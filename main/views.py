@@ -2,13 +2,15 @@ import json
 from datetime import timedelta
 from django.conf import settings
 from django.contrib import messages
-from django.http import Http404, HttpResponse
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Case, IntegerField, Q, Value, When
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
-from django.db.models import Q
 
 from .forms import LeadRequestForm
 from .models import (
@@ -19,11 +21,13 @@ from .models import (
     Flower,
     HomeHeroSlide,
     NewsPost,
+    PageContentBlock,
     Product,
     PublishStatus,
     SAME_DAY_TAG_SLUG,
     SiteHero,
     Tag,
+    WorkshopPageContent,
 )
 
 
@@ -610,51 +614,61 @@ def _get_active_home_hero_slides():
     ]
 
 
-def _get_site_hero(target_page, target_slug="", *, allow_fallback=True):
-    hero = (
+def _site_hero_payload(hero):
+    return {
+        "kicker": hero.kicker or "zad",
+        "title": hero.title,
+        "text": hero.description,
+        "image": hero.image.url if hero.image else "main/img/hero-2.jpg",
+        "mobile_image": hero.mobile_image.url if hero.mobile_image else "",
+    }
+
+
+def _get_site_hero_slides(target_page, target_slug="", *, allow_fallback=True):
+    heroes = list(
         SiteHero.objects.filter(
             is_active=True,
             target_page=target_page,
             target_slug=target_slug,
         )
         .order_by("sort_order", "id")
-        .first()
     )
 
-    if hero:
-        return {
-            "page_hero_kicker": hero.kicker or "zad",
-            "page_hero_title": hero.title,
-            "page_hero_text": hero.description,
-            "page_hero_image": hero.image.url if hero.image else "main/img/hero-2.jpg",
-            "page_hero_mobile_image": (
-                hero.mobile_image.url if hero.mobile_image else ""
-            ),
-        }
+    if heroes:
+        return [_site_hero_payload(hero) for hero in heroes]
 
     if target_slug and allow_fallback:
-        fallback = (
+        fallback_heroes = list(
             SiteHero.objects.filter(
                 is_active=True,
                 target_page=target_page,
                 target_slug="",
             )
             .order_by("sort_order", "id")
-            .first()
         )
+        return [_site_hero_payload(hero) for hero in fallback_heroes]
 
-        if fallback:
-            return {
-                "page_hero_kicker": fallback.kicker or "zad",
-                "page_hero_title": fallback.title,
-                "page_hero_text": fallback.description,
-                "page_hero_image": fallback.image.url if fallback.image else "main/img/hero-2.jpg",
-                "page_hero_mobile_image": (
-                    fallback.mobile_image.url if fallback.mobile_image else ""
-                ),
-            }
+    return []
 
-    return None
+
+def _get_site_hero(target_page, target_slug="", *, allow_fallback=True):
+    slides = _get_site_hero_slides(
+        target_page,
+        target_slug,
+        allow_fallback=allow_fallback,
+    )
+    if not slides:
+        return None
+
+    first = slides[0]
+    return {
+        "page_hero_kicker": first["kicker"],
+        "page_hero_title": first["title"],
+        "page_hero_text": first["text"],
+        "page_hero_image": first["image"],
+        "page_hero_mobile_image": first["mobile_image"],
+        "page_hero_slides": slides,
+    }
 
 
 def _default_context(
@@ -668,6 +682,7 @@ def _default_context(
     faq_items=None,
     item_id=None,
     enable_product_modal=False,
+    content_page=None,
 ):
     context = {
         "page_type": page_type,
@@ -679,6 +694,14 @@ def _default_context(
         "extra_jsonld": [],
         "is_homepage": False,
         "enable_product_modal": enable_product_modal,
+        "flowers_url": reverse("flowers"),
+        "page_content": {
+            block.section_key: block
+            for block in PageContentBlock.objects.filter(
+                page=content_page or page_type,
+                is_active=True,
+            ).order_by("sort_order", "section_key")
+        },
         **_hero_defaults(meta_title, meta_description),
     }
 
@@ -703,6 +726,7 @@ def _published_products():
     return Product.objects.filter(
         is_active=True,
         publish_status=Product.PublishStatus.PUBLISHED,
+        category__is_active=True,
     )
 
 
@@ -725,6 +749,48 @@ def _active_categories_for_section(section):
         queryset = queryset.exclude(slug="wedding")
 
     return queryset.order_by("sort_order", "name")
+
+
+CATALOG_PAGE_SIZE = 12
+
+
+def _catalog_ordered_products(queryset, section):
+    if section == Category.Section.FLOWERS:
+        order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
+        cases = [
+            When(category__slug=slug, then=Value(index))
+            for slug, index in order.items()
+        ]
+        queryset = queryset.annotate(
+            category_rank=Case(
+                *cases,
+                default=Value(len(order)),
+                output_field=IntegerField(),
+            )
+        )
+        return queryset.order_by(
+            "category_rank",
+            "-featured",
+            "sort_order",
+            "-created_at",
+            "id",
+        )
+
+    return queryset.order_by("-featured", "sort_order", "-created_at", "id")
+
+
+def _paginate_products(request, queryset):
+    paginator = Paginator(queryset, CATALOG_PAGE_SIZE)
+    page_number = request.GET.get("page") or 1
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        raise Http404("Catalog page does not exist")
+
+    return page_obj
 
 
 def _category_content(category):
@@ -920,7 +986,6 @@ def _active_occasion_tags(limit=None):
     queryset = Tag.objects.filter(
         is_occasion=True,
         is_active=True,
-        slug__in=FLOWER_OCCASION_TAG_SLUGS,
     ).order_by("sort_order", "name")
 
     if limit:
@@ -1075,7 +1140,7 @@ def index(request):
     home_events = list(
         Event.objects.filter(
             status=PublishStatus.PUBLISHED,
-            start_at__gte=timezone.now(),
+            end_at__gte=timezone.now(),
         ).order_by("start_at")[:3]
     )
     home_same_day_products = (
@@ -1093,6 +1158,9 @@ def index(request):
         {
             "featured_today": featured_today,
             "occasion_tags": occasion_tags,
+            "home_occasion_cards": [
+                _occasion_card(tag) for tag in occasion_tags[:4]
+            ],
             "sections": SECTION_CONTENT,
             "hero_call_text": "Call Now",
             "hero_telegram_text": "تلگرام",
@@ -1113,7 +1181,7 @@ def index(request):
 def _category_page(request, section):
     config = SECTION_CONTENT[section]
 
-    products_qs = _published_products_for_section(section)
+    products_qs = _published_products_for_section(section).prefetch_related(None)
 
     if section == Category.Section.FLOWERS:
         products_qs = products_qs.exclude(tags__slug__in=["condolence", "condolence", "sympathy"]).distinct()
@@ -1137,6 +1205,7 @@ def _category_page(request, section):
         breadcrumbs=breadcrumbs,
         faq_items=config["faq"] or None,
         enable_product_modal=True,
+        content_page=section,
     )
 
     hero_data = _hero_from_key(section)
@@ -1311,36 +1380,50 @@ def _collection_landing_page(request, section, *, excluded_category_slugs=()):
     landing = COLLECTION_LANDING_CONTENT[section]
 
     products_qs = _published_products_for_section(section)
-    categories_qs = Category.objects.filter(
-        section=section,
-        is_active=True,
-        products__is_active=True,
-        products__publish_status=Product.PublishStatus.PUBLISHED,
-    )
+    categories_qs = Category.objects.filter(section=section, is_active=True)
 
     if excluded_category_slugs:
         products_qs = products_qs.exclude(category__slug__in=excluded_category_slugs)
         categories_qs = categories_qs.exclude(slug__in=excluded_category_slugs)
 
-    products = list(
-        products_qs.order_by(
-            "-featured",
-            "sort_order",
-            "-created_at",
-        )
-    )
-    categories = list(
-        categories_qs.distinct().order_by("sort_order", "name")
-    )
+    selected_category_slug = request.GET.get("category") or ""
+    selected_category = None
 
+    if selected_category_slug:
+        selected_category = get_object_or_404(
+            categories_qs,
+            slug=selected_category_slug,
+        )
+        products_qs = products_qs.filter(category=selected_category)
+
+    products_qs = _catalog_ordered_products(products_qs, section)
+    page_obj = _paginate_products(request, products_qs)
+    products = list(page_obj.object_list)
+
+    if request.GET.get("partial") == "products":
+        html = render_to_string(
+            "partials/product_card.html",
+            {
+                "products": products,
+                "card_variant": "landing",
+                "fallback_image": landing["fallback_image"],
+                "empty_text": landing["empty_text"],
+            },
+            request=request,
+        )
+
+        return JsonResponse(
+            {
+                "html": html,
+                "has_next": page_obj.has_next(),
+                "next_page": page_obj.next_page_number() if page_obj.has_next() else None,
+            }
+        )
+
+    categories = list(categories_qs.distinct().order_by("sort_order", "name"))
     if section == Category.Section.FLOWERS:
         order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
-        products.sort(
-            key=lambda product: order.get(product.category.slug, len(order))
-        )
-        categories.sort(
-            key=lambda category: order.get(category.slug, len(order))
-        )
+        categories.sort(key=lambda category: order.get(category.slug, len(order)))
 
     filter_categories = [
         {
@@ -1360,6 +1443,7 @@ def _collection_landing_page(request, section, *, excluded_category_slugs=()):
         breadcrumbs=None,
         faq_items=config.get("faq") or None,
         enable_product_modal=True,
+        content_page=section,
     )
     page_hero = _get_site_hero(section)
     context.update(page_hero or _hero_from_key(section))
@@ -1367,7 +1451,11 @@ def _collection_landing_page(request, section, *, excluded_category_slugs=()):
         {
             "section": section,
             "catalog_products": products,
+            "catalog_page_obj": page_obj,
             "catalog_filter_categories": filter_categories,
+            "selected_category_slug": selected_category.slug if selected_category else "",
+            "catalog_page_size": CATALOG_PAGE_SIZE,
+            "catalog_load_url": reverse(section),
             "landing_hero_eyebrow": (
                 page_hero["page_hero_kicker"]
                 if page_hero
@@ -1472,6 +1560,7 @@ def _section_all_products(request, section):
         meta_description=f"View all {config['title']} products at zad.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
+        content_page="subcategory",
     )
 
     hero_data = _hero_from_key(
@@ -1523,9 +1612,15 @@ def flowers_same_day(request):
         "active_nav": "flowers",
         "page_hero_title": "ارسال امروز",
         "page_hero_text": "گل‌های آماده برای ارسال سریع در شهر مشهد.",
-        "collection_title": "Same Day Delivery",
+        "collection_title": "گل‌هایی برای همین امروز",
+        "collection_kicker": "SAME DAY SELECTION",
+        "collection_intro": (
+            "منتخب‌هایی که آماده‌اند تا با هماهنگی سریع، "
+            "همین امروز در مشهد به دست شما برسند."
+        ),
         "subcategory_label": "ارسال امروز",
         "items": products,
+        "is_same_day_page": True,
     }
 
     return render(request, "subcategory.html", context)
@@ -1586,6 +1681,7 @@ def _section_subcategory(request, section, subcategory_slug):
         meta_description=content["meta_description"],
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
+        content_page="subcategory",
     )
 
     hero_data = _hero_from_key(
@@ -1720,6 +1816,7 @@ def flower_occasion(request, slug):
         meta_description=f"View {title} at zad with fast order coordination.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
+        content_page="occasion-detail",
     )
 
     hero_data = _occasion_detail_hero(occasion, title=title)
@@ -1833,6 +1930,7 @@ def _item_detail_context(request, product):
         breadcrumbs=breadcrumbs,
         item_id=product.pk,
         enable_product_modal=True,
+        content_page="product",
     )
 
     hero_data = _hero_from_key(
@@ -1875,10 +1973,34 @@ def product_detail(request, pk: int, slug: str):
         pk=pk,
     )
 
-    if slug != product.slug:
-        return redirect("product_detail", pk=product.pk, slug=product.slug)
+    return redirect(product.get_absolute_url(), permanent=True)
+
+
+def _section_product_detail(request, section, category_slug, slug):
+    product = get_object_or_404(
+        _published_products()
+        .filter(category__section=section)
+        .select_related("category")
+        .prefetch_related("tags", "gallery_images"),
+        slug=slug,
+    )
+
+    if product.category.slug != category_slug:
+        return redirect(product.get_absolute_url(), permanent=True)
 
     return render(request, "item_detail.html", _item_detail_context(request, product))
+
+
+def flower_product_detail(request, category_slug, slug):
+    return _section_product_detail(request, Category.Section.FLOWERS, category_slug, slug)
+
+
+def bakery_product_detail(request, category_slug, slug):
+    return _section_product_detail(request, Category.Section.BAKERY, category_slug, slug)
+
+
+def gift_product_detail(request, category_slug, slug):
+    return _section_product_detail(request, Category.Section.GIFTS, category_slug, slug)
 
 
 def flower_detail(request, pk: int, slug: str):
@@ -1892,10 +2014,7 @@ def flower_detail(request, pk: int, slug: str):
         pk=pk,
     )
 
-    if slug != flower.slug:
-        return redirect("flower_detail", pk=flower.pk, slug=flower.slug)
-
-    return render(request, "item_detail.html", _item_detail_context(request, flower))
+    return redirect(flower.get_absolute_url(), permanent=True)
 
 
 def flower_detail_redirect(request, pk: int):
@@ -1907,7 +2026,7 @@ def flower_detail_redirect(request, pk: int):
         pk=pk,
     )
 
-    return redirect("flower_detail", pk=flower.pk, slug=flower.slug)
+    return redirect(flower.get_absolute_url(), permanent=True)
 
 
 # =========================
@@ -2089,6 +2208,7 @@ def occasion_detail(request, slug):
 def events(request):
     published_events = Event.objects.filter(
         status=PublishStatus.PUBLISHED,
+        end_at__gte=timezone.now(),
     ).order_by("start_at", "-created_at")
 
     breadcrumbs = _with_home([{"name": "ورکشاپ‌ها", "url": None}])
@@ -2103,6 +2223,10 @@ def events(request):
     )
 
     page_hero = _get_site_hero("events")
+    workshop_copy = WorkshopPageContent.current() or WorkshopPageContent()
+
+    if page_hero:
+        context.update(page_hero)
 
     context.update(
         {
@@ -2128,6 +2252,7 @@ def events(request):
                 page_hero["page_hero_mobile_image"] if page_hero else ""
             ),
             "events": published_events,
+            "workshop_copy": workshop_copy,
             "lead_form": LeadRequestForm(
                 initial_lead_type="event",
                 include_event_fields=True,
@@ -2160,6 +2285,7 @@ def event_detail(request, slug: str):
         meta_title=f"{event.title} | zad Events",
         meta_description=f"Details for {event.title} at zad: time, location, and visit coordination.",
         breadcrumbs=breadcrumbs,
+        content_page="event-detail",
     )
 
     hero_data = _hero_from_key(
@@ -2240,6 +2366,7 @@ def mashhad_hub(request):
         meta_description="zad Mashhad order hub for flowers, same-day delivery, and fast coordination.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
+        content_page="mashhad",
     )
 
     hero_data = _hero_from_key("mashhad")
@@ -2325,6 +2452,7 @@ def _local_landing(request, landing_type):
         breadcrumbs=breadcrumbs,
         faq_items=local_faq,
         enable_product_modal=True,
+        content_page="mashhad",
     )
 
     hero_data = _hero_from_key("mashhad", title=title, text=subtitle)
@@ -2416,6 +2544,7 @@ def faq(request):
         meta_description="Common questions about zad orders, delivery, opening hours, and event coordination.",
         breadcrumbs=breadcrumbs,
         faq_items=FAQ_PAGE_ITEMS,
+        content_page="faq",
     )
 
     hero_data = _hero_from_key("faq")
@@ -2500,6 +2629,7 @@ def blog(request):
         meta_title="zad Journal | Ideas & Guides",
         meta_description="zad journal notes about flowers, gifts, and occasion planning.",
         breadcrumbs=breadcrumbs,
+        content_page="blog",
     )
 
     hero_data = _hero_from_key("blog")
@@ -2553,6 +2683,7 @@ def blog_detail(request, slug):
         meta_description=post.excerpt or "Read a note from the zad Journal.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
+        content_page="blog-detail",
     )
 
     hero_data = _hero_from_key(

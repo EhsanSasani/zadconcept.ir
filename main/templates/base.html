@@ -21,14 +21,15 @@
   <link rel="stylesheet" href="{% static 'main/css/base.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/layout.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=3">
   {% block page_css %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/footer.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/final-ui-polish.css' %}?v=1">
   {% if enable_product_modal %}
-    <link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}">
+    <link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=2">
   {% endif %}
   <link rel="stylesheet" href="{% static 'main/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   {% block extra_head %}{% endblock %}
@@ -103,26 +104,40 @@
 </header>
 
   {% if not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
-  <section class="page-hero">
-    <div class="page-hero__media">
-      {% if page_hero_image %}
-        <picture>
-          {% if page_hero_mobile_image %}
-            {% if page_hero_mobile_image|slice:":7" == "/media/" %}
-              <source media="(max-width: 760px)" srcset="{{ page_hero_mobile_image }}">
-            {% else %}
-              <source media="(max-width: 760px)" srcset="{% static page_hero_mobile_image %}">
-            {% endif %}
-          {% endif %}
-
-          {% if page_hero_image|slice:":7" == "/media/" %}
-            <img src="{{ page_hero_image }}" alt="{{ page_hero_title|default:'zad' }}">
-          {% else %}
-            <img src="{% static page_hero_image %}" alt="{{ page_hero_title|default:'zad' }}">
-          {% endif %}
-        </picture>
+  <section class="page-hero" data-page-hero-slider>
+    <div class="page-hero__slides">
+      {% if page_hero_slides %}
+        {% for slide in page_hero_slides %}
+          <div class="page-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}">
+            <picture>
+              {% if slide.mobile_image %}
+                <source media="(max-width: 760px)" srcset="{{ slide.mobile_image }}">
+              {% endif %}
+              <img src="{{ slide.image }}" alt="{{ slide.title|default:'zad' }}"{% if not forloop.first %} loading="lazy"{% endif %}>
+            </picture>
+          </div>
+        {% endfor %}
       {% else %}
-        <img src="{% static 'main/img/hero-about.jpg' %}" alt="{{ page_hero_title|default:'zad' }}">
+        <div class="page-hero__slide is-active" data-page-hero-slide>
+          {% if page_hero_image %}
+            <picture>
+              {% if page_hero_mobile_image %}
+                {% if page_hero_mobile_image|slice:":7" == "/media/" %}
+                  <source media="(max-width: 760px)" srcset="{{ page_hero_mobile_image }}">
+                {% else %}
+                  <source media="(max-width: 760px)" srcset="{% static page_hero_mobile_image %}">
+                {% endif %}
+              {% endif %}
+              {% if page_hero_image|slice:":7" == "/media/" %}
+                <img src="{{ page_hero_image }}" alt="{{ page_hero_title|default:'zad' }}">
+              {% else %}
+                <img src="{% static page_hero_image %}" alt="{{ page_hero_title|default:'zad' }}">
+              {% endif %}
+            </picture>
+          {% else %}
+            <img src="{% static 'main/img/hero-about.jpg' %}" alt="{{ page_hero_title|default:'zad' }}">
+          {% endif %}
+        </div>
       {% endif %}
     </div>
 
@@ -131,12 +146,21 @@
     {% if page_type == "occasion-detail" or page_type == "flower-occasion" %}
       <div class="page-hero__content container">
         {% if page_hero_kicker %}
-          <span class="page-hero__kicker">{{ page_hero_kicker }}</span>
+          <span class="page-hero__kicker" data-page-hero-kicker>{{ page_hero_kicker }}</span>
         {% endif %}
-        <h1>{{ page_hero_title }}</h1>
+        <h1 data-page-hero-title>{{ page_hero_title }}</h1>
         {% if page_hero_text %}
-          <p>{{ page_hero_text }}</p>
+          <p data-page-hero-text>{{ page_hero_text }}</p>
         {% endif %}
+      </div>
+    {% endif %}
+    {% if page_hero_slides|length > 1 %}
+      <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
+      <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
+      <div class="page-hero__dots" aria-label="انتخاب اسلاید">
+        {% for slide in page_hero_slides %}
+          <button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>
+        {% endfor %}
       </div>
     {% endif %}
   </section>
@@ -225,11 +249,12 @@
 
   <script src="{% static 'main/js/analytics.js' %}"></script>
 <script src="{% static 'main/js/navbar.js' %}"></script>
+<script src="{% static 'main/js/page-hero-slider.js' %}?v=2"></script>
 
 {% block extra_js %}{% endblock %}
 {% if enable_product_modal %}
   {% include "product_modal.html" %}
-  <script src="{% static 'main/js/product-modal.js' %}"></script>
+  <script src="{% static 'main/js/product-modal.js' %}?v=2"></script>
 {% endif %}
 </body>
 </html>

@@ -67,6 +67,71 @@
   </div>
 </section>
 
+
+
+<section id="upcoming-workshops" class="container section-block workshops-events-section">
+  <div class="section-head section-head--center">
+    <span class="section-kicker">برنامه‌های پیش‌رو</span>
+    <h2>ورکشاپ‌های آینده زاد</h2>
+  </div>
+
+  {% if events %}
+    <div class="workshops-events-grid">
+      {% for event in events %}
+        <article class="workshop-event-card">
+          {% if event.cover_image %}
+            <a href="{{ event.get_absolute_url }}" class="workshop-event-card__media">
+              <img src="{{ event.cover_image.url }}" alt="{{ event.title }}">
+            </a>
+          {% endif %}
+
+          <div class="workshop-event-card__body">
+            {% if event.start_at %}
+              <p class="workshop-event-card__date">
+                {{ event.start_at|date:"Y/m/d" }}
+              </p>
+            {% endif %}
+
+            <h3>
+              <a href="{{ event.get_absolute_url }}">
+                {{ event.title }}
+              </a>
+            </h3>
+
+            {% if event.description %}
+              <p>
+                {{ event.description|truncatechars:120 }}
+              </p>
+            {% endif %}
+
+            <div class="workshop-event-card__meta">
+              <a href="{{ event.get_absolute_url }}">
+                جزئیات و رزرو
+              </a>
+
+              {% if event.location %}
+                <span>{{ event.location }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="workshops-empty">
+      <h3>برنامه‌های جدید به‌زودی اعلام می‌شوند.</h3>
+
+      <p>
+        برای هماهنگی ورکشاپ خصوصی یا اطلاع از زمان برگزاری برنامه‌های آینده،
+        با زاد در ارتباط باشید.
+      </p>
+
+      <a href="#workshop-request" class="workshops-btn workshops-btn--light">
+        هماهنگی با زاد
+      </a>
+    </div>
+  {% endif %}
+</section>
 <section class="workshops-types section-block">
   <div class="container">
     <div class="section-head section-head--center">
@@ -128,72 +193,7 @@
     </div>
   </div>
 </section>
-
-<section id="upcoming-workshops" class="container section-block workshops-events-section">
-  <div class="section-head section-head--center">
-    <span class="section-kicker">برنامه‌های پیش‌رو</span>
-    <h2>ورکشاپ‌های آینده زاد</h2>
-  </div>
-
-  {% if events %}
-    <div class="workshops-events-grid">
-      {% for event in events %}
-        <article class="workshop-event-card">
-          {% if event.cover_image %}
-            <a href="{{ event.get_absolute_url }}" class="workshop-event-card__media">
-              <img src="{{ event.cover_image.url }}" alt="{{ event.title }}">
-            </a>
-          {% endif %}
-
-          <div class="workshop-event-card__body">
-            {% if event.start_at %}
-              <p class="workshop-event-card__date">
-                {{ event.start_at|date:"Y/m/d" }}
-              </p>
-            {% endif %}
-
-            <h3>
-              <a href="{{ event.get_absolute_url }}">
-                {{ event.title }}
-              </a>
-            </h3>
-
-            {% if event.description %}
-              <p>
-                {{ event.description|truncatechars:120 }}
-              </p>
-            {% endif %}
-
-            <div class="workshop-event-card__meta">
-              <a href="{{ event.get_absolute_url }}">
-                جزئیات و رزرو
-              </a>
-
-              {% if event.location %}
-                <span>{{ event.location }}</span>
-              {% endif %}
-            </div>
-          </div>
-        </article>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="workshops-empty">
-      <h3>برنامه‌های جدید به‌زودی اعلام می‌شوند.</h3>
-
-      <p>
-        برای هماهنگی ورکشاپ خصوصی یا اطلاع از زمان برگزاری برنامه‌های آینده،
-        با زاد در ارتباط باشید.
-      </p>
-
-      <a href="{% url 'contact' %}" class="workshops-btn workshops-btn--light">
-        هماهنگی با زاد
-      </a>
-    </div>
-  {% endif %}
-</section>
-
-<section class="workshops-benefits section-block">
+{% comment %} <section class="workshops-benefits section-block">
   <div class="container">
     <div class="section-head section-head--center">
       <span class="section-kicker">در این تجربه چه خواهید داشت؟</span>
@@ -230,6 +230,42 @@
     <a href="{% url 'contact' %}" class="workshops-btn workshops-btn--light">
       هماهنگی از طریق تماس
     </a>
+  </div>
+</section> {% endcomment %}
+
+<section id="workshop-request" class="workshops-lead" aria-labelledby="workshops-lead-title">
+  <div class="container workshops-lead__inner">
+    <div class="workshops-lead__copy">
+      <span class="section-kicker">یک قدم تا حضور در ورکشاپ</span>
+      <h2 id="workshops-lead-title">برای هماهنگی با شما تماس بگیریم؟</h2>
+      <p>فقط نام و شماره موبایل‌تان را وارد کنید؛ برای اطلاع از زمان برگزاری یا هماهنگی ورکشاپ اختصاصی با شما تماس می‌گیریم.</p>
+    </div>
+
+    <form method="post" action="{% url 'lead_request' %}" class="workshops-lead__form" data-track-lead-form data-cta-position="workshops-footer">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}#workshop-request">
+      <input type="hidden" name="source_page" value="{{ request.path }}#workshop-request">
+      <input type="hidden" name="lead_type" value="event">
+      <input type="hidden" name="delivery_window" value="today">
+      <input type="hidden" name="event_location" value="نیازمند هماهنگی تلفنی">
+      <input type="hidden" name="note" value="درخواست هماهنگی ورکشاپ">
+
+      <label>
+        <span>نام شما</span>
+        <input type="text" name="full_name" autocomplete="name" placeholder="مثلاً سارا احمدی" maxlength="120" required>
+      </label>
+
+      <label>
+        <span>شماره موبایل</span>
+        <input type="tel" name="mobile" autocomplete="tel" inputmode="numeric" placeholder="۰۹۱۲ ۱۲۳ ۴۵۶۷" maxlength="20" pattern="[۰-۹0-9+\- ]{10,20}" required>
+      </label>
+
+      <button type="submit" class="workshops-lead__submit">
+        درخواست تماس
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      </button>
+      <small>اطلاعات شما فقط برای هماهنگی همین درخواست استفاده می‌شود.</small>
+    </form>
   </div>
 </section>
 

@@ -153,10 +153,36 @@
   background: rgba(199,155,107,0.92);
 }
 
+.product-stock-badge--available {
+  background: rgba(47, 69, 56, 0.72);
+}
+
 .product-card--out .product-card__image,
 .featured-product-card--out .featured-product-card__image {
   filter: grayscale(0.35);
   opacity: 0.82;
+}
+
+.product-card__excerpt,
+.product-card__contact {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  margin: 6px 0 0;
+  line-height: 1.7;
+}
+
+.product-card__excerpt {
+  -webkit-line-clamp: 2;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.product-card__contact {
+  -webkit-line-clamp: 2;
+  color: rgba(47, 69, 56, 0.78);
+  font-size: 0.74rem;
+  font-weight: 800;
 }
 
 .catalog-suggestion-section {

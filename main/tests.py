@@ -1,21 +1,39 @@
+import base64
 from datetime import timedelta
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from .models import (
+    BakeryItem,
     Category,
     Event,
+    GiftItem,
     HomeHeroSlide,
     LeadRequest,
+    PageContentBlock,
     Product,
+    ProductImage,
     PublishStatus,
     SiteHero,
     Tag,
+    WorkshopPageContent,
 )
+from .admin import CategoryAdminForm, EventAdminForm, HeroAdminForm
+
+
+VALID_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+)
+
+
+def uploaded_png(name="test.png"):
+    return SimpleUploadedFile(name, VALID_PNG, content_type="image/png")
 
 
 class MainViewsTests(TestCase):
@@ -129,6 +147,93 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("flowers"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.flower.product_code)
+
+    def test_collection_landing_paginates_initial_products_and_partial_next_page(self):
+        for index in range(14):
+            Product.objects.create(
+                name=f"Paged Flower {index:02d}",
+                publish_status=Product.PublishStatus.PUBLISHED,
+                category=self.flowers_category,
+                sort_order=index + 10,
+            )
+
+        response = self.client.get(reverse("flowers"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["catalog_products"]), 12)
+        self.assertTrue(response.context["catalog_page_obj"].has_next())
+
+        partial = self.client.get(
+            reverse("flowers"),
+            {"partial": "products", "page": 2},
+        )
+
+        self.assertEqual(partial.status_code, 200)
+        payload = partial.json()
+        self.assertIn("html", payload)
+        self.assertFalse(payload["has_next"])
+        self.assertContains(partial, "Paged Flower", status_code=200)
+
+        second_page = self.client.get(reverse("flowers"), {"page": 2})
+        first_ids = {product.pk for product in response.context["catalog_products"]}
+        second_ids = {product.pk for product in second_page.context["catalog_products"]}
+        self.assertTrue(first_ids.isdisjoint(second_ids))
+
+    def test_collection_landing_filters_category_on_server(self):
+        other_category = Category.objects.create(
+            name="Box",
+            slug="box",
+            section=Category.Section.FLOWERS,
+        )
+        other_product = Product.objects.create(
+            name="Box Flower",
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=other_category,
+        )
+
+        response = self.client.get(reverse("flowers"), {"category": "box"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["catalog_products"]), [other_product])
+
+    def test_new_published_flower_appears_and_draft_or_inactive_do_not(self):
+        visible = Product.objects.create(
+            name="Fresh Visible Flower",
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=self.flowers_category,
+        )
+        Product.objects.create(
+            name="Draft Hidden Flower",
+            publish_status=Product.PublishStatus.DRAFT,
+            category=self.flowers_category,
+        )
+        Product.objects.create(
+            name="Inactive Hidden Flower",
+            is_active=False,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=self.flowers_category,
+        )
+
+        response = self.client.get(reverse("flowers"))
+
+        self.assertContains(response, visible.display_name)
+        self.assertNotContains(response, "Draft Hidden Flower")
+        self.assertNotContains(response, "Inactive Hidden Flower")
+
+    def test_product_pricing_contact_text_uses_pricing_type(self):
+        inquiry_product = Product.objects.create(
+            name="Inquiry Flower",
+            pricing_type=Product.PricingType.INQUIRY,
+            price=999,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=self.flowers_category,
+        )
+
+        self.assertTrue(self.flower.has_price)
+        self.assertIn("ثبت سفارش", self.flower.order_contact_text)
+        self.assertFalse(inquiry_product.has_price)
+        self.assertIsNone(inquiry_product.price)
+        self.assertIn("استعلام قیمت", inquiry_product.order_contact_text)
 
     def test_collection_landing_uses_page_hero_from_admin(self):
         SiteHero.objects.create(
@@ -276,6 +381,35 @@ class MainViewsTests(TestCase):
         self.assertContains(response, self.published_event.title)
         self.assertNotContains(response, self.draft_event.title)
 
+    def test_events_page_shows_only_future_published_events(self):
+        past_event = Event.objects.create(
+            title="Past Event",
+            description="Past",
+            start_at=timezone.now() - timedelta(days=3),
+            end_at=timezone.now() - timedelta(days=3, hours=-2),
+            location="Mashhad",
+            status=PublishStatus.PUBLISHED,
+            published_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse("events"))
+
+        self.assertContains(response, self.published_event.title)
+        self.assertNotContains(response, past_event.title)
+
+    def test_events_page_also_shows_an_ongoing_published_event(self):
+        ongoing_event = Event.objects.create(
+            title="Ongoing Workshop",
+            description="Already started and still open",
+            start_at=timezone.now() - timedelta(hours=1),
+            end_at=timezone.now() + timedelta(hours=2),
+            location="Mashhad",
+            status=PublishStatus.PUBLISHED,
+            published_at=timezone.now(),
+        )
+
+        self.assertContains(self.client.get(reverse("events")), ongoing_event.title)
+
     def test_events_page_uses_page_hero_from_admin(self):
         SiteHero.objects.create(
             title="Admin Events Hero",
@@ -294,6 +428,24 @@ class MainViewsTests(TestCase):
         self.assertContains(response, "Admin events description")
         self.assertContains(response, "/media/heroes/pages/events.jpg")
         self.assertContains(response, "/media/heroes/pages/mobile/events.jpg")
+
+    def test_page_hero_supports_multiple_ordered_slides(self):
+        for order, title in ((2, "Second page slide"), (1, "First page slide")):
+            SiteHero.objects.create(
+                title=title,
+                image=f"heroes/pages/{order}.jpg",
+                target_page=SiteHero.TargetPage.CONTACT,
+                sort_order=order,
+            )
+
+        response = self.client.get(reverse("contact"))
+
+        self.assertEqual(
+            [slide["title"] for slide in response.context["page_hero_slides"]],
+            ["First page slide", "Second page slide"],
+        )
+        self.assertContains(response, "data-page-hero-slider")
+        self.assertContains(response, "data-page-hero-next")
 
     def test_visit_urls_redirect_to_contact(self):
         contact_url = reverse("contact")
@@ -370,9 +522,57 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("flower_detail", args=[self.flower.pk, "wrong-slug"]))
         self.assertRedirects(
             response,
-            reverse("flower_detail", args=[self.flower.pk, self.flower.slug]),
+            self.flower.get_absolute_url(),
+            status_code=301,
             fetch_redirect_response=False,
         )
+
+    def test_products_use_section_and_category_in_their_canonical_urls(self):
+        expected = {
+            self.flower: reverse(
+                "flower_product_detail",
+                args=[self.flowers_category.slug, self.flower.slug],
+            ),
+            self.bakery: reverse(
+                "bakery_product_detail",
+                args=[self.bakery_category.slug, self.bakery.slug],
+            ),
+            self.gift_product: reverse(
+                "gift_product_detail",
+                args=[self.gifts_category.slug, self.gift_product.slug],
+            ),
+        }
+
+        for product, url in expected.items():
+            with self.subTest(product=product):
+                self.assertEqual(product.get_absolute_url(), url)
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_legacy_events_urls_redirect_to_workshops(self):
+        self.assertRedirects(
+            self.client.get("/events/"),
+            reverse("events"),
+            status_code=301,
+            fetch_redirect_response=False,
+        )
+        self.assertRedirects(
+            self.client.get(f"/events/{self.published_event.slug}/"),
+            self.published_event.get_absolute_url(),
+            status_code=301,
+            fetch_redirect_response=False,
+        )
+
+    def test_admin_page_content_overrides_contact_copy(self):
+        PageContentBlock.objects.create(
+            page=PageContentBlock.Page.CONTACT,
+            section_key="intro",
+            title="Editable contact heading",
+            body="Editable contact body",
+        )
+
+        response = self.client.get(reverse("contact"))
+        self.assertContains(response, "Editable contact heading")
+        self.assertContains(response, "Editable contact body")
 
     def test_lead_form_submit_creates_row(self):
         response = self.client.post(
@@ -393,6 +593,176 @@ class MainViewsTests(TestCase):
     def test_robots_and_sitemap_routes(self):
         self.assertEqual(self.client.get(reverse("robots_txt")).status_code, 200)
         self.assertEqual(self.client.get(reverse("sitemap")).status_code, 200)
+
+    def test_proxy_products_save_with_correct_section(self):
+        bakery = BakeryItem.objects.create(
+            name="Proxy Bakery",
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=self.bakery_category,
+        )
+        gift = GiftItem.objects.create(
+            name="Proxy Gift",
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=self.gifts_category,
+        )
+
+        self.assertTrue(bakery.product_code)
+        self.assertTrue(gift.product_code)
+        self.assertContains(self.client.get(reverse("bakery")), bakery.display_name)
+        self.assertContains(self.client.get(reverse("gifts")), gift.display_name)
+
+    def test_gallery_ordering_is_stable(self):
+        first = ProductImage.objects.create(
+            product=self.flower,
+            image="products/gallery/first.jpg",
+            ordering=2,
+        )
+        second = ProductImage.objects.create(
+            product=self.flower,
+            image="products/gallery/second.jpg",
+            ordering=1,
+        )
+
+        self.assertEqual(list(self.flower.gallery_images.all()), [second, first])
+
+    def test_catalog_invalid_page_is_safe_and_out_of_range_is_404(self):
+        invalid = self.client.get(reverse("flowers"), {"page": "not-a-number"})
+        missing = self.client.get(
+            reverse("flowers"),
+            {"partial": "products", "page": 9999},
+        )
+
+        self.assertEqual(invalid.status_code, 200)
+        self.assertEqual(missing.status_code, 404)
+
+    def test_products_in_inactive_categories_are_not_public(self):
+        inactive_category = Category.objects.create(
+            name="Inactive Flowers",
+            slug="inactive-flowers",
+            section=Category.Section.FLOWERS,
+            is_active=False,
+        )
+        hidden_product = Product.objects.create(
+            name="Hidden by category",
+            category=inactive_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+        )
+
+        response = self.client.get(reverse("flowers"))
+        self.assertNotContains(response, hidden_product.display_name)
+
+    def test_proxy_slug_generation_checks_the_concrete_product_table(self):
+        same_name = self.flower.name
+        bakery = BakeryItem.objects.create(
+            name=same_name,
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+        )
+        gift = GiftItem.objects.create(
+            name=same_name,
+            category=self.gifts_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+        )
+
+        self.assertEqual(len({self.flower.slug, bakery.slug, gift.slug}), 3)
+
+    def test_new_tags_are_internal_until_marked_as_occasions(self):
+        tag = Tag.objects.create(name="Internal Tag", slug="internal-tag")
+        self.assertFalse(tag.is_occasion)
+        self.assertNotContains(self.client.get(reverse("occasions")), tag.name)
+
+        tag.is_occasion = True
+        tag.save(update_fields=["is_occasion", "updated_at"])
+        self.assertContains(self.client.get(reverse("occasions")), tag.name)
+
+    def test_multiple_home_slides_remain_visible_in_admin_order(self):
+        HomeHeroSlide.objects.create(
+            title="First managed slide",
+            image="heroes/home/first.jpg",
+            sort_order=1,
+        )
+        HomeHeroSlide.objects.create(
+            title="Second managed slide",
+            image="heroes/home/second.jpg",
+            sort_order=2,
+        )
+
+        response = self.client.get(reverse("index"))
+        self.assertContains(response, "First managed slide")
+        self.assertContains(response, "Second managed slide")
+        self.assertEqual(len(response.context["home_hero_slides"]), 2)
+
+    def test_workshop_copy_keeps_only_the_latest_active_record(self):
+        first = WorkshopPageContent.objects.create(story_title="First", is_active=True)
+        second = WorkshopPageContent.objects.create(story_title="Second", is_active=True)
+        first.refresh_from_db()
+
+        self.assertFalse(first.is_active)
+        self.assertEqual(WorkshopPageContent.current(), second)
+
+    def test_event_model_rejects_an_end_before_its_start(self):
+        start = timezone.now() + timedelta(days=1)
+        invalid_event = Event(
+            title="Invalid Event",
+            description="Invalid",
+            start_at=start,
+            end_at=start - timedelta(hours=1),
+            location="Mashhad",
+        )
+
+        with self.assertRaises(ValidationError):
+            invalid_event.full_clean()
+
+    def test_admin_image_forms_accept_valid_images_and_reject_large_files(self):
+        category_form = CategoryAdminForm(
+            data={
+                "name": "Image Category",
+                "slug": "image-category",
+                "section": Category.Section.FLOWERS,
+                "description": "",
+                "is_active": True,
+                "sort_order": 0,
+            },
+            files={"cover_image": uploaded_png("category.png")},
+        )
+        self.assertTrue(category_form.is_valid(), category_form.errors)
+
+        event_form = EventAdminForm(
+            data={
+                "title": "Image Event",
+                "slug": "image-event",
+                "description": "Event description",
+                "start_at": timezone.now() + timedelta(days=1),
+                "end_at": timezone.now() + timedelta(days=1, hours=2),
+                "location": "Mashhad",
+                "status": PublishStatus.DRAFT,
+                "published_at": "",
+            },
+            files={"cover_image": uploaded_png("event.png")},
+        )
+        self.assertTrue(event_form.is_valid(), event_form.errors)
+
+        oversized = SimpleUploadedFile(
+            "too-large.jpg",
+            b"x" * (10 * 1024 * 1024 + 1),
+            content_type="image/jpeg",
+        )
+        class HomeHeroTestForm(HeroAdminForm):
+            class Meta:
+                model = HomeHeroSlide
+                fields = "__all__"
+
+        hero_form = HomeHeroTestForm(
+            data={
+                "title": "Hero",
+                "kicker": "",
+                "description": "",
+                "is_active": True,
+                "sort_order": 0,
+            },
+            files={"image": oversized},
+        )
+        self.assertFalse(hero_form.is_valid())
 
 
 class AdminSmokeTests(TestCase):

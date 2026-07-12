@@ -8,7 +8,7 @@
 <section class="container section-block event-detail event-detail--premium">
   <div class="event-detail__grid">
     <article class="event-detail__main">
-      <p class="section-kicker">zad Event</p>
+      <p class="section-kicker">{{ page_content.intro.kicker|default:"zad Workshop" }}</p>
       <h1 class="section-title-en">{{ event.title }}</h1>
 
       {% if event.description %}
@@ -46,6 +46,6 @@
 </section>
 
 <section id="event-reserve" class="container section-block contact-help">
-  {% include "partials/lead_form.html" with lead_form=lead_form lead_default_type=lead_default_type lead_title="Reserve this event" lead_subtitle="برای رزرو، هماهنگی یا دریافت جزئیات بیشتر، درخواست خود را برای زاد ارسال کنید." cta_position="inline" %}
+  {% include "partials/lead_form.html" with lead_form=lead_form lead_default_type=lead_default_type lead_title=page_content.reserve.title|default:"Reserve this workshop" lead_subtitle=page_content.reserve.body|default:"برای رزرو، هماهنگی یا دریافت جزئیات بیشتر، درخواست خود را برای زاد ارسال کنید." cta_position="inline" %}
 </section>
 {% endblock %}

@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q
 from django.urls import reverse
@@ -53,7 +54,11 @@ def make_unique_slug(instance, value, slug_field_name="slug", queryset=None):
         slug = f"item-{uuid.uuid4().hex[:8]}"
 
     if queryset is None:
-        queryset = instance.__class__.objects.all()
+        # Proxy managers (Flower/BakeryItem/GiftItem) only see one section,
+        # while Product.slug is unique across the concrete Product table.
+        # Always check the concrete model so cross-section names cannot cause
+        # an IntegrityError during the second save.
+        queryset = instance._meta.concrete_model._default_manager.all()
 
     if instance.pk:
         queryset = queryset.exclude(pk=instance.pk)
@@ -166,7 +171,7 @@ class Tag(TimeStampedModel):
 
     is_occasion = models.BooleanField(
         "در کارت‌های مناسبتی نمایش داده شود؟",
-        default=True,
+        default=False,
         db_index=True,
     )
 
@@ -387,11 +392,51 @@ class Product(TimeStampedModel):
         return " · ".join(price_parts)
 
     @property
+    def order_contact_text(self):
+        if self.has_price:
+            return "برای ثبت سفارش با ما در ارتباط باشید"
+
+        return "برای استعلام قیمت و ثبت سفارش با ما در ارتباط باشید"
+
+    @property
+    def stock_status_label(self):
+        return self.get_stock_status_display()
+
+    @property
     def is_same_day(self):
         if not self.pk:
             return False
 
         return self.tags.filter(slug=SAME_DAY_TAG_SLUG).exists()
+
+    def _final_product_code(self):
+        if not self.pk:
+            return ""
+
+        base_code = f"{self.pk:04d}"
+        code = base_code
+        index = 2
+
+        while Product.objects.exclude(pk=self.pk).filter(product_code=code).exists():
+            code = f"{base_code}-{index}"
+            index += 1
+
+        return code
+
+    def clean(self):
+        super().clean()
+
+        if self.category_id and self.is_active and not self.category.is_active:
+            raise ValidationError(
+                {
+                    "category": "زیردسته غیرفعال است. برای نمایش محصول، ابتدا زیردسته را فعال کنید."
+                }
+            )
+
+        if self.pricing_type == self.PricingType.FIXED and self.price is None:
+            raise ValidationError(
+                {"price": "برای قیمت ثابت، وارد کردن قیمت الزامی است."}
+            )
 
     def save(self, *args, **kwargs):
         if self.pricing_type == self.PricingType.INQUIRY:
@@ -399,23 +444,32 @@ class Product(TimeStampedModel):
             self.price_usd = None
 
         if self.pk:
+            generated_fields = set()
             if not self.product_code:
-                self.product_code = f"{self.pk:04d}"
+                self.product_code = self._final_product_code()
+                generated_fields.add("product_code")
 
             if not self.slug:
                 self.slug = make_unique_slug(self, self.name or self.product_code)
+                generated_fields.add("slug")
             else:
                 self.slug = slugify(self.slug, allow_unicode=True)
 
+            if kwargs.get("update_fields") is not None and generated_fields:
+                kwargs["update_fields"] = set(kwargs["update_fields"]) | generated_fields
+
             super().save(*args, **kwargs)
             return
+
+        if not self.product_code:
+            self.product_code = f"pending-{uuid.uuid4().hex[:12]}"
 
         super().save(*args, **kwargs)
 
         update_fields = []
 
-        if not self.product_code:
-            self.product_code = f"{self.pk:04d}"
+        if self.product_code.startswith("pending-"):
+            self.product_code = self._final_product_code()
             update_fields.append("product_code")
 
         if not self.slug:
@@ -426,7 +480,16 @@ class Product(TimeStampedModel):
             super().save(update_fields=update_fields)
 
     def get_absolute_url(self):
-        return reverse("product_detail", args=[self.pk, self.slug])
+        route_name = {
+            Category.Section.FLOWERS: "flower_product_detail",
+            Category.Section.BAKERY: "bakery_product_detail",
+            Category.Section.GIFTS: "gift_product_detail",
+        }.get(self.section, "product_detail")
+
+        if route_name == "product_detail":
+            return reverse(route_name, args=[self.pk, self.slug])
+
+        return reverse(route_name, args=[self.category.slug, self.slug])
 
 
 class FlowerManager(models.Manager):
@@ -586,6 +649,14 @@ class Event(TimeStampedModel):
     def get_absolute_url(self):
         return reverse("event_detail", args=[self.slug])
 
+    def clean(self):
+        super().clean()
+
+        if self.start_at and self.end_at and self.end_at <= self.start_at:
+            raise ValidationError(
+                {"end_at": "زمان پایان باید بعد از زمان شروع باشد."}
+            )
+
 
 class LeadRequest(TimeStampedModel):
     class LeadType(models.TextChoices):
@@ -729,3 +800,103 @@ class SiteHero(TimeStampedModel):
         if self.target_slug:
             return f"{self.get_target_page_display()} - {self.target_slug}"
         return self.get_target_page_display()
+
+
+class WorkshopPageContent(TimeStampedModel):
+    story_kicker = models.CharField("عنوان کوتاه بخش فلسفه", max_length=120, blank=True)
+    story_title = models.CharField("عنوان بخش فلسفه", max_length=220, blank=True)
+    story_text = models.TextField("متن بخش فلسفه", blank=True)
+    types_kicker = models.CharField("عنوان کوتاه انواع ورکشاپ", max_length=120, blank=True)
+    types_title = models.CharField("عنوان انواع ورکشاپ", max_length=220, blank=True)
+    public_title = models.CharField("عنوان ورکشاپ عمومی", max_length=160, blank=True)
+    public_text = models.TextField("متن ورکشاپ عمومی", blank=True)
+    private_title = models.CharField("عنوان ورکشاپ خصوصی", max_length=160, blank=True)
+    private_text = models.TextField("متن ورکشاپ خصوصی", blank=True)
+    corporate_title = models.CharField("عنوان ورکشاپ سازمانی", max_length=160, blank=True)
+    corporate_text = models.TextField("متن ورکشاپ سازمانی", blank=True)
+    upcoming_kicker = models.CharField("عنوان کوتاه برنامه‌های آینده", max_length=120, blank=True)
+    upcoming_title = models.CharField("عنوان برنامه‌های آینده", max_length=220, blank=True)
+    upcoming_empty_title = models.CharField("عنوان حالت بدون برنامه", max_length=220, blank=True)
+    upcoming_empty_text = models.TextField("متن حالت بدون برنامه", blank=True)
+    cta_title = models.CharField("عنوان بخش درخواست", max_length=220, blank=True)
+    cta_text = models.TextField("متن بخش درخواست", blank=True)
+    is_active = models.BooleanField("فعال باشد؟", default=True)
+
+    class Meta:
+        verbose_name = "متن صفحه ورکشاپ"
+        verbose_name_plural = "متن صفحه ورکشاپ"
+
+    def __str__(self) -> str:
+        return "متن صفحه ورکشاپ"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.is_active:
+            type(self).objects.exclude(pk=self.pk).filter(is_active=True).update(
+                is_active=False
+            )
+
+    @classmethod
+    def current(cls):
+        return cls.objects.filter(is_active=True).order_by("-updated_at", "-id").first()
+
+
+class PageContentBlock(TimeStampedModel):
+    class Page(models.TextChoices):
+        HOME = "home", "خانه"
+        FLOWERS = "flowers", "گل‌ها"
+        BAKERY = "bakery", "بیکری"
+        GIFTS = "gifts", "هدایا"
+        OCCASIONS = "occasions", "مناسبت‌ها"
+        WORKSHOPS = "workshops", "ورکشاپ‌ها"
+        ABOUT = "about", "درباره زاد"
+        CONTACT = "contact", "تماس با ما"
+        FAQ = "faq", "سوالات پرتکرار"
+        BLOG = "blog", "بلاگ"
+        MASHHAD = "mashhad", "صفحات مشهد"
+        PRODUCT = "product", "صفحه محصول"
+        SUBCATEGORY = "subcategory", "صفحه زیردسته"
+        OCCASION_DETAIL = "occasion-detail", "جزئیات مناسبت"
+        EVENT_DETAIL = "event-detail", "جزئیات ورکشاپ"
+        BLOG_DETAIL = "blog-detail", "جزئیات بلاگ"
+
+    page = models.CharField("صفحه", max_length=40, choices=Page.choices, db_index=True)
+    section_key = models.SlugField(
+        "کلید بخش",
+        max_length=80,
+        allow_unicode=False,
+        help_text="یک کلید انگلیسی پایدار؛ مثل intro، story، cta یا empty.",
+    )
+    kicker = models.CharField("عنوان کوتاه", max_length=140, blank=True)
+    title = models.CharField("عنوان", max_length=240, blank=True)
+    body = models.TextField("متن", blank=True)
+    cta_text = models.CharField("متن دکمه", max_length=100, blank=True)
+    cta_url = models.CharField(
+        "لینک دکمه",
+        max_length=300,
+        blank=True,
+        help_text="مسیر داخلی مثل /contact/#lead-form یا آدرس کامل https://...",
+    )
+    is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        ordering = ["page", "sort_order", "section_key"]
+        verbose_name = "متن قابل ویرایش صفحه"
+        verbose_name_plural = "متن‌های قابل ویرایش صفحات"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["page", "section_key"],
+                name="uniq_page_content_block",
+            )
+        ]
+        indexes = [
+            models.Index(
+                fields=["page", "is_active", "sort_order"],
+                name="page_content_lookup_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_page_display()} / {self.section_key}"

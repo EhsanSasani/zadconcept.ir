@@ -16,7 +16,10 @@
             data-product-type="{{ product.category.slug|default:'collection' }}"
             data-product-code="{{ product.product_code }}"
             data-product-name="{{ product.name|default:'' }}"
-            data-product-price="{% if product.price %}{{ product.display_price }}{% else %}استعلام قیمت{% endif %}"
+            data-product-price="{{ product.display_price }}"
+            data-product-contact="{{ product.order_contact_text }}"
+            data-product-stock="{{ product.stock_status_label }}"
+            data-product-description="{{ product.description|default:''|truncatechars:140 }}"
           >
             <div class="featured-product-card__image-wrap">
               {% if product.cover_image %}
@@ -25,6 +28,7 @@
                   alt="{{ product.display_name }}"
                   class="featured-product-card__image"
                   loading="lazy"
+                  decoding="async"
                   data-product-image
                 >
               {% else %}
@@ -33,14 +37,17 @@
                   alt="{{ product.display_name }}"
                   class="featured-product-card__image"
                   loading="lazy"
+                  decoding="async"
                   data-product-image
                 >
               {% endif %}
 
               {% if product.stock_status == "out_of_stock" %}
-                <span class="product-stock-badge product-stock-badge--out">ناموجود</span>
+                <span class="product-stock-badge product-stock-badge--out">{{ product.stock_status_label }}</span>
               {% elif product.stock_status == "preorder" %}
-                <span class="product-stock-badge product-stock-badge--preorder">پیش‌سفارش</span>
+                <span class="product-stock-badge product-stock-badge--preorder">{{ product.stock_status_label }}</span>
+              {% else %}
+                <span class="product-stock-badge product-stock-badge--available">{{ product.stock_status_label }}</span>
               {% endif %}
             </div>
 
@@ -51,12 +58,8 @@
                 <h3 class="featured-product-card__title">{{ product.product_code }}</h3>
               {% endif %}
 
-              <p class="featured-product-card__price {% if not product.price %}featured-product-card__price--muted{% endif %}">
-                {% if product.price %}
-                  {{ product.display_price }}
-                {% else %}
-                  استعلام قیمت
-                {% endif %}
+              <p class="featured-product-card__price {% if not product.has_price %}featured-product-card__price--muted{% endif %}">
+                {{ product.display_price }}
               </p>
             </div>
           </a>

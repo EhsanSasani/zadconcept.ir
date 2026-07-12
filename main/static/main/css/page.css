@@ -1791,10 +1791,175 @@ body:not(.page-home) .section-block:first-of-type {
 
 .workshops-events-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 340px));
-  justify-content: center;
-  gap: 28px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 340px);
+  justify-content: flex-start;
+  gap: 22px;
   margin-top: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 18px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Workshop conversion form */
+.workshops-lead {
+  padding: clamp(64px, 8vw, 104px) 0;
+  background: #243026;
+  color: #fffaf3;
+}
+
+.workshops-lead__inner {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(520px, 1.2fr);
+  gap: clamp(42px, 7vw, 96px);
+  align-items: center;
+}
+
+.workshops-lead__copy .section-kicker {
+  color: #d3ad79;
+}
+
+.workshops-lead__copy h2 {
+  max-width: 520px;
+  margin: 10px 0 14px;
+  color: #fff;
+  font-family: var(--font-fa);
+  font-size: clamp(1.8rem, 3vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.workshops-lead__copy p {
+  max-width: 550px;
+  margin: 0;
+  color: rgba(255, 255, 255, .7);
+  font-size: .96rem;
+  line-height: 2.05;
+}
+
+.workshops-lead__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.workshops-lead__form label {
+  display: grid;
+  gap: 8px;
+}
+
+.workshops-lead__form label span {
+  color: rgba(255, 255, 255, .78);
+  font-size: .78rem;
+  font-weight: 500;
+}
+
+.workshops-lead__form input {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 9px;
+  outline: 0;
+  background: rgba(255, 255, 255, .07);
+  color: #fff;
+  font-family: var(--font-fa);
+  font-size: .9rem;
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.workshops-lead__form input::placeholder {
+  color: rgba(255, 255, 255, .35);
+}
+
+.workshops-lead__form input:focus {
+  border-color: #d3ad79;
+  background: rgba(255, 255, 255, .1);
+}
+
+.workshops-lead__submit {
+  height: 54px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 9px;
+  background: #f0dfc5;
+  color: #30271f;
+  font-family: var(--font-fa);
+  font-size: .88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.workshops-lead__submit:hover {
+  background: #fff7eb;
+  transform: translateY(-2px);
+}
+
+.workshops-lead__submit i {
+  margin-right: 8px;
+}
+
+.workshops-lead__form small {
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, .48);
+  font-size: .7rem;
+  line-height: 1.8;
+}
+
+@media (max-width: 980px) {
+  .workshops-lead__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .workshops-lead {
+    padding: 60px 0;
+  }
+
+  .workshops-lead__copy {
+    text-align: center;
+  }
+
+  .workshops-lead__copy p {
+    margin-inline: auto;
+  }
+
+  .workshops-lead__form {
+    grid-template-columns: 1fr;
+  }
+
+  .workshops-lead__submit {
+    width: 100%;
+  }
+}
+
+.workshops-hero__slides,
+.workshops-hero__slide,
+.workshops-hero__slide picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.workshops-hero__slide {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.workshops-hero__slide.is-active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .workshop-event-card {
@@ -1803,6 +1968,7 @@ body:not(.page-home) .section-block:first-of-type {
   background: #fff;
   border: 1px solid rgba(120, 90, 65, .10);
   box-shadow: 0 20px 60px rgba(70, 50, 35, .07);
+  scroll-snap-align: start;
 }
 
 .workshop-event-card__media {
@@ -1970,7 +2136,7 @@ body:not(.page-home) .section-block:first-of-type {
   }
 
   .workshops-events-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: minmax(280px, 42vw);
   }
 
   .workshops-benefits__grid {
@@ -2011,7 +2177,10 @@ body:not(.page-home) .section-block:first-of-type {
     height: 220px;
   }
 
-  .workshops-events-grid,
+  .workshops-events-grid {
+    grid-auto-columns: minmax(260px, 86vw);
+  }
+
   .workshops-benefits__grid {
     grid-template-columns: 1fr;
   }
@@ -2041,17 +2210,17 @@ body:not(.page-home) .section-block:first-of-type {
 
 .page-events .workshops-hero h1 {
   font-family: var(--font-fa);
-  font-size: clamp(3.35rem, 6.25vw, 6.75rem);
+  font-size: clamp(3rem, 5vw, 4.8rem);
   font-weight: 600;
-  line-height: 1.24;
-  letter-spacing: -0.035em;
+  line-height: 1.34;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 
 .page-events .workshops-hero__content > p:not(.workshops-hero__eyebrow) {
-  font-size: clamp(1rem, 1.25vw, 1.24rem);
+  font-size: clamp(0.98rem, 1.05vw, 1.08rem);
   font-weight: 400;
-  line-height: 2.05;
+  line-height: 2.1;
   letter-spacing: -0.012em;
   text-wrap: balance;
 }
@@ -2082,17 +2251,17 @@ body:not(.page-home) .section-block:first-of-type {
 }
 
 .page-events .section-head h2 {
-  font-size: clamp(2rem, 3.3vw, 3.15rem);
+  font-size: clamp(1.9rem, 2.7vw, 2.65rem);
   line-height: 1.5;
 }
 
 .page-events .workshops-story__text h2 {
-  font-size: clamp(2.15rem, 3.55vw, 3.45rem);
-  line-height: 1.52;
+  font-size: clamp(2rem, 2.9vw, 2.85rem);
+  line-height: 1.56;
 }
 
 .page-events .workshops-story__text p {
-  font-size: clamp(0.96rem, 1.05vw, 1.04rem);
+  font-size: clamp(0.98rem, 1vw, 1.04rem);
   font-weight: 400;
   line-height: 2.22;
   letter-spacing: -0.009em;
@@ -2118,12 +2287,12 @@ body:not(.page-home) .section-block:first-of-type {
 }
 
 .page-events .workshop-type-card__body h3 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   line-height: 1.65;
 }
 
 .page-events .workshop-type-card__body p {
-  font-size: 0.92rem;
+  font-size: 0.94rem;
   font-weight: 400;
   line-height: 2.08;
   letter-spacing: -0.006em;
@@ -2141,7 +2310,7 @@ body:not(.page-home) .section-block:first-of-type {
 }
 
 .page-events .workshop-event-card h3 {
-  font-size: 1.12rem;
+  font-size: 1.18rem;
   line-height: 1.72;
 }
 
@@ -2184,7 +2353,7 @@ body:not(.page-home) .section-block:first-of-type {
 }
 
 .page-events .workshops-cta h2 {
-  font-size: clamp(2rem, 3.45vw, 3.35rem);
+  font-size: clamp(2rem, 3vw, 2.9rem);
   line-height: 1.52;
 }
 
@@ -2203,8 +2372,8 @@ body:not(.page-home) .section-block:first-of-type {
   }
 
   .page-events .workshops-hero h1 {
-    font-size: clamp(2.4rem, 11.6vw, 3.5rem);
-    line-height: 1.36;
+    font-size: clamp(2.15rem, 9.5vw, 3rem);
+    line-height: 1.45;
     letter-spacing: -0.03em;
   }
 
@@ -2224,7 +2393,7 @@ body:not(.page-home) .section-block:first-of-type {
   .page-events .section-head h2,
   .page-events .workshops-story__text h2,
   .page-events .workshops-cta h2 {
-    font-size: clamp(1.7rem, 7.5vw, 2.2rem);
+    font-size: clamp(1.65rem, 6.8vw, 2.05rem);
     line-height: 1.58;
     letter-spacing: -0.022em;
   }

@@ -17,3 +17,7 @@ staticfiles/
 ui-audit-shots-current-fixes/
 
 .env
+*.bak
+*.patch
+prod-data*.json
+tmp-*.png

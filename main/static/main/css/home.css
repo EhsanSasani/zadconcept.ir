@@ -1557,8 +1557,29 @@
   }
 
   .home-occasions-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    grid-template-columns: none;
+    justify-content: flex-start;
     gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 3px 2px 16px;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    overscroll-behavior-inline: contain;
+    touch-action: pan-x pan-y;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-occasions-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-occasion-card {
+    scroll-snap-align: start;
   }
 
   .home-occasion-card__body {
@@ -1576,6 +1597,47 @@
 
   .home-occasions-more {
     margin-top: 20px;
+  }
+}
+
+/* Final polish: keep photography crisp and make horizontal collections tactile. */
+.page-home .home-category-card img {
+  filter: saturate(1) contrast(1.01) brightness(0.99);
+}
+
+.page-home .home-category-card--flowers img {
+  object-position: center 46%;
+}
+
+.page-home .home-category-card--workshops img {
+  object-position: center 43%;
+}
+
+.home-sameday-row,
+.home-occasions-row,
+.home-sameday-benefits,
+.home-abroad__features {
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-sameday-row,
+.home-occasions-row {
+  touch-action: pan-x pan-y;
+}
+
+.home-sameday-card__badge--stock {
+  background: rgba(55, 42, 34, 0.82);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home *,
+  .page-home *::before,
+  .page-home *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }
 

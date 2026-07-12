@@ -4,7 +4,8 @@
 {% block body_class %}page-home{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/home.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/home.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/home-final-polish.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -112,29 +113,29 @@
     <div class="home-categories home-categories--fixed">
 
       <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه گل‌های زاد">
-        <img src="{% static 'main/img/cat-flowers.jpg' %}" alt="گل‌های زاد">
+        <img src="{% static 'main/img/cat-flowers.jpg' %}" alt="گل‌های زاد" decoding="async">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
           <i class="bi bi-flower1 home-category-card__icon" aria-hidden="true"></i>
-          <h2>گل‌های زاد</h2>
+          <h2>{{ page_content.flowers.title|default:"گل‌های زاد" }}</h2>
           <span>Premium Bouquets</span>
           <div class="home-category-card__line"></div>
-          <p>برای لحظه‌هایی که ماندگار می‌شوند</p>
+          <p>{{ page_content.flowers.body|default:"برای لحظه‌هایی که ماندگار می‌شوند" }}</p>
           <em>مشاهده مجموعه گل‌ها <i class="bi bi-chevron-left" aria-hidden="true"></i></em>
         </div>
       </a>
 
       <a href="{% url 'events' %}" class="home-category-card home-category-card--primary home-category-card--workshops" aria-label="مشاهده ورکشاپ‌های زاد">
-        <img src="{% static 'main/img/cat-events.jpg' %}" alt="ورکشاپ‌های زاد">
+        <img src="{% static 'main/img/cat-events.jpg' %}" alt="ورکشاپ‌های زاد" decoding="async">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
           <i class="bi bi-stars home-category-card__icon" aria-hidden="true"></i>
-          <h2>ورکشاپ‌های زاد</h2>
+          <h2>{{ page_content.workshops.title|default:"ورکشاپ‌های زاد" }}</h2>
           <span>Creative Workshops</span>
           <div class="home-category-card__line"></div>
-          <p>تجربه‌ای برای خلق با گل‌ها</p>
+          <p>{{ page_content.workshops.body|default:"تجربه‌ای برای خلق با گل‌ها" }}</p>
           <em>مشاهده ورکشاپ‌ها <i class="bi bi-chevron-left" aria-hidden="true"></i></em>
         </div>
       </a>
@@ -143,44 +144,13 @@
   </div>
 </section>
 
-{% if home_events %}
-<section class="container section-block home-workshops">
-  <div class="section-head featured-products-section__head featured-products-section__head--center">
-    <h2 class="section-title-en hero-brand-text">Workshops</h2>
-    <a href="{% url 'events' %}" class="section-link hero-ui-text">View All</a>
-  </div>
-
-  <div class="home-workshops__grid">
-    {% for event in home_events %}
-      <a href="{{ event.get_absolute_url }}" class="home-workshop-card">
-        <div class="home-workshop-card__media">
-          {% if event.cover_image %}
-            <img src="{{ event.cover_image.url }}" alt="{{ event.title }}">
-          {% else %}
-            <img src="{% static 'main/img/cat-events.jpg' %}" alt="{{ event.title }}">
-          {% endif %}
-        </div>
-
-        <div class="home-workshop-card__body">
-          <p>{{ event.start_at|date:"Y/m/d" }}</p>
-          <h3>{{ event.title }}</h3>
-          {% if event.location %}
-            <span>{{ event.location }}</span>
-          {% endif %}
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
 <section class="home-sameday-section section-block">
   <div class="container">
     <div class="home-sameday-head">
       <i class="bi bi-truck"></i>
-      <span>Same Day Delivery</span>
-      <h2>ارسال فوری برای امروز</h2>
-      <p>سفارش‌های ثبت‌شده در شهر مشهد، در همان روز با عشق به دست شما می‌رسند.</p>
+      <span>{{ page_content.same_day.kicker|default:"Same Day Delivery" }}</span>
+      <h2>{{ page_content.same_day.title|default:"ارسال فوری برای امروز" }}</h2>
+      <p>{{ page_content.same_day.body|default:"سفارش‌های ثبت‌شده در شهر مشهد، در همان روز با عشق به دست شما می‌رسند." }}</p>
       <div class="home-sameday-head__line"></div>
     </div>
 
@@ -193,7 +163,10 @@
           data-product-type="{{ product.category.slug|default:'collection' }}"
           data-product-code="{{ product.product_code }}"
           data-product-name="{{ product.name|default:'' }}"
-          data-product-price="{% if product.price %}{{ product.display_price }}{% else %}استعلام قیمت{% endif %}"
+          data-product-price="{{ product.display_price }}"
+          data-product-contact="{{ product.order_contact_text }}"
+          data-product-stock="{{ product.stock_status_label }}"
+          data-product-description="{{ product.description|default:''|truncatechars:140 }}"
         >
           <div class="home-sameday-card__media">
             {% if product.cover_image %}
@@ -210,10 +183,11 @@
                 >
             {% endif %}
 
-            <span class="home-sameday-card__badge">
-              ارسال امروز
-              <i class="bi bi-lightning-charge-fill"></i>
-            </span>
+            {% if product.stock_status == "out_of_stock" %}
+              <span class="home-sameday-card__badge home-sameday-card__badge--stock">ناموجود</span>
+            {% elif product.stock_status == "preorder" %}
+              <span class="home-sameday-card__badge home-sameday-card__badge--stock">پیش‌سفارش</span>
+            {% endif %}
           </div>
 
           <div class="home-sameday-card__body">
@@ -226,10 +200,6 @@
         <a class="home-sameday-card" href="{% url 'flowers' %}">
           <div class="home-sameday-card__media">
             <img src="{% static 'main/img/sub-bouquet.jpg' %}" alt="ارسال فوری">
-            <span class="home-sameday-card__badge">
-              ارسال امروز
-              <i class="bi bi-lightning-charge-fill"></i>
-            </span>
           </div>
 
           <div class="home-sameday-card__body">
@@ -286,23 +256,23 @@
       </div>
 
       <div class="home-abroad__content">
-        <span class="home-abroad__kicker">INTERNATIONAL ORDERS</span>
+        <span class="home-abroad__kicker">{{ page_content.international.kicker|default:"INTERNATIONAL ORDERS" }}</span>
 
-          <h2>
+          <h2>{% if page_content.international.title %}{{ page_content.international.title }}{% else %}
             From Anywhere,
             To Your Loved Ones.<br>
-          </h2>
+          {% endif %}</h2>
 
           <div class="home-abroad__divider"></div>
 
-          <p>
+          <p>{% if page_content.international.body %}{{ page_content.international.body }}{% else %}
             برای عزیزانتان ، از هر جای دنیا سفارش ثبت کنید
             و تحویل را با زاد تجربه کنید.
-          </p>
+          {% endif %}</p>
 
-          <a class="home-abroad__btn" href="#">
+          <a class="home-abroad__btn" href="{{ page_content.international.cta_url|default:'/contact/#lead-form' }}">
             <i class="bi bi-arrow-left"></i>
-            PLACE YOUR ORDER
+            {{ page_content.international.cta_text|default:"PLACE YOUR ORDER" }}
           </a>
         <div class="home-abroad__features">
             <div>
@@ -331,70 +301,41 @@
   <div class="container">
 
     <div class="home-occasions-head">
-      <span>ZAD OCCASIONS</span>
-      <h2>برای لحظه‌های خاص</h2>
-      <p>هر احساس، گلی مخصوص به خود می‌خواهد</p>
+      <span>{{ page_content.occasions.kicker|default:"ZAD OCCASIONS" }}</span>
+      <h2>{{ page_content.occasions.title|default:"برای لحظه‌های خاص" }}</h2>
+      <p>{{ page_content.occasions.body|default:"هر احساس، گلی مخصوص به خود می‌خواهد" }}</p>
       <div class="home-occasions-head__line"></div>
     </div>
 
-    <div class="home-occasions-row">
-
-      <a class="home-occasion-card" href="{% url 'occasion_detail' 'birthday' %}">
-        <div class="home-occasion-card__media">
-          <img src="{% static 'main/img/occasions/birthday.jpg' %}" alt="تولد">
-        </div>
-
-        <div class="home-occasion-card__body">
-          <div>
-            <strong>تولد</strong>
-            <span>Birthday</span>
+    <div class="home-occasions-row" data-touch-slider aria-label="مناسبت‌های زاد">
+      {% for item in home_occasion_cards %}
+        <a class="home-occasion-card" href="{{ item.url }}">
+          <div class="home-occasion-card__media">
+            {% if item.image|slice:":7" == "/media/" %}
+              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" decoding="async">
+            {% else %}
+              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" decoding="async">
+            {% endif %}
           </div>
-          <i>←</i>
-        </div>
-      </a>
-
-      <a class="home-occasion-card" href="{% url 'occasion_detail' 'romantic' %}">
-        <div class="home-occasion-card__media">
-          <img src="{% static 'main/img/occasions/romantic.jpg' %}" alt="عاشقانه">
-        </div>
-
-        <div class="home-occasion-card__body">
-          <div>
-            <strong>عاشقانه</strong>
-            <span>Romance</span>
+          <div class="home-occasion-card__body">
+            <div>
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.label_en }}</span>
+            </div>
+            <i aria-hidden="true">←</i>
           </div>
-          <i>←</i>
-        </div>
-      </a>
-
-      <a class="home-occasion-card" href="{% url 'occasion_detail' 'condolence' %}">
-        <div class="home-occasion-card__media">
-          <img src="{% static 'main/img/occasions/condolence.jpg' %}" alt="تسلیت">
-        </div>
-
-        <div class="home-occasion-card__body">
-          <div>
-            <strong>تسلیت</strong>
-            <span>Condolence</span>
+        </a>
+      {% empty %}
+        <a class="home-occasion-card" href="{% url 'occasions' %}">
+          <div class="home-occasion-card__media">
+            <img src="{% static 'main/img/occasions/special.jpg' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async">
           </div>
-          <i>←</i>
-        </div>
-      </a>
-
-      <a class="home-occasion-card" href="{% url 'occasion_detail' 'no-occasion' %}">
-        <div class="home-occasion-card__media">
-          <img src="{% static 'main/img/occasions/special.jpg' %}" alt="خاص">
-        </div>
-
-        <div class="home-occasion-card__body">
-          <div>
-            <strong>بدون مناسبت</strong>
-            <span>No Occasion</span>
+          <div class="home-occasion-card__body">
+            <div><strong>لحظه‌های خاص</strong><span>Occasions</span></div>
+            <i aria-hidden="true">←</i>
           </div>
-          <i>←</i>
-        </div>
-      </a>
-
+        </a>
+      {% endfor %}
     </div>
 
     <div class="home-occasions-more">
@@ -416,22 +357,22 @@
       </div>
 
       <div class="home-experience__content">
-        <span class="home-experience__kicker">ورکشاپ‌ها و رویدادها</span>
+        <span class="home-experience__kicker">{{ page_content.experience.kicker|default:"ورکشاپ‌ها و رویدادها" }}</span>
 
-        <h2>
+        <h2>{% if page_content.experience.title %}{{ page_content.experience.title }}{% else %}
           تجربه‌هایی برای یادگیری،<br>
           خلق زیبایی و کنار هم بودن
-        </h2>
+        {% endif %}</h2>
 
         <div class="home-experience__divider"></div>
 
-        <p>
+        <p>{% if page_content.experience.body %}{{ page_content.experience.body }}{% else %}
          در ورکشاپ‌های زاد، گل‌آرایی را از نزدیک تجربه می‌کنید؛ ساده، کاربردی و در فضایی صمیمی.
-        </p>
+        {% endif %}</p>
 
-        <a class="home-experience__btn" href="{% url 'events' %}">
+        <a class="home-experience__btn" href="{{ page_content.experience.cta_url|default:'/workshops/' }}">
           <span>←</span>
-          مشاهده برنامه‌ها
+          {{ page_content.experience.cta_text|default:"مشاهده برنامه‌ها" }}
         </a>
 
         <div class="home-experience__features">
@@ -459,7 +400,7 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'main/js/home-slider.js' %}?v=4"></script>
-  <script src="{% static 'main/js/sameday-slider.js' %}?v=1"></script>
-  <script src="{% static 'main/js/occasion-slider.js' %}?v=1"></script>
+  <script src="{% static 'main/js/home-slider.js' %}?v=5"></script>
+  <script src="{% static 'main/js/sameday-slider.js' %}?v=2"></script>
+  <script src="{% static 'main/js/occasion-slider.js' %}?v=2"></script>
 {% endblock %}

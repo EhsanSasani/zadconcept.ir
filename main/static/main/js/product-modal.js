@@ -6,6 +6,9 @@
   const modalType = modal.querySelector("[data-modal-type]");
   const modalTitle = modal.querySelector("[data-modal-title]");
   const modalPrice = modal.querySelector("[data-modal-price]");
+  const modalDescription = modal.querySelector("[data-modal-description]");
+  const modalStock = modal.querySelector("[data-modal-stock]");
+  const modalContact = modal.querySelector("[data-modal-contact]");
   const modalCloseItems = Array.from(document.querySelectorAll("[data-product-modal-close]"));
 
   const typeLabels = {
@@ -35,6 +38,9 @@
     const code = card.dataset.productCode || "";
     const name = card.dataset.productName || "";
     const price = card.dataset.productPrice || "استعلام قیمت";
+    const description = card.dataset.productDescription || "";
+    const stock = card.dataset.productStock || "";
+    const contact = card.dataset.productContact || "";
 
     if (modalImage) {
       modalImage.src = imageSrc;
@@ -53,6 +59,20 @@
       modalPrice.textContent = price;
     }
 
+    if (modalDescription) {
+      modalDescription.textContent = description;
+      modalDescription.hidden = !description;
+    }
+
+    if (modalStock) {
+      modalStock.textContent = stock;
+      modalStock.hidden = !stock;
+    }
+
+    if (modalContact) {
+      modalContact.textContent = contact || "برای قیمت و ثبت سفارش با ما در ارتباط باشید.";
+    }
+
     modal.hidden = false;
     document.body.style.overflow = "hidden";
   }
@@ -64,6 +84,11 @@
     if (modalImage) {
       modalImage.src = "";
       modalImage.alt = "";
+    }
+
+    if (modalDescription) {
+      modalDescription.textContent = "";
+      modalDescription.hidden = true;
     }
   }
 

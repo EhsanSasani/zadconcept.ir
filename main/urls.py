@@ -11,22 +11,27 @@ urlpatterns = [
     path("flowers/", views.flowers, name="flowers"),
     path("flowers/all/", views.flowers_all, name="flowers_all"),
     path("flowers/same-day/", views.flowers_same_day, name="flowers_same_day"),
-    path("flowers/occasion/<slug:slug>/", views.flower_occasion, name="flower_occasion"),
-    path("flowers/<slug:subcategory_slug>/", views.flower_subcategory, name="flower_subcategory"),
+    path("flowers/occasion/<str:slug>/", views.flower_occasion, name="flower_occasion"),
+    path("flowers/<str:category_slug>/<str:slug>/", views.flower_product_detail, name="flower_product_detail"),
+    path("flowers/<str:subcategory_slug>/", views.flower_subcategory, name="flower_subcategory"),
 
     # Bakery
     path("bakery/", views.bakery, name="bakery"),
     path("bakery/all/", views.bakery_all, name="bakery_all"),
-    path("bakery/<slug:subcategory_slug>/", views.bakery_subcategory, name="bakery_subcategory"),
+    path("bakery/<str:category_slug>/<str:slug>/", views.bakery_product_detail, name="bakery_product_detail"),
+    path("bakery/<str:subcategory_slug>/", views.bakery_subcategory, name="bakery_subcategory"),
 
     # Gifts
     path("gifts/", views.gifts, name="gifts"),
     path("gifts/all/", views.gifts_all, name="gifts_all"),
-    path("gifts/<slug:subcategory_slug>/", views.gift_subcategory, name="gift_subcategory"),
+    path("gifts/<str:category_slug>/<str:slug>/", views.gift_product_detail, name="gift_product_detail"),
+    path("gifts/<str:subcategory_slug>/", views.gift_subcategory, name="gift_subcategory"),
 
     # Events
-    path("events/", views.events, name="events"),
-    path("events/<slug:slug>/", views.event_detail, name="event_detail"),
+    path("workshops/", views.events, name="events"),
+    path("workshops/<str:slug>/", views.event_detail, name="event_detail"),
+    path("events/", RedirectView.as_view(pattern_name="events", permanent=True)),
+    path("events/<str:slug>/", RedirectView.as_view(pattern_name="event_detail", permanent=True)),
 
     # Mashhad landing pages
     path("mashhad/", views.mashhad_hub, name="mashhad_hub"),
@@ -40,7 +45,7 @@ urlpatterns = [
 
     # Blog
     path("blog/", views.blog, name="blog"),
-    path("blog/<slug:slug>/", views.blog_detail, name="blog_detail"),
+    path("blog/<str:slug>/", views.blog_detail, name="blog_detail"),
 
     # Forms / utility
     path("lead-request/", views.submit_lead_request, name="lead_request"),
@@ -53,7 +58,7 @@ urlpatterns = [
 
     # Occasions
     path("occasions/", views.occasions, name="occasions"),
-    path("occasions/<slug:slug>/", views.occasion_detail, name="occasion_detail"),
+    path("occasions/<str:slug>/", views.occasion_detail, name="occasion_detail"),
 
     # Legacy
     path(
