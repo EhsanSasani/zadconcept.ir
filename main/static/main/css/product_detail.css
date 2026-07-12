@@ -7,19 +7,26 @@
   display: none;
 }
 
+.page-item {
+  background:
+    radial-gradient(circle at 14% 4%, rgba(199, 155, 107, 0.10), transparent 30%),
+    linear-gradient(180deg, #f8f4ef 0%, #f3eadf 100%);
+}
+
 .page-item .breadcrumbs {
-  margin-top: 28px;
+  margin-top: 20px;
 }
 
 .item-detail--premium {
-  margin-top: 24px;
+  margin-top: 18px;
 }
 
 .item-detail__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(360px, 0.94fr);
-  gap: clamp(24px, 4vw, 56px);
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+  gap: clamp(18px, 3vw, 42px);
   align-items: start;
+  direction: rtl;
 }
 
 .item-detail__media {
@@ -29,16 +36,18 @@
 .item-detail__image-frame {
   position: relative;
   overflow: hidden;
-  min-height: 620px;
+  min-height: clamp(540px, 56vw, 700px);
+  border: 1px solid rgba(157, 111, 63, 0.12);
+  border-radius: 18px;
   background:
     linear-gradient(135deg, rgba(247,242,235,0.9), rgba(239,231,220,0.7));
-  box-shadow: 0 28px 80px rgba(50, 35, 25, 0.12);
+  box-shadow: 0 24px 68px rgba(70, 50, 35, 0.10);
 }
 
 .item-detail__image-frame img {
   width: 100%;
   height: 100%;
-  min-height: 620px;
+  min-height: clamp(540px, 56vw, 700px);
   object-fit: cover;
   transition: transform 0.6s ease;
 }
@@ -59,7 +68,7 @@
 .item-detail__floating-badge {
   position: absolute;
   top: 18px;
-  left: 18px;
+  right: 18px;
   z-index: 2;
   display: inline-flex;
   min-height: 34px;
@@ -68,18 +77,19 @@
   padding: 0 13px;
   border: 1px solid rgba(255,255,255,0.34);
   border-radius: 999px;
-  background: rgba(31,47,71,0.72);
-  color: #fff;
-  font-family: var(--font-ui-en);
+  background: rgba(255, 250, 244, 0.84);
+  color: rgba(58, 78, 63, 0.78);
+  font-family: var(--font-fa);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  box-shadow: 0 8px 24px rgba(40, 31, 24, 0.08);
   backdrop-filter: blur(8px);
 }
 
 .item-detail__floating-badge--out {
-  background: rgba(45,42,39,0.72);
+  color: rgba(45,42,39,0.62);
+  background: rgba(255, 250, 244, 0.82);
 }
 
 .item-detail__thumbs {
@@ -93,7 +103,8 @@
   display: block;
   overflow: hidden;
   aspect-ratio: 1;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(157, 111, 63, 0.16);
+  border-radius: 12px;
   background: var(--bg-soft);
   opacity: 0.82;
 }
@@ -112,13 +123,14 @@
 .item-detail__info {
   position: sticky;
   top: calc(var(--header-height) + 28px);
-  padding: clamp(22px, 3vw, 34px);
-  border: 1px solid rgba(90, 65, 45, 0.10);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 24px 70px rgba(70, 50, 35, 0.08);
+  padding: clamp(24px, 3.1vw, 42px);
+  border: 1px solid rgba(157, 111, 63, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 250, 244, 0.84);
+  box-shadow: 0 18px 54px rgba(70, 50, 35, 0.08);
   backdrop-filter: blur(14px);
-  direction: ltr;
-  text-align: left;
+  direction: rtl;
+  text-align: right;
 }
 
 .item-detail__eyebrow,
@@ -127,9 +139,9 @@
   margin: 0 0 10px;
   color: var(--accent-hover);
   font-family: var(--font-ui-en);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
@@ -141,13 +153,14 @@
 }
 
 .item-detail__info h1 {
-  max-width: 11ch;
-  color: var(--text);
-  font-family: var(--font-brand-en);
-  font-size: clamp(2.4rem, 4vw, 4.5rem);
-  font-weight: 600;
-  line-height: 0.95;
-  letter-spacing: 0.01em;
+  max-width: 14ch;
+  margin: 0;
+  color: #342b26;
+  font-family: var(--font-fa);
+  font-size: clamp(2.45rem, 4.1vw, 4.35rem);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
 }
 
 .item-detail__chips,
@@ -172,7 +185,7 @@
   border-radius: 999px;
   background: #fcfaf7;
   color: var(--muted);
-  font-family: var(--font-ui-en), var(--font-fa);
+  font-family: var(--font-fa), var(--font-ui-en);
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -191,28 +204,28 @@
 .item-detail__microcopy,
 .item-detail-panel p {
   color: var(--muted);
-  font-family: var(--font-ui-en), var(--font-fa);
+  font-family: var(--font-fa), var(--font-ui-en);
   font-size: 0.95rem;
   line-height: 1.85;
 }
 
 .item-detail__purchase-box {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin-top: 24px;
-  padding: 22px;
+  padding: 20px 22px;
   border: 1px solid rgba(126, 92, 62, 0.14);
-  border-radius: 24px;
-  background: linear-gradient(135deg, #fbf7f1, #f4ece3);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(251, 247, 241, 0.92), rgba(244, 236, 227, 0.72));
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 .item-detail__price {
   margin: 0;
   color: #3d3028;
-  font-family: var(--font-ui-en), var(--font-fa);
+  font-family: var(--font-fa), var(--font-ui-en);
   font-size: 1.45rem;
-  font-weight: 500;
+  font-weight: 650;
   letter-spacing: -0.02em;
 }
 
@@ -236,7 +249,7 @@
   min-width: 170px;
   min-height: 44px;
   border-radius: 999px;
-  font-family: var(--font-ui-en);
+  font-family: var(--font-fa), var(--font-ui-en);
   font-weight: 600;
 }
 
@@ -277,7 +290,7 @@
 
 .item-detail__links {
   margin-top: 22px;
-  direction: ltr;
+  direction: rtl;
 }
 
 .item-detail__links a {
@@ -296,15 +309,17 @@
   border: 1px solid var(--line);
   background: rgba(255,255,255,0.72);
   box-shadow: var(--shadow-sm);
-  direction: ltr;
-  text-align: left;
+  border-radius: 18px;
+  direction: rtl;
+  text-align: right;
 }
 
 .item-detail-panel h2 {
   margin-bottom: 12px;
-  font-family: var(--font-brand-en);
-  font-size: clamp(1.7rem, 2.6vw, 2.6rem);
-  font-weight: 600;
+  font-family: var(--font-fa);
+  font-size: clamp(1.65rem, 2.4vw, 2.4rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
 }
 
 .item-detail-related {
@@ -336,7 +351,7 @@
   }
 
   .item-detail__info h1 {
-    max-width: 15ch;
+    max-width: 100%;
   }
 }
 
@@ -348,7 +363,7 @@
   .item-detail__image-frame,
   .item-detail__image-frame img,
   .item-detail__placeholder {
-    min-height: 420px;
+    min-height: 430px;
   }
 
   .item-detail__thumbs {
@@ -360,7 +375,7 @@
   }
 
   .item-detail__info h1 {
-    font-size: 2.35rem;
+    font-size: 2.25rem;
   }
 
   .item-detail__specs,
@@ -381,12 +396,12 @@
   .item-detail__image-frame,
   .item-detail__image-frame img,
   .item-detail__placeholder {
-    min-height: 340px;
+    min-height: 360px;
   }
 
   .item-detail__floating-badge {
     top: 12px;
-    left: 12px;
+    right: 12px;
   }
 }
 

@@ -1,7 +1,7 @@
 {% load static %}
 
 {% for product in products %}
-  {% if card_variant == "landing" %}
+  {% if card_variant != "legacy" %}
     <a
       href="{{ product.get_absolute_url }}"
       class="flowers-product-card {% if product.stock_status == 'out_of_stock' %}flowers-product-card--out{% endif %}"
@@ -29,7 +29,7 @@
           >
         {% else %}
           <img
-            src="{% static fallback_image|default:'main/img/cat-flowers.jpg' %}"
+            src="{% static fallback_image|default:'main/img/cat-flowers.webp' %}"
             alt="{{ product.display_name }}"
             width="520"
             height="650"
@@ -116,7 +116,7 @@
           >
         {% else %}
           <img
-            src="{% static fallback_image|default:'main/img/cat-flowers.jpg' %}"
+            src="{% static fallback_image|default:'main/img/cat-flowers.webp' %}"
             alt="{{ product.display_name }}"
             class="product-card__image"
             width="520"

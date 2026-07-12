@@ -73,6 +73,78 @@ def make_unique_slug(instance, value, slug_field_name="slug", queryset=None):
     return slug
 
 
+def _upload_slug(value, fallback):
+    slug = slugify(value or "", allow_unicode=False)
+    return slug or fallback
+
+
+def _upload_extension(filename):
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webp"
+    if extension == "jpeg":
+        extension = "jpg"
+    return extension
+
+
+def category_cover_upload_to(instance, filename):
+    section = _upload_slug(instance.section, "category")
+    slug = _upload_slug(instance.slug or instance.name, f"category-{instance.pk or 'new'}")
+    return f"categories/category-{section}-{slug}.{_upload_extension(filename)}"
+
+
+def tag_cover_upload_to(instance, filename):
+    slug = _upload_slug(instance.slug or instance.name, f"tag-{instance.pk or 'new'}")
+    return f"tags/tag-{slug}.{_upload_extension(filename)}"
+
+
+def product_cover_upload_to(instance, filename):
+    code = _upload_slug(instance.product_code or instance.slug, f"product-{instance.pk or 'new'}")
+    return f"products/covers/product-{code}.{_upload_extension(filename)}"
+
+
+def product_gallery_upload_to(instance, filename):
+    product = getattr(instance, "product", None)
+    code = _upload_slug(
+        getattr(product, "product_code", "") or getattr(product, "slug", ""),
+        f"product-{getattr(instance, 'product_id', None) or 'new'}",
+    )
+    order = instance.ordering or instance.pk or "new"
+    return f"products/gallery/product-{code}-gallery-{order}.{_upload_extension(filename)}"
+
+
+def news_cover_upload_to(instance, filename):
+    slug = _upload_slug(instance.slug or instance.title, f"news-{instance.pk or 'new'}")
+    return f"news/covers/news-{slug}.{_upload_extension(filename)}"
+
+
+def event_cover_upload_to(instance, filename):
+    slug = _upload_slug(instance.slug or instance.title, f"event-{instance.pk or 'new'}")
+    return f"events/covers/event-{slug}.{_upload_extension(filename)}"
+
+
+def home_hero_upload_to(instance, filename):
+    order = instance.sort_order or instance.pk or "new"
+    return f"heroes/home/home-hero-{order}.{_upload_extension(filename)}"
+
+
+def home_hero_mobile_upload_to(instance, filename):
+    order = instance.sort_order or instance.pk or "new"
+    return f"heroes/home/mobile/home-hero-mobile-{order}.{_upload_extension(filename)}"
+
+
+def site_hero_upload_to(instance, filename):
+    page = _upload_slug(instance.target_page, "page")
+    target = _upload_slug(instance.target_slug, "default")
+    order = instance.sort_order or instance.pk or "new"
+    return f"heroes/pages/page-hero-{page}-{target}-{order}.{_upload_extension(filename)}"
+
+
+def site_hero_mobile_upload_to(instance, filename):
+    page = _upload_slug(instance.target_page, "page")
+    target = _upload_slug(instance.target_slug, "default")
+    order = instance.sort_order or instance.pk or "new"
+    return f"heroes/pages/mobile/page-hero-{page}-{target}-{order}-mobile.{_upload_extension(filename)}"
+
+
 class Category(TimeStampedModel):
     class Section(models.TextChoices):
         FLOWERS = "flowers", "گل‌ها"
@@ -101,7 +173,7 @@ class Category(TimeStampedModel):
 
     cover_image = models.ImageField(
         "تصویر زیر‌دسته",
-        upload_to="categories/",
+        upload_to=category_cover_upload_to,
         blank=True,
         null=True,
     )
@@ -163,7 +235,7 @@ class Tag(TimeStampedModel):
 
     cover_image = models.ImageField(
         "تصویر کارت مناسبتی",
-        upload_to="tags/",
+        upload_to=tag_cover_upload_to,
         blank=True,
         null=True,
         help_text="برای کارت‌های مناسبتی مثل تولد، تسلیت، عاشقانه و ...",
@@ -265,7 +337,7 @@ class Product(TimeStampedModel):
 
     cover_image = models.ImageField(
         "تصویر اصلی",
-        upload_to="products/covers/",
+        upload_to=product_cover_upload_to,
         null=True,
         blank=True,
     )
@@ -551,7 +623,7 @@ class ProductImage(TimeStampedModel):
         related_name="gallery_images",
     )
 
-    image = models.ImageField("تصویر", upload_to="products/gallery/")
+    image = models.ImageField("تصویر", upload_to=product_gallery_upload_to)
     alt_text = models.CharField("متن جایگزین", max_length=150, blank=True)
     ordering = models.PositiveIntegerField("ترتیب نمایش", default=0)
 
@@ -577,7 +649,7 @@ class NewsPost(TimeStampedModel):
     slug = models.SlugField("اسلاگ", max_length=200, unique=True, blank=True, allow_unicode=True)
     excerpt = models.CharField("خلاصه", max_length=300, blank=True)
     body = models.TextField("متن")
-    cover_image = models.ImageField("تصویر کاور", upload_to="news/covers/", null=True, blank=True)
+    cover_image = models.ImageField("تصویر کاور", upload_to=news_cover_upload_to, null=True, blank=True)
     status = models.CharField(
         "وضعیت",
         max_length=20,
@@ -614,7 +686,7 @@ class Event(TimeStampedModel):
     start_at = models.DateTimeField("شروع")
     end_at = models.DateTimeField("پایان")
     location = models.CharField("مکان", max_length=200)
-    cover_image = models.ImageField("تصویر کاور", upload_to="events/covers/", null=True, blank=True)
+    cover_image = models.ImageField("تصویر کاور", upload_to=event_cover_upload_to, null=True, blank=True)
     status = models.CharField(
         "وضعیت",
         max_length=20,
@@ -716,10 +788,10 @@ class HomeHeroSlide(TimeStampedModel):
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 
-    image = models.ImageField("تصویر اصلی", upload_to="heroes/home/")
+    image = models.ImageField("تصویر اصلی", upload_to=home_hero_upload_to)
     mobile_image = models.ImageField(
         "تصویر موبایل",
-        upload_to="heroes/home/mobile/",
+        upload_to=home_hero_mobile_upload_to,
         blank=True,
         null=True,
     )
@@ -761,10 +833,10 @@ class SiteHero(TimeStampedModel):
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 
-    image = models.ImageField("تصویر اصلی", upload_to="heroes/pages/")
+    image = models.ImageField("تصویر اصلی", upload_to=site_hero_upload_to)
     mobile_image = models.ImageField(
         "تصویر موبایل",
-        upload_to="heroes/pages/mobile/",
+        upload_to=site_hero_mobile_upload_to,
         blank=True,
         null=True,
     )

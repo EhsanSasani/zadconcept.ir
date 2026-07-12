@@ -50,8 +50,8 @@
     {% empty %}
       <div class="hero-slide hero-slide--1 is-active">
         <picture>
-          <source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.jpg' %}">
-          <img src="{% static 'main/img/hero-1.jpg' %}" alt="ZAD Concept Store">
+          <source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.webp' %}">
+          <img src="{% static 'main/img/hero-1.webp' %}" alt="ZAD Concept Store">
         </picture>
 
         <div class="hero-slide__overlay"></div>
@@ -113,7 +113,7 @@
     <div class="home-categories home-categories--fixed">
 
       <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه گل‌های زاد">
-        <img src="{% static 'main/img/cat-flowers.jpg' %}" alt="گل‌های زاد" decoding="async">
+        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="گل‌های زاد" decoding="async">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
@@ -127,7 +127,7 @@
       </a>
 
       <a href="{% url 'events' %}" class="home-category-card home-category-card--primary home-category-card--workshops" aria-label="مشاهده ورکشاپ‌های زاد">
-        <img src="{% static 'main/img/cat-events.jpg' %}" alt="ورکشاپ‌های زاد" decoding="async">
+        <img src="{% static 'main/img/cat-events.webp' %}" alt="ورکشاپ‌های زاد" decoding="async">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
@@ -177,7 +177,7 @@
                 >
             {% else %}
               <img
-                  src="{% static 'main/img/sub-bouquet.jpg' %}"
+                  src="{% static 'main/img/sub-bouquet.webp' %}"
                   alt="{{ product.display_name }}"
                   data-product-image
                 >
@@ -199,7 +199,7 @@
       {% empty %}
         <a class="home-sameday-card" href="{% url 'flowers' %}">
           <div class="home-sameday-card__media">
-            <img src="{% static 'main/img/sub-bouquet.jpg' %}" alt="ارسال فوری">
+            <img src="{% static 'main/img/sub-bouquet.webp' %}" alt="ارسال فوری">
           </div>
 
           <div class="home-sameday-card__body">
@@ -252,7 +252,7 @@
     <div class="home-abroad">
 
       <div class="home-abroad__media">
-        <img src="{% static 'main/img/home-abroad.jpg' %}" alt="International flower delivery">
+        <img src="{% static 'main/img/home-abroad.webp' %}" alt="International flower delivery">
       </div>
 
       <div class="home-abroad__content">
@@ -328,7 +328,7 @@
       {% empty %}
         <a class="home-occasion-card" href="{% url 'occasions' %}">
           <div class="home-occasion-card__media">
-            <img src="{% static 'main/img/occasions/special.jpg' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async">
+            <img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async">
           </div>
           <div class="home-occasion-card__body">
             <div><strong>لحظه‌های خاص</strong><span>Occasions</span></div>
@@ -353,7 +353,7 @@
     <div class="home-experience">
 
       <div class="home-experience__media">
-        <img src="{% static 'main/img/home-workshop.jpg' %}" alt="ورکشاپ‌ها و رویدادهای زاد">
+        <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌ها و رویدادهای زاد">
       </div>
 
       <div class="home-experience__content">

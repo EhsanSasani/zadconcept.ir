@@ -692,16 +692,41 @@
   display: none;
 }
 
-.page-same-day .same-day-catalog {
-  padding: clamp(56px, 6vw, 88px) 0 clamp(82px, 8vw, 126px);
+.page-same-day {
+  background: #f8f4ef;
+}
+
+.page-same-day .page-hero {
+  min-height: clamp(240px, 24vw, 340px);
+  background: #eadfd4;
+}
+
+.page-same-day .page-hero__slide img {
+  object-position: center 54%;
+  filter: saturate(0.92) brightness(1.02);
+}
+
+.page-same-day .page-hero__overlay {
   background:
-    radial-gradient(circle at 50% 0%, rgba(199, 155, 107, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(248, 244, 239, 0) 34%, rgba(248, 244, 239, 0.72) 100%),
+    linear-gradient(90deg, rgba(54, 39, 29, 0.10), rgba(255, 248, 239, 0.36) 50%, rgba(54, 39, 29, 0.06));
+}
+
+.page-same-day .page-hero-mood {
+  display: none;
+}
+
+.page-same-day .same-day-catalog {
+  padding: clamp(38px, 4.8vw, 66px) 0 clamp(76px, 7vw, 110px);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(199, 155, 107, 0.10), transparent 28%),
+    radial-gradient(circle at 82% 0%, rgba(92, 113, 80, 0.07), transparent 26%),
     #f8f4ef;
 }
 
 .page-same-day .same-day-intro {
-  width: min(100%, 720px);
-  margin: 0 auto clamp(38px, 4.5vw, 58px);
+  width: min(100%, 760px);
+  margin: 0 auto clamp(30px, 3.8vw, 46px);
   text-align: center;
 }
 
@@ -720,15 +745,15 @@
   margin: 0;
   color: #342b26;
   font-family: Estedad, sans-serif;
-  font-size: clamp(2rem, 3.25vw, 3.35rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1.5;
+  font-size: clamp(2.15rem, 3.6vw, 3.85rem);
+  font-weight: 650;
+  letter-spacing: -0.05em;
+  line-height: 1.32;
 }
 
 .page-same-day .same-day-intro p {
   max-width: 590px;
-  margin: 13px auto 0;
+  margin: 12px auto 0;
   color: rgba(52, 43, 38, 0.62);
   font-family: Estedad, sans-serif;
   font-size: clamp(0.82rem, 1vw, 0.94rem);
@@ -757,15 +782,42 @@
 
 .page-same-day .same-day-grid {
   align-items: stretch;
+  gap: clamp(16px, 2vw, 24px);
 }
 
 .page-same-day .flowers-product-card {
   height: 100%;
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(70, 50, 35, 0.07);
+}
+
+.page-same-day .flowers-product-card__media {
+  aspect-ratio: 1 / 1.08;
+}
+
+.page-same-day .flowers-product-card__badge {
+  top: 12px;
+  right: 12px;
+  min-height: 30px;
+  padding: 0 12px;
+  color: rgba(58, 78, 63, 0.78);
+  background: rgba(248, 244, 239, 0.84);
+  box-shadow: 0 8px 24px rgba(40, 31, 24, 0.08);
+}
+
+.page-same-day .flowers-product-card__body {
+  min-height: 100px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #fffaf4 0%, #f7efe5 100%);
 }
 
 @media (max-width: 640px) {
+  .page-same-day .page-hero {
+    min-height: 190px;
+  }
+
   .page-same-day .same-day-catalog {
-    padding: 46px 0 78px;
+    padding: 28px 0 72px;
   }
 
   .page-same-day .same-day-intro {

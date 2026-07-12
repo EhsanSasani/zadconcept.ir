@@ -888,7 +888,7 @@
   padding: 42px 0 48px;
   background:
     linear-gradient(180deg, rgba(246, 241, 234, 0.88), rgba(246, 241, 234, 0.94)),
-    url("../img/home-occasions-bg.jpg") center / cover no-repeat;
+    url("../img/home-occasions-bg.webp") center / cover no-repeat;
   border-top: 1px solid rgba(157, 111, 63, 0.12);
   border-bottom: 1px solid rgba(157, 111, 63, 0.12);
   overflow: hidden;

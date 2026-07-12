@@ -106,32 +106,32 @@ CATEGORY_CONTENT_OVERRIDES = {
         "meta_title": "دسته گل لوکس در مشهد | ZAD",
         "meta_description": "دسته گل‌های زاد برای هدیه، تولد، عاشقانه و لحظه‌های روزمره در مشهد.",
         "intro": "انتخابی نرم و روشن برای هدیه‌های روزمره و لحظه‌های خاص.",
-        "image": "main/img/sub-bouquet.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-bouquet.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "box": {
         "label": "باکس گل",
         "meta_title": "باکس گل لوکس در مشهد | ZAD",
         "meta_description": "باکس گل‌های زاد با چیدمان مینیمال، مناسب هدیه و سفارش سریع در مشهد.",
         "intro": "هدیه‌ای مرتب، شیک و آماده برای ارسال.",
-        "image": "main/img/sub-box.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-box.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "bouquet": {
         "label": "بوکت",
         "meta_title": "بوکت گل خاص در مشهد | ZAD",
         "meta_description": "بوکت‌های طراحی‌شده زاد برای انتخاب‌های خاص‌تر و لوکس‌تر.",
         "intro": "چیدمانی طراحی‌شده‌تر برای وقتی که انتخاب باید خاص‌تر باشد.",
-        "image": "main/img/sub-bouquet.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-bouquet.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "stand": {
         "label": "استند گل",
         "meta_title": "استند گل در مشهد | ZAD",
         "meta_description": "استندهای گل رسمی زاد برای مراسم، ترحیم، افتتاحیه و لحظه‌های تشریفاتی.",
         "intro": "برای موقعیت‌های رسمی، محترمانه و پررنگ‌تر.",
-        "image": "main/img/sub-stand.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-stand.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
         },
 
     "wedding": {
@@ -139,48 +139,48 @@ CATEGORY_CONTENT_OVERRIDES = {
         "meta_title": "دسته گل عروس در مشهد | ZAD",
         "meta_description": "دسته گل عروس زاد با چیدمان لطیف، مینیمال و هماهنگ با مراسم.",
         "intro": "دسته‌گلی لطیف برای یکی از مهم‌ترین لحظه‌ها.",
-        "image": "main/img/sub-bridal-bouquet.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-bridal-bouquet.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "jarl": {
         "label": "جار گل",
         "meta_title": "جار گل در مشهد | ZAD",
         "meta_description": "جار گل‌های زاد برای دکور، هدیه‌های خاص و انتخاب‌های متفاوت.",
         "intro": "فرمی متفاوت و دکوراتیو برای انتخاب‌های خاص‌تر.",
-        "image": "main/img/sub-box.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-box.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "plants": {
         "label": "گیاه",
         "meta_title": "گیاه هدیه‌ای در مشهد | ZAD",
         "meta_description": "گیاه‌های انتخاب‌شده زاد برای هدیه، خانه و لحظه‌های آرام‌تر.",
         "intro": "انتخابی ماندگارتر برای خانه، میز کار و هدیه‌های آرام‌تر.",
-        "image": "main/img/sub-plant.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-plant.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "basket": {
         "label": "سبد گل",
         "meta_title": "سبد گل در مشهد | ZAD",
         "meta_description": "سبد گل‌های زاد برای هدیه و مراسم.",
         "intro": "یک دسته‌بندی قدیمی که فعلاً فقط برای سازگاری نگه داشته شده است.",
-        "image": "main/img/sub-plant.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/sub-plant.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "birthday-cakes": {
         "label": "Birthday Cakes",
         "meta_title": "Birthday Cakes | ZAD",
         "meta_description": "ZAD birthday cakes for warm celebrations and soft moments.",
         "intro": "Soft cakes for warm birthday moments.",
-        "image": "main/img/cat-bakery.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/cat-bakery.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
     "cookies": {
         "label": "Cookies",
         "meta_title": "Cookies | ZAD",
         "meta_description": "ZAD cookies for gifting, gatherings and sweet little details.",
         "intro": "Small sweet bites for gentle celebrations.",
-        "image": "main/img/cat-bakery.jpg",
-        "hero_image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/cat-bakery.webp",
+        "hero_image": "main/img/hero-subcategory.webp",
     },
 }
 
@@ -196,73 +196,73 @@ PAGE_HERO_CONTENT = {
         "kicker": "ZAD OCCASIONS",
         "title": "Occasions by ZAD",
         "text": "انتخاب‌هایی برای تولد، عشق، تبریک، دلجویی و لحظه‌هایی که باید ماندگار شوند.",
-        "image": "main/img/hero-occasions.jpg",
+        "image": "main/img/hero-occasions.webp",
     },
     "flowers": {
         "kicker": "ZAD Flowers",
         "title": "Flowers by ZAD",
         "text": "انتخاب گل برای لحظه‌های خاص، سفارش‌های فوری و چیدمان‌های اختصاصی.",
-        "image": "main/img/flowers-hero.jpg",
+        "image": "main/img/flowers-hero.webp",
     },
     "bakery": {
         "kicker": "zad Bakery",
         "title": "Sweet Little Rituals",
         "text": "Small sweet pieces for warmer celebrations.",
-        "image": "main/img/hero-bakery.jpg",
+        "image": "main/img/hero-bakery.webp",
     },
     "gifts": {
         "kicker": "zad Gifts",
         "title": "Chosen With Care",
         "text": "Little gifts with warmth, softness and meaning.",
-        "image": "main/img/hero-gifts.jpg",
+        "image": "main/img/hero-gifts.webp",
     },
     "subcategory": {
         "kicker": "zad Collection",
         "title": "Curated Softly",
         "text": "A smaller selection for a more exact feeling.",
-        "image": "main/img/hero-subcategory.jpg",
+        "image": "main/img/hero-subcategory.webp",
     },
     "item": {
         "kicker": "zad Item",
         "title": "",
         "text": "",
-        "image": "main/img/hero-gifts.jpg",
+        "image": "main/img/hero-gifts.webp",
     },
     "contact": {
         "kicker": "Contact zad",
         "title": "Let’s Arrange It",
         "text": "For availability, timing and order details.",
-        "image": "main/img/hero-contact.jpg",
+        "image": "main/img/hero-contact.webp",
     },
     "events": {
         "kicker": "zad Events",
         "title": "Gathered With Feeling",
         "text": "Workshops, gatherings and soft zad experiences.",
-        "image": "main/img/hero-events.jpg",
+        "image": "main/img/hero-events.webp",
     },
     "blog": {
         "kicker": "zad Journal",
         "title": "Soft Notes",
         "text": "Small ideas for flowers, gifts and moments.",
-        "image": "main/img/hero-contact.jpg",
+        "image": "main/img/hero-contact.webp",
     },
     "faq": {
         "kicker": "zad Help",
         "title": "Little Answers",
         "text": "Simple answers before you call or order.",
-        "image": "main/img/hero-faq.jpg",
+        "image": "main/img/hero-faq.webp",
     },
     "mashhad": {
         "kicker": "zad Mashhad",
         "title": "Made for Mashhad",
         "text": "Fast coordination for special orders in Mashhad.",
-        "image": "main/img/hero-mashhad.jpg",
+        "image": "main/img/hero-mashhad.webp",
     },
     "about": {
         "kicker": "zad Concept Store",
         "title": "The Story of zad",
         "text": "A closer look at the care behind the brand.",
-        "image": "main/img/hero-about.jpg",
+        "image": "main/img/hero-about.webp",
     },
 }
 
@@ -441,8 +441,8 @@ COLLECTION_LANDING_CONTENT = {
         "hero_eyebrow": "FLOWER COLLECTION",
         "hero_title": "گل‌های زاد",
         "hero_text": "گل‌هایی برای تمام لحظه‌های خاص زندگی شما",
-        "hero_image": "main/img/flowers-hero.jpg",
-        "fallback_image": "main/img/cat-flowers.jpg",
+        "hero_image": "main/img/flowers-hero.webp",
+        "fallback_image": "main/img/cat-flowers.webp",
         "empty_text": "هنوز محصولی برای نمایش ثبت نشده است.",
         "why_items": [
             {
@@ -464,15 +464,15 @@ COLLECTION_LANDING_CONTENT = {
         "cta_kicker": "CUSTOM ORDER",
         "cta_title": "دسته‌گل اختصاصی، دقیقاً مطابق سلیقه شما",
         "cta_text": "برای انتخاب رنگ، سبک چیدمان، بودجه و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
-        "cta_image": "main/img/footer-floral.jpg",
+        "cta_image": "main/img/footer-floral.webp",
         "cta_alt": "سفارش اختصاصی گل",
     },
     Category.Section.BAKERY: {
         "hero_eyebrow": "ZAD SWEET BAR",
         "hero_title": "سوییت بار زاد",
         "hero_text": "طعم‌های شیرین برای لحظه‌های گرم و به‌یادماندنی",
-        "hero_image": "main/img/hero-bakery.jpg",
-        "fallback_image": "main/img/cat-bakery.jpg",
+        "hero_image": "main/img/hero-bakery.webp",
+        "fallback_image": "main/img/cat-bakery.webp",
         "empty_text": "هنوز محصولی در سوییت بار ثبت نشده است.",
         "why_items": [
             {
@@ -494,7 +494,7 @@ COLLECTION_LANDING_CONTENT = {
         "cta_kicker": "CUSTOM ORDER",
         "cta_title": "سفارش شیرینی اختصاصی، دقیقاً برای مناسبت شما",
         "cta_text": "برای انتخاب طعم، تعداد، نوع بسته‌بندی و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
-        "cta_image": "main/img/hero-bakery.jpg",
+        "cta_image": "main/img/hero-bakery.webp",
         "cta_alt": "سفارش اختصاصی سوییت بار",
     },
     Category.Section.GIFTS: {
@@ -502,7 +502,7 @@ COLLECTION_LANDING_CONTENT = {
         "hero_title": "کانسپت استور زاد",
         "hero_text": "هدیه‌هایی خاص برای آدم‌ها و لحظه‌های خاص زندگی شما",
         "hero_image": "main/img/hero-gifts-v2.webp",
-        "fallback_image": "main/img/cat-gifts.jpg",
+        "fallback_image": "main/img/cat-gifts.webp",
         "empty_text": "هنوز محصولی در کانسپت استور ثبت نشده است.",
         "why_items": [
             {
@@ -535,7 +535,7 @@ def _hero_defaults(meta_title, meta_description):
         "page_hero_kicker": "zad",
         "page_hero_title": meta_title,
         "page_hero_text": meta_description,
-        "page_hero_image": "main/img/hero-2.jpg",
+        "page_hero_image": "main/img/hero-2.webp",
     }
 
 
@@ -546,7 +546,7 @@ def _hero_from_key(key, *, title=None, text=None, image=None):
         "page_hero_kicker": hero.get("kicker", "zad"),
         "page_hero_title": title or hero.get("title", "zad"),
         "page_hero_text": text or hero.get("text", "A thoughtful zad selection for flowers, gifts, and special orders"),
-        "page_hero_image": image or hero.get("image", "main/img/hero-2.jpg"),
+        "page_hero_image": image or hero.get("image", "main/img/hero-2.webp"),
     }
 
 
@@ -579,8 +579,8 @@ def _get_active_home_hero_slides():
             "title": "Flowers, Bakery & Gifts in Mashhad",
             "kicker": "zad Concept Store",
             "description": "Premium flowers, bakery, and gifts with fast coordination in Mashhad.",
-            "image_url": settings.STATIC_URL + "main/img/hero-1.jpg",
-            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-1.jpg",
+            "image_url": settings.STATIC_URL + "main/img/hero-1.webp",
+            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-1.webp",
             "primary_button_text": "Call Now",
             "primary_button_url": "",
             "secondary_button_text": "تلگرام",
@@ -591,8 +591,8 @@ def _get_active_home_hero_slides():
             "title": "Styled Details for Special Moments",
             "kicker": "Minimal & Premium",
             "description": "A polished zad experience across flowers, bakery, and gifts.",
-            "image_url": settings.STATIC_URL + "main/img/hero-2.jpg",
-            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-2.jpg",
+            "image_url": settings.STATIC_URL + "main/img/hero-2.webp",
+            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-2.webp",
             "primary_button_text": "",
             "primary_button_url": "",
             "secondary_button_text": "",
@@ -603,8 +603,8 @@ def _get_active_home_hero_slides():
             "title": "Fast Coordination in Mashhad",
             "kicker": "zad Mashhad",
             "description": "Quick coordination for urgent orders and daily selections.",
-            "image_url": settings.STATIC_URL + "main/img/hero-3.jpg",
-            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-3.jpg",
+            "image_url": settings.STATIC_URL + "main/img/hero-3.webp",
+            "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-3.webp",
             "primary_button_text": "",
             "primary_button_url": "",
             "secondary_button_text": "",
@@ -619,7 +619,7 @@ def _site_hero_payload(hero):
         "kicker": hero.kicker or "zad",
         "title": hero.title,
         "text": hero.description,
-        "image": hero.image.url if hero.image else "main/img/hero-2.jpg",
+        "image": hero.image.url if hero.image else "main/img/hero-2.webp",
         "mobile_image": hero.mobile_image.url if hero.mobile_image else "",
     }
 
@@ -805,8 +805,8 @@ def _category_content(category):
             or f"Explore {category.name} products at zad."
         ),
         "intro": override.get("intro") or category.description or "A curated selection for this mood.",
-        "image": override.get("image") or "main/img/sub-bouquet.jpg",
-        "hero_image": override.get("hero_image") or "main/img/hero-subcategory.jpg",
+        "image": override.get("image") or "main/img/sub-bouquet.webp",
+        "hero_image": override.get("hero_image") or "main/img/hero-subcategory.webp",
     }
 
 
@@ -828,63 +828,63 @@ OCCASION_CARD_CONTENT = {
         "hero_title": "گل تولد",
         "intro": "برای شادی‌های روشن.",
         "hero_text": "برای لحظه‌ای که باید با گل، رنگ و یک یاد شیرین ماندگار شود.",
-        "image": "main/img/occasions/birthday.jpg",
+        "image": "main/img/occasions/birthday.webp",
     },
     "romantic": {
         "title": "عاشقانه",
         "hero_title": "گل عاشقانه",
         "intro": "برای لحظه‌های نزدیک.",
         "hero_text": "برای گفتن دوستت دارم؛ آرام‌تر و زیباتر از هر کلمه.",
-        "image": "main/img/occasions/romantic.jpg",
+        "image": "main/img/occasions/romantic.webp",
     },
     "congratulation": {
         "title": "تبریک",
         "hero_title": "گل تبریک",
         "intro": "برای خبرهای خوب.",
         "hero_text": "برای جشن گرفتن خبرهای خوب و شروع‌های روشن.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
     "apology": {
         "title": "معذرت‌خواهی",
         "hero_title": "گل معذرت‌خواهی",
         "intro": "برای دلجویی آرام.",
         "hero_text": "برای وقتی که یک انتخاب صمیمی، آغاز دوباره‌ی گفت‌وگوست.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
     "condolence": {
         "title": "ترحیم",
         "hero_title": "گل ترحیم",
         "intro": "برای همراهی محترمانه.",
         "hero_text": "برای ابراز همدلی؛ باوقار، آرام و محترمانه.",
-        "image": "main/img/occasions/condolence.jpg",
+        "image": "main/img/occasions/condolence.webp",
     },
     "proposal": {
         "title": "خواستگاری",
         "hero_title": "گل خواستگاری",
         "intro": "برای شروعی رسمی.",
         "hero_text": "برای شروعی به‌یادماندنی، با جزئیاتی ظریف و باشکوه.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
     "engagement": {
         "title": "بله‌برون",
         "hero_title": "گل بله‌برون",
         "intro": "برای پیمان‌های شیرین.",
         "hero_text": "برای جشنی صمیمی و شیرین در آغاز یک همراهی.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
     "no-occasion": {
         "title": "بدون مناسبت",
         "hero_title": "گل بدون مناسبت",
         "intro": "برای بی‌دلیل دوست داشتن.",
         "hero_text": "برای همان روزهای معمولی که با یک یاد کوچک، خاص می‌شوند.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
     "wedding": {
         "title": "عروسی",
         "hero_title": "گل عروسی",
         "intro": "برای روزهای سپید.",
         "hero_text": "برای روزی سپید، لطیف و به‌یادماندنی.",
-        "image": "main/img/occasions/special.jpg",
+        "image": "main/img/occasions/special.webp",
     },
 }
 OCCASION_EN_LABELS = {
@@ -971,7 +971,7 @@ def _occasion_card(tag, *, for_flowers=False):
             if tag.cover_image
             else content.get(
                 "image",
-                "main/img/occasions/special.jpg",
+                "main/img/occasions/special.webp",
             )
         ),
         "intro": tag.description
@@ -1284,27 +1284,27 @@ SAME_DAY_TAG_SLUGS = [
 
 
 FLOWER_TYPE_FALLBACK_IMAGES = {
-    "hand-bouquet": "main/img/sub-bouquet.jpg",
-    "box": "main/img/sub-box.jpg",
-    "bouquet": "main/img/sub-bouquet.jpg",
-    "stand": "main/img/sub-stand.jpg",
-    "jarl": "main/img/sub-plant.jpg",
-    "plants": "main/img/sub-plant.jpg",
-    "wedding": "main/img/sub-bridal-bouquet.jpg",
+    "hand-bouquet": "main/img/sub-bouquet.webp",
+    "box": "main/img/sub-box.webp",
+    "bouquet": "main/img/sub-bouquet.webp",
+    "stand": "main/img/sub-stand.webp",
+    "jarl": "main/img/sub-plant.webp",
+    "plants": "main/img/sub-plant.webp",
+    "wedding": "main/img/sub-bridal-bouquet.webp",
 }
 
 
 
 OCCASION_FALLBACK_IMAGES = {
-    "birthday": "main/img/occasions/birthday.jpg",
-    "romantic": "main/img/occasions/romantic.jpg",
-    "congratulation": "main/img/occasions/special.jpg",
-    "apology": "main/img/occasions/special.jpg",
-    "condolence": "main/img/occasions/condolence.jpg",
-    "proposal": "main/img/occasions/special.jpg",
-    "engagement": "main/img/occasions/special.jpg",
-    "wedding": "main/img/occasions/special.jpg",
-    "no-occasion": "main/img/occasions/special.jpg",
+    "birthday": "main/img/occasions/birthday.webp",
+    "romantic": "main/img/occasions/romantic.webp",
+    "congratulation": "main/img/occasions/special.webp",
+    "apology": "main/img/occasions/special.webp",
+    "condolence": "main/img/occasions/condolence.webp",
+    "proposal": "main/img/occasions/special.webp",
+    "engagement": "main/img/occasions/special.webp",
+    "wedding": "main/img/occasions/special.webp",
+    "no-occasion": "main/img/occasions/special.webp",
 }
 
 
@@ -1338,7 +1338,7 @@ def _flower_occasion_cards():
                 "image": (
                     tag.cover_image.url
                     if tag.cover_image
-                    else OCCASION_FALLBACK_IMAGES.get(tag.slug, "main/img/occasions/special.jpg")
+                    else OCCASION_FALLBACK_IMAGES.get(tag.slug, "main/img/occasions/special.webp")
                 ),
             }
         )
@@ -1937,7 +1937,7 @@ def _item_detail_context(request, product):
         "item",
         title=product.name,
         text=description,
-        image=product.cover_image.url if getattr(product, "cover_image", None) else "main/img/hero-gifts.jpg",
+        image=product.cover_image.url if getattr(product, "cover_image", None) else "main/img/hero-gifts.webp",
     )
 
     db_hero = _get_site_hero("item", product.slug)
@@ -2246,7 +2246,7 @@ def events(request):
             "workshops_hero_image": (
                 page_hero["page_hero_image"]
                 if page_hero
-                else "main/img/workshops-hero.jpg"
+                else "main/img/workshops-hero.webp"
             ),
             "workshops_hero_mobile_image": (
                 page_hero["page_hero_mobile_image"] if page_hero else ""
@@ -2292,7 +2292,7 @@ def event_detail(request, slug: str):
         "events",
         title=event.title,
         text=event.description,
-        image=event.cover_image.url if event.cover_image else "main/img/hero-events.jpg",
+        image=event.cover_image.url if event.cover_image else "main/img/hero-events.webp",
     )
 
     db_hero = _get_site_hero("events", event.slug)
@@ -2690,7 +2690,7 @@ def blog_detail(request, slug):
         "blog",
         title=post.title,
         text=post.excerpt or "Read a note from the zad Journal.",
-        image=post.cover_image.url if post.cover_image else "main/img/hero-contact.jpg",
+        image=post.cover_image.url if post.cover_image else "main/img/hero-contact.webp",
     )
 
     db_hero = _get_site_hero("blog", post.slug)
