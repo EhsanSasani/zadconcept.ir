@@ -73,7 +73,7 @@
 
             {% for category in catalog_filter_categories %}
               <a
-                href="{{ category.url }}"
+                href="{{ catalog_load_url }}?category={{ category.slug|urlencode }}"
                 class="flowers-filter__chip {% if selected_category_slug == category.slug %}is-active{% endif %}"
                 data-filter="{{ category.slug }}"
               >

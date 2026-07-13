@@ -20,6 +20,7 @@
   </div>
 </article>
 
+{% comment %}
 {% if related_links %}
 <section class="container section-block">
   <div class="section-head">
@@ -45,6 +46,7 @@
   {% include "partials/featured_products_slider.html" with products=related_products %}
 </section>
 {% endif %}
+{% endcomment %}
 {% endblock %}
 
 {% block extra_js %}

@@ -25,6 +25,7 @@
   {% include "partials/product_grid.html" with products=products %}
 </section>
 
+{% comment %}
 {% if suggested_sections %}
   {% for block in suggested_sections %}
     <section class="container section-block featured-products-section catalog-suggestion-section">
@@ -41,6 +42,7 @@
     </section>
   {% endfor %}
 {% endif %}
+{% endcomment %}
 {% endblock %}
 
 {% block extra_js %}

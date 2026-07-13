@@ -258,10 +258,11 @@ class MainViewsTests(TestCase):
         self.assertContains(response, "/media/heroes/pages/flowers.jpg")
         self.assertContains(response, "/media/heroes/pages/mobile/flowers.jpg")
 
-    def test_category_page_contains_subcategory_link(self):
+    def test_category_page_contains_filter_fallback_link(self):
         response = self.client.get(reverse("bakery"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, reverse("bakery_subcategory", args=["daily-bakery"]))
+        expected_url = f'{reverse("bakery")}?category={self.bakery_category.slug}'
+        self.assertContains(response, f'href="{expected_url}"')
 
     def test_bakery_and_gifts_use_the_shared_collection_landing(self):
         for route_name, product, category in (
