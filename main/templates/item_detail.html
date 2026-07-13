@@ -15,6 +15,8 @@
   <div class="item-detail__grid">
     <article class="item-detail__media">
       <div class="item-detail__image-frame">
+        <a href="{{ subcategory_url|default:category_url|default:'/' }}" class="item-detail__close" aria-label="بازگشت">×</a>
+
         {% if product.cover_image %}
           <img src="{{ product.cover_image.url }}" alt="{{  product.display_name  }}" width="1100" height="1300">
         {% else %}

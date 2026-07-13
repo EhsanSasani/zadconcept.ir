@@ -1144,16 +1144,21 @@ def index(request):
         ).order_by("start_at")[:3]
     )
     home_same_day_products = (
-    Product.objects
-    .filter(
-        Q(tags__slug=SAME_DAY_TAG_SLUG) | Q(tags__slug="same-day") | Q(tags__name="ارسال روز") | Q(tags__name="ارسال فوری"),
-        category__section=Category.Section.FLOWERS,
+        Product.objects
+        .filter(
+            Q(tags__slug=SAME_DAY_TAG_SLUG)
+            | Q(tags__slug="same-day")
+            | Q(tags__name="ارسال روز")
+            | Q(tags__name="ارسال فوری"),
+            category__section=Category.Section.FLOWERS,
+            is_active=True,
+            publish_status=Product.PublishStatus.PUBLISHED,
+        )
+        .select_related("category")
+        .prefetch_related("tags")
+        .distinct()
+        .order_by("sort_order", "-created_at")
     )
-    .select_related("category")
-    .prefetch_related("tags")
-    .distinct()
-    .order_by("sort_order", "-created_at")[:12]
-)
     context.update(
         {
             "featured_today": featured_today,

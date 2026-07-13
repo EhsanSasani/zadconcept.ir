@@ -12,12 +12,6 @@
 {% include "partials/breadcrumbs.html" %}
 
 <section class="container section-block catalog-products-section">
-  {% if not is_flower_occasion %}
-    <div class="catalog-head-actions catalog-head-actions--center">
-      <a href="{{ flower_occasion_url|default:flowers_url }}" class="section-link">View Flower Selection</a>
-    </div>
-  {% endif %}
-
   {% if filter_links %}
     <div class="catalog-filter-row" aria-label="Catalog filters">
       {% for item in filter_links %}

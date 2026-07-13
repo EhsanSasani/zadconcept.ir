@@ -36,6 +36,12 @@
   color: #fff;
 }
 
+.top-notice-bar__paypal {
+  color: #f0c98f;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* =========================
    Header
    ========================= */

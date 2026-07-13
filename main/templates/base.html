@@ -20,7 +20,7 @@
 
   <link rel="stylesheet" href="{% static 'main/css/base.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/layout.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=3">
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="{% static 'main/css/footer.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/final-ui-polish.css' %}?v=1">
-  {% if enable_product_modal %}
-    <link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=2">
-  {% endif %}
+  <link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   {% block extra_head %}{% endblock %}
 
@@ -54,7 +52,12 @@
 
     <div class="top-notice-bar">
     <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="top-notice-bar__link">
-      {{ top_notice_text }}
+      برای سفارش محصولات زاد از خارج از ایران و پرداخت از طریق
+      <strong class="top-notice-bar__paypal">PayPal</strong>
+      با شماره
+
+      <bdi dir="ltr">+989154203569</bdi>
+      در تلگرام با ما در تماس باشید.
     </a>
    </div>
 
@@ -252,9 +255,7 @@
 <script src="{% static 'main/js/page-hero-slider.js' %}?v=2"></script>
 
 {% block extra_js %}{% endblock %}
-{% if enable_product_modal %}
-  {% include "product_modal.html" %}
-  <script src="{% static 'main/js/product-modal.js' %}?v=2"></script>
-{% endif %}
+{% include "product_modal.html" %}
+<script src="{% static 'main/js/product-modal.js' %}?v=3"></script>
 </body>
 </html>
