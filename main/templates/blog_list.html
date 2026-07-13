@@ -7,7 +7,7 @@
 
 <section class="container section-block blog-list-intro">
   <p class="intro-text intro-text--en">
-    Short notes and guides for choosing flowers, gifts, and thoughtful details with more ease.
+    {{ page_content.intro.body|default:"Short notes and guides for choosing flowers, gifts, and thoughtful details with more ease." }}
   </p>
 </section>
 
@@ -20,7 +20,7 @@
         <a href="{{ post.get_absolute_url }}" class="text-link blog-card__link">Read More</a>
       </article>
     {% empty %}
-      <div class="empty-box">No stories have been published yet.</div>
+      <div class="empty-box">{{ page_content.empty.body|default:"No stories have been published yet." }}</div>
     {% endfor %}
   </div>
 </section>

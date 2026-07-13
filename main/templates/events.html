@@ -60,74 +60,14 @@
 
     <div class="workshops-story__media">
       <img
-        src="{% static 'main/img/workshops-story.jpg' %}"
+        src="{% static 'main/img/workshops-story.webp' %}"
         alt="تجربه ورکشاپ زاد"
       >
     </div>
   </div>
 </section>
 
-<section class="workshops-types section-block">
-  <div class="container">
-    <div class="section-head section-head--center">
-      <span class="section-kicker">انواع ورکشاپ‌ها</span>
-      <h2>برای هر جمع، یک تجربه متفاوت</h2>
-    </div>
 
-    <div class="workshops-types__grid">
-      <article class="workshop-type-card">
-        <div class="workshop-type-card__media">
-          <img
-            src="{% static 'main/img/workshop-type-public.jpg' %}"
-            alt="ورکشاپ عمومی زاد"
-          >
-        </div>
-
-        <div class="workshop-type-card__body">
-          <span>۰۱</span>
-          <h3>ورکشاپ عمومی</h3>
-          <p>
-            برای علاقه‌مندان به گل‌آرایی، تجربه‌های هنری گروهی و ساختن یک چیدمان اختصاصی.
-          </p>
-        </div>
-      </article>
-
-      <article class="workshop-type-card">
-        <div class="workshop-type-card__media">
-          <img
-            src="{% static 'main/img/workshop-type-private.jpg' %}"
-            alt="ورکشاپ خصوصی زاد"
-          >
-        </div>
-
-        <div class="workshop-type-card__body">
-          <span>۰۲</span>
-          <h3>ورکشاپ خصوصی</h3>
-          <p>
-            برای تولد، دورهمی دوستانه، مناسبت عاشقانه یا تجربه‌ای دونفره و آرام.
-          </p>
-        </div>
-      </article>
-
-      <article class="workshop-type-card">
-        <div class="workshop-type-card__media">
-          <img
-            src="{% static 'main/img/workshop-type-corporate.jpg' %}"
-            alt="ورکشاپ سازمانی زاد"
-          >
-        </div>
-
-        <div class="workshop-type-card__body">
-          <span>۰۳</span>
-          <h3>ورکشاپ سازمانی</h3>
-          <p>
-            برای تیم‌سازی، برندها، کافه‌ها، گالری‌ها و رویدادهای خاص با اجرای اختصاصی.
-          </p>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
 
 <section id="upcoming-workshops" class="container section-block workshops-events-section">
   <div class="section-head section-head--center">
@@ -186,14 +126,74 @@
         با زاد در ارتباط باشید.
       </p>
 
-      <a href="{% url 'contact' %}" class="workshops-btn workshops-btn--light">
+      <a href="#workshop-request" class="workshops-btn workshops-btn--light">
         هماهنگی با زاد
       </a>
     </div>
   {% endif %}
 </section>
+<section class="workshops-types section-block">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="section-kicker">انواع ورکشاپ‌ها</span>
+      <h2>برای هر جمع، یک تجربه متفاوت</h2>
+    </div>
 
-<section class="workshops-benefits section-block">
+    <div class="workshops-types__grid">
+      <article class="workshop-type-card">
+        <div class="workshop-type-card__media">
+          <img
+            src="{% static 'main/img/workshop-type-public.webp' %}"
+            alt="ورکشاپ عمومی زاد"
+          >
+        </div>
+
+        <div class="workshop-type-card__body">
+          <span>۰۱</span>
+          <h3>ورکشاپ عمومی</h3>
+          <p>
+            برای علاقه‌مندان به گل‌آرایی، تجربه‌های هنری گروهی و ساختن یک چیدمان اختصاصی.
+          </p>
+        </div>
+      </article>
+
+      <article class="workshop-type-card">
+        <div class="workshop-type-card__media">
+          <img
+            src="{% static 'main/img/workshop-type-private.webp' %}"
+            alt="ورکشاپ خصوصی زاد"
+          >
+        </div>
+
+        <div class="workshop-type-card__body">
+          <span>۰۲</span>
+          <h3>ورکشاپ خصوصی</h3>
+          <p>
+            برای تولد، دورهمی دوستانه، مناسبت عاشقانه یا تجربه‌ای دونفره و آرام.
+          </p>
+        </div>
+      </article>
+
+      <article class="workshop-type-card">
+        <div class="workshop-type-card__media">
+          <img
+            src="{% static 'main/img/workshop-type-corporate.webp' %}"
+            alt="ورکشاپ سازمانی زاد"
+          >
+        </div>
+
+        <div class="workshop-type-card__body">
+          <span>۰۳</span>
+          <h3>ورکشاپ سازمانی</h3>
+          <p>
+            برای تیم‌سازی، برندها، کافه‌ها، گالری‌ها و رویدادهای خاص با اجرای اختصاصی.
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+{% comment %} <section class="workshops-benefits section-block">
   <div class="container">
     <div class="section-head section-head--center">
       <span class="section-kicker">در این تجربه چه خواهید داشت؟</span>
@@ -214,7 +214,7 @@
 <section id="workshop-request" class="workshops-cta">
   <img
     class="workshops-cta__image"
-    src="{% static 'main/img/workshops-cta.jpg' %}"
+    src="{% static 'main/img/workshops-cta.webp' %}"
     alt="هماهنگی ورکشاپ زاد"
   >
 
@@ -230,6 +230,42 @@
     <a href="{% url 'contact' %}" class="workshops-btn workshops-btn--light">
       هماهنگی از طریق تماس
     </a>
+  </div>
+</section> {% endcomment %}
+
+<section id="workshop-request" class="workshops-lead" aria-labelledby="workshops-lead-title">
+  <div class="container workshops-lead__inner">
+    <div class="workshops-lead__copy">
+      <span class="section-kicker">یک قدم تا حضور در ورکشاپ</span>
+      <h2 id="workshops-lead-title">برای هماهنگی با شما تماس بگیریم؟</h2>
+      <p>فقط نام و شماره موبایل‌تان را وارد کنید؛ برای اطلاع از زمان برگزاری یا هماهنگی ورکشاپ اختصاصی با شما تماس می‌گیریم.</p>
+    </div>
+
+    <form method="post" action="{% url 'lead_request' %}" class="workshops-lead__form" data-track-lead-form data-cta-position="workshops-footer">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}#workshop-request">
+      <input type="hidden" name="source_page" value="{{ request.path }}#workshop-request">
+      <input type="hidden" name="lead_type" value="event">
+      <input type="hidden" name="delivery_window" value="today">
+      <input type="hidden" name="event_location" value="نیازمند هماهنگی تلفنی">
+      <input type="hidden" name="note" value="درخواست هماهنگی ورکشاپ">
+
+      <label>
+        <span>نام شما</span>
+        <input type="text" name="full_name" autocomplete="name" placeholder="مثلاً سارا احمدی" maxlength="120" required>
+      </label>
+
+      <label>
+        <span>شماره موبایل</span>
+        <input type="tel" name="mobile" autocomplete="tel" inputmode="numeric" placeholder="۰۹۱۲ ۱۲۳ ۴۵۶۷" maxlength="20" pattern="[۰-۹0-9+\- ]{10,20}" required>
+      </label>
+
+      <button type="submit" class="workshops-lead__submit">
+        درخواست تماس
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+      </button>
+      <small>اطلاعات شما فقط برای هماهنگی همین درخواست استفاده می‌شود.</small>
+    </form>
   </div>
 </section>
 

@@ -13,7 +13,7 @@
   min-height: 220px;
   background:
     linear-gradient(to bottom, rgba(246, 239, 229, 0.02), rgba(246, 239, 229, 0.54)),
-    url("../img/footer-floral.jpg") center / cover no-repeat;
+    url("../img/footer-floral.webp") center / cover no-repeat;
 }
 
 .zad-footer__body {

@@ -150,6 +150,12 @@ JAZZMIN_SETTINGS = {
     "site_brand": "zad Admin",
     "welcome_sign": "خوش آمدید به پنل مدیریت زاد",
     "copyright": "zad Concept Store",
+    "hide_models": [
+            "main.ProductImage",
+            "main.NewsPost",
+            "main.WorkshopPageContent",
+            "main.PageContentBlock",
+        ],
     "search_model": [
         "main.Product",
         
@@ -168,9 +174,7 @@ JAZZMIN_SETTINGS = {
         "main.GiftItem",
         "main.Category",
         "main.Tag",
-        "main.ProductImage",
         "main.LeadRequest",
-        "main.NewsPost",
         "main.Event",
     ],
     "icons": {
@@ -183,11 +187,10 @@ JAZZMIN_SETTINGS = {
         "main.GiftItem": "fas fa-gift",
         "main.Category": "fas fa-sitemap",
         "main.Tag": "fas fa-tags",
-        "main.ProductImage": "fas fa-image",
         "main.LeadRequest": "fas fa-phone-alt",
-        "main.NewsPost": "fas fa-newspaper",
         "main.Event": "fas fa-calendar-alt",
     },
+    
     "default_icon_parents": "fas fa-folder",
     "default_icon_children": "fas fa-circle",
     "related_modal_active": True,

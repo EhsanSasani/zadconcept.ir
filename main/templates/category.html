@@ -4,7 +4,7 @@
 {% block body_class %}page-category page-catalog-section{% if section == "flowers" %} page-flowers-world{% endif %}{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -13,10 +13,10 @@
 {% if flower_type_cards %}
 <section class="container section-block flower-world-section flower-world-section--types" id="flower-types">
   <div class="flower-world-head">
-    <span class="flower-world-head__kicker">FLOWER TYPES</span>
+    <span class="flower-world-head__kicker">{{ page_content.types.kicker|default:"FLOWER TYPES" }}</span>
     <div>
-      <h2 class="section-title-en">Choose by Flower Type</h2>
-      <p>از دسته‌گل‌های روزمره تا چیدمان‌های خاص عروسی، استند، جار گل و گیاه.</p>
+      <h2 class="section-title-en">{{ page_content.types.title|default:"Choose by Flower Type" }}</h2>
+      <p>{{ page_content.types.body|default:"از دسته‌گل‌های روزمره تا چیدمان‌های خاص عروسی، استند، جار گل و گیاه." }}</p>
     </div>
   </div>
 
@@ -55,10 +55,10 @@
 {% if same_day_products %}
 <section class="container section-block flower-world-section flower-world-section--same-day" id="same-day-flowers">
   <div class="flower-world-head flower-world-head--split">
-    <span class="flower-world-head__kicker">SAME DAY FLOWERS</span>
+    <span class="flower-world-head__kicker">{{ page_content.same_day.kicker|default:"SAME DAY FLOWERS" }}</span>
     <div>
-      <h2 class="section-title-en">گل‌های منتخب برای امروز</h2>
-      <p>انتخاب‌هایی که برای هماهنگی سریع‌تر و ارسال روز مناسب‌تر هستند.</p>
+      <h2 class="section-title-en">{{ page_content.same_day.title|default:"گل‌های منتخب برای امروز" }}</h2>
+      <p>{{ page_content.same_day.body|default:"انتخاب‌هایی که برای هماهنگی سریع‌تر و ارسال روز مناسب‌تر هستند." }}</p>
     </div>
     <a href="{% url 'mashhad_flower_delivery' %}" class="section-link">راهنمای ارسال</a>
   </div>
@@ -70,10 +70,10 @@
 {% if occasion_cards %}
 <section class="container section-block flower-world-section flower-world-section--moments" id="flower-moments">
   <div class="flower-world-head">
-    <span class="flower-world-head__kicker">CHOOSE BY MOMENT</span>
+    <span class="flower-world-head__kicker">{{ page_content.moments.kicker|default:"CHOOSE BY MOMENT" }}</span>
     <div>
-      <h2 class="section-title-en">گل برای هر حال‌وهوا</h2>
-      <p>از تولد و عاشقانه تا یونیک، ترحیم، خواستگاری و بدون مناسبت.</p>
+      <h2 class="section-title-en">{{ page_content.moments.title|default:"گل برای هر حال‌وهوا" }}</h2>
+      <p>{{ page_content.moments.body|default:"از تولد و عاشقانه تا یونیک، ترحیم، خواستگاری و بدون مناسبت." }}</p>
     </div>
   </div>
 
@@ -125,9 +125,9 @@
 <section class="container section-block featured-products-section flower-world-section flower-world-section--selection">
   <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
     <div>
-      <h2 class="section-title-en">{{ featured_title|default:"Our Selection" }}</h2>
+      <h2 class="section-title-en">{{ page_content.selection.title|default:featured_title|default:"Our Selection" }}</h2>
       {% if section == "flowers" %}
-        <p class="catalog-section-head__text">چند انتخاب منتخب از گل‌های زاد برای شروع بهتر.</p>
+        <p class="catalog-section-head__text">{{ page_content.selection.body|default:"چند انتخاب منتخب از گل‌های زاد برای شروع بهتر." }}</p>
       {% endif %}
     </div>
     {% if section_more_url %}
@@ -139,7 +139,7 @@
 </section>
 {% else %}
 <section class="container section-block">
-  <div class="empty-box">No products are available yet.</div>
+  <div class="empty-box">{{ page_content.empty.body|default:page_content.empty.title|default:"No products are available yet." }}</div>
 </section>
 {% endif %}
 {% endblock %}

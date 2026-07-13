@@ -151,6 +151,13 @@
   font-weight: 800;
 }
 
+.zad-product-modal__stock {
+  margin: 8px 0 0;
+  color: rgba(47, 69, 56, 0.78);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 .zad-product-modal__notice {
   margin-top: 26px;
   padding: 18px 20px;

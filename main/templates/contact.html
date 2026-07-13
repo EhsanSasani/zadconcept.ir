@@ -7,7 +7,7 @@
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="تماس با زاد, سفارش گل در مشهد, ارسال گل در مشهد, سفارش هدیه زاد, هماهنگی سفارش زاد">
   <meta property="og:site_name" content="ZAD Flower & Concept Store">
-  <meta property="og:image" content="{{ site_url }}{% static 'main/img/hero-contact.jpg' %}">
+  <meta property="og:image" content="{{ site_url }}{% static 'main/img/hero-contact.webp' %}">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="alternate" hreflang="fa-IR" href="{{ request.build_absolute_uri }}">
   <script type="application/ld+json">
@@ -46,12 +46,12 @@
 
 <section class="container section-block contact-landing" aria-labelledby="contact-title">
   <div class="contact-landing__content">
-    <p class="section-kicker">تماس با زاد</p>
-    <h1 id="contact-title">برای سفارش گل، هدیه و هماهنگی ارسال با زاد در ارتباط باشید.</h1>
-    <p>
+    <p class="section-kicker">{{ page_content.intro.kicker|default:"تماس با زاد" }}</p>
+    <h1 id="contact-title">{{ page_content.intro.title|default:"برای سفارش گل، هدیه و هماهنگی ارسال با زاد در ارتباط باشید." }}</h1>
+    <p>{% if page_content.intro.body %}{{ page_content.intro.body }}{% else %}
       اگر برای سفارش گل در مشهد، انتخاب هدیه، بررسی موجودی روز، ارسال همان‌روز یا هماهنگی مراسم نیاز به راهنمایی دارید،
       تیم زاد از طریق تماس تلفنی و تلگرام پاسخ‌گوست. برای سفارش‌های فوری، تماس مستقیم سریع‌ترین مسیر است.
-    </p>
+    {% endif %}</p>
 
     <div class="contact-landing__actions" aria-label="راه‌های سریع تماس با زاد">
       <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="contact-hero">
@@ -109,12 +109,12 @@
 
 <section class="container section-block contact-help contact-form-section" aria-labelledby="contact-form-title">
   <div class="contact-form-copy">
-    <p class="section-kicker">فرم درخواست</p>
-    <h2 id="contact-form-title">جزئیات کوتاه سفارش را بفرستید.</h2>
-    <p>
+    <p class="section-kicker">{{ page_content.form.kicker|default:"فرم درخواست" }}</p>
+    <h2 id="contact-form-title">{{ page_content.form.title|default:"جزئیات کوتاه سفارش را بفرستید." }}</h2>
+    <p>{% if page_content.form.body %}{{ page_content.form.body }}{% else %}
       اگر تماس برایتان ممکن نیست، این فرم کمک می‌کند تیم زاد با اطلاعات اولیه مثل نوع سفارش، بازه تحویل و توضیح کوتاه،
       سریع‌تر با شما هماهنگ کند.
-    </p>
+    {% endif %}</p>
 
     <ul class="contact-form-tips" aria-label="اطلاعات موردنیاز برای هماهنگی">
       <li>نوع سفارش، مناسبت و حدود بودجه را کوتاه بنویسید.</li>
@@ -123,7 +123,7 @@
     </ul>
   </div>
 
-  <section class="lead-box contact-lead-box">
+  <section class="lead-box contact-lead-box" id="lead-form">
     <div class="lead-head">
       <h2>درخواست هماهنگی</h2>
       <p>اطلاعات را وارد کنید؛ تیم زاد در زمان پاسخ‌گویی با شما تماس می‌گیرد.</p>

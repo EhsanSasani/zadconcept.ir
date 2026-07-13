@@ -4,7 +4,7 @@
 {% block body_class %}page-occasions page-catalog-section{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -14,6 +14,13 @@
 </div>
 <section class="occasions-shell">
   <div class="occasions-container">
+    {% if page_content.intro.title or page_content.intro.body %}
+      <header class="section-head section-head--center">
+        {% if page_content.intro.kicker %}<span class="section-kicker">{{ page_content.intro.kicker }}</span>{% endif %}
+        {% if page_content.intro.title %}<h1>{{ page_content.intro.title }}</h1>{% endif %}
+        {% if page_content.intro.body %}<p>{{ page_content.intro.body }}</p>{% endif %}
+      </header>
+    {% endif %}
     {% if occasion_cards %}
       <section class="occasions-grid" aria-label="مناسبت‌های زاد">
         {% for item in occasion_cards %}
@@ -38,7 +45,7 @@
       </section>
     {% else %}
       <div class="occasions-empty">
-        هنوز مناسبتی برای نمایش ثبت نشده است.
+        {{ page_content.empty.body|default:page_content.empty.title|default:"هنوز مناسبتی برای نمایش ثبت نشده است." }}
       </div>
     {% endif %}
 

@@ -1,5 +1,33 @@
 /* ZAD admin minimal fixes */
 
+/*
+ * Temporarily hide out-of-scope models from the Jazzmin sidebar and dashboard.
+ * This is presentation-only: models, data, URLs and product-image inlines remain
+ * available to the application.
+ */
+.nav-sidebar li:has(a[href*="/admin/main/productimage/"]),
+.nav-sidebar li:has(a[href*="/admin/main/newspost/"]),
+.nav-sidebar li:has(a[href*="/admin/main/workshoppagecontent/"]),
+.nav-sidebar li:has(a[href*="/admin/main/pagecontentblock/"]),
+.dashboard .card-body tr:has(a[href*="/admin/main/productimage/"]),
+.dashboard .card-body tr:has(a[href*="/admin/main/newspost/"]),
+.dashboard .card-body tr:has(a[href*="/admin/main/workshoppagecontent/"]),
+.dashboard .card-body tr:has(a[href*="/admin/main/pagecontentblock/"]),
+body.dashboard tr:has(a[href*="/admin/main/productimage/"]),
+body.dashboard tr:has(a[href*="/admin/main/newspost/"]),
+body.dashboard tr:has(a[href*="/admin/main/workshoppagecontent/"]),
+body.dashboard tr:has(a[href*="/admin/main/pagecontentblock/"]) {
+    display: none !important;
+}
+
+/* Fallback: hide the link itself if a Jazzmin release changes its wrappers. */
+a[href*="/admin/main/productimage/"],
+a[href*="/admin/main/newspost/"],
+a[href*="/admin/main/workshoppagecontent/"],
+a[href*="/admin/main/pagecontentblock/"] {
+    display: none !important;
+}
+
 img.zad-admin-preview,
 #changelist img.zad-admin-preview,
 #result_list img.zad-admin-preview,

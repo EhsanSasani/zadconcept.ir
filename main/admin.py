@@ -14,17 +14,49 @@ from .models import (
     HomeHeroSlide,
     LeadRequest,
     NewsPost,
+    PageContentBlock,
     Product,
     ProductImage,
     PublishStatus,
     SiteHero,
     Tag,
+    WorkshopPageContent,
 )
 
 
 admin.site.site_header = "پنل مدیریت زاد"
 admin.site.site_title = "مدیریت زاد"
 admin.site.index_title = "مدیریت محتوا، محصولات و درخواست‌ها"
+
+MAX_ADMIN_IMAGE_SIZE = 10 * 1024 * 1024
+
+
+class HiddenFromAdminIndexMixin:
+    """Hide a registered model from admin index/sidebar without deleting it."""
+
+    def get_model_perms(self, request):
+        return {}
+ALLOWED_ADMIN_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+
+def validate_admin_image(uploaded_file):
+    if not uploaded_file or not hasattr(uploaded_file, "content_type"):
+        return uploaded_file
+
+    if uploaded_file.content_type not in ALLOWED_ADMIN_IMAGE_TYPES:
+        raise forms.ValidationError("فرمت تصویر باید JPG، PNG یا WEBP باشد.")
+
+    if uploaded_file.size > MAX_ADMIN_IMAGE_SIZE:
+        raise forms.ValidationError("حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.")
+
+    return uploaded_file
+
+
+def safe_image_url(image):
+    try:
+        return image.url
+    except (ValueError, OSError):
+        return ""
 
 
 def to_persian_digits(value):
@@ -64,11 +96,15 @@ class AdminImagePreviewMixin:
                 "بدون عکس",
             )
 
+        image_url = safe_image_url(image)
+        if not image_url:
+            return "تصویر قابل نمایش نیست"
+
         return format_html(
             '''
             <img src="{}" class="zad-admin-preview" />
             ''',
-            image.url,
+            image_url,
         )
 
     @admin.display(description="نمای بزرگ عکس")
@@ -83,14 +119,18 @@ class AdminImagePreviewMixin:
         if not image:
             return "بدون عکس"
 
+        image_url = safe_image_url(image)
+        if not image_url:
+            return "تصویر قابل نمایش نیست"
+
         return format_html(
             '''
             <a href="{}" target="_blank" class="zad-admin-large-image-link">
                 <img src="{}" class="zad-admin-preview" />
             </a>
             ''',
-            image.url,
-            image.url,
+            image_url,
+            image_url,
         )
 
 class ActiveActionsMixin:
@@ -176,6 +216,7 @@ class PublishActionsMixin:
 
 class CategoryAdminForm(forms.ModelForm):
     class Meta:
+        model = Category
         fields = "__all__"
         widgets = {
             "description": forms.Textarea(
@@ -186,9 +227,13 @@ class CategoryAdminForm(forms.ModelForm):
             ),
         }
 
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
+
 
 class TagAdminForm(forms.ModelForm):
     class Meta:
+        model = Tag
         fields = "__all__"
         widgets = {
             "description": forms.Textarea(
@@ -198,6 +243,9 @@ class TagAdminForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
 
 class PersianImageInput(forms.ClearableFileInput):
     initial_text = "عکس فعلی"
@@ -251,6 +299,15 @@ class ProductAdminForm(forms.ModelForm):
         if "sort_order" in self.fields:
             self.fields["sort_order"].help_text = "عدد کمتر یعنی محصول بالاتر نمایش داده می‌شود."
 
+        if "cover_image" in self.fields:
+            self.fields["cover_image"].help_text = "تصویر اصلی محصول است و روی کارت‌ها، لیست‌ها و ابتدای صفحه محصول نمایش داده می‌شود. عکس‌های گالری کارت جداگانه نمی‌سازند."
+
+        if "featured" in self.fields:
+            self.fields["featured"].help_text = "محصول ویژه در بخش‌های انتخاب‌شده و ترتیب نمایش بالاتر اولویت می‌گیرد؛ محصولات غیر ویژه را مخفی نمی‌کند."
+
+        if "tags" in self.fields:
+            self.fields["tags"].help_text = "برچسب می‌تواند داخلی باشد یا اگر گزینه مناسبت روشن است، در بخش مناسبت‌های سایت نمایش داده شود. برچسب ارسال روز برای فیلتر ارسال فوری استفاده می‌شود."
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -262,12 +319,6 @@ class ProductAdminForm(forms.ModelForm):
             cleaned_data["price"] = None
             cleaned_data["price_usd"] = None
 
-        if pricing_type == Product.PricingType.FIXED and price is None:
-            self.add_error(
-                "price",
-                "برای قیمت ثابت، وارد کردن قیمت الزامی است. اگر قیمت قطعی نیست، نوع قیمت‌گذاری را استعلامی بگذار.",
-            )
-
         if price is not None and price < 0:
             self.add_error("price", "قیمت نمی‌تواند منفی باشد.")
 
@@ -276,9 +327,13 @@ class ProductAdminForm(forms.ModelForm):
 
         return cleaned_data
 
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
+
 
 class NewsPostAdminForm(forms.ModelForm):
     class Meta:
+        model = NewsPost
         fields = "__all__"
         widgets = {
             "excerpt": forms.Textarea(attrs={"rows": 3}),
@@ -288,24 +343,39 @@ class NewsPostAdminForm(forms.ModelForm):
 
 class EventAdminForm(forms.ModelForm):
     class Meta:
+        model = Event
         fields = "__all__"
         widgets = {
             "description": forms.Textarea(attrs={"rows": 6}),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
-        start_at = cleaned_data.get("start_at")
-        end_at = cleaned_data.get("end_at")
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
 
-        if start_at and end_at and end_at <= start_at:
-            self.add_error("end_at", "زمان پایان باید بعد از زمان شروع باشد.")
 
-        return cleaned_data
+class HeroAdminForm(forms.ModelForm):
+    class Meta:
+        fields = "__all__"
+
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
+
+    def clean_mobile_image(self):
+        return validate_admin_image(self.cleaned_data.get("mobile_image"))
+
+
+class ProductImageAdminForm(forms.ModelForm):
+    class Meta:
+        model = ProductImage
+        fields = "__all__"
+
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
 
 
 class ProductImageInline(AdminImagePreviewMixin, admin.StackedInline):
     model = ProductImage
+    form = ProductImageAdminForm
     extra = 1
     fields = (
         "image",
@@ -1063,7 +1133,13 @@ class GiftItemAdmin(BaseProductAdmin):
 
 
 @admin.register(ProductImage)
-class ProductImageAdmin(AdminImagePreviewMixin, admin.ModelAdmin):
+class ProductImageAdmin(
+    HiddenFromAdminIndexMixin,
+    AdminImagePreviewMixin,
+    admin.ModelAdmin,
+):
+    form = ProductImageAdminForm
+    actions = ("promote_to_cover",)
     list_display = (
         "image_preview",
         "product",
@@ -1128,12 +1204,25 @@ class ProductImageAdmin(AdminImagePreviewMixin, admin.ModelAdmin):
         ),
     )
 
-    def has_module_permission(self, request):
-        return False
+    @admin.action(description="استفاده از عکس انتخاب‌شده به عنوان تصویر اصلی محصول")
+    def promote_to_cover(self, request, queryset):
+        updated = 0
+
+        for image in queryset.select_related("product"):
+            image.product.cover_image = image.image
+            image.product.save(update_fields=["cover_image", "updated_at"])
+            updated += 1
+
+        self.message_user(request, f"{updated} تصویر به عنوان کاور محصول تنظیم شد.")
 
 
 @admin.register(NewsPost)
-class NewsPostAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
+class NewsPostAdmin(
+    HiddenFromAdminIndexMixin,
+    PublishActionsMixin,
+    AdminImagePreviewMixin,
+    admin.ModelAdmin,
+):
     form = NewsPostAdminForm
 
     list_display = (
@@ -1214,6 +1303,7 @@ class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
         "image_preview",
         "title",
         "status",
+        "schedule_status",
         "start_at",
         "end_at",
         "location",
@@ -1245,6 +1335,15 @@ class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
         "status",
     )
     save_on_top = True
+
+    @admin.display(description="وضعیت زمانی")
+    def schedule_status(self, obj):
+        now = timezone.now()
+        if obj.end_at < now:
+            return "پایان‌یافته"
+        if obj.start_at <= now:
+            return "در حال برگزاری"
+        return "آینده"
 
     fieldsets = (
         (
@@ -1373,6 +1472,7 @@ class LeadRequestAdmin(admin.ModelAdmin):
 
 
 class HeroAdminBase(admin.ModelAdmin):
+    form = HeroAdminForm
     list_per_page = 20
     save_on_top = True
 
@@ -1607,3 +1707,110 @@ class SiteHeroAdmin(HeroAdminBase):
             },
         ),
     )
+
+
+@admin.register(WorkshopPageContent)
+class WorkshopPageContentAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+    list_display = (
+        "__str__",
+        "is_active",
+        "updated_at",
+    )
+    list_editable = ("is_active",)
+    readonly_fields = ("created_at", "updated_at")
+    save_on_top = True
+
+    fieldsets = (
+        (
+            "بخش فلسفه ورکشاپ‌ها",
+            {
+                "fields": (
+                    "story_kicker",
+                    "story_title",
+                    "story_text",
+                ),
+            },
+        ),
+        (
+            "بخش برنامه‌های آینده",
+            {
+                "fields": (
+                    "upcoming_kicker",
+                    "upcoming_title",
+                    "upcoming_empty_title",
+                    "upcoming_empty_text",
+                ),
+            },
+        ),
+        (
+            "بخش انواع ورکشاپ",
+            {
+                "fields": (
+                    "types_kicker",
+                    "types_title",
+                    "public_title",
+                    "public_text",
+                    "private_title",
+                    "private_text",
+                    "corporate_title",
+                    "corporate_text",
+                ),
+            },
+        ),
+        (
+            "بخش درخواست و هماهنگی",
+            {
+                "fields": (
+                    "cta_title",
+                    "cta_text",
+                ),
+            },
+        ),
+        (
+            "نمایش",
+            {
+                "fields": (
+                    "is_active",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
+        ),
+    )
+
+
+@admin.register(PageContentBlock)
+class PageContentBlockAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+    list_display = (
+        "page",
+        "section_key",
+        "title",
+        "is_active",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = ("page", "is_active")
+    search_fields = ("section_key", "kicker", "title", "body", "cta_text")
+    list_editable = ("is_active", "sort_order")
+    ordering = ("page", "sort_order", "section_key")
+    readonly_fields = ("created_at", "updated_at")
+    save_on_top = True
+    fieldsets = (
+        (
+            "جایگاه متن",
+            {"fields": ("page", "section_key", "sort_order", "is_active")},
+        ),
+        (
+            "محتوا",
+            {"fields": ("kicker", "title", "body")},
+        ),
+        (
+            "دکمه اختیاری",
+            {"fields": ("cta_text", "cta_url")},
+        ),
+        (
+            "زمان‌ها",
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
+    )
+

@@ -1,60 +1,6 @@
-{% load static %}
-
-<div class="product-grid">
+<div class="flowers-grid product-grid">
   {% if products %}
-    {% for product in products %}
-      <a
-        href="{{ product.get_absolute_url }}"
-        class="product-card {% if product.stock_status == 'out_of_stock' %}product-card--out{% endif %}"
-        data-zad-modal-card
-        data-product-type="{{ product.category.slug|default:'collection' }}"
-        data-product-code="{{ product.product_code }}"
-        data-product-name="{{ product.name|default:'' }}"
-        data-product-price="{% if product.price %}{{ product.display_price }}{% else %}استعلام قیمت{% endif %}"
-      >
-        <div class="product-card__image-wrap">
-          {% if product.cover_image %}
-            <img
-              src="{{ product.cover_image.url }}"
-              alt="{{ product.display_name }}"
-              class="product-card__image"
-              loading="lazy"
-              data-product-image
-            >
-          {% else %}
-            <img
-              src="{% static 'main/img/cat-flowers.jpg' %}"
-              alt="{{ product.display_name }}"
-              class="product-card__image"
-              loading="lazy"
-              data-product-image
-            >
-          {% endif %}
-
-          {% if product.stock_status == "out_of_stock" %}
-            <span class="product-stock-badge product-stock-badge--out">ناموجود</span>
-          {% elif product.stock_status == "preorder" %}
-            <span class="product-stock-badge product-stock-badge--preorder">پیش‌سفارش</span>
-          {% endif %}
-        </div>
-
-        <div class="product-card__body">
-          {% if product.name %}
-            <h3 class="product-card__title">{{ product.name }}</h3>
-          {% else %}
-            <h3 class="product-card__title">{{ product.product_code }}</h3>
-          {% endif %}
-
-          <p class="product-card__price {% if not product.price %}product-card__price--muted{% endif %}">
-            {% if product.price %}
-              {{ product.display_price }}
-            {% else %}
-              استعلام قیمت
-            {% endif %}
-          </p>
-        </div>
-      </a>
-    {% endfor %}
+    {% include "partials/product_card.html" with products=products card_variant="landing" fallback_image="main/img/cat-flowers.webp" %}
   {% else %}
     <div class="empty-box">فعلاً محصولی برای نمایش وجود ندارد.</div>
   {% endif %}

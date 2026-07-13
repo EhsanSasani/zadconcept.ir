@@ -4,7 +4,7 @@
 {% block body_class %}page-mashhad{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
 
 <section class="container section-block page-intro">
   <p class="intro-text intro-text--en">
-    A focused hub for Mashhad orders, same-day coordination, and faster access to zad’s flower selection.
+    {{ page_content.intro.body|default:"A focused hub for Mashhad orders, same-day coordination, and faster access to zad’s flower selection." }}
   </p>
 
   <div class="cta-row">
@@ -25,7 +25,7 @@
 <section class="container section-block featured-products-section">
   <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
     <div>
-      <h2 class="section-title-en">Our Selection</h2>
+      <h2 class="section-title-en">{{ page_content.selection.title|default:"Our Selection" }}</h2>
     </div>
     <a href="{% url 'flowers' %}" class="section-link">View All</a>
   </div>

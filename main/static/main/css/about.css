@@ -67,6 +67,17 @@
   inset: 0;
 }
 
+.page-about .about-hero__media {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .55s ease;
+}
+
+.page-about .about-hero__media.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .page-about .about-hero__media img {
   object-position: center 54%;
   transform: scale(1.015);
