@@ -3,13 +3,13 @@
 
   <h1>ZAD Concept Store</h1>
 
-  <p><strong>Flowers, sweets, gifts, and gatherings â€” curated softly in Mashhad.</strong></p>
+  <p><strong>Flowers, sweets, gifts, and gatherings &mdash; curated softly in Mashhad.</strong></p>
 
   <p>
     <a href="https://zadconcept.ir">Live website</a>
-    Â·
+    &middot;
     <a href="https://github.com/EhsanSasani/zadconcept.ir/tree/v1.1.0">Version 1.1.0</a>
-    Â·
+    &middot;
     Django 6
   </p>
 </div>
@@ -22,14 +22,14 @@ The experience is intentionally closer to a curated lookbook than a conventional
 
 ## What lives here
 
-- **Flowers** â€” bouquets, boxes, stands, jars, plants, and same-day selections
-- **Bakery** â€” cakes, cookies, chocolates, and seasonal pieces
-- **Gifts** â€” curated objects and gift combinations
-- **Occasions** â€” collections for birthdays, romantic moments, congratulations, sympathy, weddings, and more
-- **Workshops** â€” public, private, and corporate experiences
-- **Journal** â€” editorial notes and brand stories
-- **Lead coordination** â€” contact, Telegram, phone, and structured request forms
-- **Content management** â€” products, categories, tags, heroes, page copy, events, and inquiries through Django Admin
+- **Flowers** &mdash; bouquets, boxes, stands, jars, plants, and same-day selections
+- **Bakery** &mdash; cakes, cookies, chocolates, and seasonal pieces
+- **Gifts** &mdash; curated objects and gift combinations
+- **Occasions** &mdash; collections for birthdays, romantic moments, congratulations, sympathy, weddings, and more
+- **Workshops** &mdash; public, private, and corporate experiences
+- **Journal** &mdash; editorial notes and brand stories
+- **Lead coordination** &mdash; contact, Telegram, phone, and structured request forms
+- **Content management** &mdash; products, categories, tags, heroes, page copy, events, and inquiries through Django Admin
 
 ## Version 1.1.0
 
@@ -69,14 +69,14 @@ Recommendation surfaces are intentionally paused in this release while a more de
 ```text
 config/                     Django settings, URLs, WSGI and ASGI
 main/
-â”œâ”€â”€ management/             Custom management commands
-â”œâ”€â”€ migrations/             Database migrations
-â”œâ”€â”€ static/main/            CSS, JavaScript and brand assets
-â”œâ”€â”€ templates/              Pages and reusable template partials
-â”œâ”€â”€ admin.py                Admin configuration
-â”œâ”€â”€ models.py               Catalog and content models
-â”œâ”€â”€ views.py                Page, catalog and lead flows
-â””â”€â”€ tests.py                Application test suite
+|-- management/             Custom management commands
+|-- migrations/             Database migrations
+|-- static/main/            CSS, JavaScript and brand assets
+|-- templates/              Pages and reusable template partials
+|-- admin.py                Admin configuration
+|-- models.py               Catalog and content models
+|-- views.py                Page, catalog and lead flows
+`-- tests.py                Application test suite
 manage.py
 requirements.txt
 .env.example
@@ -168,9 +168,9 @@ The repository does not track uploaded media or generated `staticfiles`. Product
 
 A safe release keeps three layers separate:
 
-1. **Code** â€” versioned in Git
-2. **Database** â€” preserved and migrated in place
-3. **Media** â€” synchronized deliberately, never replaced implicitly
+1. **Code** &mdash; versioned in Git
+2. **Database** &mdash; preserved and migrated in place
+3. **Media** &mdash; synchronized deliberately, never replaced implicitly
 
 The canonical production branch is `main`. The published v1.1.0 baseline is tagged as `v1.1.0`; subsequent fixes continue on `main`.
 
