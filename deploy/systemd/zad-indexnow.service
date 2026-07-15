@@ -1,0 +1,14 @@
+[Unit]
+Description=Submit changed ZAD URLs to IndexNow
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=cloud-admin
+Group=www-data
+WorkingDirectory=/var/www/zad
+EnvironmentFile=/var/www/zad/.env
+ExecStart=/var/www/zad/venv/bin/python manage.py submit_indexnow
+NoNewPrivileges=true
+PrivateTmp=true

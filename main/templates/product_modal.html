@@ -1,23 +1,23 @@
 <div class="zad-product-modal" data-product-modal hidden>
-  <div class="zad-product-modal__overlay" data-product-modal-close></div>
+  <div class="zad-product-modal__overlay" data-product-modal-close aria-hidden="true"></div>
 
-  <div class="zad-product-modal__dialog" role="dialog" aria-modal="true">
-    <button type="button" class="zad-product-modal__close" data-product-modal-close>
+  <div class="zad-product-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="zad-product-modal-title" aria-describedby="zad-product-modal-description" tabindex="-1">
+    <button type="button" class="zad-product-modal__close" data-product-modal-close aria-label="بستن پنجره محصول">
       ×
     </button>
 
     <div class="zad-product-modal__media">
-      <img src="" alt="" data-modal-image>
+      <img src="" alt="" data-modal-image width="1100" height="1300" decoding="async">
     </div>
 
     <div class="zad-product-modal__content">
       <span class="zad-product-modal__type" data-modal-type></span>
 
-      <h2 data-modal-title></h2>
+      <h2 id="zad-product-modal-title" data-modal-title></h2>
 
       <div class="zad-product-modal__line"></div>
 
-      <p class="zad-product-modal__text" data-modal-description>
+      <p class="zad-product-modal__text" id="zad-product-modal-description" data-modal-description>
         این محصول به صورت اختصاصی و با توجه به موجودی روز طراحی و آماده می‌شود.
       </p>
 
@@ -31,7 +31,7 @@
 
       <div class="zad-product-modal__actions">
         <a href="{% url 'contact' %}" class="zad-product-modal__btn">
-          تماس با ما
+          تماس
         </a>
 
         <a
@@ -39,8 +39,20 @@
           target="_blank"
           rel="noopener"
           class="zad-product-modal__btn zad-product-modal__btn--ghost"
+          data-cta-position="product-modal-telegram"
         >
-          سفارش از تلگرام
+          تلگرام
+        </a>
+
+        <a
+          href="{{ site_bale_url }}"
+          target="_blank"
+          rel="noopener"
+          class="zad-product-modal__btn zad-product-modal__btn--bale"
+          data-cta-position="product-modal-bale"
+          aria-label="سفارش محصول در بله"
+        >
+          بله
         </a>
       </div>
     </div>

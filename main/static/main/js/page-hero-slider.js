@@ -15,6 +15,13 @@ document.addEventListener("DOMContentLoaded", function () {
     let touchStartX = 0;
     let touchStartY = 0;
 
+    function replacePrefixedClass(prefix, nextClass) {
+      Array.from(root.classList).forEach((className) => {
+        if (className.indexOf(prefix) === 0) root.classList.remove(className);
+      });
+      if (nextClass) root.classList.add(nextClass);
+    }
+
     function show(index) {
       current = (index + slides.length) % slides.length;
       slides.forEach((slide, itemIndex) => {
@@ -29,6 +36,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (title && activeSlide.dataset.heroTitle) title.textContent = activeSlide.dataset.heroTitle;
       if (kicker) kicker.textContent = activeSlide.dataset.heroKicker || "";
       if (text) text.textContent = activeSlide.dataset.heroText || "";
+      replacePrefixedClass("hero-style-", activeSlide.dataset.heroStyleClass || "");
+      replacePrefixedClass(
+        "hero-position--",
+        `hero-position--${activeSlide.dataset.heroPosition || "center-left"}`
+      );
+      replacePrefixedClass(
+        "hero-mobile-position--",
+        `hero-mobile-position--${activeSlide.dataset.heroMobilePosition || "bottom-center"}`
+      );
     }
 
     function stop() {

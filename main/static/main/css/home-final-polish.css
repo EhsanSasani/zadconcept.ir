@@ -30,7 +30,7 @@
 
 @media (max-width: 560px) {
   .home-sameday-row {
-    grid-auto-columns: 82%;
+    grid-auto-columns: 72%;
     gap: 14px;
     padding-inline: 2px 12px;
   }

@@ -37,6 +37,18 @@ class Command(BaseCommand):
             "legacy_slugs": ["wedding-decoration"],
         },
         {
+            "name": "ماشین عروس",
+            "slug": "wedding-car",
+            "parent_slug": "wedding",
+            "sort_order": 10,
+        },
+        {
+            "name": "دسته‌گل عروس",
+            "slug": "bridal-bouquet",
+            "parent_slug": "wedding",
+            "sort_order": 20,
+        },
+        {
             "name": "جار گل",
             "slug": "jarl",
             "sort_order": 70,
@@ -134,11 +146,6 @@ class Command(BaseCommand):
             "sort_order": 80,
         },
         {
-            "name": "عروسی",
-            "slug": "wedding",
-            "sort_order": 85,
-        },
-        {
             "name": "بدون مناسبت",
             "slug": "no-occasion",
             "sort_order": 90,
@@ -163,6 +170,7 @@ class Command(BaseCommand):
                 name=item["name"],
                 slug=item["slug"],
                 sort_order=item["sort_order"],
+                parent_slug=item.get("parent_slug"),
                 legacy_slugs=item.get("legacy_slugs", []),
                 legacy_names=item.get("legacy_names", []),
             )
@@ -189,16 +197,21 @@ class Command(BaseCommand):
                 legacy_names=item.get("legacy_names", []),
             )
 
-        wedding_tag = Tag.objects.get(slug="wedding")
-        wedding_products = Product.objects.filter(
-            category__section=Category.Section.FLOWERS,
-            category__slug="wedding",
-        ).exclude(tags=wedding_tag)
-        wedding_tag.products.add(*wedding_products)
+        self.normalize_wedding_products()
 
         self.stdout.write(self.style.SUCCESS("کاتالوگ زاد با موفقیت همگام‌سازی شد."))
 
-    def sync_category(self, *, section, name, slug, sort_order, legacy_slugs=None, legacy_names=None):
+    def sync_category(
+        self,
+        *,
+        section,
+        name,
+        slug,
+        sort_order,
+        parent_slug=None,
+        legacy_slugs=None,
+        legacy_names=None,
+    ):
         legacy_slugs = legacy_slugs or []
         legacy_names = legacy_names or []
 
@@ -223,6 +236,11 @@ class Command(BaseCommand):
         category.name = name
         category.slug = slug
         category.section = section
+        category.parent = (
+            Category.objects.get(section=section, slug=parent_slug)
+            if parent_slug
+            else None
+        )
         category.is_active = True
         category.sort_order = sort_order
         category.save()
@@ -230,6 +248,55 @@ class Command(BaseCommand):
         status = "ساخته شد" if created else "به‌روزرسانی شد"
         self.stdout.write(self.style.SUCCESS(f"{category} - {status}"))
         return category
+
+    def normalize_wedding_products(self):
+        wedding = Category.objects.get(section=Category.Section.FLOWERS, slug="wedding")
+        wedding_car = Category.objects.get(
+            section=Category.Section.FLOWERS,
+            slug="wedding-car",
+        )
+        bridal_bouquet = Category.objects.get(
+            section=Category.Section.FLOWERS,
+            slug="bridal-bouquet",
+        )
+        wedding_tag = Tag.objects.filter(slug="wedding").first()
+
+        product_ids = set(
+            Product.objects.filter(category=wedding).values_list("pk", flat=True)
+        )
+        if wedding_tag:
+            product_ids.update(
+                wedding_tag.products.filter(
+                    category__section=Category.Section.FLOWERS
+                ).values_list("pk", flat=True)
+            )
+
+        persian_car_keywords = (
+            "ماشین",
+            "خودرو",
+            "اتومبیل",
+        )
+        english_car_tokens = {"car", "vehicle", "auto"}
+        for product in Product.objects.filter(pk__in=product_ids):
+            searchable = f"{product.name or ''} {product.slug or ''}".lower()
+            english_tokens = set(searchable.replace("-", " ").split())
+            is_wedding_car = any(
+                word in searchable for word in persian_car_keywords
+            ) or bool(english_tokens & english_car_tokens)
+            product.category = (
+                wedding_car
+                if is_wedding_car
+                else bridal_bouquet
+            )
+            product.save(update_fields=["category", "updated_at"])
+
+        if wedding_tag:
+            wedding_tag.products.clear()
+            wedding_tag.is_occasion = False
+            wedding_tag.is_active = False
+            wedding_tag.save(
+                update_fields=["is_occasion", "is_active", "updated_at"]
+            )
 
     def find_category(self, section, slug, name, legacy_slugs, legacy_names):
         lookups = [

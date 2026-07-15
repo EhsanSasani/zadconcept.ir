@@ -1,0 +1,63 @@
+name: Django CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ENV: dev
+      DEBUG: "False"
+      SECRET_KEY: ci-only-secret-key-not-for-production
+      ALLOWED_HOSTS: 127.0.0.1,localhost,testserver
+      ZAD_SITE_URL: https://www.zadconcept.ir
+      USE_MANIFEST_STATIC: "False"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --requirement requirements.txt
+
+      - name: Django checks
+        run: |
+          python manage.py check
+          ENV=prod \
+          DEBUG=False \
+          SECRET_KEY='ci-production-config-check-9fQ2xR7kM4pL8vN6eT3wB5uC1-long-secret' \
+          ALLOWED_HOSTS='www.zadconcept.ir,zadconcept.ir' \
+          CSRF_TRUSTED_ORIGINS='https://www.zadconcept.ir,https://zadconcept.ir' \
+          PGDATABASE='zad_db' \
+          PGUSER='zad_user' \
+          PGPASSWORD='ci-only' \
+          PGHOST='127.0.0.1' \
+          ZAD_SITE_URL='https://www.zadconcept.ir' \
+          SECURE_HSTS_INCLUDE_SUBDOMAINS=True \
+          SECURE_HSTS_PRELOAD=True \
+          python manage.py check --deploy
+
+      - name: Verify and apply migrations
+        run: |
+          python manage.py makemigrations --check --dry-run
+          python manage.py migrate --plan
+          python manage.py migrate --noinput
+
+      - name: Test
+        run: python manage.py test --verbosity 2
+
+      - name: SEO contract audit
+        run: python manage.py audit_seo --fail-on-error
+
+      - name: Verify static collection
+        run: python manage.py collectstatic --noinput --clear

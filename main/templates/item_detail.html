@@ -5,7 +5,7 @@
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'main/css/product_detail.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/product_detail.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
         <a href="{{ subcategory_url|default:category_url|default:'/' }}" class="item-detail__close" aria-label="بازگشت">×</a>
 
         {% if product.cover_image %}
-          <img src="{{ product.cover_image.url }}" alt="{{  product.display_name  }}" width="1100" height="1300">
+          <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}"{% endif %} width="1100" height="1300" sizes="(max-width: 760px) 100vw, 55vw" fetchpriority="high" decoding="async">
         {% else %}
           <div class="item-detail__placeholder">تصویر هنوز اضافه نشده</div>
         {% endif %}
@@ -37,13 +37,13 @@
           <div class="item-detail__thumbs" aria-label="Product gallery">
             {% if product.cover_image %}
               <span class="item-detail__thumb is-active">
-                <img src="{{ product.cover_image.url }}" alt="{{  product.display_name }}">
+                <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
               </span>
             {% endif %}
 
             {% for image in gallery|slice:":5" %}
               <span class="item-detail__thumb">
-                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.display_name }}">
+                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.seo_name }}"{% if image.image_srcset %} srcset="{{ image.image_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
               </span>
             {% endfor %}
           </div>
@@ -103,6 +103,11 @@
 
         <a href="{{ item_telegram_href|default:site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="product-detail">
           {{ item_telegram_text|default:"Telegram" }}
+        </a>
+
+        <a href="{{ site_bale_url }}" target="_blank" rel="noopener" class="btn btn-bale" data-cta-position="product-detail-bale" aria-label="سفارش {{ product.display_name }} در بله">
+          <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+          <span>بله</span>
         </a>
       </div>
 

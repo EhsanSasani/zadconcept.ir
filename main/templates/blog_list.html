@@ -1,27 +1,60 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block body_class %}page-blog{% endblock %}
+{% block body_class %}page-blog page-info{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/policy.css' %}?v=2">{% endblock %}
 
 {% block content %}
-{% include "partials/breadcrumbs.html" %}
+<article class="info-page journal-page"{% if not has_managed_site_hero %} aria-labelledby="journal-title"{% endif %}>
+  {% if not has_managed_site_hero %}
+  <header class="info-hero">
+    <div class="container info-hero__inner">
+      <div class="info-hero__topline">
+        <div>
+          <a href="{% url 'index' %}" class="info-hero__home">خانه</a>
+          <span aria-hidden="true">/</span>
+          <span>مجله زاد</span>
+        </div>
+      </div>
 
-<section class="container section-block blog-list-intro">
-  <p class="intro-text intro-text--en">
-    {{ page_content.intro.body|default:"Short notes and guides for choosing flowers, gifts, and thoughtful details with more ease." }}
-  </p>
-</section>
+      <p class="info-hero__kicker" dir="ltr">ZAD · JOURNAL</p>
+      <div class="info-hero__copy">
+        <h1 id="journal-title">مجله زاد</h1>
+        <p>{{ page_content.intro.body|default:"یادداشت‌ها و راهنماهای کوتاه زاد برای انتخاب بهتر گل، هدیه و جزئیات مناسبت‌ها." }}</p>
+      </div>
 
-<section class="container section-block">
-  <div class="list-grid">
-    {% for post in posts %}
-      <article class="list-card blog-card">
-        <h2 class="blog-card__title"><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
-        <p class="blog-card__excerpt">{{ post.excerpt|default:post.body|truncatechars:170 }}</p>
-        <a href="{{ post.get_absolute_url }}" class="text-link blog-card__link">Read More</a>
-      </article>
-    {% empty %}
-      <div class="empty-box">{{ page_content.empty.body|default:"No stories have been published yet." }}</div>
-    {% endfor %}
+      <div class="info-hero__meta">
+        <span>راهنمای انتخاب و نگهداری</span>
+        <span>ایده‌هایی برای مناسبت‌ها</span>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
+  <div class="container journal-page__body">
+    <div class="journal-page__heading">
+      <div>
+        <span dir="ltr">LATEST NOTES</span>
+        <h2>تازه‌ترین مطالب</h2>
+      </div>
+      <p>خواندنی‌های کوتاه، کاربردی و انتخاب‌شده از دنیای زاد.</p>
+    </div>
+
+    <section class="journal-list" aria-label="مطالب مجله زاد">
+      {% for post in posts %}
+        <article class="journal-card">
+          <div class="journal-card__number" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</div>
+          <div class="journal-card__content">
+            {% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"j F Y" }}</time>{% endif %}
+            <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+            <p>{{ post.excerpt|default:post.body|truncatechars:190 }}</p>
+            <a href="{{ post.get_absolute_url }}" class="info-text-link">مطالعه مطلب <span aria-hidden="true">←</span></a>
+          </div>
+        </article>
+      {% empty %}
+        <div class="info-paper journal-empty">{{ page_content.empty.body|default:"هنوز مطلبی منتشر نشده است." }}</div>
+      {% endfor %}
+    </section>
   </div>
-</section>
+</article>
 {% endblock %}

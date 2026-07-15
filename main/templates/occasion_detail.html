@@ -4,7 +4,7 @@
 {% block body_class %}page-occasion-detail page-catalog-occasion{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/flowers-landing.css' %}?v=6">
 {% endblock %}
 
@@ -15,7 +15,7 @@
   {% if filter_links %}
     <div class="catalog-filter-row" aria-label="Catalog filters">
       {% for item in filter_links %}
-        <a href="{{ item.url }}" class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}">
+        <a href="{{ item.url }}"{% if item.filter_url %} data-filter-target="{{ item.filter_url }}"{% endif %} class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}">
           {{ item.label }}
         </a>
       {% endfor %}
@@ -46,5 +46,6 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script src="{% static 'main/js/filter-fallback.js' %}"></script>
   <script src="{% static 'main/js/featured-products-slider.js' %}?v=10000"></script>
 {% endblock %}

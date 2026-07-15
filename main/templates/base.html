@@ -1,55 +1,74 @@
-{% load static %}
+{% load static seo_tags %}
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{{ html_lang|default:'fa' }}" dir="{{ html_dir|default:'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ meta_title|default:"zad" }}</title>
   <meta name="description" content="{{ meta_description|default:'zad concept store for flowers, bakery, gifts, and event coordination in Mashhad.' }}">
+  <meta name="robots" content="{{ robots_content|default:'index,follow' }}">
   {% if canonical_url %}
     <link rel="canonical" href="{{ canonical_url }}">
   {% endif %}
+  {% for alternate in alternate_links %}
+    <link rel="alternate" hreflang="{{ alternate.language }}" href="{{ alternate.url }}">
+  {% endfor %}
+  <link rel="icon" href="{% static 'main/img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="shortcut icon" href="{% url 'favicon' %}">
+  {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
+  {% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}">{% endif %}
 
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="fa_IR">
+  <meta property="og:type" content="{{ og_type|default:'website' }}">
+  <meta property="og:locale" content="{{ og_locale|default:'fa_IR' }}">
+  <meta property="og:site_name" content="ZAD Flower & Concept Store">
   <meta property="og:title" content="{{ meta_title|default:'zad' }}">
   <meta property="og:description" content="{{ meta_description|default:'zad concept store for flowers, bakery, gifts, and event coordination in Mashhad.' }}">
   {% if canonical_url %}
     <meta property="og:url" content="{{ canonical_url }}">
+  {% endif %}
+  <meta property="og:image" content="{{ social_image_url|default:site_default_social_image }}">
+  <meta property="og:image:width" content="{{ social_image_width }}">
+  <meta property="og:image:height" content="{{ social_image_height }}">
+  <meta property="og:image:alt" content="{{ meta_title|default:'ZAD Flower & Concept Store' }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta_title|default:'zad' }}">
+  <meta name="twitter:description" content="{{ meta_description|default:'zad concept store in Mashhad.' }}">
+  <meta name="twitter:image" content="{{ social_image_url|default:site_default_social_image }}">
+
+  {% if google_tag_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tag_id }}"></script>
+    <script nonce="{{ csp_nonce }}">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ google_tag_id }}');
+    </script>
   {% endif %}
 
   <link rel="stylesheet" href="{% static 'main/css/base.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/layout.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=3">
-  <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=3">
   {% block page_css %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/footer.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/final-ui-polish.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=3">
+  {% if enable_product_modal %}<link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=4">{% endif %}
   <link rel="stylesheet" href="{% static 'main/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'main/css/hero-config.css' %}?v=3">
+  <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
 
-  {% if local_business_jsonld %}
-    <script type="application/ld+json">{{ local_business_jsonld|safe }}</script>
-  {% endif %}
-  {% if breadcrumbs_jsonld %}
-    <script type="application/ld+json">{{ breadcrumbs_jsonld|safe }}</script>
-  {% endif %}
-  {% if faq_jsonld %}
-    <script type="application/ld+json">{{ faq_jsonld|safe }}</script>
-  {% endif %}
-  {% if extra_jsonld %}
-    {% for schema in extra_jsonld %}
-      <script type="application/ld+json">{{ schema|safe }}</script>
-    {% endfor %}
+  {% if structured_data_graph %}
+    <script type="application/ld+json" nonce="{{ csp_nonce }}">{{ structured_data_graph|json_ld }}</script>
   {% endif %}
 </head>
 
-<body class="{% block body_class %}{% endblock %}" data-page-type="{{ page_type|default:'default' }}"{% if item_id %} data-item-id="{{ item_id }}"{% endif %}>
+<body class="{% block body_class %}{% endblock %}" data-page-type="{{ page_type|default:'default' }}"{% if item_id %} data-item-id="{{ item_id }}" data-item-name="{{ product.seo_name }}" data-item-category="{{ product.category.slug }}"{% endif %}>
 
+  {% if not hide_global_chrome %}
     <div class="top-notice-bar">
     <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="top-notice-bar__link">
       برای سفارش محصولات زاد از خارج از ایران و پرداخت از طریق
@@ -105,18 +124,19 @@
 </nav>
   </div>
 </header>
+  {% endif %}
 
-  {% if not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
-  <section class="page-hero" data-page-hero-slider>
+  {% if not suppress_default_hero and not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
+  <section class="page-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" data-page-hero-slider>
     <div class="page-hero__slides">
       {% if page_hero_slides %}
         {% for slide in page_hero_slides %}
-          <div class="page-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}">
+          <div class="page-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}">
             <picture>
               {% if slide.mobile_image %}
                 <source media="(max-width: 760px)" srcset="{{ slide.mobile_image }}">
               {% endif %}
-              <img src="{{ slide.image }}" alt="{{ slide.title|default:'zad' }}"{% if not forloop.first %} loading="lazy"{% endif %}>
+              <img src="{{ slide.image }}" alt="{{ slide.title|default:'zad' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
             </picture>
           </div>
         {% endfor %}
@@ -132,13 +152,13 @@
                 {% endif %}
               {% endif %}
               {% if page_hero_image|slice:":7" == "/media/" %}
-                <img src="{{ page_hero_image }}" alt="{{ page_hero_title|default:'zad' }}">
+                <img src="{{ page_hero_image }}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
               {% else %}
-                <img src="{% static page_hero_image %}" alt="{{ page_hero_title|default:'zad' }}">
+                <img src="{% static page_hero_image %}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
               {% endif %}
             </picture>
           {% else %}
-            <img src="{% static 'main/img/hero-about.webp' %}" alt="{{ page_hero_title|default:'zad' }}">
+            <img src="{% static 'main/img/hero-about.webp' %}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
           {% endif %}
         </div>
       {% endif %}
@@ -146,8 +166,8 @@
 
     <div class="page-hero__overlay"></div>
 
-    {% if page_type == "occasion-detail" or page_type == "flower-occasion" %}
-      <div class="page-hero__content container">
+    {% if page_type == "occasion-detail" or page_type == "flower-occasion" or page_hero_style_class %}
+      <div class="page-hero__content container" data-hero-content>
         {% if page_hero_kicker %}
           <span class="page-hero__kicker" data-page-hero-kicker>{{ page_hero_kicker }}</span>
         {% endif %}
@@ -169,7 +189,7 @@
   </section>
   
 
-  {% if page_type != "item" and page_type != "occasions" and page_type != "occasion-detail" and page_type != "flower-occasion" %}
+  {% if not page_hero_style_class and page_type != "item" and page_type != "occasions" and page_type != "occasion-detail" and page_type != "flower-occasion" %}
     <section class="container section-block page-hero-mood">
       <div class="home-intro__brandline page-hero-mood__brandline">
         <span class="page-hero-mood__mark">✦</span>
@@ -186,7 +206,7 @@
   {% if messages %}
     <div class="container alerts">
       {% for message in messages %}
-        <div class="alert {{ message.tags }}">{{ message }}</div>
+        <div class="alert {{ message.tags }}"{% if 'lead-success' in message.tags %} data-lead-success{% endif %}>{{ message }}</div>
       {% endfor %}
     </div>
   {% endif %}
@@ -195,6 +215,7 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% if not hide_global_chrome %}
   <footer class="zad-footer">
   <div class="zad-footer__image" aria-hidden="true"></div>
 
@@ -207,7 +228,7 @@
     </div>
 
     <div class="zad-footer__info">
-      <a href="/contact/" class="zad-footer__item">
+      <a href="{% url 'contact' %}" class="zad-footer__item">
         <i class="bi bi-geo-alt"></i>
         <strong>آدرس زاد</strong>
         <span>{{ site_address_text }}</span>
@@ -231,12 +252,25 @@
         <span>zad_concept</span>
       </a>
 
-      <a href="/faq/" class="zad-footer__item">
+      <a href="{% url 'faq' %}" class="zad-footer__item">
         <i class="bi bi-question-circle"></i>
         <strong>سوالات متداول</strong>
         <span>FAQ</span>
       </a>
     </div>
+
+    <nav class="zad-footer__legal" aria-label="پیوندهای حقوقی و خدمات">
+      <a href="{% url 'international_orders' %}">سفارش از خارج ایران</a>
+      <a href="{% url 'international_orders_en' %}" hreflang="en" lang="en" dir="ltr">International Orders</a>
+      <a href="{% url 'mashhad_hub' %}">خدمات زاد در مشهد</a>
+      <a href="{% url 'service_area' %}">محدوده خدمات</a>
+      <a href="{% url 'blog' %}">مجله زاد</a>
+      <a href="{% url 'delivery_policy' %}">ارسال</a>
+      <a href="{% url 'refund_policy' %}">لغو و بازپرداخت</a>
+      <a href="{% url 'payment_methods' %}">پرداخت</a>
+      <a href="{% url 'privacy' %}">حریم خصوصی</a>
+      <a href="{% url 'terms' %}">شرایط استفاده</a>
+    </nav>
 
     <div class="zad-footer__bottom">
       <p>© 2026 ZAD Flower &amp; Concept Store</p>
@@ -249,13 +283,17 @@
     </div>
   </div>
 </footer>
+  {% endif %}
 
   <script src="{% static 'main/js/analytics.js' %}"></script>
+{% if google_tag_id %}<script src="{% static 'main/js/web-vitals.js' %}"></script>{% endif %}
 <script src="{% static 'main/js/navbar.js' %}"></script>
-<script src="{% static 'main/js/page-hero-slider.js' %}?v=2"></script>
+{% if page_hero_slides|length > 1 %}<script src="{% static 'main/js/page-hero-slider.js' %}?v=2"></script>{% endif %}
 
 {% block extra_js %}{% endblock %}
-{% include "product_modal.html" %}
-<script src="{% static 'main/js/product-modal.js' %}?v=3"></script>
+{% if enable_product_modal %}
+  {% include "product_modal.html" %}
+  <script src="{% static 'main/js/product-modal.js' %}?v=4"></script>
+{% endif %}
 </body>
 </html>

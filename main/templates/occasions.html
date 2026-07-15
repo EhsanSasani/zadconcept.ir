@@ -14,22 +14,20 @@
 </div>
 <section class="occasions-shell">
   <div class="occasions-container">
-    {% if page_content.intro.title or page_content.intro.body %}
-      <header class="section-head section-head--center">
-        {% if page_content.intro.kicker %}<span class="section-kicker">{{ page_content.intro.kicker }}</span>{% endif %}
-        {% if page_content.intro.title %}<h1>{{ page_content.intro.title }}</h1>{% endif %}
-        {% if page_content.intro.body %}<p>{{ page_content.intro.body }}</p>{% endif %}
-      </header>
-    {% endif %}
+    <header class="section-head section-head--center">
+      {% if page_content.intro.kicker %}<span class="section-kicker">{{ page_content.intro.kicker }}</span>{% endif %}
+      <h1>{{ page_content.intro.title|default:"مناسبت‌های زاد" }}</h1>
+      {% if page_content.intro.body %}<p>{{ page_content.intro.body }}</p>{% endif %}
+    </header>
     {% if occasion_cards %}
       <section class="occasions-grid" aria-label="مناسبت‌های زاد">
         {% for item in occasion_cards %}
           <a href="{{ item.url }}" class="occasion-card">
             <div class="occasion-card__media">
               {% if item.image|slice:":7" == "/media/" %}
-                <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy">
+                <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
               {% else %}
-                <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy">
+                <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
               {% endif %}
             </div>
 

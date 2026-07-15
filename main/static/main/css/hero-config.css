@@ -1,0 +1,280 @@
+/* Database-backed, CSP-safe Hero presentation controls. */
+
+.hero-configurable {
+  --hero-config-color: #ffffff;
+  --hero-config-font: var(--font-fa);
+  --hero-config-title-size: 64px;
+  --hero-config-body-size: 18px;
+  --hero-config-kicker-size: 13px;
+  --hero-config-mobile-title-size: 40px;
+  --hero-config-mobile-body-size: 14px;
+  --hero-config-mobile-kicker-size: 10px;
+  --hero-config-top: 50%;
+  --hero-config-right: auto;
+  --hero-config-bottom: auto;
+  --hero-config-left: clamp(24px, 6vw, 96px);
+  --hero-config-transform: translateY(-50%);
+  --hero-config-align: flex-start;
+  --hero-config-text-align: left;
+}
+
+.hero-configurable [data-hero-content] {
+  position: absolute !important;
+  top: var(--hero-config-top) !important;
+  right: var(--hero-config-right) !important;
+  bottom: var(--hero-config-bottom) !important;
+  left: var(--hero-config-left) !important;
+  z-index: 3;
+  width: min(720px, calc(100% - 48px)) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: var(--hero-config-align) !important;
+  justify-content: flex-start !important;
+  color: var(--hero-config-color) !important;
+  font-family: var(--hero-config-font) !important;
+  text-align: var(--hero-config-text-align) !important;
+  transform: var(--hero-config-transform) !important;
+  /* Keep flex-start/flex-end mapped to physical left/right on RTL pages. */
+  direction: ltr;
+}
+
+.hero-configurable [data-hero-content] > *,
+.hero-configurable [data-hero-kicker],
+.hero-configurable [data-hero-title],
+.hero-configurable [data-hero-text] {
+  max-width: 100% !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  text-align: inherit !important;
+  overflow-wrap: anywhere;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.hero-configurable [data-hero-title] {
+  width: auto !important;
+  font-size: var(--hero-config-title-size) !important;
+  line-height: 1.2 !important;
+}
+
+.hero-configurable [data-hero-text] {
+  width: auto !important;
+  font-size: var(--hero-config-body-size) !important;
+  line-height: 1.9 !important;
+  opacity: 0.9;
+}
+
+.hero-configurable [data-hero-kicker] {
+  width: auto !important;
+  font-size: var(--hero-config-kicker-size) !important;
+  opacity: 0.82;
+}
+
+.hero-position--top-left {
+  --hero-config-top: clamp(132px, 15vh, 168px);
+  --hero-config-right: auto;
+  --hero-config-bottom: auto;
+  --hero-config-left: clamp(24px, 6vw, 96px);
+  --hero-config-transform: none;
+  --hero-config-align: flex-start;
+  --hero-config-text-align: left;
+}
+
+.hero-position--top-center {
+  --hero-config-top: clamp(132px, 15vh, 168px);
+  --hero-config-right: auto;
+  --hero-config-bottom: auto;
+  --hero-config-left: 50%;
+  --hero-config-transform: translateX(-50%);
+  --hero-config-align: center;
+  --hero-config-text-align: center;
+}
+
+.hero-position--top-right {
+  --hero-config-top: clamp(132px, 15vh, 168px);
+  --hero-config-right: clamp(24px, 6vw, 96px);
+  --hero-config-bottom: auto;
+  --hero-config-left: auto;
+  --hero-config-transform: none;
+  --hero-config-align: flex-end;
+  --hero-config-text-align: right;
+}
+
+.hero-position--center-left {
+  --hero-config-top: 50%;
+  --hero-config-right: auto;
+  --hero-config-bottom: auto;
+  --hero-config-left: clamp(24px, 6vw, 96px);
+  --hero-config-transform: translateY(-50%);
+  --hero-config-align: flex-start;
+  --hero-config-text-align: left;
+}
+
+.hero-position--center {
+  --hero-config-top: 50%;
+  --hero-config-right: auto;
+  --hero-config-bottom: auto;
+  --hero-config-left: 50%;
+  --hero-config-transform: translate(-50%, -50%);
+  --hero-config-align: center;
+  --hero-config-text-align: center;
+}
+
+.hero-position--center-right {
+  --hero-config-top: 50%;
+  --hero-config-right: clamp(24px, 6vw, 96px);
+  --hero-config-bottom: auto;
+  --hero-config-left: auto;
+  --hero-config-transform: translateY(-50%);
+  --hero-config-align: flex-end;
+  --hero-config-text-align: right;
+}
+
+.hero-position--bottom-left {
+  --hero-config-top: auto;
+  --hero-config-right: auto;
+  --hero-config-bottom: clamp(64px, 9vh, 108px);
+  --hero-config-left: clamp(24px, 6vw, 96px);
+  --hero-config-transform: none;
+  --hero-config-align: flex-start;
+  --hero-config-text-align: left;
+}
+
+.hero-position--bottom-center {
+  --hero-config-top: auto;
+  --hero-config-right: auto;
+  --hero-config-bottom: clamp(64px, 9vh, 108px);
+  --hero-config-left: 50%;
+  --hero-config-transform: translateX(-50%);
+  --hero-config-align: center;
+  --hero-config-text-align: center;
+}
+
+.hero-position--bottom-right {
+  --hero-config-top: auto;
+  --hero-config-right: clamp(24px, 6vw, 96px);
+  --hero-config-bottom: clamp(64px, 9vh, 108px);
+  --hero-config-left: auto;
+  --hero-config-transform: none;
+  --hero-config-align: flex-end;
+  --hero-config-text-align: right;
+}
+
+@media (max-width: 760px) {
+  .hero-configurable [data-hero-content] {
+    width: min(520px, calc(100% - 36px)) !important;
+  }
+
+  .hero-configurable [data-hero-title] {
+    font-size: var(--hero-config-mobile-title-size) !important;
+  }
+
+  .hero-configurable [data-hero-text] {
+    font-size: var(--hero-config-mobile-body-size) !important;
+  }
+
+  .hero-configurable [data-hero-kicker] {
+    font-size: var(--hero-config-mobile-kicker-size) !important;
+  }
+
+  .hero-mobile-position--top-left {
+    --hero-config-top: 128px;
+    --hero-config-right: auto;
+    --hero-config-bottom: auto;
+    --hero-config-left: 18px;
+    --hero-config-transform: none;
+    --hero-config-align: flex-start;
+    --hero-config-text-align: left;
+  }
+
+  .hero-mobile-position--top-center {
+    --hero-config-top: 128px;
+    --hero-config-right: auto;
+    --hero-config-bottom: auto;
+    --hero-config-left: 50%;
+    --hero-config-transform: translateX(-50%);
+    --hero-config-align: center;
+    --hero-config-text-align: center;
+  }
+
+  .hero-mobile-position--top-right {
+    --hero-config-top: 128px;
+    --hero-config-right: 18px;
+    --hero-config-bottom: auto;
+    --hero-config-left: auto;
+    --hero-config-transform: none;
+    --hero-config-align: flex-end;
+    --hero-config-text-align: right;
+  }
+
+  .hero-mobile-position--center-left {
+    --hero-config-top: 50%;
+    --hero-config-right: auto;
+    --hero-config-bottom: auto;
+    --hero-config-left: 18px;
+    --hero-config-transform: translateY(-50%);
+    --hero-config-align: flex-start;
+    --hero-config-text-align: left;
+  }
+
+  .hero-mobile-position--center {
+    --hero-config-top: 50%;
+    --hero-config-right: auto;
+    --hero-config-bottom: auto;
+    --hero-config-left: 50%;
+    --hero-config-transform: translate(-50%, -50%);
+    --hero-config-align: center;
+    --hero-config-text-align: center;
+  }
+
+  .hero-mobile-position--center-right {
+    --hero-config-top: 50%;
+    --hero-config-right: 18px;
+    --hero-config-bottom: auto;
+    --hero-config-left: auto;
+    --hero-config-transform: translateY(-50%);
+    --hero-config-align: flex-end;
+    --hero-config-text-align: right;
+  }
+
+  .hero-mobile-position--bottom-left {
+    --hero-config-top: auto;
+    --hero-config-right: auto;
+    --hero-config-bottom: 64px;
+    --hero-config-left: 18px;
+    --hero-config-transform: none;
+    --hero-config-align: flex-start;
+    --hero-config-text-align: left;
+  }
+
+  .hero-mobile-position--bottom-center {
+    --hero-config-top: auto;
+    --hero-config-right: auto;
+    --hero-config-bottom: 64px;
+    --hero-config-left: 50%;
+    --hero-config-transform: translateX(-50%);
+    --hero-config-align: center;
+    --hero-config-text-align: center;
+  }
+
+  .hero-mobile-position--bottom-right {
+    --hero-config-top: auto;
+    --hero-config-right: 18px;
+    --hero-config-bottom: 64px;
+    --hero-config-left: auto;
+    --hero-config-transform: none;
+    --hero-config-align: flex-end;
+    --hero-config-text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-configurable [data-hero-content] {
+    transition: none !important;
+  }
+}

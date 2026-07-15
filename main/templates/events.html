@@ -5,33 +5,45 @@
 
 {% block content %}
 
-<section class="workshops-hero{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های گل‌آرایی زاد">
-  {% if workshops_hero_mobile_image %}
-    {% if workshops_hero_mobile_image|slice:":7" == "/media/" %}
-      <img class="workshops-hero__image workshops-hero__image--mobile" src="{{ workshops_hero_mobile_image }}" alt="{{ workshops_hero_title }}">
+<section class="workshops-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های گل‌آرایی زاد" data-page-hero-slider>
+  <div class="workshops-hero__slides">
+    {% if page_hero_slides %}
+      {% for slide in page_hero_slides %}
+        <div class="workshops-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}" aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+          <picture>
+            {% if slide.mobile_image %}<source media="(max-width: 760px)" srcset="{{ slide.mobile_image }}">{% endif %}
+            <img class="workshops-hero__image" src="{{ slide.image }}" alt="{{ slide.title }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
+          </picture>
+        </div>
+      {% endfor %}
     {% else %}
-      <img class="workshops-hero__image workshops-hero__image--mobile" src="{% static workshops_hero_mobile_image %}" alt="{{ workshops_hero_title }}">
+      <div class="workshops-hero__slide is-active" data-page-hero-slide aria-hidden="false">
+        <picture>
+          {% if workshops_hero_mobile_image %}
+            {% if workshops_hero_mobile_image|slice:":7" == "/media/" %}
+              <source media="(max-width: 760px)" srcset="{{ workshops_hero_mobile_image }}">
+            {% else %}
+              <source media="(max-width: 760px)" srcset="{% static workshops_hero_mobile_image %}">
+            {% endif %}
+          {% endif %}
+          {% if workshops_hero_image|slice:":7" == "/media/" %}
+            <img class="workshops-hero__image" src="{{ workshops_hero_image }}" alt="{{ workshops_hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+          {% else %}
+            <img class="workshops-hero__image" src="{% static workshops_hero_image %}" alt="{{ workshops_hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+          {% endif %}
+        </picture>
+      </div>
     {% endif %}
-  {% endif %}
-
-  {% if workshops_hero_image|slice:":7" == "/media/" %}
-    <img class="workshops-hero__image workshops-hero__image--desktop" src="{{ workshops_hero_image }}" alt="{{ workshops_hero_title }}">
-  {% else %}
-  <img
-    class="workshops-hero__image workshops-hero__image--desktop"
-    src="{% static workshops_hero_image %}"
-    alt="{{ workshops_hero_title }}"
-  >
-  {% endif %}
+  </div>
 
   <div class="workshops-hero__overlay"></div>
 
-  <div class="workshops-hero__content">
-    <p class="workshops-hero__eyebrow">{{ workshops_hero_kicker }}</p>
+  <div class="workshops-hero__content" data-hero-content>
+    <p class="workshops-hero__eyebrow" data-page-hero-kicker data-hero-kicker>{{ workshops_hero_kicker }}</p>
 
-    <h1>{{ workshops_hero_title }}</h1>
+    <h1 data-page-hero-title data-hero-title>{{ workshops_hero_title }}</h1>
 
-    <p>{{ workshops_hero_text }}</p>
+    <p data-page-hero-text data-hero-text>{{ workshops_hero_text }}</p>
 
     <div class="workshops-hero__actions">
       <a href="#workshop-request" class="workshops-btn workshops-btn--light">
@@ -43,6 +55,13 @@
       </a>
     </div>
   </div>
+  {% if page_hero_slides|length > 1 %}
+    <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
+    <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
+    <div class="page-hero__dots" aria-label="انتخاب اسلاید">
+      {% for slide in page_hero_slides %}<button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>{% endfor %}
+    </div>
+  {% endif %}
 </section>
 
 <section class="workshops-story section-block">
@@ -62,7 +81,7 @@
       <img
         src="{% static 'main/img/workshops-story.webp' %}"
         alt="تجربه ورکشاپ زاد"
-      >
+       width="1600" height="1067" decoding="async" loading="lazy">
     </div>
   </div>
 </section>
@@ -81,7 +100,7 @@
         <article class="workshop-event-card">
           {% if event.cover_image %}
             <a href="{{ event.get_absolute_url }}" class="workshop-event-card__media">
-              <img src="{{ event.cover_image.url }}" alt="{{ event.title }}">
+              <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" width="1200" height="1500" decoding="async" loading="lazy">
             </a>
           {% endif %}
 
@@ -145,7 +164,7 @@
           <img
             src="{% static 'main/img/workshop-type-public.webp' %}"
             alt="ورکشاپ عمومی زاد"
-          >
+           width="1600" height="1067" decoding="async" loading="lazy">
         </div>
 
         <div class="workshop-type-card__body">
@@ -162,7 +181,7 @@
           <img
             src="{% static 'main/img/workshop-type-private.webp' %}"
             alt="ورکشاپ خصوصی زاد"
-          >
+           width="1600" height="1067" decoding="async" loading="lazy">
         </div>
 
         <div class="workshop-type-card__body">
@@ -179,7 +198,7 @@
           <img
             src="{% static 'main/img/workshop-type-corporate.webp' %}"
             alt="ورکشاپ سازمانی زاد"
-          >
+           width="1600" height="1067" decoding="async" loading="lazy">
         </div>
 
         <div class="workshop-type-card__body">
@@ -216,7 +235,7 @@
     class="workshops-cta__image"
     src="{% static 'main/img/workshops-cta.webp' %}"
     alt="هماهنگی ورکشاپ زاد"
-  >
+   width="1600" height="1067" decoding="async" loading="lazy">
 
   <div class="workshops-cta__overlay"></div>
 

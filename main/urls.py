@@ -49,6 +49,14 @@ urlpatterns = [
     path("contact/", views.contact, name="contact"),
     path("faq/", views.faq, name="faq"),
     path("about/", views.about, name="about"),
+    path("privacy/", views.policy_page, {"policy_slug": "privacy"}, name="privacy"),
+    path("terms/", views.policy_page, {"policy_slug": "terms"}, name="terms"),
+    path("delivery-policy/", views.policy_page, {"policy_slug": "delivery"}, name="delivery_policy"),
+    path("refund-cancellation/", views.policy_page, {"policy_slug": "refund"}, name="refund_policy"),
+    path("payment-methods/", views.policy_page, {"policy_slug": "payment"}, name="payment_methods"),
+    path("service-area/", views.policy_page, {"policy_slug": "service-area"}, name="service_area"),
+    path("international-orders/", views.international_orders, name="international_orders"),
+    path("en/international-orders/", views.international_orders_en, name="international_orders_en"),
 
     # Blog
     path("blog/", views.blog, name="blog"),
@@ -57,6 +65,9 @@ urlpatterns = [
     # Forms / utility
     path("lead-request/", views.submit_lead_request, name="lead_request"),
     path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("hero-styles.css", views.hero_styles_css, name="hero_styles_css"),
+    path("csp-report/", views.csp_report, name="csp_report"),
+    path("<str:key>.txt", views.indexnow_key, name="indexnow_key"),
 
     # Product legacy/detail routes
     path("product/<int:pk>/<str:slug>/", views.product_detail, name="product_detail"),

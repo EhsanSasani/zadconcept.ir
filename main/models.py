@@ -1,10 +1,18 @@
 import uuid
+from pathlib import PurePosixPath
 
 from django.core.exceptions import ValidationError
+from django.core.validators import (
+    FileExtensionValidator,
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 from django.db import models
 from django.db.models import F, Q
 from django.urls import reverse
-from django.utils.text import slugify
+from django.utils.functional import cached_property
+from django.utils.text import Truncator, slugify
 
 
 # =========================
@@ -18,6 +26,8 @@ FLOWER_CATEGORY_SLUGS = (
     "stand",
     "jarl",
     "wedding",
+    "wedding-car",
+    "bridal-bouquet",
     "plants",
 )
 
@@ -33,11 +43,80 @@ FLOWER_OCCASION_TAG_SLUGS = (
     "condolence",
     "proposal",
     "engagement",
-    "wedding",
     "no-occasion",
 )
 
 SAME_DAY_TAG_SLUG = "same-day"
+
+PRODUCT_SEO_CATEGORY_LABELS = {
+    "hand-bouquet": "دسته گل",
+    "box": "باکس گل",
+    "bouquet": "بوکت گل",
+    "stand": "استند گل",
+    "jarl": "جار گل",
+    "plants": "گیاه هدیه‌ای",
+    "wedding": "گل‌آرایی عروسی",
+    "wedding-car": "گل‌آرایی ماشین عروس",
+    "bridal-bouquet": "دسته‌گل عروس",
+}
+
+HERO_POSITION_CHOICES = (
+    ("top-left", "بالا چپ"),
+    ("top-center", "بالا وسط"),
+    ("top-right", "بالا راست"),
+    ("center-left", "وسط چپ"),
+    ("center", "وسط"),
+    ("center-right", "وسط راست"),
+    ("bottom-left", "پایین چپ"),
+    ("bottom-center", "پایین وسط"),
+    ("bottom-right", "پایین راست"),
+)
+
+HERO_BUILTIN_FONT_CHOICES = (
+    ("estedad", "استعداد (فارسی)"),
+    ("vazirmatn", "وزیرمتن (فارسی)"),
+    ("cormorant", "Cormorant Garamond (انگلیسی)"),
+    ("jakarta", "Plus Jakarta Sans (انگلیسی)"),
+)
+
+HEX_COLOR_VALIDATOR = RegexValidator(
+    regex=r"^#[0-9a-fA-F]{6}$",
+    message="رنگ را به فرمت شش‌رقمی وارد کنید؛ مثل #FFFFFF.",
+)
+
+MAX_HERO_FONT_SIZE = 5 * 1024 * 1024
+
+PERSIAN_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+
+
+def validate_hero_font_file_size(uploaded_file):
+    if not uploaded_file:
+        return
+    try:
+        file_size = uploaded_file.size
+    except (AttributeError, OSError, ValueError):
+        # An already-saved file may temporarily be unavailable on storage.
+        # Rendering has its own font fallback, so editing other fields must remain safe.
+        return
+    if file_size > MAX_HERO_FONT_SIZE:
+        raise ValidationError("حجم فایل فونت نباید بیشتر از ۵ مگابایت باشد.")
+
+
+def responsive_image_srcset(image_field, widths=(520, 1040, 1600)):
+    if not image_field or not image_field.name:
+        return ""
+    path = PurePosixPath(image_field.name)
+    candidates = []
+    for width in widths:
+        variant = path.with_name(f"{path.stem}-{width}w.webp")
+        try:
+            exists = image_field.storage.exists(str(variant))
+        except OSError:
+            exists = False
+        if exists:
+            candidates.append(f"{image_field.storage.url(str(variant))} {width}w")
+    # A single small candidate can unnecessarily replace a larger original.
+    return ", ".join(candidates) if len(candidates) >= 2 else ""
 
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField("زمان ایجاد", auto_now_add=True)
@@ -145,6 +224,12 @@ def site_hero_mobile_upload_to(instance, filename):
     return f"heroes/pages/mobile/page-hero-{page}-{target}-{order}-mobile.{_upload_extension(filename)}"
 
 
+def hero_font_upload_to(instance, filename):
+    name = _upload_slug(instance.name, f"font-{instance.pk or 'new'}")
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else "woff2"
+    return f"heroes/fonts/hero-font-{name}.{extension}"
+
+
 class Category(TimeStampedModel):
     class Section(models.TextChoices):
         FLOWERS = "flowers", "گل‌ها"
@@ -167,6 +252,19 @@ class Category(TimeStampedModel):
         max_length=20,
         choices=Section.choices,
         db_index=True,
+    )
+
+    parent = models.ForeignKey(
+        "self",
+        verbose_name="دسته والد",
+        on_delete=models.PROTECT,
+        related_name="children",
+        null=True,
+        blank=True,
+        help_text=(
+            "فقط برای ساخت زیردسته انتخاب شود. مثال: «ماشین عروس» و "
+            "«دسته‌گل عروس» هر دو والد «عروسی» دارند."
+        ),
     )
 
     description = models.TextField("توضیح کوتاه", blank=True)
@@ -200,6 +298,8 @@ class Category(TimeStampedModel):
         ]
 
     def __str__(self) -> str:
+        if self.parent_id:
+            return f"{self.get_section_display()} / {self.parent.name} / {self.name}"
         return f"{self.get_section_display()} / {self.name}"
 
     @property
@@ -208,7 +308,38 @@ class Category(TimeStampedModel):
 
     @property
     def is_wedding_flower_category(self):
-        return self.section == self.Section.FLOWERS and self.slug in FLOWER_WEDDING_CATEGORY_SLUGS
+        return self.section == self.Section.FLOWERS and (
+            self.slug in FLOWER_WEDDING_CATEGORY_SLUGS
+            or (
+                self.parent_id
+                and self.parent.slug in FLOWER_WEDDING_CATEGORY_SLUGS
+            )
+        )
+
+    @property
+    def is_leaf(self):
+        if not self.pk:
+            return True
+        return not self.children.exists()
+
+    def clean(self):
+        super().clean()
+
+        if not self.parent_id:
+            return
+
+        if self.pk and self.parent_id == self.pk:
+            raise ValidationError({"parent": "یک دسته نمی‌تواند والد خودش باشد."})
+
+        if self.parent.section != self.section:
+            raise ValidationError(
+                {"parent": "دسته والد و زیردسته باید در یک بخش اصلی باشند."}
+            )
+
+        if self.parent.parent_id:
+            raise ValidationError(
+                {"parent": "ساختار دسته‌بندی زاد حداکثر دو سطح دارد."}
+            )
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -218,6 +349,16 @@ class Category(TimeStampedModel):
             self.slug = slugify(self.slug, allow_unicode=True)
 
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        route_name = {
+            self.Section.FLOWERS: "flower_subcategory",
+            self.Section.BAKERY: "bakery_subcategory",
+            self.Section.GIFTS: "gift_subcategory",
+        }.get(self.section)
+        if not route_name:
+            return reverse("events")
+        return reverse(route_name, args=[self.slug])
 
 
 class Tag(TimeStampedModel):
@@ -276,6 +417,9 @@ class Tag(TimeStampedModel):
             self.slug = slugify(self.slug, allow_unicode=True)
 
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("occasion_detail", args=[self.slug])
 
 
 class Product(TimeStampedModel):
@@ -420,6 +564,53 @@ class Product(TimeStampedModel):
         return clean_name or self.product_code or f"{self.pk or 'NEW'}"
 
     @property
+    def seo_category_name(self):
+        if not self.category_id:
+            return "محصول"
+        if self.category.slug in PRODUCT_SEO_CATEGORY_LABELS:
+            return PRODUCT_SEO_CATEGORY_LABELS[self.category.slug]
+        if self.category.section == Category.Section.BAKERY:
+            return f"محصول سوئیت‌بار {self.category.name}"
+        if self.category.section == Category.Section.GIFTS:
+            return f"هدیه {self.category.name}"
+        return self.category.name or "محصول"
+
+    @property
+    def seo_name(self):
+        clean_name = self.name.strip() if self.name else ""
+        code = (self.product_code or str(self.pk or "")).translate(PERSIAN_DIGITS)
+        if clean_name:
+            if code:
+                return f"{clean_name}، کد {code}"
+            return clean_name
+        if code:
+            return f"{self.seo_category_name} زاد، کد {code}"
+        return f"{self.seo_category_name} زاد"
+
+    @property
+    def seo_description(self):
+        description = " ".join((self.description or "").split())
+        code = (self.product_code or str(self.pk or "")).translate(PERSIAN_DIGITS)
+        if description:
+            suffix = f" کد محصول: {code}." if code else ""
+            return Truncator(f"{description}{suffix}").chars(160)
+        return Truncator(
+            f"{self.seo_name}؛ بررسی موجودی، استعلام قیمت و هماهنگی سفارش و ارسال در مشهد."
+        ).chars(160)
+
+    @property
+    def schema_availability(self):
+        if self.stock_status == self.StockStatus.OUT_OF_STOCK:
+            return "https://schema.org/OutOfStock"
+        if self.stock_status == self.StockStatus.PREORDER:
+            return "https://schema.org/PreOrder"
+        return "https://schema.org/InStock"
+
+    @cached_property
+    def cover_srcset(self):
+        return responsive_image_srcset(self.cover_image)
+
+    @property
     def is_flower(self):
         return self.category_id and self.category.section == Category.Section.FLOWERS
 
@@ -502,6 +693,16 @@ class Product(TimeStampedModel):
             raise ValidationError(
                 {
                     "category": "زیردسته غیرفعال است. برای نمایش محصول، ابتدا زیردسته را فعال کنید."
+                }
+            )
+
+        if self.category_id and self.category.children.filter(is_active=True).exists():
+            raise ValidationError(
+                {
+                    "category": (
+                        "این دسته دارای زیردسته است و محصول باید داخل یکی از "
+                        "زیردسته‌های آن قرار بگیرد."
+                    )
                 }
             )
 
@@ -595,6 +796,18 @@ class Flower(Product):
         verbose_name_plural = "محصولات گل"
 
 
+class SameDayFlower(Product):
+    """Admin-only proxy for the fast same-day selection workflow."""
+
+    objects = FlowerManager()
+
+    class Meta:
+        proxy = True
+        ordering = ["sort_order", "-updated_at"]
+        verbose_name = "گل ارسال روز"
+        verbose_name_plural = "مدیریت ارسال روز"
+
+
 class BakeryItem(Product):
     objects = BakeryItemManager()
 
@@ -637,6 +850,10 @@ class ProductImage(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.product.display_name} - image {self.ordering}"
+
+    @cached_property
+    def image_srcset(self):
+        return responsive_image_srcset(self.image)
 
 
 class PublishStatus(models.TextChoices):
@@ -783,6 +1000,47 @@ class LeadRequest(TimeStampedModel):
         return base
 
 
+class HeroFont(TimeStampedModel):
+    name = models.CharField(
+        "نام نمایشی فونت",
+        max_length=100,
+        unique=True,
+        help_text="یک نام واضح بنویس؛ مثلاً «فونت فارسی کمپین نوروز».",
+    )
+    font_file = models.FileField(
+        "فایل فونت",
+        upload_to=hero_font_upload_to,
+        validators=[
+            FileExtensionValidator(["woff2", "woff", "ttf", "otf"]),
+            validate_hero_font_file_size,
+        ],
+        help_text=(
+            "فرمت WOFF2 پیشنهاد می‌شود. فرمت‌های WOFF، TTF و OTF هم پذیرفته "
+            "می‌شوند. حداکثر حجم فایل ۵ مگابایت است."
+        ),
+    )
+    is_active = models.BooleanField(
+        "قابل انتخاب باشد؟",
+        default=True,
+        help_text=(
+            "اگر خاموش شود، Heroهایی که این فونت را انتخاب کرده‌اند بدون خطا "
+            "با فونت پیش‌فرض نمایش داده می‌شوند."
+        ),
+    )
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "فونت Hero"
+        verbose_name_plural = "فونت‌های Hero"
+
+    def __str__(self):
+        return self.name if self.is_active else f"{self.name} (غیرفعال)"
+
+    @property
+    def css_family_name(self):
+        return f"ZADHeroFont-{self.pk}" if self.pk else "ZADHeroFont"
+
+
 class HomeHeroSlide(TimeStampedModel):
     title = models.CharField("عنوان", max_length=180)
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
@@ -801,6 +1059,68 @@ class HomeHeroSlide(TimeStampedModel):
 
     secondary_button_text = models.CharField("متن دکمه دوم", max_length=60, blank=True)
     secondary_button_url = models.CharField("لینک دکمه دوم", max_length=255, blank=True)
+
+    content_position = models.CharField(
+        "موقعیت متن در دسکتاپ",
+        max_length=20,
+        choices=HERO_POSITION_CHOICES,
+        default="bottom-right",
+        help_text="جای تقریبی کل بلوک متن روی تصویر دسکتاپ را مشخص می‌کند.",
+    )
+    mobile_content_position = models.CharField(
+        "موقعیت متن در موبایل",
+        max_length=20,
+        choices=HERO_POSITION_CHOICES,
+        default="bottom-center",
+        help_text="موقعیت مستقل متن روی تصویر موبایل؛ برای جلوگیری از پوشاندن سوژه.",
+    )
+    text_color = models.CharField(
+        "رنگ متن",
+        max_length=7,
+        default="#FFFFFF",
+        validators=[HEX_COLOR_VALIDATOR],
+        help_text="رنگ شش‌رقمی؛ مثل #FFFFFF برای سفید یا #2D2A27 برای قهوه‌ای تیره.",
+    )
+    builtin_font = models.CharField(
+        "فونت داخلی",
+        max_length=20,
+        choices=HERO_BUILTIN_FONT_CHOICES,
+        default="estedad",
+        help_text="اگر فونت آپلودی انتخاب نشود یا در دسترس نباشد، این فونت استفاده می‌شود.",
+    )
+    custom_font = models.ForeignKey(
+        HeroFont,
+        verbose_name="فونت آپلودی",
+        on_delete=models.SET_NULL,
+        related_name="home_hero_slides",
+        null=True,
+        blank=True,
+        help_text="اختیاری است. در صورت انتخاب، بر فونت داخلی اولویت دارد.",
+    )
+    title_font_size = models.PositiveSmallIntegerField(
+        "اندازه عنوان در دسکتاپ",
+        default=64,
+        validators=[MinValueValidator(28), MaxValueValidator(120)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۲۸ تا ۱۲۰.",
+    )
+    body_font_size = models.PositiveSmallIntegerField(
+        "اندازه توضیح در دسکتاپ",
+        default=18,
+        validators=[MinValueValidator(12), MaxValueValidator(32)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۱۲ تا ۳۲.",
+    )
+    mobile_title_font_size = models.PositiveSmallIntegerField(
+        "اندازه عنوان در موبایل",
+        default=40,
+        validators=[MinValueValidator(22), MaxValueValidator(72)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۲۲ تا ۷۲.",
+    )
+    mobile_body_font_size = models.PositiveSmallIntegerField(
+        "اندازه توضیح در موبایل",
+        default=14,
+        validators=[MinValueValidator(12), MaxValueValidator(24)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۱۲ تا ۲۴.",
+    )
 
     is_active = models.BooleanField("فعال باشد؟", default=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
@@ -852,6 +1172,68 @@ class SiteHero(TimeStampedModel):
         max_length=120,
         blank=True,
         help_text="برای زیر‌دسته یا صفحه خاص، اسلاگ را وارد کن. مثال: bouquet",
+    )
+
+    content_position = models.CharField(
+        "موقعیت متن در دسکتاپ",
+        max_length=20,
+        choices=HERO_POSITION_CHOICES,
+        default="center-left",
+        help_text="جای تقریبی کل بلوک متن روی تصویر دسکتاپ را مشخص می‌کند.",
+    )
+    mobile_content_position = models.CharField(
+        "موقعیت متن در موبایل",
+        max_length=20,
+        choices=HERO_POSITION_CHOICES,
+        default="bottom-center",
+        help_text="موقعیت مستقل متن روی تصویر موبایل؛ برای جلوگیری از پوشاندن سوژه.",
+    )
+    text_color = models.CharField(
+        "رنگ متن",
+        max_length=7,
+        default="#FFFFFF",
+        validators=[HEX_COLOR_VALIDATOR],
+        help_text="رنگ شش‌رقمی؛ مثل #FFFFFF برای سفید یا #2D2A27 برای قهوه‌ای تیره.",
+    )
+    builtin_font = models.CharField(
+        "فونت داخلی",
+        max_length=20,
+        choices=HERO_BUILTIN_FONT_CHOICES,
+        default="estedad",
+        help_text="اگر فونت آپلودی انتخاب نشود یا در دسترس نباشد، این فونت استفاده می‌شود.",
+    )
+    custom_font = models.ForeignKey(
+        HeroFont,
+        verbose_name="فونت آپلودی",
+        on_delete=models.SET_NULL,
+        related_name="site_heroes",
+        null=True,
+        blank=True,
+        help_text="اختیاری است. در صورت انتخاب، بر فونت داخلی اولویت دارد.",
+    )
+    title_font_size = models.PositiveSmallIntegerField(
+        "اندازه عنوان در دسکتاپ",
+        default=68,
+        validators=[MinValueValidator(28), MaxValueValidator(120)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۲۸ تا ۱۲۰.",
+    )
+    body_font_size = models.PositiveSmallIntegerField(
+        "اندازه توضیح در دسکتاپ",
+        default=18,
+        validators=[MinValueValidator(12), MaxValueValidator(32)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۱۲ تا ۳۲.",
+    )
+    mobile_title_font_size = models.PositiveSmallIntegerField(
+        "اندازه عنوان در موبایل",
+        default=40,
+        validators=[MinValueValidator(22), MaxValueValidator(72)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۲۲ تا ۷۲.",
+    )
+    mobile_body_font_size = models.PositiveSmallIntegerField(
+        "اندازه توضیح در موبایل",
+        default=14,
+        validators=[MinValueValidator(12), MaxValueValidator(24)],
+        help_text="بر حسب پیکسل؛ بازه مجاز ۱۲ تا ۲۴.",
     )
 
     is_active = models.BooleanField("فعال باشد؟", default=True)

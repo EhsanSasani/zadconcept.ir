@@ -183,8 +183,8 @@
 
 .zad-product-modal__actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
   margin-top: 24px;
 }
 
@@ -222,6 +222,19 @@
 .zad-product-modal__btn--ghost:hover {
   background: rgba(185, 138, 87, 0.1);
   color: #2f251f;
+}
+
+.zad-product-modal__btn--bale {
+  border-color: rgba(32, 107, 89, 0.24);
+  background: #eaf6f1;
+  color: #206b59;
+}
+
+.zad-product-modal__btn--bale:hover,
+.zad-product-modal__btn--bale:focus-visible {
+  border-color: #206b59;
+  background: #206b59;
+  color: #fff;
 }
 
 @media (max-width: 760px) {

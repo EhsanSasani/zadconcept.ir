@@ -8,6 +8,11 @@
 {% endblock %}
 
 {% block content %}
+{% if has_managed_site_hero %}
+  <h2 class="sr-only">{{ meta_title|default:"کاتالوگ زاد" }}</h2>
+{% else %}
+  <h1 class="sr-only">{{ meta_title|default:"کاتالوگ زاد" }}</h1>
+{% endif %}
 {% include "partials/breadcrumbs.html" %}
 
 {% if flower_type_cards %}
@@ -26,9 +31,9 @@
         <a href="{{ item.url }}" class="flower-type-card__main">
           <div class="flower-type-card__media">
             {% if item.image|slice:":7" == "/media/" %}
-              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy">
+              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
             {% else %}
-              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy">
+              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
             {% endif %}
           </div>
           <div class="flower-type-card__overlay"></div>
@@ -82,9 +87,9 @@
       <a href="{{ item.url }}" class="flower-moment-card">
         <div class="flower-moment-card__media">
           {% if item.image|slice:":7" == "/media/" %}
-            <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy">
+            <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
           {% else %}
-            <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy">
+            <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
           {% endif %}
         </div>
         <div class="flower-moment-card__body">
@@ -104,9 +109,9 @@
       <a href="{{ item.url }}" class="catalog-image-card">
         <div class="catalog-image-card__media">
           {% if item.image|slice:":7" == "/media/" %}
-            <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy">
+            <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
           {% else %}
-            <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy">
+            <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" width="1200" height="1500" decoding="async">
           {% endif %}
         </div>
         <div class="catalog-image-card__overlay"></div>

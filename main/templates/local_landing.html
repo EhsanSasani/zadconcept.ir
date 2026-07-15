@@ -8,24 +8,29 @@
 {% endblock %}
 
 {% block content %}
+{% if has_managed_site_hero %}
+  <h2 class="sr-only">{{ landing_title }}</h2>
+{% else %}
+  <h1 class="sr-only">{{ landing_title }}</h1>
+{% endif %}
 {% include "partials/breadcrumbs.html" %}
 
 <section class="container section-block page-intro">
-  <p class="intro-text intro-text--en">{{ landing_subtitle }}</p>
+  <p class="intro-text">{{ landing_subtitle }}</p>
 
   <div class="cta-row">
-    <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="hero">Call</a>
-    <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="hero">Telegram</a>
+    <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="hero">تماس</a>
+    <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="hero">تلگرام</a>
   </div>
 </section>
 
 <section class="container section-block">
   <div class="section-head">
-    <h2>Delivery & Coverage</h2>
+    <h2>ارسال و محدوده پوشش</h2>
   </div>
 
   <div class="meta-row">
-    <span>Same-day coordination in key Mashhad areas</span>
+    <span>هماهنگی ارسال همان‌روز در محدوده‌های قابل پوشش مشهد</span>
     <span>{{ site_opening_hours_text }}</span>
     <span>{{ site_response_time_text }}</span>
   </div>
@@ -35,9 +40,9 @@
 <section class="container section-block featured-products-section">
   <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
     <div>
-      <h2 class="section-title-en">Our Selection</h2>
+      <h2>پیشنهادهای زاد</h2>
     </div>
-    <a href="{% url 'flowers' %}" class="section-link">View All</a>
+    <a href="{% url 'flowers' %}" class="section-link">مشاهده همه</a>
   </div>
 
   {% include "partials/featured_products_slider.html" with products=curated_items %}
@@ -46,7 +51,7 @@
 
 <section class="container section-block">
   <div class="section-head">
-    <h2>Why zad?</h2>
+    <h2>چرا زاد؟</h2>
   </div>
 
   <div class="list-grid">
@@ -58,7 +63,7 @@
 
 <section class="container section-block">
   <div class="section-head">
-    <h2>Occasions</h2>
+    <h2>مناسبت‌ها</h2>
   </div>
 
   <div class="inline-links">

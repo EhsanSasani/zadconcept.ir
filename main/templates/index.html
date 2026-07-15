@@ -4,34 +4,35 @@
 {% block body_class %}page-home{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/home.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'main/css/home-final-polish.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/home.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/home-final-polish.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
+<h1 class="sr-only">زاد؛ سفارش آنلاین گل، هدیه و تجربه‌های خاص در مشهد</h1>
 
 <section class="global-hero home-hero">
   <div class="hero-slides" id="heroSlides">
     {% for slide in home_hero_slides %}
-      <div class="hero-slide hero-slide--{{ forloop.counter }} {% if forloop.first %}is-active{% endif %}">
+      <div class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }} {% if forloop.first %}is-active{% endif %}">
 
         <picture>
           {% if slide.mobile_image_url %}
             <source media="(max-width:760px)" srcset="{{ slide.mobile_image_url }}">
           {% endif %}
 
-          <img src="{{ slide.image_url }}" alt="{{ slide.title|default:'ZAD' }}">
+          <img src="{{ slide.image_url }}" alt="{{ slide.title|default:'ZAD' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
         </picture>
 
         <div class="hero-slide__overlay"></div>
         {% if slide.show_content %}
-          <div class="hero-slide__content hero-slide__content--cms container">
+          <div class="hero-slide__content hero-slide__content--cms container" data-hero-content>
             {% if slide.kicker %}
-              <span class="hero-slide__kicker">{{ slide.kicker }}</span>
+              <span class="hero-slide__kicker" data-hero-kicker>{{ slide.kicker }}</span>
             {% endif %}
-            <h2 class="hero-slide__title">{{ slide.title }}</h2>
+            <h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>
             {% if slide.description %}
-              <p class="hero-slide__description">{{ slide.description }}</p>
+              <p class="hero-slide__description" data-hero-text>{{ slide.description }}</p>
             {% endif %}
             {% if slide.primary_button_text and slide.primary_button_url or slide.secondary_button_text and slide.secondary_button_url %}
               <div class="hero-slide__actions">
@@ -48,10 +49,10 @@
       </div>
 
     {% empty %}
-      <div class="hero-slide hero-slide--1 is-active">
+      <div class="hero-slide hero-slide--1 hero-configurable hero-position--bottom-right hero-mobile-position--bottom-center is-active">
         <picture>
           <source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.webp' %}">
-          <img src="{% static 'main/img/hero-1.webp' %}" alt="ZAD Concept Store">
+          <img src="{% static 'main/img/hero-1.webp' %}" alt="ZAD Concept Store" width="1920" height="1080" fetchpriority="high" decoding="async">
         </picture>
 
         <div class="hero-slide__overlay"></div>
@@ -78,7 +79,7 @@
 
       <div class="home-trust-item">
         <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/flower.svg' %}" alt="">
+          <img src="{% static 'main/img/icons/flower.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
         </div>
         <h3>گل‌های تازه</h3>
         <p>انتخابی از بهترین گل‌ها</p>
@@ -88,7 +89,7 @@
 
       <div class="home-trust-item">
         <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/gift.svg' %}" alt="">
+          <img src="{% static 'main/img/icons/gift.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
         </div>
         <h3>بسته‌بندی شیک</h3>
         <p>طراحی شده با عشق و دقت</p>
@@ -98,7 +99,7 @@
 
       <div class="home-trust-item">
         <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/delivery.svg' %}" alt="">
+          <img src="{% static 'main/img/icons/delivery.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
         </div>
         <h3>ارسال در همان روز</h3>
         <p>سریع و مطمئن</p>
@@ -113,7 +114,7 @@
     <div class="home-categories home-categories--fixed">
 
       <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه گل‌های زاد">
-        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="گل‌های زاد" decoding="async">
+        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="گل‌های زاد" decoding="async" width="900" height="1125" loading="lazy">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
@@ -127,7 +128,7 @@
       </a>
 
       <a href="{% url 'events' %}" class="home-category-card home-category-card--primary home-category-card--workshops" aria-label="مشاهده ورکشاپ‌های زاد">
-        <img src="{% static 'main/img/cat-events.webp' %}" alt="ورکشاپ‌های زاد" decoding="async">
+        <img src="{% static 'main/img/cat-events.webp' %}" alt="ورکشاپ‌های زاد" decoding="async" width="900" height="1125" loading="lazy">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
@@ -156,10 +157,9 @@
 
     <div class="home-sameday-row" data-sameday-slider>
       {% for product in home_same_day_products %}
-        <a
+        <article
           class="home-sameday-card"
-          href="{{ product.get_absolute_url }}"
-          data-zad-modal-card
+          data-catalog-card
           data-product-type="{{ product.category.slug|default:'collection' }}"
           data-product-code="{{ product.product_code }}"
           data-product-name="{{ product.name|default:'' }}"
@@ -168,17 +168,28 @@
           data-product-stock="{{ product.stock_status_label }}"
           data-product-description="{{ product.description|default:''|truncatechars:140 }}"
         >
+          <a class="home-sameday-card__main" href="{{ product.get_absolute_url }}" data-zad-modal-card>
           <div class="home-sameday-card__media">
             {% if product.cover_image %}
               <img
                   src="{{ product.cover_image.url }}"
-                  alt="{{ product.display_name }}"
+                  alt="{{ product.seo_name }}"
+                  {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %}
+                  sizes="(max-width: 640px) 82vw, 280px"
+                  width="520"
+                  height="650"
+                  loading="lazy"
+                  decoding="async"
                   data-product-image
                 >
             {% else %}
               <img
                   src="{% static 'main/img/sub-bouquet.webp' %}"
-                  alt="{{ product.display_name }}"
+                  alt="{{ product.seo_name }}"
+                  width="520"
+                  height="650"
+                  loading="lazy"
+                  decoding="async"
                   data-product-image
                 >
             {% endif %}
@@ -195,11 +206,12 @@
             <span class="home-sameday-card__price">{{ product.display_price }}</span>
             <em>مشاهده محصول ←</em>
           </div>
-        </a>
+          </a>
+        </article>
       {% empty %}
         <a class="home-sameday-card" href="{% url 'flowers' %}">
           <div class="home-sameday-card__media">
-            <img src="{% static 'main/img/sub-bouquet.webp' %}" alt="ارسال فوری">
+            <img src="{% static 'main/img/sub-bouquet.webp' %}" alt="ارسال فوری" width="520" height="650" loading="lazy" decoding="async">
           </div>
 
           <div class="home-sameday-card__body">
@@ -252,7 +264,7 @@
     <div class="home-abroad">
 
       <div class="home-abroad__media">
-        <img src="{% static 'main/img/home-abroad.webp' %}" alt="International flower delivery">
+        <img src="{% static 'main/img/home-abroad.webp' %}" alt="International flower delivery" width="1600" height="1067" decoding="async" loading="lazy">
       </div>
 
       <div class="home-abroad__content">
@@ -312,9 +324,9 @@
         <a class="home-occasion-card" href="{{ item.url }}">
           <div class="home-occasion-card__media">
             {% if item.image|slice:":7" == "/media/" %}
-              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" decoding="async">
+              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" decoding="async" width="1200" height="1500">
             {% else %}
-              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" decoding="async">
+              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" decoding="async" width="1200" height="1500">
             {% endif %}
           </div>
           <div class="home-occasion-card__body">
@@ -328,7 +340,7 @@
       {% empty %}
         <a class="home-occasion-card" href="{% url 'occasions' %}">
           <div class="home-occasion-card__media">
-            <img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async">
+            <img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async" width="900" height="1125">
           </div>
           <div class="home-occasion-card__body">
             <div><strong>لحظه‌های خاص</strong><span>Occasions</span></div>
@@ -353,7 +365,7 @@
     <div class="home-experience">
 
       <div class="home-experience__media">
-        <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌ها و رویدادهای زاد">
+        <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌ها و رویدادهای زاد" width="1600" height="1067" decoding="async" loading="lazy">
       </div>
 
       <div class="home-experience__content">

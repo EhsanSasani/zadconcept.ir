@@ -1,0 +1,13 @@
+[Unit]
+Description=Run the ZAD technical SEO contract audit
+After=network.target
+
+[Service]
+Type=oneshot
+User=cloud-admin
+Group=www-data
+WorkingDirectory=/var/www/zad
+EnvironmentFile=/var/www/zad/.env
+ExecStart=/var/www/zad/venv/bin/python manage.py audit_seo --fail-on-error --output /var/lib/zad/seo-audit.json
+NoNewPrivileges=true
+PrivateTmp=true

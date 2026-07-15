@@ -3,43 +3,6 @@
 
 {% block body_class %}page-contact{% endblock %}
 
-{% block extra_head %}
-  <meta name="robots" content="index, follow">
-  <meta name="keywords" content="تماس با زاد, سفارش گل در مشهد, ارسال گل در مشهد, سفارش هدیه زاد, هماهنگی سفارش زاد">
-  <meta property="og:site_name" content="ZAD Flower & Concept Store">
-  <meta property="og:image" content="{{ site_url }}{% static 'main/img/hero-contact.webp' %}">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="alternate" hreflang="fa-IR" href="{{ request.build_absolute_uri }}">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "ContactPage",
-    "inLanguage": "fa-IR",
-    "name": "تماس با زاد",
-    "url": "{{ request.build_absolute_uri|escapejs }}",
-    "description": "تماس با زاد برای سفارش گل، هدیه، بیکری، ارسال در مشهد و هماهنگی سفارش‌های مناسبتی.",
-    "about": {
-      "@type": "LocalBusiness",
-      "name": "ZAD Flower & Concept Store",
-      "url": "{{ site_url|escapejs }}",
-      "telephone": "{{ site_call_href|cut:'tel:'|escapejs }}",
-      "address": "{{ site_address_text|escapejs }}",
-      "areaServed": "Mashhad, Razavi Khorasan, IR",
-      "sameAs": [
-        "{{ site_telegram_url|escapejs }}",
-        "{{ site_instagram_url|escapejs }}"
-      ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "{{ site_call_href|cut:'tel:'|escapejs }}",
-        "contactType": "customer service",
-        "availableLanguage": ["fa", "en"],
-        "areaServed": "IR"
-      }
-    }
-  }
-  </script>
-{% endblock %}
 
 {% block content %}
 {% include "partials/breadcrumbs.html" %}
@@ -50,7 +13,7 @@
     <h1 id="contact-title">{{ page_content.intro.title|default:"برای سفارش گل، هدیه و هماهنگی ارسال با زاد در ارتباط باشید." }}</h1>
     <p>{% if page_content.intro.body %}{{ page_content.intro.body }}{% else %}
       اگر برای سفارش گل در مشهد، انتخاب هدیه، بررسی موجودی روز، ارسال همان‌روز یا هماهنگی مراسم نیاز به راهنمایی دارید،
-      تیم زاد از طریق تماس تلفنی و تلگرام پاسخ‌گوست. برای سفارش‌های فوری، تماس مستقیم سریع‌ترین مسیر است.
+      تیم زاد از طریق تماس تلفنی، تلگرام و بله پاسخ‌گوست. برای سفارش‌های فوری، تماس مستقیم سریع‌ترین مسیر است.
     {% endif %}</p>
 
     <div class="contact-landing__actions" aria-label="راه‌های سریع تماس با زاد">
@@ -61,6 +24,10 @@
       <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="contact-hero">
         <i class="bi bi-telegram"></i>
         پیام در تلگرام
+      </a>
+      <a href="{{ site_bale_url }}" target="_blank" rel="noopener" class="btn btn-bale" data-cta-position="contact-hero-bale">
+        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+        پیام در بله
       </a>
     </div>
   </div>
@@ -75,6 +42,11 @@
       <i class="bi bi-telegram"></i>
       <span>تلگرام</span>
       <strong>ارسال پیام به زاد</strong>
+    </a>
+    <a href="{{ site_bale_url }}" target="_blank" rel="noopener" data-cta-position="contact-info-bale">
+      <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+      <span>بله</span>
+      <strong>{{ site_bale_display }}</strong>
     </a>
     <div>
       <i class="bi bi-clock"></i>
@@ -98,7 +70,7 @@
   <article>
     <i class="bi bi-chat-heart"></i>
     <h2>راهنمایی انتخاب</h2>
-    <p>اگر بین چند سبک، رنگ یا بودجه مردد هستید، در تلگرام توضیح بدهید تا گزینه مناسب پیشنهاد شود.</p>
+    <p>اگر بین چند سبک، رنگ یا بودجه مردد هستید، در تلگرام یا بله توضیح بدهید تا گزینه مناسب پیشنهاد شود.</p>
   </article>
   <article>
     <i class="bi bi-calendar-event"></i>

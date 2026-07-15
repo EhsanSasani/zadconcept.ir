@@ -343,7 +343,7 @@
 .home-sameday-row {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 64px) / 5);
+  grid-auto-columns: calc((100% - 48px) / 4);
   gap: 16px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -358,7 +358,9 @@
 }
 
 .home-sameday-card {
-  display: block;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   overflow: hidden;
   scroll-snap-align: start;
   border: 1px solid rgba(157, 111, 63, 0.18);
@@ -376,15 +378,26 @@
   box-shadow: 0 22px 54px rgba(70, 50, 35, 0.14);
 }
 
+.home-sameday-card__main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
 .home-sameday-card__media {
   position: relative;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
 }
 
 .home-sameday-card__media img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 4.1;
+  height: 100%;
+  aspect-ratio: auto;
   object-fit: cover;
   filter: saturate(0.96) brightness(0.98);
   transition: transform 360ms ease;
@@ -415,13 +428,13 @@
 }
 
 .home-sameday-card__body {
-  min-height: 112px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 14px 12px 16px;
+  padding: 12px 12px 14px;
   text-align: center;
   background: linear-gradient(180deg, #fffaf3 0%, #f8efe5 100%);
 }
@@ -1100,7 +1113,7 @@
 
 @media (max-width: 1180px) {
   .home-sameday-row {
-    grid-auto-columns: calc((100% - 48px) / 4);
+    grid-auto-columns: calc((100% - 32px) / 3);
   }
 }
 
@@ -1151,14 +1164,14 @@
   }
 
   .home-sameday-row {
-    grid-auto-columns: 62%;
+    grid-auto-columns: 44%;
     gap: 14px;
     padding-bottom: 20px;
   }
 
   .home-sameday-card__body {
-    min-height: 126px;
-    padding: 18px 14px;
+    min-height: 96px;
+    padding: 13px 14px 15px;
   }
 
   .home-sameday-benefits {
@@ -1409,11 +1422,7 @@
   }
 
   .home-sameday-row {
-    grid-auto-columns: 78%;
-  }
-
-  .home-sameday-card__media img {
-    aspect-ratio: 4 / 4.9;
+    grid-auto-columns: 72%;
   }
 
   .home-sameday-card__body strong {

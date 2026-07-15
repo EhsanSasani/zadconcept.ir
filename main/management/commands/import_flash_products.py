@@ -25,7 +25,9 @@ FOLDER_CATEGORY_MAP = {
     "daste gol": "hand-bouquet",
     "jarl": "jarl",
     "stand": "stand",
-    "wedding": "wedding",
+    "wedding": "bridal-bouquet",
+    "wedding car": "wedding-car",
+    "mashine aroos": "wedding-car",
 }
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -78,9 +80,6 @@ class Command(BaseCommand):
                     for code in tag_codes
                     if code in TAG_CODE_MAP
                 ]
-
-                if category_slug == "wedding":
-                    tag_slugs.append("wedding")
 
                 tags = list(Tag.objects.filter(slug__in=tag_slugs, is_active=True))
 

@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
 
 from .models import (
     BakeryItem,
@@ -11,6 +12,7 @@ from .models import (
     Event,
     Flower,
     GiftItem,
+    HeroFont,
     HomeHeroSlide,
     LeadRequest,
     NewsPost,
@@ -18,6 +20,8 @@ from .models import (
     Product,
     ProductImage,
     PublishStatus,
+    SAME_DAY_TAG_SLUG,
+    SameDayFlower,
     SiteHero,
     Tag,
     WorkshopPageContent,
@@ -29,6 +33,25 @@ admin.site.site_title = "مدیریت زاد"
 admin.site.index_title = "مدیریت محتوا، محصولات و درخواست‌ها"
 
 MAX_ADMIN_IMAGE_SIZE = 10 * 1024 * 1024
+MAX_ADMIN_FONT_SIZE = 5 * 1024 * 1024
+
+HERO_SLUG_TARGET_PAGES = {
+    SiteHero.TargetPage.EVENTS,
+    SiteHero.TargetPage.OCCASIONS,
+    SiteHero.TargetPage.BLOG,
+    SiteHero.TargetPage.MASHHAD,
+    SiteHero.TargetPage.SUBCATEGORY,
+    SiteHero.TargetPage.ITEM,
+}
+
+HERO_TARGET_SLUG_HELP = {
+    SiteHero.TargetPage.EVENTS: "برای یک ورکشاپ خاص، اسلاگ همان ورکشاپ را وارد کن.",
+    SiteHero.TargetPage.OCCASIONS: "برای یک مناسبت خاص، مثل birthday یا romantic، اسلاگ را وارد کن.",
+    SiteHero.TargetPage.BLOG: "برای یک مطلب خاص، اسلاگ همان مطلب را وارد کن.",
+    SiteHero.TargetPage.MASHHAD: "برای صفحات داخلی از flower-order یا flower-delivery استفاده کن.",
+    SiteHero.TargetPage.SUBCATEGORY: "برای یک زیردسته خاص، مثل bouquet یا box، اسلاگ را وارد کن.",
+    SiteHero.TargetPage.ITEM: "برای یک محصول خاص، اسلاگ همان محصول را وارد کن.",
+}
 
 
 class HiddenFromAdminIndexMixin:
@@ -36,6 +59,8 @@ class HiddenFromAdminIndexMixin:
 
     def get_model_perms(self, request):
         return {}
+
+
 ALLOWED_ADMIN_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
@@ -55,7 +80,9 @@ def validate_admin_image(uploaded_file):
 def safe_image_url(image):
     try:
         return image.url
-    except (ValueError, OSError):
+    except Exception:
+        # A missing object or temporarily unavailable remote storage must not
+        # make the Hero list/change page unusable.
         return ""
 
 
@@ -227,6 +254,20 @@ class CategoryAdminForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if "parent" in self.fields:
+            section = self.data.get("section") or getattr(self.instance, "section", "")
+            queryset = Category.objects.filter(parent__isnull=True)
+            if section:
+                queryset = queryset.filter(section=section)
+            if self.instance and self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            self.fields["parent"].queryset = queryset.order_by(
+                "section", "sort_order", "name"
+            )
+
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
 
@@ -272,7 +313,10 @@ class ProductAdminForm(forms.ModelForm):
         if "category" in self.fields:
             section_filter = getattr(self, "section_filter", None)
 
-            category_queryset = Category.objects.filter(is_active=True)
+            category_queryset = Category.objects.filter(
+                is_active=True,
+                children__isnull=True,
+            )
 
             if section_filter:
                 category_queryset = category_queryset.filter(section=section_filter)
@@ -356,12 +400,121 @@ class EventAdminForm(forms.ModelForm):
 class HeroAdminForm(forms.ModelForm):
     class Meta:
         fields = "__all__"
+        widgets = {
+            "text_color": forms.TextInput(attrs={"type": "color"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "custom_font" in self.fields:
+            self.fields["custom_font"].queryset = HeroFont.objects.order_by(
+                "-is_active", "name"
+            )
+
+        if "target_slug" in self.fields:
+            field_name = self.add_prefix("target_page")
+            target_page = self.data.get(field_name) or getattr(
+                self.instance,
+                "target_page",
+                "",
+            )
+            if not target_page:
+                self.fields["target_slug"].help_text = (
+                    "ابتدا صفحه هدف را انتخاب کن. برای Hero اصلی صفحه، این فیلد خالی می‌ماند."
+                )
+            else:
+                detail_help = HERO_TARGET_SLUG_HELP.get(target_page, "")
+                self.fields["target_slug"].help_text = (
+                    "برای Hero کل صفحه خالی بگذار. "
+                    f"{detail_help or 'این صفحه مقصد جزئی ندارد و اسلاگ باید خالی بماند.'}"
+                )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if "target_slug" not in self.fields:
+            return cleaned_data
+
+        target_page = cleaned_data.get("target_page")
+        raw_target_slug = (cleaned_data.get("target_slug") or "").strip()
+
+        if "/" in raw_target_slug:
+            self.add_error(
+                "target_slug",
+                "فقط خود اسلاگ را وارد کن؛ مسیر کامل یا / لازم نیست.",
+            )
+            return cleaned_data
+
+        target_slug = slugify(raw_target_slug, allow_unicode=True)
+        cleaned_data["target_slug"] = target_slug
+
+        if target_slug and target_page not in HERO_SLUG_TARGET_PAGES:
+            self.add_error(
+                "target_slug",
+                "برای این صفحه Hero فقط به‌صورت سراسری تعریف می‌شود؛ اسلاگ را خالی بگذار.",
+            )
+
+        return cleaned_data
 
     def clean_image(self):
         return validate_admin_image(self.cleaned_data.get("image"))
 
     def clean_mobile_image(self):
         return validate_admin_image(self.cleaned_data.get("mobile_image"))
+
+
+class HeroFontAdminForm(forms.ModelForm):
+    class Meta:
+        model = HeroFont
+        fields = "__all__"
+
+    def clean_font_file(self):
+        uploaded_file = self.cleaned_data.get("font_file")
+        if not uploaded_file:
+            return uploaded_file
+
+        # When no replacement is uploaded Django returns the existing FieldFile.
+        # Do not reopen a missing/remote file just to edit metadata; the public
+        # Hero renderer safely falls back to the selected built-in font.
+        if not hasattr(uploaded_file, "content_type"):
+            return uploaded_file
+
+        try:
+            file_size = uploaded_file.size
+            file_name = uploaded_file.name
+        except (AttributeError, OSError, ValueError):
+            raise forms.ValidationError(
+                "فایل فونت خوانده نشد؛ لطفاً فایل را دوباره انتخاب کنید."
+            )
+
+        if file_size > MAX_ADMIN_FONT_SIZE:
+            raise forms.ValidationError("حجم فایل فونت نباید بیشتر از ۵ مگابایت باشد.")
+
+        extension = file_name.rsplit(".", 1)[-1].lower()
+        if extension not in {"woff2", "woff", "ttf", "otf"}:
+            raise forms.ValidationError(
+                "فقط فایل‌های WOFF2، WOFF، TTF و OTF قابل آپلود هستند."
+            )
+
+        signatures = {
+            "woff2": {b"wOF2"},
+            "woff": {b"wOFF"},
+            "ttf": {b"\x00\x01\x00\x00", b"true"},
+            "otf": {b"OTTO"},
+        }
+        try:
+            position = uploaded_file.tell()
+            header = uploaded_file.read(4)
+            uploaded_file.seek(position)
+        except (AttributeError, OSError, ValueError):
+            raise forms.ValidationError(
+                "محتوای فایل فونت خوانده نشد؛ لطفاً یک فایل سالم انتخاب کنید."
+            )
+        if header not in signatures[extension]:
+            raise forms.ValidationError(
+                "پسوند فایل درست است اما محتوای آن فونت معتبر نیست."
+            )
+
+        return uploaded_file
 
 
 class ProductImageAdminForm(forms.ModelForm):
@@ -406,6 +559,7 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
         "image_preview",
         "name",
         "section",
+        "parent",
         "is_active",
         "sort_order",
         "product_count",
@@ -413,6 +567,7 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
     )
     list_filter = (
         "section",
+        "parent",
         "is_active",
     )
     search_fields = (
@@ -448,6 +603,7 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
                     "image_preview",
                     "name",
                     "section",
+                    "parent",
                 ),
             },
         ),
@@ -596,62 +752,17 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
             return obj.products_total
 
         return obj.products.count()
-    @admin.display(description="کد", ordering="product_code")
-    def product_code_display(self, obj):
-        if not obj.product_code:
-            return "-"
-
-        return format_html(
-            '<strong style="font-size:13px;letter-spacing:.04em;">{}</strong>',
-            to_persian_digits(obj.product_code),
-        )
 
 
-@admin.display(description="نام محصول", ordering="name")
-def name_display(self, obj):
-    if not obj.name:
-        return "-"
-
-    return obj.name
-
-
-@admin.display(description="نوع", ordering="category__name")
-def category_display(self, obj):
-    if not obj.category_id:
-        return "-"
-
-    return obj.category.name
-
-
-@admin.display(description="موجودی", ordering="stock_status")
-def stock_badge(self, obj):
-    label_map = {
-        Product.StockStatus.IN_STOCK: "موجود",
-        Product.StockStatus.OUT_OF_STOCK: "ناموجود",
-        Product.StockStatus.PREORDER: "پیش‌سفارش",
-    }
-
-    return label_map.get(obj.stock_status, "-")
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.annotate(products_total=Count("products"))
-
-    @admin.display(description="تعداد محصول")
-    def product_count(self, obj):
-        if not obj.pk:
-            return 0
-
-        if hasattr(obj, "products_total"):
-            return obj.products_total
-
-        return obj.products.count()
 class SectionCategoryFilter(admin.SimpleListFilter):
     title = "زیردسته"
     parameter_name = "category"
 
     def lookups(self, request, model_admin):
-        queryset = Category.objects.filter(is_active=True)
+        queryset = Category.objects.filter(
+            is_active=True,
+            children__isnull=True,
+        )
 
         if getattr(model_admin, "section_filter", None):
             queryset = queryset.filter(section=model_admin.section_filter)
@@ -871,6 +982,7 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
                 Category.objects.filter(
                     section=self.section_filter,
                     is_active=True,
+                    children__isnull=True,
                 )
                 .order_by("sort_order", "name")
                 .first()
@@ -883,7 +995,10 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "category":
-            queryset = Category.objects.filter(is_active=True)
+            queryset = Category.objects.filter(
+                is_active=True,
+                children__isnull=True,
+            )
 
             if self.section_filter:
                 queryset = queryset.filter(section=self.section_filter)
@@ -990,6 +1105,99 @@ class FlowerAdmin(BaseProductAdmin):
             },
         ),
     )
+
+
+@admin.register(SameDayFlower)
+class SameDayFlowerAdmin(FlowerAdmin):
+    """Edit only today's flowers; adding here preselects the same-day tag."""
+
+    section_filter = Category.Section.FLOWERS
+    list_per_page = 50
+    list_display = (
+        "image_preview",
+        "product_code_display",
+        "name_display",
+        "category_display",
+        "stock_badge",
+        "tags_summary",
+    )
+    list_display_links = (
+        "image_preview",
+        "product_code_display",
+        "name_display",
+    )
+    list_filter = (
+        SectionCategoryFilter,
+        "stock_status",
+        "publish_status",
+        "is_active",
+    )
+    actions = (
+        "remove_from_same_day",
+        "mark_in_stock",
+        "mark_out_of_stock",
+        "publish_selected_products",
+        "draft_selected_products",
+    )
+    fieldsets = FlowerAdmin.fieldsets
+
+    @staticmethod
+    def _ensure_same_day_tag():
+        tag = Tag.objects.filter(slug=SAME_DAY_TAG_SLUG).first()
+        if tag is None:
+            tag = Tag.objects.filter(name="ارسال روز").first()
+        if tag is None:
+            return Tag.objects.create(
+                name="ارسال روز",
+                slug=SAME_DAY_TAG_SLUG,
+                is_active=True,
+                is_occasion=False,
+                sort_order=100,
+            )
+
+        update_fields = []
+        if tag.slug != SAME_DAY_TAG_SLUG:
+            tag.slug = SAME_DAY_TAG_SLUG
+            update_fields.append("slug")
+        if not tag.is_active:
+            tag.is_active = True
+            update_fields.append("is_active")
+        if tag.is_occasion:
+            tag.is_occasion = False
+            update_fields.append("is_occasion")
+        if update_fields:
+            update_fields.append("updated_at")
+            tag.save(update_fields=update_fields)
+        return tag
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .filter(tags__slug=SAME_DAY_TAG_SLUG)
+            .distinct()
+        )
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial["tags"] = [self._ensure_same_day_tag().pk]
+        return initial
+
+    @admin.display(description="برچسب‌ها")
+    def tags_summary(self, obj):
+        names = [tag.name for tag in obj.tags.all() if tag.slug != SAME_DAY_TAG_SLUG]
+        return "، ".join(names[:4]) or "—"
+
+    @admin.action(description="حذف محصولات انتخاب‌شده از ارسال روز")
+    def remove_from_same_day(self, request, queryset):
+        tag = Tag.objects.filter(slug=SAME_DAY_TAG_SLUG).first()
+        products = list(queryset)
+        if tag:
+            tag.products.remove(*products)
+        self.message_user(
+            request,
+            f"{len(products)} محصول از بخش ارسال روز حذف شد.",
+        )
 
 
 @admin.register(BakeryItem)
@@ -1471,6 +1679,55 @@ class LeadRequestAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(HeroFont)
+class HeroFontAdmin(admin.ModelAdmin):
+    form = HeroFontAdminForm
+    list_display = (
+        "name",
+        "file_type",
+        "is_active",
+        "usage_count",
+        "updated_at",
+    )
+    list_filter = ("is_active",)
+    search_fields = ("name", "font_file")
+    list_editable = ("is_active",)
+    readonly_fields = ("usage_count", "created_at", "updated_at")
+    save_on_top = True
+    fieldsets = (
+        (
+            "آپلود فونت Hero",
+            {
+                "description": (
+                    "فایل WOFF2 بهترین انتخاب برای سرعت سایت است. بعد از ذخیره، "
+                    "این فونت در فرم Hero خانه و Hero صفحات قابل انتخاب می‌شود. "
+                    "اگر فایل پاک یا غیرفعال شود، سایت خودکار به فونت داخلی برمی‌گردد."
+                ),
+                "fields": ("name", "font_file", "is_active"),
+            },
+        ),
+        (
+            "اطلاعات",
+            {
+                "fields": ("usage_count", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    @admin.display(description="فرمت")
+    def file_type(self, obj):
+        if not obj.font_file or "." not in obj.font_file.name:
+            return "—"
+        return obj.font_file.name.rsplit(".", 1)[-1].upper()
+
+    @admin.display(description="تعداد استفاده")
+    def usage_count(self, obj):
+        if not obj.pk:
+            return 0
+        return obj.home_hero_slides.count() + obj.site_heroes.count()
+
+
 class HeroAdminBase(admin.ModelAdmin):
     form = HeroAdminForm
     list_per_page = 20
@@ -1494,45 +1751,45 @@ class HeroAdminBase(admin.ModelAdmin):
         "id",
     )
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("custom_font")
+
+    @admin.display(description="فونت")
+    def font_display(self, obj):
+        if obj.custom_font_id:
+            suffix = "" if obj.custom_font.is_active else " (غیرفعال؛ fallback)"
+            return f"{obj.custom_font.name}{suffix}"
+        return obj.get_builtin_font_display()
+
     @admin.display(description="پیش‌نمایش تصویر")
     def image_preview(self, obj):
         if obj and obj.image:
+            image_url = safe_image_url(obj.image)
+            if not image_url:
+                return "تصویر قابل نمایش نیست"
             return format_html(
-                '''
-                <img src="{}" style="
-                    width:72px !important;
-                    height:42px !important;
-                    object-fit:cover !important;
-                    border-radius:8px !important;
-                    display:block !important;
-                " />
-                ''',
-                obj.image.url,
+                '<img src="{}" class="zad-admin-hero-preview" alt="" />',
+                image_url,
             )
 
         return format_html(
-            '<span style="display:inline-flex;width:72px;height:42px;align-items:center;justify-content:center;border:1px dashed #999;border-radius:8px;font-size:10px;color:#999;">{}</span>',
+            '<span class="zad-admin-hero-empty-preview zad-admin-hero-empty-preview--desktop">{}</span>',
             "بدون عکس",
         )
 
     @admin.display(description="پیش‌نمایش موبایل")
     def mobile_image_preview(self, obj):
         if obj and obj.mobile_image:
+            image_url = safe_image_url(obj.mobile_image)
+            if not image_url:
+                return "تصویر قابل نمایش نیست"
             return format_html(
-                '''
-                <img src="{}" style="
-                    width:32px !important;
-                    height:54px !important;
-                    object-fit:cover !important;
-                    border-radius:8px !important;
-                    display:block !important;
-                " />
-                ''',
-                obj.mobile_image.url,
+                '<img src="{}" class="zad-admin-hero-mobile-preview" alt="" />',
+                image_url,
             )
 
         return format_html(
-            '<span style="display:inline-flex;width:32px;height:54px;align-items:center;justify-content:center;border:1px dashed #999;border-radius:8px;font-size:9px;color:#999;">{}</span>',
+            '<span class="zad-admin-hero-empty-preview zad-admin-hero-empty-preview--mobile">{}</span>',
             "ندارد",
         )
 
@@ -1541,7 +1798,11 @@ class HeroAdminBase(admin.ModelAdmin):
 class HomeHeroSlideAdmin(HeroAdminBase):
     list_display = (
         "image_preview",
+        "mobile_image_preview",
         "title",
+        "font_display",
+        "content_position",
+        "mobile_content_position",
         "is_active",
         "sort_order",
         "updated_at",
@@ -1570,7 +1831,28 @@ class HomeHeroSlideAdmin(HeroAdminBase):
             },
         ),
         (
-            "۲. عکس اسلاید",
+            "۲. چیدمان و تایپوگرافی",
+            {
+                "description": (
+                    "موقعیت و اندازه‌های دسکتاپ و موبایل مستقل‌اند. ابتدا فونت داخلی "
+                    "را انتخاب کن؛ فونت آپلودی اختیاری است و اگر مشکل داشته باشد، "
+                    "سایت بدون خطا از همان فونت داخلی استفاده می‌کند."
+                ),
+                "fields": (
+                    "content_position",
+                    "mobile_content_position",
+                    "text_color",
+                    "builtin_font",
+                    "custom_font",
+                    "title_font_size",
+                    "body_font_size",
+                    "mobile_title_font_size",
+                    "mobile_body_font_size",
+                ),
+            },
+        ),
+        (
+            "۳. عکس اسلاید",
             {
                 "fields": (
                     "image",
@@ -1581,7 +1863,7 @@ class HomeHeroSlideAdmin(HeroAdminBase):
             },
         ),
         (
-            "۳. دکمه‌ها",
+            "۴. دکمه‌ها",
             {
                 "fields": (
                     "primary_button_text",
@@ -1593,7 +1875,7 @@ class HomeHeroSlideAdmin(HeroAdminBase):
             },
         ),
         (
-            "۴. نمایش در سایت",
+            "۵. نمایش در سایت",
             {
                 "fields": (
                     "is_active",
@@ -1618,9 +1900,13 @@ class HomeHeroSlideAdmin(HeroAdminBase):
 class SiteHeroAdmin(HeroAdminBase):
     list_display = (
         "image_preview",
+        "mobile_image_preview",
         "title",
         "target_page_display",
         "target_slug_display",
+        "font_display",
+        "content_position",
+        "mobile_content_position",
         "is_active",
         "sort_order",
         "updated_at",
@@ -1649,7 +1935,7 @@ class SiteHeroAdmin(HeroAdminBase):
     def target_page_display(self, obj):
         return obj.get_target_page_display()
 
-    @admin.display(description="برای کدام دسته؟")
+    @admin.display(description="اسلاگ هدف")
     def target_slug_display(self, obj):
         if obj.target_slug:
             return obj.target_slug
@@ -1660,6 +1946,11 @@ class SiteHeroAdmin(HeroAdminBase):
         (
             "۱. این بنر برای کجاست؟",
             {
+                "description": (
+                    "صفحه هدف را انتخاب کن. برای Hero اصلی همان صفحه، «اسلاگ هدف» "
+                    "را خالی بگذار. اسلاگ فقط برای ورکشاپ، مناسبت، مطلب، صفحه مشهد، "
+                    "زیردسته یا محصول مشخص استفاده می‌شود."
+                ),
                 "fields": (
                     "target_page",
                     "target_slug",
@@ -1677,7 +1968,28 @@ class SiteHeroAdmin(HeroAdminBase):
             },
         ),
         (
-            "۳. عکس بنر",
+            "۳. چیدمان و تایپوگرافی",
+            {
+                "description": (
+                    "برای اینکه متن روی سوژه نیفتد، جای آن را برای دسکتاپ و موبایل "
+                    "جدا انتخاب کن. فونت آپلودی اختیاری است؛ در صورت حذف یا خرابی "
+                    "فایل، فونت داخلی به‌صورت خودکار جایگزین می‌شود."
+                ),
+                "fields": (
+                    "content_position",
+                    "mobile_content_position",
+                    "text_color",
+                    "builtin_font",
+                    "custom_font",
+                    "title_font_size",
+                    "body_font_size",
+                    "mobile_title_font_size",
+                    "mobile_body_font_size",
+                ),
+            },
+        ),
+        (
+            "۴. عکس بنر",
             {
                 "fields": (
                     "image",
@@ -1688,7 +2000,7 @@ class SiteHeroAdmin(HeroAdminBase):
             },
         ),
         (
-            "۴. نمایش در سایت",
+            "۵. نمایش در سایت",
             {
                 "fields": (
                     "is_active",

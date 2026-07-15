@@ -1,75 +1,36 @@
-import json
+import re
 
 from django.conf import settings
 
 
+GOOGLE_TAG_ID_PATTERN = re.compile(r"^(?:G|GT|AW)-[A-Z0-9]+$")
+
+
 def site_defaults(request):
-    site_url = getattr(settings, "zad_SITE_URL", "https://zad.ir").rstrip("/")
-    phone_display = getattr(settings, "zad_PHONE_DISPLAY", "09154203569")
-    phone_e164 = getattr(settings, "zad_PHONE_E164", "+989154203569")
-    opening_hours_text = getattr(settings, "zad_OPENING_HOURS_TEXT", "هر روز ۱۰:۰۰ تا ۲۲:۰۰")
-    response_time_text = getattr(settings, "zad_RESPONSE_TIME_TEXT", "زمان متوسط پاسخ‌گویی: حدود ۱۵ دقیقه")
-
-    address_street = getattr(settings, "zad_ADDRESS_STREET", "بلوار وکیل اباد - نبش فارغ التحصیلان 6 - کانسپت زاد")
-    address_locality = getattr(settings, "zad_ADDRESS_LOCALITY", "مشهد")
-    address_region = getattr(settings, "zad_ADDRESS_REGION", "خراسان رضوی")
-    address_country = getattr(settings, "zad_ADDRESS_COUNTRY", "IR")
-    address_postal = getattr(settings, "zad_ADDRESS_POSTAL_CODE", "")
-
-    telegram_url = getattr(settings, "zad_TELEGRAM_URL", "https://t.me/Flowerhouse_pv")
-    telegram_display = getattr(settings, "zad_TELEGRAM_DISPLAY", "@Flowerhouse_pv")
-    instagram_url = getattr(settings, "zad_INSTAGRAM_URL", "https://www.instagram.com/zad_concept/")
-    email = getattr(settings, "zad_EMAIL", "")
-
-    address_schema = {
-        "@type": "PostalAddress",
-        "streetAddress": address_street,
-        "addressLocality": address_locality,
-        "addressRegion": address_region,
-        "addressCountry": address_country,
-    }
-
-    if address_postal:
-        address_schema["postalCode"] = address_postal
-
-    local_business_schema = {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "zad",
-        "url": site_url,
-        "telephone": phone_e164,
-        "address": address_schema,
-        "areaServed": "Mashhad, Razavi Khorasan, IR",
-        "sameAs": [instagram_url, telegram_url],
-        "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": [
-                    "Saturday",
-                    "Sunday",
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                ],
-                "opens": "10:00",
-                "closes": "22:00",
-            }
-        ],
-    }
+    google_tag_id = settings.GOOGLE_TAG_ID.strip().upper()
+    if not GOOGLE_TAG_ID_PATTERN.fullmatch(google_tag_id):
+        google_tag_id = ""
 
     return {
-        "site_url": site_url,
-        "site_call_href": f"tel:{phone_e164}",
-        "site_phone_display": phone_display,
-        "site_telegram_url": telegram_url,
-        "site_telegram_display": telegram_display,
-        "site_instagram_url": instagram_url,
-        "site_email": email,
-        "site_opening_hours_text": opening_hours_text,
-        "site_response_time_text": response_time_text,
-        "site_address_text": address_street,
-        "top_notice_text": f"برای سفارش و هماهنگی سریع زاد، با شماره {phone_display} تماس بگیرید یا در تلگرام {telegram_display} پیام بدهید.",
-        "local_business_jsonld": json.dumps(local_business_schema, ensure_ascii=False),
+        "site_url": settings.ZAD_SITE_URL,
+        "site_call_href": f"tel:{settings.ZAD_PHONE_E164}",
+        "site_phone_display": settings.ZAD_PHONE_DISPLAY,
+        "site_telegram_url": settings.ZAD_TELEGRAM_URL,
+        "site_telegram_display": settings.ZAD_TELEGRAM_DISPLAY,
+        "site_bale_url": settings.ZAD_BALE_URL,
+        "site_bale_display": settings.ZAD_BALE_DISPLAY,
+        "site_instagram_url": settings.ZAD_INSTAGRAM_URL,
+        "site_email": settings.ZAD_EMAIL,
+        "site_opening_hours_text": settings.ZAD_OPENING_HOURS_TEXT,
+        "site_response_time_text": settings.ZAD_RESPONSE_TIME_TEXT,
+        "site_address_text": settings.ZAD_ADDRESS_STREET,
+        "site_default_social_image": settings.ZAD_DEFAULT_SOCIAL_IMAGE,
+        "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
+        "bing_site_verification": settings.BING_SITE_VERIFICATION,
+        "google_tag_id": google_tag_id,
+        "top_notice_text": (
+            "برای سفارش و هماهنگی سریع زاد، با شماره "
+            f"{settings.ZAD_PHONE_DISPLAY} تماس بگیرید یا در تلگرام "
+            f"{settings.ZAD_TELEGRAM_DISPLAY} پیام بدهید."
+        ),
     }

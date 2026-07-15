@@ -332,7 +332,7 @@
 
 .item-detail__cta {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 24px;
 }
@@ -340,10 +340,25 @@
 .item-detail__cta .btn {
   min-width: 0;
   min-height: 48px;
+  padding: 9px 12px;
   border-radius: 999px;
   font-family: var(--font-fa), var(--font-ui-en);
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.item-detail__cta .btn-bale {
+  gap: 7px;
+  border-color: rgba(32, 107, 89, 0.22);
+  background: #eaf6f1;
+  color: #206b59;
+}
+
+.item-detail__cta .btn-bale:hover,
+.item-detail__cta .btn-bale:focus-visible {
+  border-color: #206b59;
+  background: #206b59;
+  color: #fff;
 }
 
 .item-detail__specs {

@@ -6,6 +6,14 @@ from .models import LeadRequest
 
 
 class LeadRequestForm(forms.ModelForm):
+    website = forms.CharField(
+        required=False,
+        label="",
+        widget=forms.HiddenInput(
+            attrs={"autocomplete": "off", "tabindex": "-1", "aria-hidden": "true"}
+        ),
+    )
+
     class Meta:
         model = LeadRequest
         fields = [
@@ -64,6 +72,12 @@ class LeadRequestForm(forms.ModelForm):
         if len(digits) < 10 or len(digits) > 14:
             raise forms.ValidationError("شماره موبایل معتبر نیست.")
         return mobile
+
+    def clean_website(self):
+        value = self.cleaned_data.get("website", "")
+        if value:
+            raise forms.ValidationError("درخواست نامعتبر است.")
+        return ""
 
     def clean(self):
         cleaned = super().clean()

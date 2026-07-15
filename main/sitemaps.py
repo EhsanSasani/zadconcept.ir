@@ -1,10 +1,28 @@
+from types import SimpleNamespace
+from urllib.parse import urlsplit
+
+from django.conf import settings
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
+from django.utils import timezone
 
-from .models import Event, NewsPost, Product, PublishStatus
+from .models import Category, Event, NewsPost, Product, PublishStatus, Tag
 
 
-class StaticViewSitemap(Sitemap):
+class CanonicalSitemap(Sitemap):
+    """Force sitemap locations to use the one configured production origin."""
+
+    def get_urls(self, page=1, site=None, protocol=None):
+        origin = urlsplit(settings.ZAD_SITE_URL)
+        canonical_site = SimpleNamespace(domain=origin.netloc)
+        return super().get_urls(
+            page=page,
+            site=canonical_site,
+            protocol=origin.scheme,
+        )
+
+
+class StaticViewSitemap(CanonicalSitemap):
     changefreq = "weekly"
     priority = 0.8
 
@@ -12,12 +30,26 @@ class StaticViewSitemap(Sitemap):
         return [
             "index",
             "flowers",
+            "flowers_all",
             "bakery",
+            "bakery_all",
             "gifts",
+            "gifts_all",
+            "occasions",
+            "flowers_same_day",
             "events",
             "blog",
+            "about",
             "contact",
             "faq",
+            "privacy",
+            "terms",
+            "delivery_policy",
+            "refund_policy",
+            "payment_methods",
+            "service_area",
+            "international_orders",
+            "international_orders_en",
             "mashhad_hub",
             "mashhad_flower_order",
             "mashhad_flower_delivery",
@@ -27,45 +59,81 @@ class StaticViewSitemap(Sitemap):
         return reverse(item)
 
 
-class FlowerSubcategorySitemap(Sitemap):
+class CategorySitemap(CanonicalSitemap):
     changefreq = "weekly"
     priority = 0.7
 
     def items(self):
-        return ["bouquet", "box", "stand", "plant"]
+        return (
+            Category.objects.filter(
+                is_active=True,
+                section__in=(
+                    Category.Section.FLOWERS,
+                    Category.Section.BAKERY,
+                    Category.Section.GIFTS,
+                ),
+            )
+            .order_by("section", "sort_order", "name")
+        )
 
-    def location(self, item):
-        return reverse("flower_subcategory", args=[item])
+    def lastmod(self, obj):
+        return obj.updated_at
 
 
-class ProductSitemap(Sitemap):
+class OccasionSitemap(CanonicalSitemap):
+    changefreq = "weekly"
+    priority = 0.7
+
+    def items(self):
+        return Tag.objects.filter(is_active=True, is_occasion=True).order_by(
+            "sort_order", "name"
+        )
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+
+class ProductSitemap(CanonicalSitemap):
     changefreq = "daily"
     priority = 0.9
 
     def items(self):
-        return Product.objects.filter(is_active=True).order_by("-updated_at")
+        return (
+            Product.objects.filter(
+                is_active=True,
+                publish_status=Product.PublishStatus.PUBLISHED,
+                category__is_active=True,
+            )
+            .select_related("category")
+            .order_by("-updated_at")
+        )
 
     def lastmod(self, obj):
         return obj.updated_at
 
 
-class EventSitemap(Sitemap):
+class EventSitemap(CanonicalSitemap):
     changefreq = "weekly"
     priority = 0.7
 
     def items(self):
-        return Event.objects.filter(status=PublishStatus.PUBLISHED).order_by("-updated_at")
+        return Event.objects.filter(
+            status=PublishStatus.PUBLISHED,
+            end_at__gte=timezone.now(),
+        ).order_by("-updated_at")
 
     def lastmod(self, obj):
         return obj.updated_at
 
 
-class BlogSitemap(Sitemap):
+class BlogSitemap(CanonicalSitemap):
     changefreq = "weekly"
     priority = 0.6
 
     def items(self):
-        return NewsPost.objects.filter(status=PublishStatus.PUBLISHED).order_by("-updated_at")
+        return NewsPost.objects.filter(status=PublishStatus.PUBLISHED).order_by(
+            "-updated_at"
+        )
 
     def lastmod(self, obj):
         return obj.updated_at
@@ -73,7 +141,8 @@ class BlogSitemap(Sitemap):
 
 sitemaps = {
     "static": StaticViewSitemap,
-    "flower_subcategories": FlowerSubcategorySitemap,
+    "categories": CategorySitemap,
+    "occasions": OccasionSitemap,
     "products": ProductSitemap,
     "events": EventSitemap,
     "blog": BlogSitemap,

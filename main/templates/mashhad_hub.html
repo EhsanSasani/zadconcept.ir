@@ -1,38 +1,74 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block body_class %}page-mashhad{% endblock %}
+{% block body_class %}page-mashhad page-info{% endblock %}
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/policy.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-{% include "partials/breadcrumbs.html" %}
+<article class="info-page mashhad-page"{% if not has_managed_site_hero %} aria-labelledby="mashhad-title"{% endif %}>
+  {% if not has_managed_site_hero %}
+  <header class="info-hero">
+    <div class="container info-hero__inner">
+      <div class="info-hero__topline">
+        <div>
+          <a href="{% url 'index' %}" class="info-hero__home">خانه</a>
+          <span aria-hidden="true">/</span>
+          <span>خدمات زاد در مشهد</span>
+        </div>
+      </div>
 
-<section class="container section-block page-intro">
-  <p class="intro-text intro-text--en">
-    {{ page_content.intro.body|default:"A focused hub for Mashhad orders, same-day coordination, and faster access to zad’s flower selection." }}
-  </p>
+      <p class="info-hero__kicker" dir="ltr">ZAD · MASHHAD</p>
+      <div class="info-hero__copy">
+        <h1 id="mashhad-title">سفارش و ارسال گل در مشهد با زاد</h1>
+        <p>{{ page_content.intro.body|default:"مرکز سفارش‌های زاد در مشهد؛ برای دسترسی سریع‌تر به گل‌ها، هماهنگی ارسال و سفارش‌های همان‌روز." }}</p>
+      </div>
 
-  <div class="cta-row">
-    <a href="{% url 'mashhad_flower_order' %}" class="btn btn-light">Flower Orders in Mashhad</a>
-    <a href="{% url 'mashhad_flower_delivery' %}" class="btn btn-light">Same-day Flower Delivery</a>
-  </div>
-</section>
-
-{% if curated_items %}
-<section class="container section-block featured-products-section">
-  <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
-    <div>
-      <h2 class="section-title-en">{{ page_content.selection.title|default:"Our Selection" }}</h2>
+      <div class="info-hero__meta">
+        <span>سفارش گل و هدیه</span>
+        <span>هماهنگی ارسال در محدوده مشهد</span>
+      </div>
     </div>
-    <a href="{% url 'flowers' %}" class="section-link">View All</a>
-  </div>
+  </header>
+  {% endif %}
 
-  {% include "partials/featured_products_slider.html" with products=curated_items %}
-</section>
-{% endif %}
+  <div class="container info-page__body">
+    <nav class="info-quick-links" aria-label="دسترسی سریع به خدمات زاد در مشهد">
+      <a href="{% url 'mashhad_flower_order' %}">
+        <span>01</span>
+        <strong>سفارش گل در مشهد</strong>
+        <small>انتخاب و هماهنگی سفارش</small>
+      </a>
+      <a href="{% url 'mashhad_flower_delivery' %}">
+        <span>02</span>
+        <strong>ارسال گل همان‌روز</strong>
+        <small>بررسی موجودی و ظرفیت امروز</small>
+      </a>
+      <a href="{% url 'service_area' %}">
+        <span>03</span>
+        <strong>محدوده خدمات</strong>
+        <small>شرایط و محدوده‌های قابل پوشش</small>
+      </a>
+    </nav>
+
+    {% if curated_items %}
+      <section class="info-paper info-catalog featured-products-section" aria-labelledby="mashhad-selection-title">
+        <div class="info-paper__heading info-paper__heading--row">
+          <div>
+            <span dir="ltr">CURATED BY ZAD</span>
+            <h2 id="mashhad-selection-title">{{ page_content.selection.title|default:"پیشنهادهای زاد" }}</h2>
+          </div>
+          <a href="{% url 'flowers' %}" class="info-text-link">مشاهده همه گل‌ها</a>
+        </div>
+
+        {% include "partials/featured_products_slider.html" with products=curated_items %}
+      </section>
+    {% endif %}
+  </div>
+</article>
 {% endblock %}
 
 {% block extra_js %}

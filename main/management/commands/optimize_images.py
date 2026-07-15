@@ -97,6 +97,25 @@ def optimize_to_webp(source, destination, quality, lossless, max_dimension):
         write_destination.replace(destination)
 
 
+def create_width_variant(source, destination, width, quality):
+    with Image.open(source) as image:
+        image = ImageOps.exif_transpose(image)
+        if image.width <= width:
+            return False
+        height = max(1, round(image.height * (width / image.width)))
+        image = image.resize((width, height), Image.Resampling.LANCZOS)
+        alpha = has_alpha(image)
+        image = image.convert("RGBA" if alpha else "RGB")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        save_kwargs = {"format": "WEBP", "method": 6}
+        if alpha:
+            save_kwargs.update({"lossless": True, "exact": True})
+        else:
+            save_kwargs.update({"quality": quality, "optimize": True})
+        image.save(destination, **save_kwargs)
+    return True
+
+
 class Command(BaseCommand):
     help = "Optimize and standardize media/static image files."
 
@@ -106,6 +125,12 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--keep-originals", action="store_true")
         parser.add_argument("--skip-static-rewrite", action="store_true")
+        parser.add_argument("--skip-responsive", action="store_true")
+        parser.add_argument(
+            "--media-only",
+            action="store_true",
+            help="Optimize database/untracked media without touching source static assets.",
+        )
 
     def handle(self, *args, **options):
         self.quality = options["quality"]
@@ -113,6 +138,8 @@ class Command(BaseCommand):
         self.dry_run = options["dry_run"]
         self.keep_originals = options["keep_originals"]
         self.skip_static_rewrite = options["skip_static_rewrite"]
+        self.skip_responsive = options["skip_responsive"]
+        self.media_only = options["media_only"]
         self.media_root = Path(settings.MEDIA_ROOT)
         self.static_root = Path(settings.BASE_DIR) / STATIC_IMG_ROOT
         self.used_paths = set()
@@ -121,7 +148,8 @@ class Command(BaseCommand):
 
         targets = self.get_database_targets()
         targets.extend(self.get_untracked_media_targets(targets))
-        targets.extend(self.get_static_targets())
+        if not self.media_only:
+            targets.extend(self.get_static_targets())
 
         before_size = sum(target.path.stat().st_size for target in targets if target.path.exists())
 
@@ -151,13 +179,31 @@ class Command(BaseCommand):
                     max_dimension=self.max_dimension,
                 )
 
+                if (
+                    not self.skip_responsive
+                    and isinstance(target.model_object, (Product, ProductImage))
+                ):
+                    for width in (520, 1040, 1600):
+                        variant = destination.with_name(
+                            f"{destination.stem}-{width}w.webp"
+                        )
+                        create_width_variant(
+                            destination,
+                            variant,
+                            width=width,
+                            quality=self.quality,
+                        )
+
                 new_size = destination.stat().st_size
 
                 if destination != target.path and not self.keep_originals:
                     target.path.unlink()
 
                 if target.model_object and target.field_name:
-                    setattr(target.model_object, target.field_name, target.new_relative_path)
+                    actual_relative_path = str(
+                        destination.relative_to(self.media_root)
+                    ).replace("\\", "/")
+                    setattr(target.model_object, target.field_name, actual_relative_path)
                     target.model_object.save(update_fields=[target.field_name, "updated_at"])
 
                 if target.is_static:

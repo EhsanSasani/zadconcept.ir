@@ -39,6 +39,19 @@
   background: #f4ede4;
 }
 
+.btn-bale {
+  border-color: rgba(32, 107, 89, 0.22);
+  background: #eaf6f1;
+  color: #206b59;
+}
+
+.btn-bale:hover,
+.btn-bale:focus-visible {
+  border-color: #206b59;
+  background: #206b59;
+  color: #fff;
+}
+
 .btn-light {
   background: var(--bg-card);
   color: var(--text);
@@ -178,6 +191,14 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow);
   border-color: #dccfbe;
+}
+
+.product-card__main,
+.flowers-product-card__main {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
 }
 
 /* featured slider */

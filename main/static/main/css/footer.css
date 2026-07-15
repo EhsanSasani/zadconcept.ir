@@ -248,3 +248,23 @@
     text-align: center;
   }
 }
+
+.zad-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  padding-top: 14px;
+  font-size: 0.78rem;
+}
+
+.zad-footer__legal a {
+  color: inherit;
+  opacity: 0.72;
+  text-decoration: none;
+}
+
+.zad-footer__legal a:hover,
+.zad-footer__legal a:focus-visible {
+  opacity: 1;
+}

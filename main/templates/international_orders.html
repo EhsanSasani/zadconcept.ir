@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}page-policy page-info page-international-orders{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/policy.css' %}?v=2">{% endblock %}
+
+{% block content %}
+<article class="info-page policy-page" aria-labelledby="international-title">
+  <header class="info-hero">
+    <div class="container info-hero__inner">
+      <div class="info-hero__topline">
+        <div>
+          <a href="{% url 'index' %}" class="info-hero__home">خانه</a>
+          <span aria-hidden="true">/</span>
+          <span>سفارش از خارج ایران</span>
+        </div>
+        <a href="{% url 'international_orders_en' %}" hreflang="en" lang="en" dir="ltr" class="info-language-link">English version</a>
+      </div>
+
+      <p class="info-hero__kicker" dir="ltr">INTERNATIONAL ORDER · LOCAL DELIVERY</p>
+      <div class="info-hero__copy">
+        <h1 id="international-title">سفارش گل و هدیه از خارج ایران برای مشهد</h1>
+        <p>از هر کشور می‌توانید سفارش را با تیم زاد هماهنگ کنید تا گل، هدیه یا آیتم بیکری برای گیرنده در مشهد آماده و ارسال شود.</p>
+      </div>
+
+      <div class="info-hero__meta">
+        <span>ثبت سفارش از سراسر جهان</span>
+        <span>آماده‌سازی و تحویل محلی در مشهد</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container info-layout">
+    <aside class="info-index" aria-label="فهرست این صفحه">
+      <p class="info-index__title">فرایند سفارش</p>
+      <ol>
+        <li><a href="#international-steps">سه مرحله سفارش</a></li>
+        <li><a href="#international-details">اطلاعات مهم</a></li>
+        <li><a href="#international-faq">سوالات متداول</a></li>
+      </ol>
+      <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-index__contact">شروع هماهنگی در تلگرام</a>
+    </aside>
+
+    <div class="info-content">
+      <section class="info-paper info-order-flow" id="international-steps" aria-labelledby="international-steps-title">
+        <div class="info-paper__heading">
+          <span>HOW IT WORKS</span>
+          <h2 id="international-steps-title">سفارش در سه مرحله</h2>
+        </div>
+        <div class="policy-page__steps" aria-label="مراحل سفارش">
+          <section><span>۱</span><h3>جزئیات را ارسال کنید</h3><p>مناسبت، بودجه، تاریخ، بازه تحویل و نشانی گیرنده را در تلگرام بفرستید.</p></section>
+          <section><span>۲</span><h3>موجودی و پرداخت تأیید می‌شود</h3><p>تیم زاد گزینه‌های موجود، مبلغ نهایی و روش پرداخت قابل استفاده را اعلام می‌کند.</p></section>
+          <section><span>۳</span><h3>آماده‌سازی و تحویل</h3><p>پس از تأیید، سفارش در مشهد آماده می‌شود و در بازه هماهنگ‌شده تحویل می‌گردد.</p></section>
+        </div>
+      </section>
+
+      <section class="info-paper info-section info-section--standalone" aria-labelledby="international-details">
+        <div class="info-section__heading">
+          <span aria-hidden="true">۰۱</span>
+          <h2 id="international-details">اطلاعات مهم</h2>
+        </div>
+        <ul>
+          <li>امکان ارسال همان‌روز به موجودی، ظرفیت آماده‌سازی و زمان درخواست بستگی دارد.</li>
+          <li>روش پرداخت ارزی، از جمله امکان PayPal، پیش از نهایی‌شدن سفارش تأیید می‌شود.</li>
+          <li>در صورت درخواست، امکان هماهنگی برای دریافت تصویر نهایی پیش از ارسال وجود دارد.</li>
+          <li>ارسال فعلی به‌صورت محلی در مشهد انجام می‌شود؛ سفارش از خارج ایران به معنی ارسال بین‌المللی کالا نیست.</li>
+        </ul>
+      </section>
+
+      <section class="info-paper policy-page__faq" aria-labelledby="international-faq">
+        <div class="info-paper__heading">
+          <span>FAQ</span>
+          <h2 id="international-faq">سوالات متداول</h2>
+        </div>
+        {% for item in faq_items %}
+          <details{% if forloop.first %} open{% endif %}>
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer }}</p>
+          </details>
+        {% endfor %}
+      </section>
+
+      <aside class="info-contact policy-page__contact">
+        <div>
+          <span class="info-contact__kicker">سفارش بین‌المللی</span>
+          <h2>برای شروع سفارش پیام بدهید</h2>
+          <p>جزئیات سفارش، بودجه و بازه تحویل را ارسال کنید تا تیم زاد امکان اجرا را بررسی کند.</p>
+        </div>
+        <div class="info-contact__actions">
+          <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-button info-button--light">هماهنگی در تلگرام</a>
+          <a href="{{ site_call_href }}" class="info-button info-button--outline">تماس با زاد</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</article>
+{% endblock %}

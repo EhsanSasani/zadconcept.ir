@@ -1,0 +1,269 @@
+{
+  "site": "https://www.zadconcept.ir",
+  "pages_checked": 26,
+  "links_checked": 27,
+  "errors": [],
+  "warnings": [],
+  "pages": [
+    {
+      "url": "https://www.zadconcept.ir/",
+      "status": 200,
+      "title": "زاد | گل، سوئیت‌بار، هدیه و ورکشاپ در مشهد",
+      "description": "فروشگاه زاد در مشهد برای سفارش گل، سوئیت‌بار، هدیه، ورکشاپ و هماهنگی سریع ارسال.",
+      "canonical": "https://www.zadconcept.ir/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/about/",
+      "status": 200,
+      "title": "درباره زاد | گل، سوئیت‌بار و ورکشاپ در مشهد",
+      "description": "با فضای واقعی زاد، گل‌ها، سوئیت‌بار و ورکشاپ‌های خلاقانه زاد در مشهد آشنا شوید.",
+      "canonical": "https://www.zadconcept.ir/about/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/bakery/",
+      "status": 200,
+      "title": "سفارش سوئیت‌بار و شیرینی در مشهد | زاد",
+      "description": "سفارش محصولات سوئیت‌بار زاد برای هدیه، پذیرایی و مناسبت‌ها در مشهد.",
+      "canonical": "https://www.zadconcept.ir/bakery/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/bakery/all/",
+      "status": 200,
+      "title": "Bakery در مشهد | زاد",
+      "description": "مشاهده و سفارش محصولات بخش Bakery زاد با هماهنگی ارسال در مشهد.",
+      "canonical": "https://www.zadconcept.ir/bakery/all/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/blog/",
+      "status": 200,
+      "title": "مجله زاد | راهنمای گل، هدیه و مناسبت‌ها",
+      "description": "مطالب و راهنماهای زاد درباره گل، هدیه، نگهداری محصولات و برنامه‌ریزی مناسبت‌ها.",
+      "canonical": "https://www.zadconcept.ir/blog/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/contact/",
+      "status": 200,
+      "title": "تماس با زاد | هماهنگی سفارش و ارسال",
+      "description": "تماس با زاد برای سفارش، مشاوره، بررسی موجودی و هماهنگی زمان ارسال در مشهد.",
+      "canonical": "https://www.zadconcept.ir/contact/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/delivery-policy/",
+      "status": 200,
+      "title": "سیاست ارسال و تحویل سفارش‌های زاد در مشهد",
+      "description": "جزئیات محدوده ارسال، زمان‌بندی، سفارش همان‌روز و شرایط تحویل محصولات زاد در مشهد.",
+      "canonical": "https://www.zadconcept.ir/delivery-policy/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/en/international-orders/",
+      "status": 200,
+      "title": "Send Flowers to Mashhad, Iran | ZAD",
+      "description": "Order flowers, gifts, and bakery items from abroad for local delivery to your recipient in Mashhad, Iran.",
+      "canonical": "https://www.zadconcept.ir/en/international-orders/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "en"
+    },
+    {
+      "url": "https://www.zadconcept.ir/faq/",
+      "status": 200,
+      "title": "سوالات متداول سفارش و ارسال | زاد",
+      "description": "پاسخ سوالات متداول درباره سفارش محصولات زاد، ارسال، ساعت کاری و هماهنگی ورکشاپ‌ها.",
+      "canonical": "https://www.zadconcept.ir/faq/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/flowers/",
+      "status": 200,
+      "title": "سفارش گل لوکس در مشهد | زاد",
+      "description": "سفارش گل تازه، چیدمان اختصاصی و هماهنگی سریع ارسال در مشهد با زاد.",
+      "canonical": "https://www.zadconcept.ir/flowers/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/flowers/all/",
+      "status": 200,
+      "title": "Flowers در مشهد | زاد",
+      "description": "مشاهده و سفارش محصولات بخش Flowers زاد با هماهنگی ارسال در مشهد.",
+      "canonical": "https://www.zadconcept.ir/flowers/all/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/flowers/same-day/",
+      "status": 200,
+      "title": "ارسال گل امروز در مشهد | زاد",
+      "description": "سفارش گل‌های آماده برای ارسال همان‌روز در مشهد؛ بررسی موجودی و هماهنگی سریع با زاد.",
+      "canonical": "https://www.zadconcept.ir/flowers/same-day/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/gifts/",
+      "status": 200,
+      "title": "هدیه و کانسپت استور در مشهد | زاد",
+      "description": "انتخاب و سفارش هدیه‌های خاص و مینیمال از کانسپت استور زاد در مشهد.",
+      "canonical": "https://www.zadconcept.ir/gifts/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/gifts/all/",
+      "status": 200,
+      "title": "Gifts در مشهد | زاد",
+      "description": "مشاهده و سفارش محصولات بخش Gifts زاد با هماهنگی ارسال در مشهد.",
+      "canonical": "https://www.zadconcept.ir/gifts/all/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/international-orders/",
+      "status": 200,
+      "title": "سفارش گل از خارج ایران برای مشهد | زاد",
+      "description": "ثبت سفارش گل و هدیه از خارج ایران با پرداخت ارزی و تحویل محلی برای گیرنده در مشهد.",
+      "canonical": "https://www.zadconcept.ir/international-orders/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/mashhad/",
+      "status": 200,
+      "title": "سفارش گل و ارسال در مشهد | زاد",
+      "description": "مرکز سفارش گل زاد در مشهد برای ارسال همان‌روز، بررسی موجودی و هماهنگی سریع.",
+      "canonical": "https://www.zadconcept.ir/mashhad/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/mashhad/flower-delivery/",
+      "status": 200,
+      "title": "ارسال همان‌روز گل در مشهد | زاد",
+      "description": "ارسال همان‌روز گل در مشهد با پشتیبانی تلفنی و انتخاب از محصولات آماده زاد.",
+      "canonical": "https://www.zadconcept.ir/mashhad/flower-delivery/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/mashhad/flower-order/",
+      "status": 200,
+      "title": "سفارش گل در مشهد | زاد",
+      "description": "سفارش گل در مشهد با پاسخ‌گویی سریع، چیدمان اختصاصی و هماهنگی تلفنی زاد.",
+      "canonical": "https://www.zadconcept.ir/mashhad/flower-order/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/occasions/",
+      "status": 200,
+      "title": "انتخاب گل و هدیه براساس مناسبت | زاد",
+      "description": "انتخاب گل، سوئیت‌بار و هدیه زاد برای تولد، عاشقانه، تبریک، دلجویی و مناسبت‌های مختلف.",
+      "canonical": "https://www.zadconcept.ir/occasions/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/occasions/wedding/",
+      "status": 200,
+      "title": "عروسی | انتخاب گل و هدیه از زاد",
+      "description": "پیشنهادهای زاد برای عروسی؛ انتخاب گل، هدیه و سوئیت‌بار با هماهنگی ارسال در مشهد.",
+      "canonical": "https://www.zadconcept.ir/occasions/wedding/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/payment-methods/",
+      "status": 200,
+      "title": "روش‌های پرداخت سفارش در زاد",
+      "description": "نحوه هماهنگی پرداخت سفارش‌های داخلی و سفارش‌های ثبت‌شده از خارج ایران در زاد.",
+      "canonical": "https://www.zadconcept.ir/payment-methods/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/privacy/",
+      "status": 200,
+      "title": "سیاست حریم خصوصی زاد",
+      "description": "نحوه دریافت، استفاده و محافظت از اطلاعات تماس و درخواست‌های ثبت‌شده در وب‌سایت زاد.",
+      "canonical": "https://www.zadconcept.ir/privacy/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/refund-cancellation/",
+      "status": 200,
+      "title": "سیاست لغو و بازپرداخت سفارش‌های زاد",
+      "description": "شرایط تغییر سفارش، لغو، جایگزینی اقلام طبیعی و بررسی بازپرداخت در زاد.",
+      "canonical": "https://www.zadconcept.ir/refund-cancellation/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/service-area/",
+      "status": 200,
+      "title": "محدوده ارسال و خدمات زاد در مشهد",
+      "description": "اطلاعات محدوده ارسال گل، هدیه و سفارش‌های همان‌روز زاد در مناطق مختلف مشهد.",
+      "canonical": "https://www.zadconcept.ir/service-area/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/terms/",
+      "status": 200,
+      "title": "شرایط استفاده و ثبت سفارش در زاد",
+      "description": "شرایط استفاده از وب‌سایت، استعلام موجودی، ثبت درخواست و نهایی‌شدن سفارش‌های زاد.",
+      "canonical": "https://www.zadconcept.ir/terms/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    },
+    {
+      "url": "https://www.zadconcept.ir/workshops/",
+      "status": 200,
+      "title": "ورکشاپ‌های گل‌آرایی زاد در مشهد",
+      "description": "ورکشاپ‌های گل‌آرایی زاد؛ تجربه‌ای آرام، زیبا و الهام‌بخش.",
+      "canonical": "https://www.zadconcept.ir/workshops/",
+      "robots": "index,follow",
+      "h1_count": 1,
+      "html_lang": "fa"
+    }
+  ]
+}
