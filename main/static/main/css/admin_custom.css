@@ -1,4 +1,29 @@
-/* ZAD admin minimal fixes */
+/* ZAD admin: RTL, responsive layout, and product workflow fixes */
+
+@font-face {
+    font-family: "VazirmatnZadAdmin";
+    src: url("../admin/fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-display: swap;
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "VazirmatnZadAdmin";
+    src: url("../admin/fonts/Vazirmatn-Bold.woff2") format("woff2");
+    font-display: swap;
+    font-style: normal;
+    font-weight: 700;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+    font-family: "VazirmatnZadAdmin", Tahoma, sans-serif !important;
+}
 
 /*
  * Color widgets create an ARIA live region at left:-10000px. On RTL admin
@@ -20,16 +45,112 @@
     border: 0 !important;
 }
 
-/* AdminLTE's off-canvas rule is left-oriented. In RTL, the right sidebar can
- * remain over the form even while body has sidebar-collapse. Mirror the
- * transform only on compact screens; desktop navigation is unchanged. */
+/*
+ * Jazzmin 3 / AdminLTE 4 can load the LTR sidebar rule while Django's admin
+ * content is RTL. In that combination the negative margin and our old
+ * translateX correction cancel each other, leaving the sidebar over most of
+ * the mobile viewport. Make the compact sidebar a real right-side drawer and
+ * let `sidebar-open` be the only open-state source of truth.
+ */
 @media (max-width: 991.98px) {
-    body:not(.sidebar-open) .app-sidebar {
-        transform: translateX(100%) !important;
+    .app-wrapper {
+        grid-template-areas:
+            "lte-app-header"
+            "lte-app-main"
+            "lte-app-footer" !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .app-header,
+    .app-main,
+    .app-footer {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .app-sidebar {
+        position: fixed !important;
+        inset: 0 0 0 auto !important;
+        z-index: 1040 !important;
+        width: min(var(--lte-sidebar-width, 250px), calc(100vw - 48px)) !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 48px) !important;
+        max-height: 100dvh !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: translate3d(100%, 0, 0) !important;
+        transition:
+            transform 0.22s ease,
+            visibility 0s linear 0.22s !important;
     }
 
     body.sidebar-open .app-sidebar {
-        transform: translateX(0) !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translate3d(0, 0, 0) !important;
+        transition:
+            transform 0.22s ease,
+            visibility 0s linear 0s !important;
+    }
+
+    body.sidebar-open {
+        overflow: hidden !important;
+    }
+
+    .sidebar-overlay {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 1039 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        background: rgba(0, 0, 0, 0.42) !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transition:
+            opacity 0.18s ease,
+            visibility 0s linear 0.18s !important;
+    }
+
+    body.sidebar-open .sidebar-overlay {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transition:
+            opacity 0.18s ease,
+            visibility 0s linear 0s !important;
+    }
+
+    /*
+     * Compatibility with Jazzmin releases still based on AdminLTE 3.
+     * Newer Jazzmin uses .app-sidebar; older releases use .main-sidebar.
+     */
+    html[dir="rtl"] .main-sidebar {
+        position: fixed !important;
+        inset: 0 0 0 auto !important;
+        right: 0 !important;
+        left: auto !important;
+        margin: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: translate3d(100%, 0, 0) !important;
+    }
+
+    html[dir="rtl"] body.sidebar-open .main-sidebar {
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: translate3d(0, 0, 0) !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .app-sidebar,
+        .sidebar-overlay,
+        html[dir="rtl"] .main-sidebar {
+            transition: none !important;
+        }
     }
 }
 
@@ -165,4 +286,582 @@ body.model-samedayflower #changelist-form .actions {
     border-radius: 12px;
     background: #f6fbf8;
     box-shadow: 0 10px 28px rgba(33, 54, 45, 0.08);
+}
+
+/* ---------- Shared responsive foundations ---------- */
+
+html,
+body {
+    max-width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.app-wrapper,
+.wrapper,
+.app-main,
+.content-wrapper,
+.app-content,
+.content,
+.app-content > .container-fluid,
+.content > .container-fluid,
+#content,
+#content-main,
+#changelist,
+#changelist-form,
+.card,
+.card-body,
+.tab-content,
+.tab-pane,
+.inline-group,
+.inline-related {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.app-main,
+.content-wrapper {
+    overflow-x: clip;
+}
+
+.app-content img,
+.content img,
+.change-form img {
+    max-width: 100%;
+}
+
+.login-box,
+.register-box {
+    width: min(400px, calc(100vw - 24px)) !important;
+    max-width: 100%;
+}
+
+.app-content-header h1,
+.app-content-header h2,
+.app-content-header h3,
+.content-header h1,
+.content-header h2,
+.content-header h3,
+.card-title,
+label,
+.help,
+.help-block,
+.readonly,
+.fieldBox {
+    overflow-wrap: anywhere;
+}
+
+/* Inputs must stay inside their card even when a widget has an inline width. */
+.change-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+.change-form select,
+.change-form textarea,
+.change-form .select2-container,
+.change-form .select2-selection,
+.change-form .vTextField,
+.change-form .vURLField,
+.change-form .vIntegerField,
+.change-form .vLargeTextField {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.change-form input[type="file"] {
+    min-height: 44px;
+    padding: 7px;
+}
+
+.related-widget-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+}
+
+.related-widget-wrapper > select,
+.related-widget-wrapper > .select2-container {
+    flex: 1 1 240px;
+}
+
+.related-widget-wrapper-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    margin: 0 !important;
+}
+
+/* Horizontal tabs remain usable instead of wrapping into a tall broken row. */
+.change-form .nav-tabs {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.change-form .nav-tabs .nav-item,
+.change-form .nav-tabs .nav-link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* Tables scroll inside their own region; the whole admin page never drifts sideways. */
+#changelist .results,
+#changelist-form .results,
+.inline-group .tabular,
+.inline-related .tabular,
+.dashboard .card-body {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+#result_list {
+    width: 100%;
+    min-width: 760px;
+    margin: 0;
+}
+
+#result_list th,
+#result_list td {
+    vertical-align: middle;
+}
+
+#result_list th,
+#result_list td,
+.inline-related table th,
+.inline-related table td {
+    white-space: normal;
+}
+
+#result_list td.action-checkbox,
+#result_list th.action-checkbox-column {
+    width: 42px;
+    min-width: 42px;
+    text-align: center;
+}
+
+/* Changelist search, filters, bulk actions, and pagination. */
+#changelist-search,
+#toolbar form,
+#changelist .actions {
+    max-width: 100%;
+}
+
+#changelist-search .form-group,
+#toolbar form,
+#changelist .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+#changelist-search .input-group,
+#toolbar .input-group {
+    flex: 1 1 280px;
+    min-width: 0;
+}
+
+#searchbar {
+    min-width: 0;
+}
+
+#changelist .actions label {
+    display: flex;
+    flex: 1 1 260px;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+#changelist .actions select {
+    width: auto;
+    max-width: 100%;
+}
+
+#changelist .actions .button,
+#changelist .actions button,
+#changelist-search button,
+#toolbar button {
+    min-height: 38px;
+}
+
+.paginator {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+}
+
+.paginator a,
+.paginator .this-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+/* Inline image forms can be wider than the viewport on small screens. */
+.inline-related table {
+    width: 100%;
+    min-width: 680px;
+}
+
+.inline-related h3,
+.inline-group h2 {
+    white-space: normal;
+}
+
+/* Django's dual-select widget falls back to one readable column on narrow cards. */
+.selector {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 10px;
+    width: 100% !important;
+    max-width: 100%;
+}
+
+.selector-available,
+.selector-chosen {
+    width: auto !important;
+    min-width: 0;
+}
+
+.selector select {
+    width: 100% !important;
+}
+
+/* ---------- Tablet and compact navigation ---------- */
+
+@media (max-width: 991.98px) {
+    .app-main,
+    .app-header,
+    .app-footer,
+    .content-wrapper,
+    .main-header,
+    .main-footer {
+        width: auto !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+    }
+
+    .app-content > .container-fluid,
+    .content > .container-fluid,
+    .app-content-header > .container-fluid,
+    .content-header > .container-fluid {
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+    }
+
+    #jazzy-navbar .container-fluid,
+    .main-header.navbar {
+        min-width: 0;
+    }
+
+    #jazzy-navbar .navbar-nav,
+    .main-header .navbar-nav {
+        min-width: 0;
+    }
+
+    .object-tools,
+    ul.object-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        float: none !important;
+        margin: 8px 0 12px !important;
+        padding: 0;
+    }
+
+    .object-tools li {
+        float: none !important;
+        margin: 0 !important;
+    }
+
+    .object-tools a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
+    }
+
+    .change-form .card-body,
+    .change-list .card-body {
+        padding: 14px;
+    }
+}
+
+/* ---------- Mobile admin ---------- */
+
+@media (max-width: 767.98px) {
+    .app-content-header,
+    .content-header {
+        padding-top: 10px;
+        padding-bottom: 8px;
+    }
+
+    .app-content-header .row > [class*="col-"],
+    .content-header .row > [class*="col-"] {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .app-content-header .float-sm-end,
+    .content-header .float-sm-right,
+    .content-header .float-sm-left {
+        float: none !important;
+        margin-top: 6px;
+    }
+
+    #jazzy-navbar .container-fluid {
+        flex-wrap: wrap;
+        gap: 4px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+
+    #jazzy-navbar form[method="GET"] {
+        order: 5;
+        flex: 1 0 100%;
+        width: 100%;
+        margin: 2px 0 4px !important;
+    }
+
+    #jazzy-navbar form[method="GET"] .input-group {
+        width: 100%;
+    }
+
+    .change-form .form-group > .row > [class*="col-"],
+    .change-form fieldset .row > [class*="col-"] {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .change-form .form-group > .row > [class*="col-"] + [class*="col-"],
+    .change-form fieldset .row > [class*="col-"] + [class*="col-"] {
+        margin-top: 6px;
+    }
+
+    .change-form .form-group,
+    .change-form .fieldBox {
+        margin-bottom: 14px;
+    }
+
+    .change-form label {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .change-form .help,
+    .change-form .help-block {
+        display: block;
+        margin-top: 6px;
+        line-height: 1.75;
+    }
+
+    .change-form .datetime {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .change-form .datetime br {
+        display: none;
+    }
+
+    .change-form .calendarbox,
+    .change-form .clockbox {
+        position: fixed !important;
+        inset: 10vh 12px auto 12px !important;
+        width: auto !important;
+        max-width: calc(100vw - 24px);
+        z-index: 1100;
+    }
+
+    .selector {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .selector-chooser {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #changelist-search .form-group,
+    #toolbar form {
+        align-items: stretch;
+    }
+
+    #changelist-search .input-group,
+    #toolbar .input-group,
+    #searchbar {
+        flex: 1 1 100%;
+        width: 100% !important;
+    }
+
+    #changelist-search .help,
+    #changelist-search .help-block {
+        flex-basis: 100%;
+        margin: 0;
+        line-height: 1.7;
+    }
+
+    #changelist .actions {
+        position: static !important;
+        top: auto !important;
+        align-items: stretch;
+    }
+
+    body.model-samedayflower #changelist-form .actions {
+        position: static;
+        top: auto;
+        padding: 10px !important;
+    }
+
+    #changelist .actions label {
+        flex: 1 1 100%;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    #changelist .actions select,
+    #changelist .actions .button,
+    #changelist .actions button {
+        width: 100%;
+    }
+
+    #result_list {
+        min-width: 690px;
+    }
+
+    img.zad-admin-preview,
+    #changelist img.zad-admin-preview,
+    #result_list img.zad-admin-preview,
+    td.field-image_preview img.zad-admin-preview,
+    .field-image_preview img.zad-admin-preview {
+        width: 68px !important;
+        height: 84px !important;
+        min-width: 68px !important;
+        max-width: 68px !important;
+        min-height: 84px !important;
+        max-height: 84px !important;
+        border-radius: 10px !important;
+    }
+
+    .change-form img.zad-admin-preview {
+        width: min(180px, 100%) !important;
+        height: auto !important;
+        min-width: 0 !important;
+        max-width: 180px !important;
+        min-height: 0 !important;
+        max-height: 230px !important;
+        aspect-ratio: 4 / 5;
+    }
+
+    .change-form img.zad-admin-hero-preview,
+    .change-form img.zad-admin-hero-mobile-preview {
+        width: min(100%, 280px) !important;
+        height: auto !important;
+        max-height: 280px;
+    }
+
+    .submit-row,
+    .change-form .submit-row,
+    .change-form .card-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .submit-row input,
+    .submit-row button,
+    .submit-row a,
+    .change-form .card-footer input,
+    .change-form .card-footer button,
+    .change-form .card-footer a {
+        flex: 1 1 100%;
+        width: 100%;
+        min-height: 44px;
+        margin: 0 !important;
+        text-align: center;
+    }
+
+    .submit-row .deletelink-box {
+        width: 100%;
+        margin: 0;
+    }
+
+    .submit-row .deletelink {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .inline-related table {
+        min-width: 620px;
+    }
+
+    .paginator {
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-content > .container-fluid,
+    .content > .container-fluid,
+    .app-content-header > .container-fluid,
+    .content-header > .container-fluid {
+        padding-right: 8px !important;
+        padding-left: 8px !important;
+    }
+
+    .change-form .card-body,
+    .change-list .card-body,
+    .dashboard .card-body {
+        padding: 10px;
+    }
+
+    .card-header {
+        padding: 10px 12px;
+    }
+
+    .btn,
+    button,
+    input[type="submit"],
+    input[type="button"] {
+        min-height: 42px;
+    }
+
+    .object-tools,
+    ul.object-tools {
+        flex-direction: column;
+    }
+
+    .object-tools li,
+    .object-tools a {
+        width: 100%;
+    }
+
+    .object-tools a {
+        justify-content: center;
+    }
 }

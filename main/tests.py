@@ -414,6 +414,66 @@ class MainViewsTests(TestCase):
 
         self.assertContains(self.client.get(reverse("events")), ongoing_event.title)
 
+    def test_workshops_use_concrete_experience_copy(self):
+        workshops = self.client.get(reverse("events"))
+        home = self.client.get(reverse("index"))
+
+        self.assertContains(workshops, "فضایی برای کار با دست‌ها")
+        self.assertContains(workshops, "در ورکشاپ‌های زاد چه تجربه‌ای دارید؟")
+        self.assertContains(home, "کار عملی با متریال")
+        self.assertContains(home, "انتخاب و ساختن با سلیقه شخصی")
+        self.assertNotContains(workshops, "فعلاً با گل‌ها")
+        self.assertNotContains(workshops, "گل، مرز ورکشاپ‌های زاد نیست")
+        self.assertNotContains(home, "به گل محدود نمی‌مانند")
+
+    def test_workshops_page_uses_managed_section_copy(self):
+        WorkshopPageContent.objects.create(
+            story_kicker="Managed story kicker",
+            story_title="Managed story title",
+            story_text="Managed story text",
+            types_kicker="Managed types kicker",
+            types_title="Managed types title",
+            public_title="Managed public title",
+            public_text="Managed public text",
+            private_title="Managed private title",
+            private_text="Managed private text",
+            corporate_title="Managed corporate title",
+            corporate_text="Managed corporate text",
+            upcoming_kicker="Managed upcoming kicker",
+            upcoming_title="Managed upcoming title",
+            upcoming_empty_title="Managed empty title",
+            upcoming_empty_text="Managed empty text",
+            cta_title="Managed CTA title",
+            cta_text="Managed CTA text",
+        )
+
+        response = self.client.get(reverse("events"))
+
+        for managed_copy in (
+            "Managed story kicker",
+            "Managed story title",
+            "Managed story text",
+            "Managed types kicker",
+            "Managed types title",
+            "Managed public title",
+            "Managed public text",
+            "Managed private title",
+            "Managed private text",
+            "Managed corporate title",
+            "Managed corporate text",
+            "Managed upcoming kicker",
+            "Managed upcoming title",
+            "Managed CTA title",
+            "Managed CTA text",
+        ):
+            with self.subTest(managed_copy=managed_copy):
+                self.assertContains(response, managed_copy)
+
+        self.published_event.delete()
+        empty_response = self.client.get(reverse("events"))
+        self.assertContains(empty_response, "Managed empty title")
+        self.assertContains(empty_response, "Managed empty text")
+
     def test_events_page_uses_page_hero_from_admin(self):
         SiteHero.objects.create(
             title="Admin Events Hero",

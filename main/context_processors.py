@@ -6,6 +6,27 @@ from django.conf import settings
 GOOGLE_TAG_ID_PATTERN = re.compile(r"^(?:G|GT|AW)-[A-Z0-9]+$")
 
 
+def full_address_text(street, locality):
+    """Return one consistent public address without duplicating the city."""
+
+    street = (street or "").strip()
+    locality = (locality or "").strip()
+
+    if not locality:
+        return street
+    if not street:
+        return locality
+
+    normalized_street = street.lstrip("،, -")
+    if normalized_street == locality or any(
+        normalized_street.startswith(f"{locality}{separator}")
+        for separator in ("،", ",", " ", "-")
+    ):
+        return street
+
+    return f"{locality}، {street}"
+
+
 def site_defaults(request):
     google_tag_id = settings.GOOGLE_TAG_ID.strip().upper()
     if not GOOGLE_TAG_ID_PATTERN.fullmatch(google_tag_id):
@@ -23,7 +44,10 @@ def site_defaults(request):
         "site_email": settings.ZAD_EMAIL,
         "site_opening_hours_text": settings.ZAD_OPENING_HOURS_TEXT,
         "site_response_time_text": settings.ZAD_RESPONSE_TIME_TEXT,
-        "site_address_text": settings.ZAD_ADDRESS_STREET,
+        "site_address_text": full_address_text(
+            settings.ZAD_ADDRESS_STREET,
+            settings.ZAD_ADDRESS_LOCALITY,
+        ),
         "site_default_social_image": settings.ZAD_DEFAULT_SOCIAL_IMAGE,
         "google_site_verification": settings.GOOGLE_SITE_VERIFICATION,
         "bing_site_verification": settings.BING_SITE_VERIFICATION,

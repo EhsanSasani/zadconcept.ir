@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<section class="workshops-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های گل‌آرایی زاد" data-page-hero-slider>
+<section class="workshops-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های تجربه‌محور زاد" data-page-hero-slider>
   <div class="workshops-hero__slides">
     {% if page_hero_slides %}
       {% for slide in page_hero_slides %}
@@ -47,11 +47,11 @@
 
     <div class="workshops-hero__actions">
       <a href="#workshop-request" class="workshops-btn workshops-btn--light">
-        درخواست هماهنگی ورکشاپ
+        ثبت درخواست
       </a>
 
       <a href="#upcoming-workshops" class="workshops-btn workshops-btn--ghost">
-        مشاهده برنامه‌های آینده
+        مشاهده برنامه‌ها
       </a>
     </div>
   </div>
@@ -67,14 +67,23 @@
 <section class="workshops-story section-block">
   <div class="container workshops-story__grid">
     <div class="workshops-story__text">
-      <span class="section-kicker">فلسفه ورکشاپ‌های زاد</span>
+      <span class="section-kicker">{{ workshop_copy.story_kicker|default:"درباره ورکشاپ‌های زاد" }}</span>
 
-      <h2>گل‌آرایی، فقط کنار هم چیدن گل‌ها نیست.</h2>
+      <h2>{{ workshop_copy.story_title|default:"در ورکشاپ‌های زاد چه تجربه‌ای دارید؟" }}</h2>
 
-      <p>
-        در ورکشاپ‌های زاد، گل‌ها بهانه‌ای برای مکث، خلق کردن، گفتگو و تجربه‌ی یک فضای گرم و صمیمی هستند؛
-        جایی برای ساختن لحظه‌هایی که آرام و زیبا در ذهن می‌مانند.
-      </p>
+      {% if workshop_copy.story_text %}
+        <p>{{ workshop_copy.story_text|linebreaksbr }}</p>
+      {% else %}
+        <p>
+          در هر ورکشاپ، متریال را از نزدیک می‌بینید، انتخاب می‌کنید، ترکیب می‌کنید
+          و با دست‌های خودتان به نتیجه‌ای متناسب با سلیقه‌تان می‌رسید.
+          روند کار با همراهی برگزارکننده پیش می‌رود و هر شرکت‌کننده فضای کافی برای انتخاب و تجربه شخصی دارد.
+        </p>
+        <p>
+          این جلسات فرصتی برای تمرکز روی یک کار عملی، فاصله گرفتن از روزمرگی
+          و حضور در یک جمع صمیمی‌اند. نتیجه هر نفر بر اساس انتخاب‌ها و نگاه خودش شکل می‌گیرد.
+        </p>
+      {% endif %}
     </div>
 
     <div class="workshops-story__media">
@@ -90,8 +99,8 @@
 
 <section id="upcoming-workshops" class="container section-block workshops-events-section">
   <div class="section-head section-head--center">
-    <span class="section-kicker">برنامه‌های پیش‌رو</span>
-    <h2>ورکشاپ‌های آینده زاد</h2>
+    <span class="section-kicker">{{ workshop_copy.upcoming_kicker|default:"برنامه ورکشاپ‌ها" }}</span>
+    <h2>{{ workshop_copy.upcoming_title|default:"ورکشاپ‌های پیش رو" }}</h2>
   </div>
 
   {% if events %}
@@ -138,15 +147,12 @@
     </div>
   {% else %}
     <div class="workshops-empty">
-      <h3>برنامه‌های جدید به‌زودی اعلام می‌شوند.</h3>
+      <h3>{{ workshop_copy.upcoming_empty_title|default:"برای اطلاع از برنامه بعدی ثبت درخواست کنید" }}</h3>
 
-      <p>
-        برای هماهنگی ورکشاپ خصوصی یا اطلاع از زمان برگزاری برنامه‌های آینده،
-        با زاد در ارتباط باشید.
-      </p>
+      <p>{{ workshop_copy.upcoming_empty_text|default:"نام و شماره‌تان را ثبت کنید تا پس از مشخص‌شدن زمان برگزاری، برای هماهنگی با شما تماس بگیریم. درخواست ورکشاپ خصوصی و سازمانی نیز از همین بخش قابل ثبت است." }}</p>
 
       <a href="#workshop-request" class="workshops-btn workshops-btn--light">
-        هماهنگی با زاد
+        ثبت درخواست
       </a>
     </div>
   {% endif %}
@@ -154,8 +160,8 @@
 <section class="workshops-types section-block">
   <div class="container">
     <div class="section-head section-head--center">
-      <span class="section-kicker">انواع ورکشاپ‌ها</span>
-      <h2>برای هر جمع، یک تجربه متفاوت</h2>
+      <span class="section-kicker">{{ workshop_copy.types_kicker|default:"نحوه شرکت و برگزاری" }}</span>
+      <h2>{{ workshop_copy.types_title|default:"ورکشاپ عمومی، خصوصی و سازمانی" }}</h2>
     </div>
 
     <div class="workshops-types__grid">
@@ -169,10 +175,8 @@
 
         <div class="workshop-type-card__body">
           <span>۰۱</span>
-          <h3>ورکشاپ عمومی</h3>
-          <p>
-            برای علاقه‌مندان به گل‌آرایی، تجربه‌های هنری گروهی و ساختن یک چیدمان اختصاصی.
-          </p>
+          <h3>{{ workshop_copy.public_title|default:"ورکشاپ عمومی" }}</h3>
+          <p>{{ workshop_copy.public_text|default:"برنامه‌های زمان‌بندی‌شده با ثبت‌نام فردی؛ هر شرکت‌کننده در یک جمع مشترک روی کار خودش تمرکز می‌کند." }}</p>
         </div>
       </article>
 
@@ -186,10 +190,8 @@
 
         <div class="workshop-type-card__body">
           <span>۰۲</span>
-          <h3>ورکشاپ خصوصی</h3>
-          <p>
-            برای تولد، دورهمی دوستانه، مناسبت عاشقانه یا تجربه‌ای دونفره و آرام.
-          </p>
+          <h3>{{ workshop_copy.private_title|default:"ورکشاپ خصوصی" }}</h3>
+          <p>{{ workshop_copy.private_text|default:"برگزاری اختصاصی برای جمع دوستان، خانواده یا یک مناسبت شخصی؛ زمان و جزئیات برنامه با توجه به گروه هماهنگ می‌شود." }}</p>
         </div>
       </article>
 
@@ -203,10 +205,8 @@
 
         <div class="workshop-type-card__body">
           <span>۰۳</span>
-          <h3>ورکشاپ سازمانی</h3>
-          <p>
-            برای تیم‌سازی، برندها، کافه‌ها، گالری‌ها و رویدادهای خاص با اجرای اختصاصی.
-          </p>
+          <h3>{{ workshop_copy.corporate_title|default:"ورکشاپ سازمانی" }}</h3>
+          <p>{{ workshop_copy.corporate_text|default:"برنامه‌ای برای تیم‌ها و برندها که بر اساس تعداد نفرات، هدف رویداد و فضای برگزاری طراحی و هماهنگ می‌شود." }}</p>
         </div>
       </article>
     </div>
@@ -255,9 +255,9 @@
 <section id="workshop-request" class="workshops-lead" aria-labelledby="workshops-lead-title">
   <div class="container workshops-lead__inner">
     <div class="workshops-lead__copy">
-      <span class="section-kicker">یک قدم تا حضور در ورکشاپ</span>
-      <h2 id="workshops-lead-title">برای هماهنگی با شما تماس بگیریم؟</h2>
-      <p>فقط نام و شماره موبایل‌تان را وارد کنید؛ برای اطلاع از زمان برگزاری یا هماهنگی ورکشاپ اختصاصی با شما تماس می‌گیریم.</p>
+      <span class="section-kicker">ثبت درخواست</span>
+      <h2 id="workshops-lead-title">{{ workshop_copy.cta_title|default:"شرکت در ورکشاپ یا برگزاری یک برنامه اختصاصی" }}</h2>
+      <p>{{ workshop_copy.cta_text|default:"نام و شماره‌تان را ثبت کنید. برای اعلام برنامه‌های عمومی یا هماهنگی جزئیات ورکشاپ خصوصی و سازمانی با شما تماس می‌گیریم." }}</p>
     </div>
 
     <form method="post" action="{% url 'lead_request' %}" class="workshops-lead__form" data-track-lead-form data-cta-position="workshops-footer">

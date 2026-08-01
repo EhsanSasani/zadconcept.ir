@@ -85,8 +85,11 @@ class OccasionSitemap(CanonicalSitemap):
     priority = 0.7
 
     def items(self):
-        return Tag.objects.filter(is_active=True, is_occasion=True).order_by(
-            "sort_order", "name"
+        return (
+            Tag.objects.filter(is_active=True, is_occasion=True)
+            .exclude(slug="wedding")
+            .exclude(name="عروسی")
+            .order_by("sort_order", "name")
         )
 
     def lastmod(self, obj):

@@ -94,6 +94,14 @@ def to_persian_digits(value):
     return value.translate(translation_table)
 
 
+def to_english_digits(value):
+    """Normalize Persian and Arabic-Indic digits for product-code searches."""
+
+    return str(value or "").translate(
+        str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
+    )
+
+
 def format_toman(value):
     if value in (None, ""):
         return "استعلام قیمت"
@@ -288,6 +296,25 @@ class TagAdminForm(forms.ModelForm):
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
 
+    def clean(self):
+        cleaned_data = super().clean()
+        slug = (cleaned_data.get("slug") or "").strip().casefold()
+        name = (cleaned_data.get("name") or "").strip()
+
+        if (slug == "wedding" or name == "عروسی") and cleaned_data.get(
+            "is_occasion"
+        ):
+            self.add_error(
+                "is_occasion",
+                (
+                    "عروسی در ساختار فعلی یک دستهٔ گل با دو زیر‌دستهٔ "
+                    "«ماشین عروس» و «دسته‌گل عروس» است و نباید مناسبت شود."
+                ),
+            )
+
+        return cleaned_data
+
+
 class PersianImageInput(forms.ClearableFileInput):
     initial_text = "عکس فعلی"
     input_text = "تغییر عکس"
@@ -313,10 +340,7 @@ class ProductAdminForm(forms.ModelForm):
         if "category" in self.fields:
             section_filter = getattr(self, "section_filter", None)
 
-            category_queryset = Category.objects.filter(
-                is_active=True,
-                children__isnull=True,
-            )
+            category_queryset = Category.objects.filter(is_active=True)
 
             if section_filter:
                 category_queryset = category_queryset.filter(section=section_filter)
@@ -326,13 +350,18 @@ class ProductAdminForm(forms.ModelForm):
                 "sort_order",
                 "name",
             )
-            self.fields["category"].help_text = "نوع فیزیکی محصول را انتخاب کن؛ مثل باکس، دسته گل، کیک تولد، شمع."
+            self.fields["category"].help_text = (
+                "دسته دقیق محصول را انتخاب کن. اگر محصول هنوز زیردسته مشخصی "
+                "ندارد، می‌تواند مستقیم داخل دسته والد بماند."
+            )
 
         if "tags" in self.fields:
-            self.fields["tags"].queryset = Tag.objects.filter(
-                is_active=True
-            ).order_by("sort_order", "name")
-            self.fields["tags"].help_text = "مناسبت یا کاربرد محصول؛ مثل تولد، ترحیم، ارسال روز، عاشقانه، یونیک و ..."
+            self.fields["tags"].queryset = (
+                Tag.objects.filter(is_active=True)
+                .exclude(slug="wedding")
+                .exclude(name="عروسی")
+                .order_by("sort_order", "name")
+            )
 
         if "price" in self.fields:
             self.fields["price"].help_text = "فقط عدد وارد کن؛ مثلاً 2500000."
@@ -350,7 +379,11 @@ class ProductAdminForm(forms.ModelForm):
             self.fields["featured"].help_text = "محصول ویژه در بخش‌های انتخاب‌شده و ترتیب نمایش بالاتر اولویت می‌گیرد؛ محصولات غیر ویژه را مخفی نمی‌کند."
 
         if "tags" in self.fields:
-            self.fields["tags"].help_text = "برچسب می‌تواند داخلی باشد یا اگر گزینه مناسبت روشن است، در بخش مناسبت‌های سایت نمایش داده شود. برچسب ارسال روز برای فیلتر ارسال فوری استفاده می‌شود."
+            self.fields["tags"].help_text = (
+                "برچسب می‌تواند داخلی باشد یا اگر گزینه مناسبت روشن است، "
+                "در بخش مناسبت‌های سایت نمایش داده شود. برچسب ارسال روز "
+                "برای فیلتر ارسال فوری است؛ عروسی از نوع محصول انتخاب می‌شود."
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -597,7 +630,13 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
         (
             "۱. زیر‌دسته",
             {
-                "description": "زیر‌دسته یعنی نوع فیزیکی محصول؛ مثل دسته گل، باکس، استند، کیک تولد، شمع.",
+                "description": (
+                    "زیر‌دسته یعنی نوع فیزیکی محصول؛ مثل دسته گل، باکس، استند، "
+                    "کیک تولد یا شمع. ساختار عروسی دو مرحله‌ای است: «عروسی» "
+                    "والد «ماشین عروس» و «دسته‌گل عروس» است. محصولاتی که هنوز "
+                    "زیردسته دقیق ندارند می‌توانند مستقیم در والد بمانند و "
+                    "همچنان در صفحه آن نمایش داده می‌شوند."
+                ),
                 "fields": (
                     "cover_image",
                     "image_preview",
@@ -642,7 +681,10 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        return queryset.annotate(products_total=Count("products"))
+        return queryset.annotate(
+            products_total=Count("products", distinct=True),
+            child_products_total=Count("children__products", distinct=True),
+        )
 
     @admin.display(description="تعداد محصول")
     def product_count(self, obj):
@@ -749,9 +791,11 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
             return 0
 
         if hasattr(obj, "products_total"):
-            return obj.products_total
+            return obj.products_total + getattr(obj, "child_products_total", 0)
 
-        return obj.products.count()
+        return obj.products.count() + Product.objects.filter(
+            category__parent=obj
+        ).count()
 
 
 class SectionCategoryFilter(admin.SimpleListFilter):
@@ -759,16 +803,20 @@ class SectionCategoryFilter(admin.SimpleListFilter):
     parameter_name = "category"
 
     def lookups(self, request, model_admin):
-        queryset = Category.objects.filter(
-            is_active=True,
-            children__isnull=True,
-        )
+        queryset = Category.objects.filter(is_active=True).select_related("parent")
 
         if getattr(model_admin, "section_filter", None):
             queryset = queryset.filter(section=model_admin.section_filter)
 
         return [
-            (category.pk, category.name)
+            (
+                category.pk,
+                (
+                    f"{category.parent.name} / {category.name}"
+                    if category.parent_id
+                    else category.name
+                ),
+            )
             for category in queryset.order_by("sort_order", "name")
         ]
 
@@ -805,6 +853,9 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
         "name",
         "category__name",
         "tags__name",
+    )
+    search_help_text = (
+        "نام یا کد محصول را وارد کنید؛ کد با رقم فارسی یا انگلیسی قابل جست‌وجو است."
     )
 
     readonly_fields = (
@@ -915,6 +966,10 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
         return queryset
 
+    def get_search_results(self, request, queryset, search_term):
+        normalized_term = to_english_digits(search_term).strip()
+        return super().get_search_results(request, queryset, normalized_term)
+
     @admin.display(description="کد", ordering="product_code")
     def product_code_display(self, obj):
         if not obj.product_code:
@@ -995,10 +1050,7 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "category":
-            queryset = Category.objects.filter(
-                is_active=True,
-                children__isnull=True,
-            )
+            queryset = Category.objects.filter(is_active=True)
 
             if self.section_filter:
                 queryset = queryset.filter(section=self.section_filter)
@@ -1009,9 +1061,14 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "tags":
-            kwargs["queryset"] = Tag.objects.filter(is_active=True).order_by(
-                "sort_order",
-                "name",
+            kwargs["queryset"] = (
+                Tag.objects.filter(is_active=True)
+                .exclude(slug="wedding")
+                .exclude(name="عروسی")
+                .order_by(
+                    "sort_order",
+                    "name",
+                )
             )
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
@@ -1077,7 +1134,12 @@ class FlowerAdmin(BaseProductAdmin):
         (
             "۴. نوع گل و مناسبت",
             {
-                "description": "زیر‌دسته مثل دسته گل، باکس گل، بوکت، استند، جار گل یا گیاه است. برچسب مثل تولد، عاشقانه، یونیک، ترحیم یا ارسال روز است.",
+                "description": (
+                    "نوع گل مثل دسته گل، باکس، بوکت، استند، جار یا گیاه است. "
+                    "برای عروسی فقط «ماشین عروس» یا «دسته‌گل عروس» را انتخاب "
+                    "کن؛ عروسی برچسب نیست. برچسب‌ها برای تولد، عاشقانه، ترحیم "
+                    "یا ارسال روز هستند."
+                ),
                 "fields": (
                     "category",
                     "tags",

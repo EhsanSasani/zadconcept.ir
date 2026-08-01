@@ -59,7 +59,7 @@
       <div class="flowers-directory">
         <header class="flowers-directory__head">
           <span>FLOWER COLLECTIONS</span>
-          <h2>دسته‌بندی گل‌های زاد</h2>
+          <h2>دسته‌بندی محصولات استودیو گل زاد</h2>
           <p>برای دیدن محصولات، دسته‌ی موردنظرتان را انتخاب کنید.</p>
         </header>
 
@@ -78,7 +78,7 @@
                 <small>{{ item.slug|cut:"-"|upper }}</small>
                 <strong>{{ item.label }}</strong>
                 {% if item.intro %}<span>{{ item.intro }}</span>{% endif %}
-                <em>مشاهده محصولات <b aria-hidden="true">←</b></em>
+                <em>{% if item.has_children %}مشاهده مجموعه‌ها{% else %}مشاهده محصولات{% endif %} <b aria-hidden="true">←</b></em>
               </span>
             </a>
           {% empty %}

@@ -696,16 +696,6 @@ class Product(TimeStampedModel):
                 }
             )
 
-        if self.category_id and self.category.children.filter(is_active=True).exists():
-            raise ValidationError(
-                {
-                    "category": (
-                        "این دسته دارای زیردسته است و محصول باید داخل یکی از "
-                        "زیردسته‌های آن قرار بگیرد."
-                    )
-                }
-            )
-
         if self.pricing_type == self.PricingType.FIXED and self.price is None:
             raise ValidationError(
                 {"price": "برای قیمت ثابت، وارد کردن قیمت الزامی است."}

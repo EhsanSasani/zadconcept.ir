@@ -113,13 +113,13 @@
   <div class="container container--wide-home">
     <div class="home-categories home-categories--fixed">
 
-      <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه گل‌های زاد">
-        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="گل‌های زاد" decoding="async" width="900" height="1125" loading="lazy">
+      <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه استودیو گل زاد">
+        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="استودیو گل زاد" decoding="async" width="900" height="1125" loading="lazy">
         <div class="home-category-card__overlay"></div>
 
         <div class="home-category-card__content">
           <i class="bi bi-flower1 home-category-card__icon" aria-hidden="true"></i>
-          <h2>{{ page_content.flowers.title|default:"گل‌های زاد" }}</h2>
+          <h2>{{ page_content.flowers.title|default:"استودیو گل زاد" }}</h2>
           <span>Premium Bouquets</span>
           <div class="home-category-card__line"></div>
           <p>{{ page_content.flowers.body|default:"برای لحظه‌هایی که ماندگار می‌شوند" }}</p>
@@ -136,7 +136,7 @@
           <h2>{{ page_content.workshops.title|default:"ورکشاپ‌های زاد" }}</h2>
           <span>Creative Workshops</span>
           <div class="home-category-card__line"></div>
-          <p>{{ page_content.workshops.body|default:"تجربه‌ای برای خلق با گل‌ها" }}</p>
+          <p>{{ page_content.workshops.body|default:"تجربه‌ای عملی برای ساختن با دست‌ها و سلیقه خودتان" }}</p>
           <em>مشاهده ورکشاپ‌ها <i class="bi bi-chevron-left" aria-hidden="true"></i></em>
         </div>
       </a>
@@ -369,17 +369,18 @@
       </div>
 
       <div class="home-experience__content">
-        <span class="home-experience__kicker">{{ page_content.experience.kicker|default:"ورکشاپ‌ها و رویدادها" }}</span>
+        <span class="home-experience__kicker">{{ page_content.experience.kicker|default:"تجربه‌های زاد" }}</span>
 
         <h2>{% if page_content.experience.title %}{{ page_content.experience.title }}{% else %}
-          تجربه‌هایی برای یادگیری،<br>
-          خلق زیبایی و کنار هم بودن
+          چند ساعت برای ساختن<br>
+          با دست‌های خودتان
         {% endif %}</h2>
 
         <div class="home-experience__divider"></div>
 
         <p>{% if page_content.experience.body %}{{ page_content.experience.body }}{% else %}
-         در ورکشاپ‌های زاد، گل‌آرایی را از نزدیک تجربه می‌کنید؛ ساده، کاربردی و در فضایی صمیمی.
+          در ورکشاپ‌های زاد، متریال را از نزدیک لمس می‌کنید، انتخاب می‌کنید و با سلیقه خودتان به آن شکل می‌دهید.
+          فضایی صمیمی برای حضور در لحظه، تجربه یک کار عملی و کشف علاقه‌ای تازه.
         {% endif %}</p>
 
         <a class="home-experience__btn" href="{{ page_content.experience.cta_url|default:'/workshops/' }}">
@@ -390,17 +391,17 @@
         <div class="home-experience__features">
           <div>
             <span class="home-experience__icon">◎</span>
-            <strong>تجربه‌ای متفاوت</strong>
+            <strong>کار عملی با متریال</strong>
           </div>
 
           <div>
             <span class="home-experience__icon">♢</span>
-            <strong>محیطی صمیمی و الهام‌بخش</strong>
+            <strong>انتخاب و ساختن با سلیقه شخصی</strong>
           </div>
 
           <div>
             <span class="home-experience__icon">✿</span>
-            <strong>یادگیری و خلق زیبایی</strong>
+            <strong>تجربه‌ای گروهی در فضایی صمیمی</strong>
           </div>
         </div>
       </div>

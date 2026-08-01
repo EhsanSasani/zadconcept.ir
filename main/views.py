@@ -60,6 +60,27 @@ from .site_content import (
 
 security_logger = logging.getLogger("main.security")
 
+LEGACY_FLOWER_BRAND_PHRASES = (
+    "گل‌های زاد",
+    "گل های زاد",
+    "گل‌ های زاد",
+    "گل‌ های‌ زاد",
+    "گلهای زاد",
+)
+FLOWER_STUDIO_NAME = "استودیو گل زاد"
+
+
+def _public_brand_copy(value):
+    """Normalize legacy public-facing flower brand copy at render time."""
+
+    if not isinstance(value, str):
+        return value
+
+    for phrase in LEGACY_FLOWER_BRAND_PHRASES:
+        value = value.replace(phrase, FLOWER_STUDIO_NAME)
+
+    return value
+
 
 # =========================
 # Page content
@@ -134,7 +155,7 @@ CATEGORY_CONTENT_OVERRIDES = {
     "hand-bouquet": {
         "label": "دسته گل",
         "meta_title": "دسته گل لوکس در مشهد | ZAD",
-        "meta_description": "دسته گل‌های زاد برای هدیه، تولد، عاشقانه و لحظه‌های روزمره در مشهد.",
+        "meta_description": "دسته‌گل‌های منتخب استودیو گل زاد برای هدیه، تولد، عاشقانه و لحظه‌های روزمره در مشهد.",
         "intro": "انتخابی نرم و روشن برای هدیه‌های روزمره و لحظه‌های خاص.",
         "image": "main/img/sub-bouquet.webp",
         "hero_image": "main/img/hero-subcategory.webp",
@@ -142,7 +163,7 @@ CATEGORY_CONTENT_OVERRIDES = {
     "box": {
         "label": "باکس گل",
         "meta_title": "باکس گل لوکس در مشهد | ZAD",
-        "meta_description": "باکس گل‌های زاد با چیدمان مینیمال، مناسب هدیه و سفارش سریع در مشهد.",
+        "meta_description": "باکس‌های گل استودیو گل زاد با چیدمان مینیمال، مناسب هدیه و سفارش سریع در مشهد.",
         "intro": "هدیه‌ای مرتب، شیک و آماده برای ارسال.",
         "image": "main/img/sub-box.webp",
         "hero_image": "main/img/hero-subcategory.webp",
@@ -191,7 +212,7 @@ CATEGORY_CONTENT_OVERRIDES = {
     "jarl": {
         "label": "جار گل",
         "meta_title": "جار گل در مشهد | ZAD",
-        "meta_description": "جار گل‌های زاد برای دکور، هدیه‌های خاص و انتخاب‌های متفاوت.",
+        "meta_description": "جارهای گل استودیو گل زاد برای دکور، هدیه‌های خاص و انتخاب‌های متفاوت.",
         "intro": "فرمی متفاوت و دکوراتیو برای انتخاب‌های خاص‌تر.",
         "image": "main/img/sub-box.webp",
         "hero_image": "main/img/hero-subcategory.webp",
@@ -207,7 +228,7 @@ CATEGORY_CONTENT_OVERRIDES = {
     "basket": {
         "label": "سبد گل",
         "meta_title": "سبد گل در مشهد | ZAD",
-        "meta_description": "سبد گل‌های زاد برای هدیه و مراسم.",
+        "meta_description": "سبدهای گل استودیو گل زاد برای هدیه و مراسم.",
         "intro": "یک دسته‌بندی قدیمی که فعلاً فقط برای سازگاری نگه داشته شده است.",
         "image": "main/img/sub-plant.webp",
         "hero_image": "main/img/hero-subcategory.webp",
@@ -328,7 +349,7 @@ def _item_telegram_href(request, product):
 COLLECTION_LANDING_CONTENT = {
     Category.Section.FLOWERS: {
         "hero_eyebrow": "FLOWER COLLECTION",
-        "hero_title": "گل‌های زاد",
+        "hero_title": "استودیو گل زاد",
         "hero_text": "گل‌هایی برای تمام لحظه‌های خاص زندگی شما",
         "hero_image": "main/img/flowers-hero.webp",
         "fallback_image": "main/img/cat-flowers.webp",
@@ -435,9 +456,15 @@ def _hero_from_key(key, *, title=None, text=None, image=None):
     hero = PAGE_HERO_CONTENT.get(key, {})
 
     return {
-        "page_hero_kicker": hero.get("kicker", "zad"),
-        "page_hero_title": title or hero.get("title", "zad"),
-        "page_hero_text": text or hero.get("text", "A thoughtful zad selection for flowers, gifts, and special orders"),
+        "page_hero_kicker": _public_brand_copy(hero.get("kicker", "zad")),
+        "page_hero_title": _public_brand_copy(title or hero.get("title", "zad")),
+        "page_hero_text": _public_brand_copy(
+            text
+            or hero.get(
+                "text",
+                "A thoughtful zad selection for flowers, gifts, and special orders",
+            )
+        ),
         "page_hero_image": image or hero.get("image", "main/img/hero-2.webp"),
     }
 
@@ -487,16 +514,20 @@ def _get_active_home_hero_slides():
     if slides:
         return [
             {
-                "title": slide.title,
-                "kicker": slide.kicker,
-                "description": slide.description,
+                "title": _public_brand_copy(slide.title),
+                "kicker": _public_brand_copy(slide.kicker),
+                "description": _public_brand_copy(slide.description),
                 "image_url": slide.image.url,
                 "mobile_image_url": (
                     slide.mobile_image.url if slide.mobile_image else ""
                 ),
-                "primary_button_text": slide.primary_button_text,
+                "primary_button_text": _public_brand_copy(
+                    slide.primary_button_text
+                ),
                 "primary_button_url": slide.primary_button_url,
-                "secondary_button_text": slide.secondary_button_text,
+                "secondary_button_text": _public_brand_copy(
+                    slide.secondary_button_text
+                ),
                 "secondary_button_url": slide.secondary_button_url,
                 "show_content": True,
                 **_hero_style_payload(slide, "home"),
@@ -555,9 +586,9 @@ def _get_active_home_hero_slides():
 
 def _site_hero_payload(hero):
     return {
-        "kicker": hero.kicker or "zad",
-        "title": hero.title,
-        "text": hero.description,
+        "kicker": _public_brand_copy(hero.kicker or "zad"),
+        "title": _public_brand_copy(hero.title),
+        "text": _public_brand_copy(hero.description),
         "image": hero.image.url if hero.image else "main/img/hero-2.webp",
         "mobile_image": hero.mobile_image.url if hero.mobile_image else "",
         **_hero_style_payload(hero, "site"),
@@ -802,7 +833,13 @@ def _default_context(
         "suppress_default_hero": suppress_default_hero,
         "has_managed_site_hero": False,
         "page_content": {
-            block.section_key: block
+            block.section_key: {
+                "kicker": _public_brand_copy(block.kicker),
+                "title": _public_brand_copy(block.title),
+                "body": _public_brand_copy(block.body),
+                "cta_text": _public_brand_copy(block.cta_text),
+                "cta_url": block.cta_url,
+            }
             for block in PageContentBlock.objects.filter(
                 page=content_page or page_type,
                 is_active=True,
@@ -989,13 +1026,6 @@ OCCASION_CARD_CONTENT = {
         "hero_text": "برای همان روزهای معمولی که با یک یاد کوچک، خاص می‌شوند.",
         "image": "main/img/occasions/special.webp",
     },
-    "wedding": {
-        "title": "عروسی",
-        "hero_title": "گل عروسی",
-        "intro": "برای روزهای سپید.",
-        "hero_text": "برای روزی سپید، لطیف و به‌یادماندنی.",
-        "image": "main/img/occasions/special.webp",
-    },
 }
 OCCASION_EN_LABELS = {
     "birthday": "Birthday",
@@ -1006,7 +1036,6 @@ OCCASION_EN_LABELS = {
     "proposal": "Proposal",
     "engagement": "Engagement",
     "no-occasion": "Just Because",
-    "wedding": "Wedding",
 }
 
 OCCASION_DETAIL_HERO_IMAGE = "main/img/occasion-detail-hero-v1.webp"
@@ -1057,6 +1086,7 @@ def _section_category_url(category):
 
 def _category_card(category):
     content = _category_content(category)
+    has_children = category.children.filter(is_active=True).exists()
 
     return {
         "slug": category.slug,
@@ -1064,6 +1094,7 @@ def _category_card(category):
         "url": _section_category_url(category),
         "image": category.cover_image.url if category.cover_image else content["image"],
         "intro": category.description or content["intro"],
+        "has_children": has_children,
     }
 
 
@@ -1099,7 +1130,9 @@ def _active_occasion_tags(limit=None):
     queryset = Tag.objects.filter(
         is_occasion=True,
         is_active=True,
-    ).exclude(slug="wedding").order_by("sort_order", "name")
+    ).exclude(
+        Q(slug="wedding") | Q(name="عروسی")
+    ).order_by("sort_order", "name")
 
     if limit:
         queryset = queryset[:limit]
@@ -1422,7 +1455,6 @@ OCCASION_FALLBACK_IMAGES = {
     "condolence": "main/img/occasions/condolence.webp",
     "proposal": "main/img/occasions/special.webp",
     "engagement": "main/img/occasions/special.webp",
-    "wedding": "main/img/occasions/special.webp",
     "no-occasion": "main/img/occasions/special.webp",
 }
 
@@ -1726,7 +1758,6 @@ def _section_all_products(request, section):
                 categories,
                 selected_slug=selected_slug,
             ),
-            "related_posts": [],
             "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
             "lead_default_type": config["lead_type"],
         }
@@ -1824,22 +1855,13 @@ def _section_subcategory(request, section, subcategory_slug):
         category.children.filter(is_active=True).order_by("sort_order", "name")
     )
 
-    if child_categories:
-        items = []
-    else:
-        items = list(
-            _published_products()
-            .filter(category=category)
-            .select_related("category")
-            .prefetch_related("tags")
-            .order_by("-featured", "sort_order", "-created_at")[:48]
-        )
-
-    related_posts = list(
-        NewsPost.objects.filter(status=PublishStatus.PUBLISHED).order_by(
-            "-published_at",
-            "-created_at",
-        )[:3]
+    visible_category_ids = [category.pk, *[child.pk for child in child_categories]]
+    items = list(
+        _published_products()
+        .filter(category_id__in=visible_category_ids)
+        .select_related("category")
+        .prefetch_related("tags")
+        .order_by("-featured", "sort_order", "-created_at")[:48]
     )
 
     breadcrumb_items = [{"name": config["title"], "url": reverse(section)}]
@@ -1859,7 +1881,7 @@ def _section_subcategory(request, section, subcategory_slug):
         meta_title=content["meta_title"],
         meta_description=content["meta_description"],
         breadcrumbs=breadcrumbs,
-        enable_product_modal=not child_categories,
+        enable_product_modal=True,
         content_page="subcategory",
         suppress_default_hero=is_flower_category_page and not db_hero,
     )
@@ -1893,11 +1915,6 @@ def _section_subcategory(request, section, subcategory_slug):
             "child_categories": [
                 _category_card(child) for child in child_categories
             ],
-            "related_posts": (
-                related_posts
-                if section == Category.Section.FLOWERS and not child_categories
-                else []
-            ),
             "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
             "lead_default_type": config["lead_type"],
         }
@@ -2406,8 +2423,11 @@ def events(request):
         request,
         page_type="workshops",
         active_nav="events",
-        meta_title="ورکشاپ‌های گل‌آرایی زاد در مشهد",
-        meta_description="ورکشاپ‌های گل‌آرایی زاد؛ تجربه‌ای آرام، زیبا و الهام‌بخش.",
+        meta_title="ورکشاپ‌های خلاق و تجربه‌محور زاد در مشهد",
+        meta_description=(
+            "اطلاعات و ثبت درخواست ورکشاپ‌های عمومی، خصوصی و سازمانی زاد "
+            "در مشهد؛ تجربه‌ای عملی برای ساختن، انتخاب‌کردن و خلق اثری شخصی."
+        ),
         breadcrumbs=breadcrumbs,
     )
 
@@ -2420,17 +2440,22 @@ def events(request):
     context.update(
         {
             "workshops_hero_kicker": (
-                page_hero["page_hero_kicker"] if page_hero else "ZAD WORKSHOPS"
+                page_hero["page_hero_kicker"]
+                if page_hero
+                else "ZAD WORKSHOPS"
             ),
             "workshops_hero_title": (
                 page_hero["page_hero_title"]
                 if page_hero
-                else "ورکشاپ‌های گل‌آرایی زاد"
+                else "ورکشاپ‌های زاد"
             ),
             "workshops_hero_text": (
                 page_hero["page_hero_text"]
                 if page_hero
-                else "تجربه‌ای آرام، زیبا و الهام‌بخش برای ساختن لحظه‌هایی که در ذهن می‌مانند."
+                else (
+                    "فضایی برای کار با دست‌ها، انتخاب و ترکیب متریال "
+                    "و ساختن اثری شخصی در کنار دیگران."
+                )
             ),
             "workshops_hero_image": (
                 page_hero["page_hero_image"]

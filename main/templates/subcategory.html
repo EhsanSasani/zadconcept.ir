@@ -41,7 +41,7 @@
 <section class="flowers-child-directory">
   <div class="flowers-container">
     <header class="flowers-directory__head flowers-directory__head--compact">
-      <span>WEDDING COLLECTIONS</span>
+      <span>{% if subcategory_slug == "wedding" %}WEDDING COLLECTIONS{% else %}COLLECTIONS{% endif %}</span>
       {% if is_flower_category_page %}
         <h2>انتخاب مجموعه</h2>
       {% else %}
@@ -72,7 +72,9 @@
     </div>
   </div>
 </section>
-{% elif is_same_day_page %}
+{% endif %}
+
+{% if is_same_day_page %}
 <section class="same-day-catalog">
   <div class="flowers-container">
     <header class="same-day-intro">
@@ -91,9 +93,15 @@
     {% endif %}
   </div>
 </section>
-{% else %}
+{% elif items or not child_categories %}
 <section class="container section-block catalog-products-section">
-  {% if is_flower_category_page %}
+  {% if child_categories %}
+    <div class="section-head section-head--center catalog-detail-head">
+      <div>
+        <h2 class="section-title-en hero-brand-text">محصولات {{ collection_title }}</h2>
+      </div>
+    </div>
+  {% elif is_flower_category_page %}
     <h2 class="sr-only">محصولات {{ collection_title }}</h2>
   {% else %}
   <div class="section-head section-head--center catalog-detail-head">
@@ -128,24 +136,6 @@
 </section>
 {% endif %}
 
-{% if related_posts %}
-<section class="container section-block">
-  <div class="section-head section-head--center">
-    <h2 class="section-title-en">{{ page_content.related.title|default:"Related Stories" }}</h2>
-  </div>
-
-  <div class="list-grid">
-    {% for post in related_posts %}
-      <article class="list-card">
-        <h3>
-          <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-        </h3>
-        <p>{{ post.excerpt|default:post.body|truncatechars:140 }}</p>
-      </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
 {% endblock %}
 
 {% block extra_js %}
