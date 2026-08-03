@@ -3,10 +3,11 @@ from django.contrib import admin
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 
+from .image_pipeline import ImageUploadError, normalize_admin_image
 from .models import (
+    SAME_DAY_TAG_SLUG,
     BakeryItem,
     Category,
     Event,
@@ -20,20 +21,55 @@ from .models import (
     Product,
     ProductImage,
     PublishStatus,
-    SAME_DAY_TAG_SLUG,
     SameDayFlower,
     SiteHero,
     Tag,
     WorkshopPageContent,
 )
 
-
 admin.site.site_header = "پنل مدیریت زاد"
 admin.site.site_title = "مدیریت زاد"
 admin.site.index_title = "مدیریت محتوا، محصولات و درخواست‌ها"
 
-MAX_ADMIN_IMAGE_SIZE = 10 * 1024 * 1024
 MAX_ADMIN_FONT_SIZE = 5 * 1024 * 1024
+
+ADMIN_IMAGE_ACCEPT = "image/*,.heic,.heif,.heics,.heifs,.hif,.jfif,.jpe"
+ADMIN_IMAGE_HELP_TEXT = (
+    "JPG/JPEG، PNG، WebP، HEIC/HEIF، AVIF، TIFF، BMP و GIF ثابت "
+    "تا ۲۰ مگابایت پذیرفته می‌شوند و هنگام ذخیره به WebP بهینه تبدیل می‌شوند."
+)
+
+
+class PersianImageInput(forms.ClearableFileInput):
+    initial_text = "عکس فعلی"
+    input_text = "تغییر عکس"
+    clear_checkbox_label = "حذف عکس فعلی"
+
+    def __init__(self, attrs=None):
+        attrs = dict(attrs or {})
+        # ``image/*`` keeps camera/gallery selection available on phones. The
+        # explicit suffixes cover browsers that omit HEIC/HEIF from image/*.
+        attrs.setdefault("accept", ADMIN_IMAGE_ACCEPT)
+        super().__init__(attrs)
+
+
+class AdminImageUploadField(forms.FileField):
+    """Let the content-aware pipeline be the only image validator.
+
+    Django's regular form ImageField rejects by filename extension before a
+    ``clean_<field>`` method can inspect the real bytes. Sellers' phone/editor
+    uploads can carry unusual or mismatched extensions and MIME values, so the
+    admin accepts a file here and validates/normalizes it in one place below.
+    The model later receives a verified ``.webp`` file and keeps its own normal
+    ImageField validation.
+    """
+
+    widget = PersianImageInput
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.help_text:
+            self.help_text = ADMIN_IMAGE_HELP_TEXT
 
 HERO_SLUG_TARGET_PAGES = {
     SiteHero.TargetPage.EVENTS,
@@ -61,20 +97,11 @@ class HiddenFromAdminIndexMixin:
         return {}
 
 
-ALLOWED_ADMIN_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
-
-
 def validate_admin_image(uploaded_file):
-    if not uploaded_file or not hasattr(uploaded_file, "content_type"):
-        return uploaded_file
-
-    if uploaded_file.content_type not in ALLOWED_ADMIN_IMAGE_TYPES:
-        raise forms.ValidationError("فرمت تصویر باید JPG، PNG یا WEBP باشد.")
-
-    if uploaded_file.size > MAX_ADMIN_IMAGE_SIZE:
-        raise forms.ValidationError("حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.")
-
-    return uploaded_file
+    try:
+        return normalize_admin_image(uploaded_file)
+    except ImageUploadError as error:
+        raise forms.ValidationError(str(error), code="invalid_image") from error
 
 
 def safe_image_url(image):
@@ -253,6 +280,7 @@ class CategoryAdminForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
             "description": forms.Textarea(
                 attrs={
@@ -284,6 +312,7 @@ class TagAdminForm(forms.ModelForm):
     class Meta:
         model = Tag
         fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
             "description": forms.Textarea(
                 attrs={
@@ -315,14 +344,10 @@ class TagAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class PersianImageInput(forms.ClearableFileInput):
-    initial_text = "عکس فعلی"
-    input_text = "تغییر عکس"
-    clear_checkbox_label = "حذف عکس فعلی"
-
 class ProductAdminForm(forms.ModelForm):
     class Meta:
         fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
                 "cover_image": PersianImageInput,
                 "tags": forms.CheckboxSelectMultiple,
@@ -373,7 +398,11 @@ class ProductAdminForm(forms.ModelForm):
             self.fields["sort_order"].help_text = "عدد کمتر یعنی محصول بالاتر نمایش داده می‌شود."
 
         if "cover_image" in self.fields:
-            self.fields["cover_image"].help_text = "تصویر اصلی محصول است و روی کارت‌ها، لیست‌ها و ابتدای صفحه محصول نمایش داده می‌شود. عکس‌های گالری کارت جداگانه نمی‌سازند."
+            self.fields["cover_image"].help_text = (
+                "تصویر اصلی محصول است. JPG/JPEG، PNG، WebP، HEIC/HEIF، AVIF، "
+                "TIFF، BMP و GIF ثابت تا ۲۰ مگابایت، هنگام ذخیره با حفظ "
+                "کیفیت به WebP بهینه تبدیل می‌شوند."
+            )
 
         if "featured" in self.fields:
             self.fields["featured"].help_text = "محصول ویژه در بخش‌های انتخاب‌شده و ترتیب نمایش بالاتر اولویت می‌گیرد؛ محصولات غیر ویژه را مخفی نمی‌کند."
@@ -412,16 +441,21 @@ class NewsPostAdminForm(forms.ModelForm):
     class Meta:
         model = NewsPost
         fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
             "excerpt": forms.Textarea(attrs={"rows": 3}),
             "body": forms.Textarea(attrs={"rows": 8}),
         }
+
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
 
 
 class EventAdminForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
             "description": forms.Textarea(attrs={"rows": 6}),
         }
@@ -433,6 +467,10 @@ class EventAdminForm(forms.ModelForm):
 class HeroAdminForm(forms.ModelForm):
     class Meta:
         fields = "__all__"
+        field_classes = {
+            "image": AdminImageUploadField,
+            "mobile_image": AdminImageUploadField,
+        }
         widgets = {
             "text_color": forms.TextInput(attrs={"type": "color"}),
         }
@@ -554,6 +592,7 @@ class ProductImageAdminForm(forms.ModelForm):
     class Meta:
         model = ProductImage
         fields = "__all__"
+        field_classes = {"image": AdminImageUploadField}
 
     def clean_image(self):
         return validate_admin_image(self.cleaned_data.get("image"))
