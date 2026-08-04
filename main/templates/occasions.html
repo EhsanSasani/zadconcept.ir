@@ -43,7 +43,13 @@
       </section>
     {% else %}
       <div class="occasions-empty">
-        {{ page_content.empty.body|default:page_content.empty.title|default:"هنوز مناسبتی برای نمایش ثبت نشده است." }}
+        {% if page_content.empty.body %}
+          {{ page_content.empty.body }}
+        {% elif page_content.empty.title %}
+          {{ page_content.empty.title }}
+        {% else %}
+          هنوز مناسبتی برای نمایش ثبت نشده است.
+        {% endif %}
       </div>
     {% endif %}
 

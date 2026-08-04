@@ -144,7 +144,15 @@
 </section>
 {% else %}
 <section class="container section-block">
-  <div class="empty-box">{{ page_content.empty.body|default:page_content.empty.title|default:"No products are available yet." }}</div>
+  <div class="empty-box">
+    {% if page_content.empty.body %}
+      {{ page_content.empty.body }}
+    {% elif page_content.empty.title %}
+      {{ page_content.empty.title }}
+    {% else %}
+      No products are available yet.
+    {% endif %}
+  </div>
 </section>
 {% endif %}
 {% endblock %}

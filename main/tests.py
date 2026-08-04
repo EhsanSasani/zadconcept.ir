@@ -146,25 +146,28 @@ class MainViewsTests(TestCase):
     def test_flowers_landing_page_loads(self):
         response = self.client.get(reverse("flowers"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.flower.product_code)
+        self.assertTrue(response.context["directory_only"])
+        self.assertEqual(response.context["catalog_products"], [])
+        self.assertContains(response, self.flowers_category.get_absolute_url())
+        self.assertNotContains(response, self.flower.product_code)
 
-    def test_collection_landing_paginates_initial_products_and_partial_next_page(self):
+    def test_collection_landing_paginates_products_and_partial_next_page(self):
         for index in range(14):
             Product.objects.create(
-                name=f"Paged Flower {index:02d}",
+                name=f"Paged Bakery {index:02d}",
                 publish_status=Product.PublishStatus.PUBLISHED,
-                category=self.flowers_category,
+                category=self.bakery_category,
                 sort_order=index + 10,
             )
 
-        response = self.client.get(reverse("flowers"))
+        response = self.client.get(reverse("bakery"))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["catalog_products"]), 12)
         self.assertTrue(response.context["catalog_page_obj"].has_next())
 
         partial = self.client.get(
-            reverse("flowers"),
+            reverse("bakery"),
             {"partial": "products", "page": 2},
         )
 
@@ -172,26 +175,26 @@ class MainViewsTests(TestCase):
         payload = partial.json()
         self.assertIn("html", payload)
         self.assertFalse(payload["has_next"])
-        self.assertContains(partial, "Paged Flower", status_code=200)
+        self.assertContains(partial, "Paged Bakery", status_code=200)
 
-        second_page = self.client.get(reverse("flowers"), {"page": 2})
+        second_page = self.client.get(reverse("bakery"), {"page": 2})
         first_ids = {product.pk for product in response.context["catalog_products"]}
         second_ids = {product.pk for product in second_page.context["catalog_products"]}
         self.assertTrue(first_ids.isdisjoint(second_ids))
 
     def test_collection_landing_filters_category_on_server(self):
         other_category = Category.objects.create(
-            name="Box",
-            slug="box",
-            section=Category.Section.FLOWERS,
+            name="Cookie",
+            slug="cookie",
+            section=Category.Section.BAKERY,
         )
         other_product = Product.objects.create(
-            name="Box Flower",
+            name="Cookie Box",
             publish_status=Product.PublishStatus.PUBLISHED,
             category=other_category,
         )
 
-        response = self.client.get(reverse("flowers"), {"category": "box"})
+        response = self.client.get(reverse("bakery"), {"category": "cookie"})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context["catalog_products"]), [other_product])
@@ -214,7 +217,9 @@ class MainViewsTests(TestCase):
             category=self.flowers_category,
         )
 
-        response = self.client.get(reverse("flowers"))
+        response = self.client.get(
+            reverse("flower_subcategory", args=[self.flowers_category.slug])
+        )
 
         self.assertContains(response, visible.display_name)
         self.assertNotContains(response, "Draft Hidden Flower")
@@ -275,7 +280,7 @@ class MainViewsTests(TestCase):
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
                 self.assertTemplateUsed(response, "flowers_landing.html")
-                self.assertContains(response, 'class="flowers-hero"')
+                self.assertContains(response, 'class="flowers-hero hero-configurable')
                 self.assertContains(response, f'data-filter="{category.slug}"')
                 self.assertContains(response, f'data-category="{category.slug}"')
                 self.assertContains(response, product.product_code)
@@ -336,9 +341,8 @@ class MainViewsTests(TestCase):
             )["is_active"]
         )
 
-    def test_wedding_is_an_occasion_and_uses_the_shared_occasion_page(self):
-        wedding_category = Category.objects.create(
-            name="Wedding",
+    def test_wedding_is_a_catalog_parent_not_an_occasion(self):
+        wedding_category = Category.objects.get(
             slug="wedding",
             section=Category.Section.FLOWERS,
         )
@@ -346,8 +350,8 @@ class MainViewsTests(TestCase):
             slug="wedding",
             defaults={
                 "name": "عروسی",
-                "is_occasion": True,
-                "is_active": True,
+                "is_occasion": False,
+                "is_active": False,
                 "sort_order": 85,
             },
         )
@@ -359,22 +363,24 @@ class MainViewsTests(TestCase):
         wedding_product.tags.add(wedding_tag)
 
         occasions_response = self.client.get(reverse("occasions"))
-        wedding_response = self.client.get(reverse("occasion_detail", args=["wedding"]))
+        wedding_response = self.client.get(
+            reverse("flower_subcategory", args=["wedding"])
+        )
 
-        self.assertContains(
+        self.assertNotContains(
             occasions_response,
             f'href="{reverse("occasion_detail", args=["wedding"])}"',
         )
-        self.assertTemplateUsed(wedding_response, "occasion_detail.html")
-        self.assertEqual(wedding_response.context["active_nav"], "occasions")
+        self.assertTemplateUsed(wedding_response, "subcategory.html")
+        self.assertEqual(wedding_response.context["active_nav"], "flowers")
         self.assertContains(wedding_response, wedding_product.name)
 
-    def test_legacy_wedding_flower_url_redirects_to_the_occasion(self):
-        response = self.client.get(reverse("flower_subcategory", args=["wedding"]))
+    def test_legacy_wedding_occasion_url_redirects_to_the_catalog_parent(self):
+        response = self.client.get(reverse("occasion_detail", args=["wedding"]))
 
         self.assertRedirects(
             response,
-            reverse("occasion_detail", args=["wedding"]),
+            reverse("flower_subcategory", args=["wedding"]),
             status_code=301,
             fetch_redirect_response=False,
         )
@@ -868,6 +874,15 @@ class AdminSmokeTests(TestCase):
                 "description": "",
                 "target_page": SiteHero.TargetPage.CONTACT,
                 "target_slug": "",
+                "content_position": "center-left",
+                "mobile_content_position": "bottom-center",
+                "text_color": "#FFFFFF",
+                "builtin_font": "estedad",
+                "custom_font": "",
+                "title_font_size": "68",
+                "body_font_size": "18",
+                "mobile_title_font_size": "40",
+                "mobile_body_font_size": "14",
                 "is_active": "on",
                 "sort_order": "0",
                 "_save": "Save",
