@@ -175,25 +175,6 @@
   letter-spacing: 0.01em;
   backdrop-filter: blur(6px);
 }
-/* product cards */
-.product-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--line);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  text-align: right;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow);
-  border-color: #dccfbe;
-}
-
-.product-card__main,
 .flowers-product-card__main {
   display: block;
   min-width: 0;
@@ -232,68 +213,6 @@
   transition: transform 0.7s ease;
   will-change: transform;
   transform: translateX(0);
-}
-
-.featured-product-card {
-  flex: 0 0 calc((100% - 72px) / 5);
-  min-width: calc((100% - 72px) / 5);
-  background: transparent;
-  overflow: hidden;
-  text-align: center;
-}
-
-.featured-product-card__image-wrap {
-  display: block;
-}
-
-.featured-product-card__image {
-  width: 100%;
-  aspect-ratio: 4 / 5.2;
-  object-fit: cover;
-  display: block;
-  background: #f3eee8;
-}
-
-.featured-product-card__placeholder {
-  width: 100%;
-  aspect-ratio: 4 / 5.2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #efe7df;
-  color: #8d7f72;
-  font-size: 0.95rem;
-}
-
-.featured-product-card__body {
-  padding: 12px 4px 0;
-}
-
-.featured-product-card__title {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-.featured-product-card__title a {
-  color: var(--text);
-}
-
-.featured-product-card__title a:hover {
-  opacity: 0.85;
-}
-
-.featured-product-card__price {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.featured-product-card__price--muted {
-  color: var(--muted);
-  font-weight: 500;
 }
 
 /* generic cards */
@@ -470,33 +389,4 @@
 
 .event-detail__body{
   margin-top: 18px;
-}
-
-/* =========================
-   zad English-facing catalog polish
-   ========================= */
-
-.product-card,
-.featured-product-card {
-  direction: ltr;
-  text-align: left;
-}
-
-.featured-product-card__title {
-  font-family: var(--font-ui-en), var(--font-fa);
-  letter-spacing: -0.01em;
-}
-
-.featured-product-card__price {
-  font-family: var(--font-ui-en), var(--font-fa);
-}
-
-.btn-telegram {
-  background: var(--bg-soft);
-  color: var(--text);
-  border-color: var(--line);
-}
-
-.btn-telegram:hover {
-  background: #f4ede4;
 }

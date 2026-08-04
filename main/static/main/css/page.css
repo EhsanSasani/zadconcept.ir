@@ -1543,6 +1543,7 @@ body:not(.page-home) .section-block:first-of-type {
   max-height: 860px;
   overflow: hidden;
   background: #1b120d;
+  touch-action: pan-y;
 }
 
 .workshops-hero__image {
@@ -1800,8 +1801,30 @@ body:not(.page-home) .section-block:first-of-type {
   overflow-y: hidden;
   padding: 4px 4px 18px;
   scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+}
+
+.workshops-events-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.workshops-empty {
+  max-width: 760px;
+  margin: 32px auto 0;
+  padding: clamp(28px, 5vw, 52px);
+  border: 1px solid rgba(120, 90, 65, 0.11);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #fffaf4, #f6eee5);
+  box-shadow: 0 18px 50px rgba(70, 50, 35, 0.06);
+  text-align: center;
+}
+
+.workshops-empty p {
+  max-width: 620px;
+  margin-inline: auto;
 }
 
 /* Workshop conversion form */
@@ -2178,7 +2201,16 @@ body:not(.page-home) .section-block:first-of-type {
   }
 
   .workshops-events-grid {
-    grid-auto-columns: minmax(260px, 86vw);
+    grid-auto-columns: 84%;
+    scroll-padding-inline: 4px;
+  }
+
+  .workshop-type-card__body {
+    text-align: right;
+  }
+
+  .workshops-empty {
+    padding: 28px 20px;
   }
 
   .workshops-benefits__grid {
@@ -2412,5 +2444,15 @@ body:not(.page-home) .section-block:first-of-type {
   .page-events .workshop-event-card__body > p:not(.workshop-event-card__date) {
     font-size: 0.88rem;
     line-height: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-events *,
+  .page-events *::before,
+  .page-events *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }

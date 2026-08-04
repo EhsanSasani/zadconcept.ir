@@ -1,0 +1,10 @@
+{
+  "name": "zadconcept-quality-gates",
+  "private": true,
+  "scripts": {
+    "lint:css": "stylelint \"main/static/main/css/**/*.css\""
+  },
+  "devDependencies": {
+    "stylelint": "17.14.1"
+  }
+}

@@ -69,21 +69,6 @@ class TemplateComponentContractTests(TestCase):
         self.assertEqual(rail.count("data-featured-card"), 2)
         self.assertNotIn('class="featured-product-card', rail)
 
-    def test_legacy_card_adapter_preserves_modal_data_contract(self):
-        rendered = render_to_string(
-            "components/product_card.html",
-            {
-                "product": self.first,
-                "card_variant": "legacy",
-                "fallback_image": "main/img/cat-flowers.webp",
-            },
-        )
-
-        self.assertIn('data-card-variant="legacy"', rendered)
-        self.assertIn("data-zad-modal-card", rendered)
-        self.assertIn("data-product-image", rendered)
-        self.assertIn("data-product-code", rendered)
-
     def test_standard_hero_preserves_slider_contract(self):
         slides = [
             {

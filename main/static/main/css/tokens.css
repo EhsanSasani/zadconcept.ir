@@ -1,0 +1,84 @@
+/*
+ * ZAD design tokens
+ *
+ * This is the only global token owner. Page styles may define narrowly scoped
+ * aliases on their page root, but must not create another global :root block.
+ */
+
+:root {
+  /* Color roles */
+  --color-canvas: #f7f2eb;
+  --color-canvas-soft: #efe7dc;
+  --color-surface: #ffffff;
+  --color-surface-strong: #f2e8dc;
+  --color-text: #2d2a27;
+  --color-text-muted: #7b736a;
+  --color-border: #e6ddd1;
+  --color-brand-surface: #f8f4ee;
+  --color-brand-text: #2d2a27;
+  --color-brand-dark: #1f2f47;
+  --color-accent: #c79b6b;
+  --color-accent-hover: #b98a57;
+  --color-success: #bfa487;
+  --color-success-hover: #ad8d68;
+  --color-white: #ffffff;
+
+  /* Typography */
+  --font-brand-en: "CormorantGaramond", serif;
+  --font-ui-en: "PlusJakartaSans", sans-serif;
+  --font-fa: "EstedadLocal", "VazirmatnLocal", Tahoma, sans-serif;
+
+  /* Space and layout */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --container: 1380px;
+  --header-height: 72px;
+  --control-min-size: 44px;
+
+  /* Shape and depth */
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-lg: 0px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 8px 18px rgba(38, 26, 16, 0.04);
+  --shadow: 0 14px 34px rgba(38, 26, 16, 0.07);
+  --shadow-lg: 0 20px 44px rgba(38, 26, 16, 0.1);
+
+  /* Interaction */
+  --focus-ring-color: rgba(31, 47, 71, 0.82);
+  --focus-ring: 3px solid var(--focus-ring-color);
+  --focus-ring-offset: 3px;
+  --motion-fast: 160ms;
+  --motion-standard: 240ms;
+  --motion-slow: 450ms;
+
+  /* Layering */
+  --z-header: 100;
+  --z-dropdown: 200;
+  --z-dialog: 1000;
+
+  /* Media */
+  --hero-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.34));
+
+  /* Stable aliases for existing components. */
+  --bg: var(--color-canvas);
+  --bg-soft: var(--color-canvas-soft);
+  --bg-card: var(--color-surface);
+  --bg-strong: var(--color-surface-strong);
+  --text: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-border);
+  --brand: var(--color-brand-surface);
+  --brand-text: var(--color-brand-text);
+  --brand-dark: var(--color-brand-dark);
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --success: var(--color-success);
+  --success-hover: var(--color-success-hover);
+  --white: var(--color-white);
+}

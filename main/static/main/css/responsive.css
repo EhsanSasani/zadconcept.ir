@@ -14,10 +14,6 @@
     min-height: 500px;
   }
 
-  .featured-product-card {
-    flex: 0 0 calc((100% - 36px) / 3);
-    min-width: calc((100% - 36px) / 3);
-  }
 }
 
 /* Small tablet */
@@ -57,14 +53,6 @@
     min-height: 340px;
   }
 
-  .home-workshops__grid,
-  .home-workshop-card {
-    grid-template-columns: 1fr;
-  }
-
-  .home-workshop-card__body {
-    padding: 18px;
-  }
 }
 
 /* Mobile */
@@ -265,19 +253,6 @@
     line-height: 1.12;
   }
 
-  .featured-product-card {
-    flex: 0 0 calc((100% - 16px) / 2);
-    min-width: calc((100% - 16px) / 2);
-  }
-
-  .featured-product-card__title {
-    font-size: 1rem;
-  }
-
-  .featured-product-card__price {
-    font-size: 0.95rem;
-  }
-
   .page-events .intro-text,
   .page-event-detail .intro-text,
   .blog-list-intro,
@@ -325,41 +300,29 @@
   }
 
   .page-category .list-card,
-  .page-category .product-card,
   .page-subcategory .list-card,
-  .page-subcategory .product-card,
-  .page-occasion-detail .list-card,
-  .page-occasion-detail .product-card {
+  .page-occasion-detail .list-card {
     min-width: 0;
     width: 100%;
   }
 
   .page-category .list-card img,
-  .page-category .product-card img,
   .page-subcategory .list-card img,
-  .page-subcategory .product-card img,
-  .page-occasion-detail .list-card img,
-  .page-occasion-detail .product-card img {
+  .page-occasion-detail .list-card img {
     width: 100%;
     aspect-ratio: 3 / 4;
     object-fit: cover;
   }
 
   .page-category .list-card__body,
-  .page-category .product-card__body,
   .page-subcategory .list-card__body,
-  .page-subcategory .product-card__body,
-  .page-occasion-detail .list-card__body,
-  .page-occasion-detail .product-card__body {
+  .page-occasion-detail .list-card__body {
     padding: 12px;
   }
 
   .page-category .list-card h3,
-  .page-category .product-card h3,
   .page-subcategory .list-card h3,
-  .page-subcategory .product-card h3,
-  .page-occasion-detail .list-card h3,
-  .page-occasion-detail .product-card h3 {
+  .page-occasion-detail .list-card h3 {
     font-size: 0.94rem;
     line-height: 1.55;
   }
@@ -382,10 +345,6 @@
   .featured-products__track {
     display: flex;
     gap: 14px;
-  }
-
-  .featured-product-card {
-    scroll-snap-align: start;
   }
 
   .featured-products__nav {
@@ -460,11 +419,6 @@
 
   .featured-products__track {
     gap: 14px;
-  }
-
-  .featured-product-card {
-    flex: 0 0 calc((100% - 14px) / 2);
-    min-width: calc((100% - 14px) / 2);
   }
 
   .occasion-grid {
@@ -625,12 +579,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     justify-content: stretch;
-  }
-
-  .page-category .product-card,
-  .page-subcategory .product-card,
-  .page-occasion-detail .product-card {
-    min-width: 0;
   }
 
   .page-contact .page-intro,

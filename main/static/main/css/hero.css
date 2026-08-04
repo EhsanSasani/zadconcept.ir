@@ -2,6 +2,10 @@
    Home hero + page hero
    ========================= */
 
+[data-page-hero-slider] {
+  touch-action: pan-y;
+}
+
 .global-hero {
   position: relative;
   overflow: hidden;

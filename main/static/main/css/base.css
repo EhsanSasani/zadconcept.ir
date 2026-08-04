@@ -106,45 +106,6 @@
   font-display: swap;
 }
 
-:root {
-  --bg: #f7f2eb;
-  --bg-soft: #efe7dc;
-  --bg-card: #ffffff;
-  --bg-strong: #f2e8dc;
-
-  --text: #2d2a27;
-  --muted: #7b736a;
-  --line: #e6ddd1;
-
-  --brand: #f8f4ee;
-  --brand-text: #2d2a27;
-  --brand-dark: #1f2f47;
-
-  --accent: #c79b6b;
-  --accent-hover: #b98a57;
-  --success: #bfa487;
-  --success-hover: #ad8d68;
-
-  --white: #ffffff;
-  --shadow-sm: 0 8px 18px rgba(38, 26, 16, 0.04);
-  --shadow: 0 14px 34px rgba(38, 26, 16, 0.07);
-  --shadow-lg: 0 20px 44px rgba(38, 26, 16, 0.1);
-
-  --radius: 0px;
-  --radius-sm: 0px;
-  --radius-lg: 0px;
-  --radius-pill: 999px;
-
-  --container: 1380px;
-  --header-height: 72px;
-
-  --hero-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.34));
-
-  --font-brand-en: "CormorantGaramond", serif;
-  --font-ui-en: "PlusJakartaSans", sans-serif;
-  --font-fa: "EstedadLocal", "VazirmatnLocal", Tahoma, sans-serif;
-}
-
 *,
 *::before,
 *::after {
@@ -225,16 +186,4 @@ button {
   font: inherit;
   border: 0;
   background: none;
-}
-/* Accessible text that remains available to screen readers and crawlers. */
-.sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
 }

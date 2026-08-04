@@ -131,14 +131,14 @@
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 48%, rgba(255, 244, 229, 0.38), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.18), rgba(248, 235, 216, 0.58) 48%, rgba(35, 22, 14, 0.08));
+    radial-gradient(circle at 50% 48%, rgba(255, 244, 229, 0.34), transparent 34%),
+    linear-gradient(90deg, rgba(43, 28, 18, 0.12), rgba(248, 235, 216, 0.48) 48%, rgba(35, 22, 14, 0.05));
 }
 
 .page-home .home-category-card--workshops .home-category-card__overlay {
   background:
-    radial-gradient(circle at 72% 48%, rgba(255, 244, 229, 0.50), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.10), rgba(248, 235, 216, 0.34) 46%, rgba(248, 235, 216, 0.62));
+    radial-gradient(circle at 72% 48%, rgba(255, 244, 229, 0.44), transparent 34%),
+    linear-gradient(90deg, rgba(43, 28, 18, 0.08), rgba(248, 235, 216, 0.28) 46%, rgba(248, 235, 216, 0.54));
 }
 
 .page-home .home-category-card__content {
@@ -261,7 +261,7 @@
    ========================= */
 
 .home-sameday-section {
-  padding: 48px 0 52px;
+  padding: 42px 0 52px;
   background:
     radial-gradient(circle at 50% 0%, rgba(199, 155, 107, 0.10), transparent 32%),
     linear-gradient(180deg, #fbf7f1 0%, #f7efe6 100%);
@@ -1423,6 +1423,8 @@
 
   .home-sameday-row {
     grid-auto-columns: 72%;
+    gap: 14px;
+    padding-inline: 2px 12px;
   }
 
   .home-sameday-card__body strong {
@@ -1650,4 +1652,22 @@
   }
 }
 
+/*
+ * Intentional finishing overrides. These keep the former polish sheet's
+ * computed precedence while leaving Home as the single owner of Home styles.
+ */
+.page-home .home-category-card__overlay {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 244, 229, 0.34), transparent 34%),
+    linear-gradient(90deg, rgba(43, 28, 18, 0.12), rgba(248, 235, 216, 0.48) 48%, rgba(35, 22, 14, 0.05));
+}
 
+.page-home .home-category-card--workshops .home-category-card__overlay {
+  background:
+    radial-gradient(circle at 72% 48%, rgba(255, 244, 229, 0.44), transparent 34%),
+    linear-gradient(90deg, rgba(43, 28, 18, 0.08), rgba(248, 235, 216, 0.28) 46%, rgba(248, 235, 216, 0.54));
+}
+
+.home-sameday-section {
+  padding-top: 42px;
+}
