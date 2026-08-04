@@ -1,3 +1,5 @@
+"""Existing model definitions kept stable while domains are extracted."""
+
 import uuid
 from pathlib import PurePosixPath
 

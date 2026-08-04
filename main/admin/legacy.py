@@ -1,3 +1,5 @@
+"""Existing admin registrations pending domain-by-domain extraction."""
+
 from django import forms
 from django.contrib import admin
 from django.db.models import Count
@@ -5,8 +7,8 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.text import slugify
 
-from .image_pipeline import ImageUploadError, normalize_admin_image
-from .models import (
+from ..image_pipeline import ImageUploadError, normalize_admin_image
+from ..models import (
     SAME_DAY_TAG_SLUG,
     BakeryItem,
     Category,
@@ -2226,4 +2228,3 @@ class PageContentBlockAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
-
