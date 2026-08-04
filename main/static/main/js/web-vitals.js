@@ -45,7 +45,7 @@
       });
       observer.observe(Object.assign({ type: type, buffered: true }, options || {}));
       return observer;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -102,7 +102,7 @@
           lcpValue = entry.startTime;
         });
         lcpObserver.disconnect();
-      } catch (error) {
+      } catch {
         // Ignore unsupported observer operations.
       }
     }

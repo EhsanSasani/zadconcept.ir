@@ -141,5 +141,5 @@
 {% endblock %}
 
 {% block extra_js %}
-  {% if filter_links %}<script src="{% static 'main/js/filter-fallback.js' %}"></script>{% endif %}
+  {% if filter_links %}<script type="module" src="{% static 'main/js/components/filter-links.js' %}?v=1"></script>{% endif %}
 {% endblock %}

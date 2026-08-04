@@ -1,4 +1,4 @@
-(function () {
+export function initProductDialog() {
   const modal = document.querySelector("[data-product-modal]");
   if (!modal) return;
 
@@ -10,7 +10,7 @@
   const modalStock = modal.querySelector("[data-modal-stock]");
   const modalContact = modal.querySelector("[data-modal-contact]");
   const modalDialog = modal.querySelector('[role="dialog"]');
-  const closeButton = modal.querySelector(".zad-product-modal__close");
+  const closeButton = modal.querySelector("[data-product-modal-close-button]");
   let opener = null;
 
   const typeLabels = {
@@ -156,4 +156,6 @@
       }
     }
   });
-})();
+}
+
+initProductDialog();

@@ -101,7 +101,7 @@
       <p>اطلاعات را وارد کنید؛ تیم زاد در زمان پاسخ‌گویی با شما تماس می‌گیرد.</p>
     </div>
 
-    <form method="post" action="{% url 'lead_request' %}" class="lead-form contact-lead-form" data-track-lead-form data-cta-position="contact-form" data-default-lead-type="{{ lead_default_type|default:'flower' }}">
+    <form method="post" action="{% url 'lead_request' %}" class="lead-form contact-lead-form" data-lead-form data-track-lead-form data-cta-position="contact-form" data-default-lead-type="{{ lead_default_type|default:'flower' }}">
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
       <input type="hidden" name="source_page" value="{{ request.path }}">
@@ -136,13 +136,13 @@
         {{ lead_form.delivery_window.errors }}
       </label>
 
-      <label class="field-optional date-only">
+      <label class="field-optional date-only" data-lead-date-field>
         <span>تاریخ پیشنهادی</span>
         {{ lead_form.preferred_date }}
         {{ lead_form.preferred_date.errors }}
       </label>
 
-      <label class="field-optional event-only">
+      <label class="field-optional event-only" data-lead-event-field>
         <span>محل رویداد</span>
         {{ lead_form.event_location }}
         {{ lead_form.event_location.errors }}

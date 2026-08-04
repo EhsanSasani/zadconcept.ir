@@ -8,7 +8,7 @@
   </a>
 </div>
 
-<header class="site-header">
+<header class="site-header" data-site-header>
   <div class="container nav-wrap">
     <a class="brand brand--text" href="{% url 'index' %}" aria-label="zad Home">
       <span class="brand__name">ZAD</span>
@@ -22,11 +22,17 @@
         </a>
 
         <div class="nav-dropdown" data-nav-dropdown>
-          <button type="button" class="nav-dropdown__trigger" data-nav-dropdown-trigger>
+          <button
+            type="button"
+            class="nav-dropdown__trigger"
+            data-nav-dropdown-trigger
+            aria-expanded="false"
+            aria-controls="product-navigation-menu"
+          >
             محصولات
           </button>
 
-          <div class="nav-dropdown__menu" data-nav-dropdown-menu>
+          <div class="nav-dropdown__menu" id="product-navigation-menu" data-nav-dropdown-menu>
             <a href="{% url 'flowers' %}">گل</a>
             <a href="{% url 'bakery' %}">سوییت بار</a>
             <a href="{% url 'gifts' %}">کانسپت استور</a>

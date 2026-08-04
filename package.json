@@ -1,10 +1,16 @@
 {
   "name": "zadconcept-quality-gates",
   "private": true,
+  "type": "module",
   "scripts": {
-    "lint:css": "stylelint \"main/static/main/css/**/*.css\""
+    "lint:css": "stylelint \"main/static/main/css/**/*.css\"",
+    "lint:js": "eslint \"main/static/main/js/**/*.js\" \"tests/js/**/*.mjs\"",
+    "test:js": "node --test \"tests/js/**/*.test.mjs\""
   },
   "devDependencies": {
+    "eslint": "10.8.0",
+    "globals": "17.9.0",
+    "jsdom": "29.1.1",
     "stylelint": "17.14.1"
   }
 }

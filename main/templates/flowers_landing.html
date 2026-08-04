@@ -179,8 +179,8 @@
               </a>
             {% endfor %}
             </div>
-              <div class="flowers-filter-scrollbar" aria-hidden="true">
-                <span></span>
+              <div class="flowers-filter-scrollbar" data-catalog-scrollbar aria-hidden="true">
+                <span data-catalog-scrollbar-thumb></span>
               </div>
             </div>
       {% endif %}
@@ -278,5 +278,5 @@
 {% endblock %}
 
 {% block extra_js %}
-  {% if not directory_only %}<script src="{% static 'main/js/catalog-loader.js' %}?v=2"></script>{% endif %}
+  {% if not directory_only %}<script type="module" src="{% static 'main/js/pages/catalog.js' %}?v=1"></script>{% endif %}
 {% endblock %}

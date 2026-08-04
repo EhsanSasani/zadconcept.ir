@@ -118,29 +118,4 @@
     });
   });
 
-  function toggleOptionalFields(form) {
-    var leadType = form.querySelector('[name="lead_type"]');
-    var deliveryWindow = form.querySelector('[name="delivery_window"]');
-    var eventRow = form.querySelector(".event-only");
-    var dateRow = form.querySelector(".date-only");
-
-    if (!leadType || !deliveryWindow) {
-      return;
-    }
-
-    function refresh() {
-      if (eventRow) {
-        eventRow.style.display = leadType.value === "event" ? "grid" : "none";
-      }
-      if (dateRow) {
-        dateRow.style.display = deliveryWindow.value === "pick_date" ? "grid" : "none";
-      }
-    }
-
-    leadType.addEventListener("change", refresh);
-    deliveryWindow.addEventListener("change", refresh);
-    refresh();
-  }
-
-  document.querySelectorAll("form[data-track-lead-form]").forEach(toggleOptionalFields);
 })();

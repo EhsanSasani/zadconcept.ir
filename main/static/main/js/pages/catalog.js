@@ -1,10 +1,12 @@
-(function () {
+import { preferredScrollBehavior } from "../core/motion.js";
+
+export function initCatalog() {
   const filterRoot = document.querySelector("[data-catalog-filter]");
   const grid = document.querySelector("[data-catalog-grid]");
   const loader = document.querySelector("[data-catalog-loader]");
   const status = document.querySelector("[data-catalog-loader-status]");
   const loadMoreButton = document.querySelector("[data-catalog-load-more]");
-  const scrollbarThumb = document.querySelector(".flowers-filter-scrollbar span");
+  const scrollbarThumb = document.querySelector("[data-catalog-scrollbar-thumb]");
 
   if (!filterRoot || !grid || !loader) return;
 
@@ -118,7 +120,7 @@
 
   function scrollToGridStart() {
     const gridTop = grid.getBoundingClientRect().top + window.pageYOffset - 110;
-    window.scrollTo({top: gridTop, behavior: "smooth"});
+    window.scrollTo({ top: gridTop, behavior: preferredScrollBehavior() });
   }
 
   filterRoot.addEventListener("click", async function (event) {
@@ -144,12 +146,6 @@
     scrollToGridStart();
   });
 
-  filterRoot.addEventListener("wheel", function (event) {
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    filterRoot.scrollLeft += event.deltaY;
-    event.preventDefault();
-  }, {passive: false});
-
   filterRoot.addEventListener("scroll", updateFilterScrollbar, {passive: true});
   window.addEventListener("resize", updateFilterScrollbar);
   window.addEventListener("popstate", function () {
@@ -171,4 +167,6 @@
 
   updateFilterScrollbar();
   syncLoadMoreButton(false);
-})();
+}
+
+initCatalog();

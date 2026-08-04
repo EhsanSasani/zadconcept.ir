@@ -10,10 +10,10 @@
 {% block content %}
 <h1 class="sr-only">زاد؛ سفارش آنلاین گل، هدیه و تجربه‌های خاص در مشهد</h1>
 
-<section class="global-hero home-hero">
+<section class="global-hero home-hero" data-home-hero>
   <div class="hero-slides" id="heroSlides">
     {% for slide in home_hero_slides %}
-      <div class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }} {% if forloop.first %}is-active{% endif %}">
+      <div class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }} {% if forloop.first %}is-active{% endif %}" data-home-hero-slide>
 
         <picture>
           {% if slide.mobile_image_url %}
@@ -48,7 +48,7 @@
       </div>
 
     {% empty %}
-      <div class="hero-slide hero-slide--1 hero-configurable hero-position--bottom-right hero-mobile-position--bottom-center is-active">
+      <div class="hero-slide hero-slide--1 hero-configurable hero-position--bottom-right hero-mobile-position--bottom-center is-active" data-home-hero-slide>
         <picture>
           <source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.webp' %}">
           <img src="{% static 'main/img/hero-1.webp' %}" alt="ZAD Concept Store" width="1920" height="1080" fetchpriority="high" decoding="async">
@@ -61,12 +61,12 @@
   </div>
 
   {% if home_hero_slides|length > 1 %}
-    <button class="hero-slider__nav hero-slider__nav--prev" id="heroPrev" type="button" aria-label="Previous slide">‹</button>
-    <button class="hero-slider__nav hero-slider__nav--next" id="heroNext" type="button" aria-label="Next slide">›</button>
+    <button class="hero-slider__nav hero-slider__nav--prev" id="heroPrev" type="button" aria-label="Previous slide" data-home-hero-prev>‹</button>
+    <button class="hero-slider__nav hero-slider__nav--next" id="heroNext" type="button" aria-label="Next slide" data-home-hero-next>›</button>
 
     <div class="hero-slider__dots" id="heroDots">
       {% for slide in home_hero_slides %}
-        <button type="button" class="{% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+        <button type="button" class="{% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}" data-home-hero-dot></button>
       {% endfor %}
     </div>
   {% endif %}
@@ -409,10 +409,4 @@
   </div>
 </section>
 
-{% endblock %}
-
-{% block extra_js %}
-  <script src="{% static 'main/js/home-slider.js' %}?v=5"></script>
-  <script src="{% static 'main/js/sameday-slider.js' %}?v=3"></script>
-  <script src="{% static 'main/js/occasion-slider.js' %}?v=2"></script>
 {% endblock %}

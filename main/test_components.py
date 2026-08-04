@@ -68,6 +68,8 @@ class TemplateComponentContractTests(TestCase):
         self.assertEqual(rail.count("data-catalog-card"), 2)
         self.assertEqual(rail.count("data-featured-card"), 2)
         self.assertNotIn('class="featured-product-card', rail)
+        self.assertEqual(rail.count("data-featured-prev hidden"), 1)
+        self.assertEqual(rail.count("data-featured-next hidden"), 1)
 
     def test_standard_hero_preserves_slider_contract(self):
         slides = [
@@ -143,7 +145,9 @@ class TemplateComponentContractTests(TestCase):
         response = self.client.get(reverse("index"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '<header class="site-header">', count=1)
+        self.assertContains(
+            response, '<header class="site-header" data-site-header>', count=1
+        )
         self.assertContains(response, '<main class="site-main">', count=1)
         self.assertContains(response, '<footer class="zad-footer">', count=1)
 
@@ -151,5 +155,5 @@ class TemplateComponentContractTests(TestCase):
         response = self.client.get(reverse("international_orders_en"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, '<header class="site-header">')
+        self.assertNotContains(response, '<header class="site-header" data-site-header>')
         self.assertNotContains(response, '<footer class="zad-footer">')

@@ -11,6 +11,7 @@ class ResilientManifestStaticFilesStorage(ManifestStaticFilesStorage):
     """
 
     manifest_strict = False
+    support_js_module_import_aggregation = True
 
     def hashed_name(self, name, content=None, filename=None):
         try:

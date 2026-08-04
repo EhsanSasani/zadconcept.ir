@@ -42,8 +42,11 @@ jobs:
           python -m pip check
           python -m compileall -q config main
 
-      - name: Lint stylesheets
-        run: npm run lint:css
+      - name: Lint and test frontend modules
+        run: |
+          npm run lint:css
+          npm run lint:js
+          npm run test:js
 
       - name: Django checks
         run: |
@@ -75,4 +78,28 @@ jobs:
         run: python manage.py audit_seo --fail-on-error
 
       - name: Verify static collection
-        run: python manage.py collectstatic --noinput --clear
+        run: |
+          ENV=prod \
+          DEBUG=False \
+          SECRET_KEY='ci-production-config-check-9fQ2xR7kM4pL8vN6eT3wB5uC1-long-secret' \
+          ALLOWED_HOSTS='www.zadconcept.ir,zadconcept.ir' \
+          CSRF_TRUSTED_ORIGINS='https://www.zadconcept.ir,https://zadconcept.ir' \
+          PGDATABASE='zad_db' \
+          PGUSER='zad_user' \
+          PGPASSWORD='ci-only' \
+          PGHOST='127.0.0.1' \
+          ZAD_SITE_URL='https://www.zadconcept.ir' \
+          USE_MANIFEST_STATIC=True \
+          python manage.py collectstatic --noinput --clear
+          ENV=prod \
+          DEBUG=False \
+          SECRET_KEY='ci-production-config-check-9fQ2xR7kM4pL8vN6eT3wB5uC1-long-secret' \
+          ALLOWED_HOSTS='www.zadconcept.ir,zadconcept.ir' \
+          CSRF_TRUSTED_ORIGINS='https://www.zadconcept.ir,https://zadconcept.ir' \
+          PGDATABASE='zad_db' \
+          PGUSER='zad_user' \
+          PGPASSWORD='ci-only' \
+          PGHOST='127.0.0.1' \
+          ZAD_SITE_URL='https://www.zadconcept.ir' \
+          USE_MANIFEST_STATIC=True \
+          python manage.py audit_static_modules

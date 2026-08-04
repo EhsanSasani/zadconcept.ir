@@ -4,7 +4,7 @@
     <p>{{ lead_subtitle|default:"Leave a short request and the zad team will coordinate with you." }}</p>
   </div>
 
-  <form method="post" action="{% url 'lead_request' %}" class="lead-form" data-track-lead-form data-cta-position="{{ cta_position|default:'inline' }}" data-default-lead-type="{{ lead_default_type|default:'flower' }}">
+  <form method="post" action="{% url 'lead_request' %}" class="lead-form" data-lead-form data-track-lead-form data-cta-position="{{ cta_position|default:'inline' }}" data-default-lead-type="{{ lead_default_type|default:'flower' }}">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ request.get_full_path }}">
     <input type="hidden" name="source_page" value="{{ request.path }}">
@@ -30,12 +30,12 @@
       {{ lead_form.delivery_window }}
     </label>
 
-    <label class="field-optional date-only">
+    <label class="field-optional date-only" data-lead-date-field>
       <span>Preferred Date</span>
       {{ lead_form.preferred_date }}
     </label>
 
-    <label class="field-optional event-only">
+    <label class="field-optional event-only" data-lead-event-field>
       <span>Event Location</span>
       {{ lead_form.event_location }}
     </label>

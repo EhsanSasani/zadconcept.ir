@@ -92,15 +92,14 @@
     {% include "layout/site_footer.html" with site_address_text=site_address_text site_telegram_url=site_telegram_url site_telegram_display=site_telegram_display site_call_href=site_call_href site_phone_display=site_phone_display site_instagram_url=site_instagram_url only %}
   {% endif %}
 
-  <script src="{% static 'main/js/analytics.js' %}"></script>
+<script src="{% static 'main/js/analytics.js' %}"></script>
 {% if google_tag_id %}<script src="{% static 'main/js/web-vitals.js' %}"></script>{% endif %}
-<script src="{% static 'main/js/navbar.js' %}"></script>
-{% if page_hero_slides|length > 1 %}<script src="{% static 'main/js/page-hero-slider.js' %}?v=2"></script>{% endif %}
+<script type="module" src="{% static 'main/js/site.js' %}?v=1"></script>
 
 {% block extra_js %}{% endblock %}
 {% if enable_product_modal %}
   {% include "product_modal.html" %}
-  <script src="{% static 'main/js/product-modal.js' %}?v=4"></script>
+  <script type="module" src="{% static 'main/js/components/product-dialog.js' %}?v=1"></script>
 {% endif %}
 </body>
 </html>
