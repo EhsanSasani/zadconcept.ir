@@ -1,0 +1,9 @@
+{% if page_hero_slides|length > 1 %}
+  <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
+  <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
+  <div class="page-hero__dots" aria-label="انتخاب اسلاید">
+    {% for slide in page_hero_slides %}
+      <button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>
+    {% endfor %}
+  </div>
+{% endif %}

@@ -1,0 +1,6 @@
+<section class="page-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" data-page-hero-slider>
+  {% include "components/hero/standard_media.html" with page_hero_slides=page_hero_slides page_hero_image=page_hero_image page_hero_mobile_image=page_hero_mobile_image page_hero_title=page_hero_title only %}
+  <div class="page-hero__overlay"></div>
+  {% include "components/hero/standard_content.html" with page_type=page_type page_hero_style_class=page_hero_style_class page_hero_kicker=page_hero_kicker page_hero_title=page_hero_title page_hero_text=page_hero_text only %}
+  {% include "components/hero/standard_controls.html" with page_hero_slides=page_hero_slides only %}
+</section>

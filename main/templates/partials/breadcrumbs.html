@@ -1,15 +1,1 @@
-{% comment %} {% if breadcrumbs %}
-<nav class="container breadcrumbs" aria-label="Breadcrumb">
-  <ol>
-    {% for crumb in breadcrumbs %}
-      <li>
-        {% if crumb.url and not forloop.last %}
-          <a href="{{ crumb.url }}">{{ crumb.name }}</a>
-        {% else %}
-          <span>{{ crumb.name }}</span>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ol>
-</nav>
-{% endif %} {% endcomment %}
+{% include "components/breadcrumbs.html" with breadcrumbs=breadcrumbs only %}

@@ -1,0 +1,11 @@
+{% if page_type == "occasion-detail" or page_type == "flower-occasion" or page_hero_style_class %}
+  <div class="page-hero__content container" data-hero-content>
+    {% if page_hero_kicker %}
+      <span class="page-hero__kicker" data-page-hero-kicker>{{ page_hero_kicker }}</span>
+    {% endif %}
+    <h1 data-page-hero-title>{{ page_hero_title }}</h1>
+    {% if page_hero_text %}
+      <p data-page-hero-text>{{ page_hero_text }}</p>
+    {% endif %}
+  </div>
+{% endif %}

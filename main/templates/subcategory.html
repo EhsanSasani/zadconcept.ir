@@ -86,7 +86,9 @@
 
     {% if items %}
       <div class="flowers-grid same-day-grid">
-        {% include "partials/product_card.html" with products=items card_variant="landing" fallback_image="main/img/cat-flowers.webp" %}
+        {% for product in items %}
+          {% include "components/product_card.html" with product=product card_variant="grid" fallback_image="main/img/cat-flowers.webp" only %}
+        {% endfor %}
       </div>
     {% else %}
       <div class="flowers-empty">فعلاً محصولی برای ارسال امروز موجود نیست.</div>

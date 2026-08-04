@@ -1,0 +1,50 @@
+<div class="top-notice-bar">
+  <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="top-notice-bar__link">
+    برای سفارش محصولات زاد از خارج از ایران و پرداخت از طریق
+    <strong class="top-notice-bar__paypal">PayPal</strong>
+    با شماره
+    <bdi dir="ltr">+989154203569</bdi>
+    در تلگرام با ما در تماس باشید.
+  </a>
+</div>
+
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand brand--text" href="{% url 'index' %}" aria-label="zad Home">
+      <span class="brand__name">ZAD</span>
+      <span class="brand__sub">flowerstore</span>
+    </a>
+
+    <nav class="main-nav" aria-label="ناوبری اصلی">
+      <div class="main-nav__center">
+        <a href="{% url 'index' %}" class="{% if active_nav == 'home' %}is-active{% endif %}">
+          خانه
+        </a>
+
+        <div class="nav-dropdown" data-nav-dropdown>
+          <button type="button" class="nav-dropdown__trigger" data-nav-dropdown-trigger>
+            محصولات
+          </button>
+
+          <div class="nav-dropdown__menu" data-nav-dropdown-menu>
+            <a href="{% url 'flowers' %}">گل</a>
+            <a href="{% url 'bakery' %}">سوییت بار</a>
+            <a href="{% url 'gifts' %}">کانسپت استور</a>
+          </div>
+        </div>
+
+        <a href="{% url 'occasions' %}" class="{% if active_nav == 'occasions' %}is-active{% endif %}">
+          مناسبت‌ها
+        </a>
+
+        <a href="{% url 'events' %}" class="{% if active_nav == 'events' %}is-active{% endif %}">
+          ورکشاپ ها
+        </a>
+      </div>
+
+      <a href="{% url 'about' %}" class="main-nav__about {% if active_nav == 'about' %}is-active{% endif %}">
+        درباره زاد
+      </a>
+    </nav>
+  </div>
+</header>

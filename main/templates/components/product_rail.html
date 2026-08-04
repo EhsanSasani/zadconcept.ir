@@ -1,0 +1,21 @@
+<div class="featured-products" data-featured-slider>
+  {% if products %}
+    <button class="featured-products__nav featured-products__nav--prev" type="button" aria-label="محصولات قبلی" data-featured-prev>
+      ‹
+    </button>
+
+    <div class="featured-products__viewport" data-featured-viewport>
+      <div class="featured-products__track" data-featured-track>
+        {% for product in products %}
+          {% include "components/product_card.html" with product=product card_variant="rail" fallback_image=fallback_image only %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <button class="featured-products__nav featured-products__nav--next" type="button" aria-label="محصولات بعدی" data-featured-next>
+      ›
+    </button>
+  {% else %}
+    <div class="empty-box">{{ empty_text|default:"فعلاً محصولی برای نمایش وجود ندارد." }}</div>
+  {% endif %}
+</div>

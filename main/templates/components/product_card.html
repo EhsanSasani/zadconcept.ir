@@ -1,0 +1,148 @@
+{% load static %}
+
+{% if card_variant != "legacy" %}
+  <article
+    class="flowers-product-card{% if product.stock_status == 'out_of_stock' %} flowers-product-card--out{% endif %}"
+    data-catalog-card
+    {% if card_variant == "rail" %}data-featured-card{% endif %}
+    data-card-variant="{{ card_variant|default:'grid' }}"
+    data-category="{{ product.category.slug|default:'uncategorized' }}"
+    data-product-type="{{ product.category.slug|default:'collection' }}"
+    data-product-code="{{ product.product_code }}"
+    data-product-name="{{ product.name|default:'' }}"
+    data-product-price="{{ product.display_price }}"
+    data-product-contact="{{ product.order_contact_text }}"
+    data-product-stock="{{ product.stock_status_label }}"
+    data-product-description="{{ product.description|default:''|truncatechars:140 }}"
+  >
+    <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main" data-zad-modal-card>
+      <div class="flowers-product-card__media">
+        {% if product.cover_image %}
+          <img
+            src="{{ product.cover_image.url }}"
+            alt="{{ product.seo_name }}"
+            {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %}
+            width="520"
+            height="650"
+            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            loading="lazy"
+            decoding="async"
+            data-product-image
+          >
+        {% else %}
+          <img
+            src="{% static fallback_image|default:'main/img/cat-flowers.webp' %}"
+            alt="{{ product.seo_name }}"
+            width="520"
+            height="650"
+            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            loading="lazy"
+            decoding="async"
+            data-product-image
+          >
+        {% endif %}
+
+        {% if product.stock_status == "out_of_stock" %}
+          <span class="flowers-product-card__badge flowers-product-card__badge--muted">{{ product.stock_status_label }}</span>
+        {% elif product.stock_status == "preorder" %}
+          <span class="flowers-product-card__badge">{{ product.stock_status_label }}</span>
+        {% else %}
+          <span class="flowers-product-card__badge flowers-product-card__badge--available">{{ product.stock_status_label }}</span>
+        {% endif %}
+      </div>
+
+      <div class="flowers-product-card__body">
+        <div>
+          <span class="flowers-product-card__type">
+            {% if product.category.slug == "hand-bouquet" %}
+              HAND BOUQUET
+            {% elif product.category.slug == "box" %}
+              BOX
+            {% elif product.category.slug == "bouquet" %}
+              BOUQUET
+            {% elif product.category.slug == "jarl" %}
+              JARL
+            {% elif product.category.slug == "wedding" %}
+              WEDDING
+            {% elif product.category.slug == "wedding-car" %}
+              WEDDING CAR
+            {% elif product.category.slug == "bridal-bouquet" %}
+              BRIDAL BOUQUET
+            {% elif product.category.slug == "stand" %}
+              STAND
+            {% elif product.category %}
+              {{ product.category.slug|cut:"-"|upper }}
+            {% else %}
+              COLLECTION
+            {% endif %}
+          </span>
+
+          <h3{% if not product.name %} class="flowers-product-card__code"{% endif %}>{{ product.display_name }}</h3>
+          <p class="{% if not product.has_price %}flowers-product-card__price-muted{% endif %}">{{ product.display_price }}</p>
+          {% if product.description %}<p class="flowers-product-card__excerpt">{{ product.description|truncatechars:72 }}</p>{% endif %}
+        </div>
+
+        <span class="flowers-product-card__arrow"><span>→</span></span>
+      </div>
+    </a>
+  </article>
+{% else %}
+  <article
+    class="product-card{% if product.stock_status == 'out_of_stock' %} product-card--out{% endif %}"
+    data-catalog-card
+    data-card-variant="legacy"
+    data-product-type="{{ product.category.slug|default:'collection' }}"
+    data-product-code="{{ product.product_code }}"
+    data-product-name="{{ product.name|default:'' }}"
+    data-product-price="{{ product.display_price }}"
+    data-product-contact="{{ product.order_contact_text }}"
+    data-product-stock="{{ product.stock_status_label }}"
+    data-product-description="{{ product.description|default:''|truncatechars:140 }}"
+  >
+    <a href="{{ product.get_absolute_url }}" class="product-card__main" data-zad-modal-card>
+      <div class="product-card__image-wrap">
+        {% if product.cover_image %}
+          <img
+            src="{{ product.cover_image.url }}"
+            alt="{{ product.seo_name }}"
+            {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %}
+            class="product-card__image"
+            width="520"
+            height="650"
+            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            loading="lazy"
+            decoding="async"
+            data-product-image
+          >
+        {% else %}
+          <img
+            src="{% static fallback_image|default:'main/img/cat-flowers.webp' %}"
+            alt="{{ product.seo_name }}"
+            class="product-card__image"
+            width="520"
+            height="650"
+            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            loading="lazy"
+            decoding="async"
+            data-product-image
+          >
+        {% endif %}
+
+        {% if product.stock_status == "out_of_stock" %}
+          <span class="product-stock-badge product-stock-badge--out">{{ product.stock_status_label }}</span>
+        {% elif product.stock_status == "preorder" %}
+          <span class="product-stock-badge product-stock-badge--preorder">{{ product.stock_status_label }}</span>
+        {% else %}
+          <span class="product-stock-badge product-stock-badge--available">{{ product.stock_status_label }}</span>
+        {% endif %}
+      </div>
+
+      <div class="product-card__body">
+        <h3 class="product-card__title">{{ product.display_name }}</h3>
+        <p class="product-card__price{% if not product.has_price %} product-card__price--muted{% endif %}">{{ product.display_price }}</p>
+        {% if product.description %}<p class="product-card__excerpt">{{ product.description|truncatechars:72 }}</p>{% endif %}
+        <p class="product-card__contact">{{ product.order_contact_text }}</p>
+      </div>
+    </a>
+  </article>
+{% endif %}

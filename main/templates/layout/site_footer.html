@@ -1,0 +1,67 @@
+<footer class="zad-footer">
+  <div class="zad-footer__image" aria-hidden="true"></div>
+
+  <div class="zad-footer__body">
+    <div class="zad-footer__brand">
+      <h2>ZAD</h2>
+      <p>Flower &amp; Concept Store</p>
+      <span></span>
+      <strong>برای لحظه‌هایی که ارزش ماندن دارند.</strong>
+    </div>
+
+    <div class="zad-footer__info">
+      <a href="{% url 'contact' %}" class="zad-footer__item">
+        <i class="bi bi-geo-alt"></i>
+        <strong>آدرس زاد</strong>
+        <span>{{ site_address_text }}</span>
+      </a>
+
+      <a href="{{ site_telegram_url }}" class="zad-footer__item" target="_blank" rel="noopener">
+        <i class="bi bi-telegram"></i>
+        <strong>تلگرام</strong>
+        <span>{{ site_telegram_display }}</span>
+      </a>
+
+      <a href="{{ site_call_href }}" class="zad-footer__item">
+        <i class="bi bi-telephone"></i>
+        <strong>تماس با ما</strong>
+        <span>{{ site_phone_display }}</span>
+      </a>
+
+      <a href="{{ site_instagram_url }}" class="zad-footer__item" target="_blank" rel="noopener">
+        <i class="bi bi-instagram"></i>
+        <strong>اینستاگرام</strong>
+        <span>zad_concept</span>
+      </a>
+
+      <a href="{% url 'faq' %}" class="zad-footer__item">
+        <i class="bi bi-question-circle"></i>
+        <strong>سوالات متداول</strong>
+        <span>FAQ</span>
+      </a>
+    </div>
+
+    <nav class="zad-footer__legal" aria-label="پیوندهای حقوقی و خدمات">
+      <a href="{% url 'international_orders' %}">سفارش از خارج ایران</a>
+      <a href="{% url 'international_orders_en' %}" hreflang="en" lang="en" dir="ltr">International Orders</a>
+      <a href="{% url 'mashhad_hub' %}">خدمات زاد در مشهد</a>
+      <a href="{% url 'service_area' %}">محدوده خدمات</a>
+      <a href="{% url 'blog' %}">مجله زاد</a>
+      <a href="{% url 'delivery_policy' %}">ارسال</a>
+      <a href="{% url 'refund_policy' %}">لغو و بازپرداخت</a>
+      <a href="{% url 'payment_methods' %}">پرداخت</a>
+      <a href="{% url 'privacy' %}">حریم خصوصی</a>
+      <a href="{% url 'terms' %}">شرایط استفاده</a>
+    </nav>
+
+    <div class="zad-footer__bottom">
+      <p>© 2026 ZAD Flower &amp; Concept Store</p>
+
+      <div class="zad-footer__socials">
+        <a href="{{ site_instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+        <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
+        <a href="{{ site_call_href }}" aria-label="Phone"><i class="bi bi-telephone"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>

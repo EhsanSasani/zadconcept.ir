@@ -69,220 +69,26 @@
 <body class="{% block body_class %}{% endblock %}" data-page-type="{{ page_type|default:'default' }}"{% if item_id %} data-item-id="{{ item_id }}" data-item-name="{{ product.seo_name }}" data-item-category="{{ product.category.slug }}"{% endif %}>
 
   {% if not hide_global_chrome %}
-    <div class="top-notice-bar">
-    <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="top-notice-bar__link">
-      برای سفارش محصولات زاد از خارج از ایران و پرداخت از طریق
-      <strong class="top-notice-bar__paypal">PayPal</strong>
-      با شماره
-
-      <bdi dir="ltr">+989154203569</bdi>
-      در تلگرام با ما در تماس باشید.
-    </a>
-   </div>
-
-  <header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand brand--text" href="{% url 'index' %}" aria-label="zad Home">
-      <span class="brand__name">ZAD</span>
-      <span class="brand__sub">flowerstore</span>
-    </a>
-
-    <nav class="main-nav" aria-label="ناوبری اصلی">
-  <div class="main-nav__center">
-
-    
-
-    <a href="{% url 'index' %}" class="{% if active_nav == 'home' %}is-active{% endif %}">
-      خانه
-    </a>
-
-    <div class="nav-dropdown" data-nav-dropdown>
-  <button type="button" class="nav-dropdown__trigger" data-nav-dropdown-trigger>
-    محصولات
-  </button>
-
-  <div class="nav-dropdown__menu" data-nav-dropdown-menu>
-    <a href="{% url 'flowers' %}">گل</a>
-    <a href="{% url 'bakery' %}">سوییت بار</a>
-    <a href="{% url 'gifts' %}">کانسپت استور</a>
-  </div>
-</div>
-
-    <a href="{% url 'occasions' %}" class="{% if active_nav == 'occasions' %}is-active{% endif %}">
-      مناسبت‌ها
-    </a>
-
-    <a href="{% url 'events' %}" class="{% if active_nav == 'events' %}is-active{% endif %}">
-      ورکشاپ ها
-    </a>
-
-  </div>
-
-  <a href="{% url 'about' %}" class="main-nav__about {% if active_nav == 'about' %}is-active{% endif %}">
-    درباره زاد
-  </a>
-</nav>
-  </div>
-</header>
+    {% include "layout/site_header.html" with active_nav=active_nav site_telegram_url=site_telegram_url only %}
   {% endif %}
 
   {% if not suppress_default_hero and not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
-  <section class="page-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" data-page-hero-slider>
-    <div class="page-hero__slides">
-      {% if page_hero_slides %}
-        {% for slide in page_hero_slides %}
-          <div class="page-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}">
-            <picture>
-              {% if slide.mobile_image %}
-                <source media="(max-width: 760px)" srcset="{{ slide.mobile_image }}">
-              {% endif %}
-              <img src="{{ slide.image }}" alt="{{ slide.title|default:'zad' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
-            </picture>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="page-hero__slide is-active" data-page-hero-slide>
-          {% if page_hero_image %}
-            <picture>
-              {% if page_hero_mobile_image %}
-                {% if page_hero_mobile_image|slice:":7" == "/media/" %}
-                  <source media="(max-width: 760px)" srcset="{{ page_hero_mobile_image }}">
-                {% else %}
-                  <source media="(max-width: 760px)" srcset="{% static page_hero_mobile_image %}">
-                {% endif %}
-              {% endif %}
-              {% if page_hero_image|slice:":7" == "/media/" %}
-                <img src="{{ page_hero_image }}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
-              {% else %}
-                <img src="{% static page_hero_image %}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
-              {% endif %}
-            </picture>
-          {% else %}
-            <img src="{% static 'main/img/hero-about.webp' %}" alt="{{ page_hero_title|default:'zad' }}" width="1920" height="1080" fetchpriority="high" decoding="async">
-          {% endif %}
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="page-hero__overlay"></div>
-
-    {% if page_type == "occasion-detail" or page_type == "flower-occasion" or page_hero_style_class %}
-      <div class="page-hero__content container" data-hero-content>
-        {% if page_hero_kicker %}
-          <span class="page-hero__kicker" data-page-hero-kicker>{{ page_hero_kicker }}</span>
-        {% endif %}
-        <h1 data-page-hero-title>{{ page_hero_title }}</h1>
-        {% if page_hero_text %}
-          <p data-page-hero-text>{{ page_hero_text }}</p>
-        {% endif %}
-      </div>
-    {% endif %}
-    {% if page_hero_slides|length > 1 %}
-      <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
-      <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
-      <div class="page-hero__dots" aria-label="انتخاب اسلاید">
-        {% for slide in page_hero_slides %}
-          <button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>
-        {% endfor %}
-      </div>
-    {% endif %}
-  </section>
+  {% include "components/hero/standard.html" with page_type=page_type page_hero_style_class=page_hero_style_class page_hero_content_position=page_hero_content_position page_hero_mobile_content_position=page_hero_mobile_content_position page_hero_slides=page_hero_slides page_hero_image=page_hero_image page_hero_mobile_image=page_hero_mobile_image page_hero_title=page_hero_title page_hero_kicker=page_hero_kicker page_hero_text=page_hero_text only %}
   
 
   {% if not page_hero_style_class and page_type != "item" and page_type != "occasions" and page_type != "occasion-detail" and page_type != "flower-occasion" %}
-    <section class="container section-block page-hero-mood">
-      <div class="home-intro__brandline page-hero-mood__brandline">
-        <span class="page-hero-mood__mark">✦</span>
-        <h2 class="home-intro__title hero-brand-text">{{ page_hero_title }}</h2>
-
-        {% if page_hero_text %}
-          <p class="page-hero-mood__text">{{ page_hero_text }}</p>
-        {% endif %}
-      </div>
-    </section>
+    {% include "components/hero/mood.html" with page_hero_title=page_hero_title page_hero_text=page_hero_text only %}
   {% endif %}
 {% endif %}
 
-  {% if messages %}
-    <div class="container alerts">
-      {% for message in messages %}
-        <div class="alert {{ message.tags }}"{% if 'lead-success' in message.tags %} data-lead-success{% endif %}>{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  {% include "layout/flash_messages.html" with messages=messages only %}
 
   <main class="site-main">
     {% block content %}{% endblock %}
   </main>
 
   {% if not hide_global_chrome %}
-  <footer class="zad-footer">
-  <div class="zad-footer__image" aria-hidden="true"></div>
-
-  <div class="zad-footer__body">
-    <div class="zad-footer__brand">
-      <h2>ZAD</h2>
-      <p>Flower &amp; Concept Store</p>
-      <span></span>
-      <strong>برای لحظه‌هایی که ارزش ماندن دارند.</strong>
-    </div>
-
-    <div class="zad-footer__info">
-      <a href="{% url 'contact' %}" class="zad-footer__item">
-        <i class="bi bi-geo-alt"></i>
-        <strong>آدرس زاد</strong>
-        <span>{{ site_address_text }}</span>
-      </a>
-
-      <a href="{{ site_telegram_url }}" class="zad-footer__item" target="_blank" rel="noopener">
-        <i class="bi bi-telegram"></i>
-        <strong>تلگرام</strong>
-        <span>{{ site_telegram_display }}</span>
-      </a>
-
-      <a href="{{ site_call_href }}" class="zad-footer__item">
-        <i class="bi bi-telephone"></i>
-        <strong>تماس با ما</strong>
-        <span>{{ site_phone_display }}</span>
-      </a>
-
-      <a href="{{ site_instagram_url }}" class="zad-footer__item" target="_blank" rel="noopener">
-        <i class="bi bi-instagram"></i>
-        <strong>اینستاگرام</strong>
-        <span>zad_concept</span>
-      </a>
-
-      <a href="{% url 'faq' %}" class="zad-footer__item">
-        <i class="bi bi-question-circle"></i>
-        <strong>سوالات متداول</strong>
-        <span>FAQ</span>
-      </a>
-    </div>
-
-    <nav class="zad-footer__legal" aria-label="پیوندهای حقوقی و خدمات">
-      <a href="{% url 'international_orders' %}">سفارش از خارج ایران</a>
-      <a href="{% url 'international_orders_en' %}" hreflang="en" lang="en" dir="ltr">International Orders</a>
-      <a href="{% url 'mashhad_hub' %}">خدمات زاد در مشهد</a>
-      <a href="{% url 'service_area' %}">محدوده خدمات</a>
-      <a href="{% url 'blog' %}">مجله زاد</a>
-      <a href="{% url 'delivery_policy' %}">ارسال</a>
-      <a href="{% url 'refund_policy' %}">لغو و بازپرداخت</a>
-      <a href="{% url 'payment_methods' %}">پرداخت</a>
-      <a href="{% url 'privacy' %}">حریم خصوصی</a>
-      <a href="{% url 'terms' %}">شرایط استفاده</a>
-    </nav>
-
-    <div class="zad-footer__bottom">
-      <p>© 2026 ZAD Flower &amp; Concept Store</p>
-
-      <div class="zad-footer__socials">
-        <a href="{{ site_instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-        <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
-        <a href="{{ site_call_href }}" aria-label="Phone"><i class="bi bi-telephone"></i></a>
-      </div>
-    </div>
-  </div>
-</footer>
+    {% include "layout/site_footer.html" with site_address_text=site_address_text site_telegram_url=site_telegram_url site_telegram_display=site_telegram_display site_call_href=site_call_href site_phone_display=site_phone_display site_instagram_url=site_instagram_url only %}
   {% endif %}
 
   <script src="{% static 'main/js/analytics.js' %}"></script>

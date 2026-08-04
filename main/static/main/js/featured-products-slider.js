@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!viewport || !track) return;
 
-    const cards = [...track.querySelectorAll(".featured-product-card")];
+    const cards = [...track.querySelectorAll("[data-featured-card]")];
 
     if (cards.length === 0) return;
 
