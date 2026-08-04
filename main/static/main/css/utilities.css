@@ -1,5 +1,9 @@
 /* Small, single-purpose helpers. Component and page selectors do not belong here. */
 
+[hidden] {
+  display: none !important;
+}
+
 .sr-only {
   position: absolute !important;
   width: 1px !important;
