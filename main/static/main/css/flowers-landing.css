@@ -498,7 +498,7 @@
   flex-direction: row-reverse;
   gap: 9px;
 
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 20px;
 
   border: 0;
@@ -785,7 +785,6 @@
 .flowers-load-more__button:hover,
 .flowers-load-more__button:focus-visible {
   border-color: rgba(157, 111, 63, 0.52);
-  outline: none;
 }
 
 .flowers-load-more__button[hidden] {
@@ -1398,7 +1397,7 @@
   }
 
   .flowers-filter__chip {
-    min-height: 36px;
+    min-height: 44px;
     padding-inline: 12px;
     gap: 6px;
     direction: rtl;

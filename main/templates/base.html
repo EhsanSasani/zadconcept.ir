@@ -61,6 +61,7 @@
   {% block extra_head %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/hero-config.css' %}?v=3">
   <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
+  <link rel="stylesheet" href="{% static 'main/css/accessibility.css' %}?v=1">
 
   {% if structured_data_graph %}
     <script type="application/ld+json" nonce="{{ csp_nonce }}">{{ structured_data_graph|json_ld }}</script>
@@ -68,6 +69,8 @@
 </head>
 
 <body class="{% block body_class %}{% endblock %}" data-page-type="{{ page_type|default:'default' }}"{% if item_id %} data-item-id="{{ item_id }}" data-item-name="{{ product.seo_name }}" data-item-category="{{ product.category.slug }}"{% endif %}>
+
+  <a class="skip-link" href="#main-content">{% if html_lang == "en" %}Skip to main content{% else %}پرش به محتوای اصلی{% endif %}</a>
 
   {% if not hide_global_chrome %}
     {% include "layout/site_header.html" with active_nav=active_nav site_telegram_url=site_telegram_url only %}
@@ -84,7 +87,7 @@
 
   {% include "layout/flash_messages.html" with messages=messages only %}
 
-  <main class="site-main">
+  <main class="site-main" id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
 

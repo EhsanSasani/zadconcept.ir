@@ -7,6 +7,10 @@
   display: none;
 }
 
+body.has-open-product-dialog {
+  overflow: hidden;
+}
+
 .zad-product-modal {
   position: fixed;
   inset: 0;
@@ -253,8 +257,8 @@
   .zad-product-modal__close {
     top: 14px;
     left: 14px;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 
   .zad-product-modal__media {

@@ -12,6 +12,11 @@
         data-hero-style-class="{{ slide.style_class }}"
         data-hero-position="{{ slide.content_position }}"
         data-hero-mobile-position="{{ slide.mobile_content_position }}"
+        {% if page_hero_slides|length > 1 %}role="group"
+        aria-roledescription="slide"
+        aria-label="اسلاید {{ forloop.counter }} از {{ page_hero_slides|length }}"{% endif %}
+        aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
+        {% if not forloop.first %}inert{% endif %}
       >
         <picture>
           {% if slide.mobile_image %}
@@ -29,7 +34,7 @@
       </div>
     {% endfor %}
   {% else %}
-    <div class="page-hero__slide is-active" data-page-hero-slide>
+    <div class="page-hero__slide is-active" data-page-hero-slide aria-hidden="false">
       {% if page_hero_image %}
         <picture>
           {% if page_hero_mobile_image %}

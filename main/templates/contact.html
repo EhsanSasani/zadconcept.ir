@@ -105,54 +105,16 @@
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
       <input type="hidden" name="source_page" value="{{ request.path }}">
+      {{ lead_form.website }}
 
-      {% if lead_form.non_field_errors %}
-        <div class="form-errors">
-          {{ lead_form.non_field_errors }}
-        </div>
-      {% endif %}
-
-      <label>
-        <span>نام و نام خانوادگی</span>
-        {{ lead_form.full_name }}
-        {{ lead_form.full_name.errors }}
-      </label>
-
-      <label>
-        <span>شماره موبایل</span>
-        {{ lead_form.mobile }}
-        {{ lead_form.mobile.errors }}
-      </label>
-
-      <label>
-        <span>نوع درخواست</span>
-        {{ lead_form.lead_type }}
-        {{ lead_form.lead_type.errors }}
-      </label>
-
-      <label>
-        <span>بازه زمانی تحویل</span>
-        {{ lead_form.delivery_window }}
-        {{ lead_form.delivery_window.errors }}
-      </label>
-
-      <label class="field-optional date-only" data-lead-date-field>
-        <span>تاریخ پیشنهادی</span>
-        {{ lead_form.preferred_date }}
-        {{ lead_form.preferred_date.errors }}
-      </label>
-
-      <label class="field-optional event-only" data-lead-event-field>
-        <span>محل رویداد</span>
-        {{ lead_form.event_location }}
-        {{ lead_form.event_location.errors }}
-      </label>
-
-      <label>
-        <span>توضیح کوتاه</span>
-        {{ lead_form.note }}
-        {{ lead_form.note.errors }}
-      </label>
+      {% include "components/forms/error_summary.html" with form=lead_form only %}
+      {% include "components/forms/field.html" with field=lead_form.full_name label="نام و نام خانوادگی" only %}
+      {% include "components/forms/field.html" with field=lead_form.mobile label="شماره موبایل" only %}
+      {% include "components/forms/field.html" with field=lead_form.lead_type label="نوع درخواست" only %}
+      {% include "components/forms/field.html" with field=lead_form.delivery_window label="بازه زمانی تحویل" only %}
+      {% include "components/forms/field.html" with field=lead_form.preferred_date label="تاریخ پیشنهادی" conditional="date" requirement_note="در صورت انتخاب تاریخ مشخص" only %}
+      {% include "components/forms/field.html" with field=lead_form.event_location label="محل رویداد" conditional="event" requirement_note="برای درخواست رویداد" only %}
+      {% include "components/forms/field.html" with field=lead_form.note label="توضیح کوتاه" full_width=True only %}
 
       <button type="submit" class="btn btn-call">
         <i class="bi bi-send"></i>

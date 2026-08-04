@@ -3,7 +3,14 @@ function initDropdown(dropdown) {
   const menu = dropdown.querySelector("[data-nav-dropdown-menu]");
   if (!trigger || !menu) return;
 
+  const isNativeDisclosure = dropdown.tagName === "DETAILS";
+
+  function isOpen() {
+    return isNativeDisclosure ? dropdown.open : dropdown.classList.contains("is-open");
+  }
+
   function setOpen(isOpen, { restoreFocus = false } = {}) {
+    if (isNativeDisclosure) dropdown.open = isOpen;
     dropdown.classList.toggle("is-open", isOpen);
     trigger.setAttribute("aria-expanded", String(isOpen));
     if (!isOpen && restoreFocus) trigger.focus();
@@ -12,11 +19,11 @@ function initDropdown(dropdown) {
   trigger.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    setOpen(!dropdown.classList.contains("is-open"));
+    setOpen(!isOpen());
   });
 
   dropdown.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !dropdown.classList.contains("is-open")) return;
+    if (event.key !== "Escape" || !isOpen()) return;
     event.preventDefault();
     setOpen(false, { restoreFocus: true });
   });
@@ -30,7 +37,7 @@ function initDropdown(dropdown) {
   });
   window.addEventListener("resize", () => setOpen(false));
 
-  setOpen(false);
+  setOpen(isNativeDisclosure && dropdown.open);
 }
 
 function initStickyHeader() {

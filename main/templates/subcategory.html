@@ -125,13 +125,13 @@
   {% endif %}
 
   {% if filter_links %}
-    <div class="catalog-filter-row" aria-label="Catalog filters">
+    <nav class="catalog-filter-row" aria-label="فیلتر محصولات">
       {% for item in filter_links %}
-        <a href="{{ item.url }}"{% if item.filter_url %} data-filter-target="{{ item.filter_url }}"{% endif %} class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}">
+        <a href="{{ item.url }}"{% if item.filter_url %} data-filter-target="{{ item.filter_url }}"{% endif %} class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}"{% if item.is_active %} aria-current="page"{% endif %}>
           {{ item.label }}
         </a>
       {% endfor %}
-    </div>
+    </nav>
   {% endif %}
 
   {% include "partials/product_grid.html" with products=items %}

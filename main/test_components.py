@@ -112,6 +112,11 @@ class TemplateComponentContractTests(TestCase):
         self.assertIn('fetchpriority="high"', rendered)
         self.assertIn('loading="lazy"', rendered)
         self.assertIn('data-hero-position="center-left"', rendered)
+        self.assertIn("data-page-hero-toggle", rendered)
+        self.assertIn('aria-roledescription="carousel"', rendered)
+        self.assertEqual(rendered.count('aria-roledescription="slide"'), 2)
+        self.assertEqual(rendered.count(" inert"), 1)
+        self.assertIn('aria-current="true"', rendered)
 
     def test_flash_component_preserves_lead_success_hook(self):
         rendered = render_to_string(
@@ -148,8 +153,25 @@ class TemplateComponentContractTests(TestCase):
         self.assertContains(
             response, '<header class="site-header" data-site-header>', count=1
         )
-        self.assertContains(response, '<main class="site-main">', count=1)
+        self.assertContains(
+            response,
+            '<main class="site-main" id="main-content" tabindex="-1">',
+            count=1,
+        )
         self.assertContains(response, '<footer class="zad-footer">', count=1)
+        self.assertContains(response, 'class="skip-link"', count=1)
+        self.assertContains(response, 'id="main-content"', count=1)
+
+    def test_active_navigation_uses_native_disclosure_and_current_page_state(self):
+        response = self.client.get(reverse("flowers"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<details class="nav-dropdown" data-nav-dropdown>')
+        self.assertContains(
+            response,
+            'href="/flowers/" aria-current="page"',
+            count=1,
+        )
 
     def test_hidden_chrome_page_has_no_shared_header_or_footer(self):
         response = self.client.get(reverse("international_orders_en"))

@@ -12,6 +12,7 @@ export function createCarousel({
   dots = [],
   previous = null,
   next = null,
+  toggle = null,
   interval = 0,
   onChange = () => {},
 }) {
@@ -19,6 +20,23 @@ export function createCarousel({
 
   let current = 0;
   let timer = null;
+  let userPaused = false;
+
+  function setToggleLabel(text) {
+    if (!toggle) return;
+    const label = toggle.querySelector("[data-carousel-toggle-label]");
+    if (label) label.textContent = text;
+    toggle.setAttribute("aria-label", text);
+  }
+
+  function syncToggle() {
+    if (!toggle) return;
+    const unavailable = interval <= 0 || slides.length <= 1;
+    const motionDisabled = prefersReducedMotion();
+    toggle.hidden = unavailable || motionDisabled;
+    toggle.setAttribute("aria-pressed", String(userPaused));
+    setToggleLabel(userPaused ? "ادامه نمایش خودکار" : "توقف نمایش خودکار");
+  }
 
   function stop() {
     if (timer !== null) window.clearInterval(timer);
@@ -26,7 +44,17 @@ export function createCarousel({
   }
 
   function canRotate() {
-    return interval > 0 && slides.length > 1 && !document.hidden && !prefersReducedMotion();
+    const hasPointerPause = root.matches?.(":hover") ?? false;
+    const hasFocusPause = root.contains(document.activeElement);
+    return (
+      interval > 0 &&
+      slides.length > 1 &&
+      !userPaused &&
+      !document.hidden &&
+      !hasPointerPause &&
+      !hasFocusPause &&
+      !prefersReducedMotion()
+    );
   }
 
   function start() {
@@ -42,6 +70,8 @@ export function createCarousel({
       const isActive = itemIndex === current;
       slide.classList.toggle("is-active", isActive);
       slide.setAttribute("aria-hidden", isActive ? "false" : "true");
+      if (isActive) slide.removeAttribute("inert");
+      else slide.setAttribute("inert", "");
     });
 
     dots.forEach((dot, itemIndex) => {
@@ -60,8 +90,18 @@ export function createCarousel({
     dot.addEventListener("click", () => show(index, { restart: true }));
   });
 
+  toggle?.addEventListener("click", () => {
+    userPaused = !userPaused;
+    if (userPaused) stop();
+    else start();
+    syncToggle();
+  });
+
   observeHorizontalSwipe(root, (direction) => show(current + direction, { restart: true }));
-  observeMotionPreference(start);
+  observeMotionPreference(() => {
+    syncToggle();
+    start();
+  });
 
   root.addEventListener("mouseenter", stop);
   root.addEventListener("mouseleave", start);
@@ -75,7 +115,14 @@ export function createCarousel({
   });
 
   show(0);
+  syncToggle();
   start();
 
-  return { show, start, stop, getCurrent: () => current };
+  return {
+    show,
+    start,
+    stop,
+    getCurrent: () => current,
+    isUserPaused: () => userPaused,
+  };
 }

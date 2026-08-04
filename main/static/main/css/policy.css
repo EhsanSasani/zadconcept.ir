@@ -114,7 +114,7 @@
 .info-language-link {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
+  min-height: 44px;
   padding-inline: 12px;
   border: 1px solid var(--info-line);
   background: rgba(255, 255, 255, 0.46);

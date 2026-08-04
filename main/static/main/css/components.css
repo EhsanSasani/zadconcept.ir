@@ -263,7 +263,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--line);
   background: #fcfaf7;
@@ -296,9 +296,12 @@
   margin-top: 18px;
 }
 
-.lead-form label {
+.lead-field {
   display: grid;
   gap: 8px;
+}
+
+.lead-field > label {
   font-size: 0.86rem;
   font-weight: 700;
 }
@@ -321,10 +324,53 @@
   resize: vertical;
 }
 
-.lead-form label:last-of-type,
 .lead-form .btn,
 .field-optional {
   grid-column: 1 / -1;
+}
+
+.field-required {
+  color: #9d3d32;
+}
+
+.field-requirement {
+  margin-inline-start: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.errorlist {
+  margin: 0;
+  color: #8b2f27;
+  font-size: 0.78rem;
+  font-weight: 700;
+  list-style: none;
+}
+
+.form-error-summary {
+  grid-column: 1 / -1;
+  padding: 16px 18px;
+  border: 2px solid #b64a3d;
+  border-radius: 14px;
+  background: #fff3f1;
+  color: #6f251f;
+}
+
+.form-error-summary h3 {
+  color: inherit;
+}
+
+.form-error-summary ul {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  padding-inline-start: 20px;
+}
+
+.form-error-summary a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 /* =========================
    Shared centered section headings

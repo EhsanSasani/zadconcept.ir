@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-lead-error{% endblock %}
+
+{% block content %}
+  <section class="container section-block lead-error-page" aria-labelledby="lead-error-page-title">
+    <header class="lead-error-page__header">
+      <span class="section-kicker">اصلاح فرم</span>
+      <h1 id="lead-error-page-title">بعضی از اطلاعات درخواست نیاز به اصلاح دارد.</h1>
+      <p>موارد مشخص‌شده را بررسی کنید؛ اطلاعات واردشده‌ی شما در فرم حفظ شده است.</p>
+      <a class="inline-link" href="{{ lead_next_url }}">بازگشت به صفحه قبل</a>
+    </header>
+
+    {% include "partials/lead_form.html" with request=request lead_form=lead_form lead_default_type=lead_default_type lead_next_url=lead_next_url lead_source_page=lead_source_page lead_title="اصلاح و ارسال دوباره" lead_subtitle="پس از رفع خطاها، درخواست را دوباره ارسال کنید." cta_position="validation-page" only %}
+  </section>
+{% endblock %}

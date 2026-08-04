@@ -3,7 +3,10 @@
   <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
   <div class="page-hero__dots" aria-label="انتخاب اسلاید">
     {% for slide in page_hero_slides %}
-      <button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>
+      <button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}"></button>
     {% endfor %}
   </div>
+  <button class="hero-carousel__toggle" type="button" data-page-hero-toggle aria-pressed="false">
+    <span data-carousel-toggle-label>توقف نمایش خودکار</span>
+  </button>
 {% endif %}

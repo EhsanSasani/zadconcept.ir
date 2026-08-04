@@ -1,0 +1,39 @@
+/* Global accessibility policy. Loaded last so focus, hidden, and motion states win. */
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10000;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: #fff;
+  color: #2d2a27;
+  box-shadow: 0 8px 24px rgba(24, 18, 14, 0.24);
+  transform: translateY(-160%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #8a552d;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

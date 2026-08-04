@@ -5,11 +5,11 @@
 
 {% block content %}
 
-<section class="workshops-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های تجربه‌محور زاد" data-page-hero-slider>
+<section class="workshops-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}{% if workshops_hero_mobile_image %} workshops-hero--has-mobile{% endif %}" aria-label="ورکشاپ‌های تجربه‌محور زاد" data-page-hero-slider{% if page_hero_slides|length > 1 %} role="region" aria-roledescription="carousel"{% endif %}>
   <div class="workshops-hero__slides">
     {% if page_hero_slides %}
       {% for slide in page_hero_slides %}
-        <div class="workshops-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}" aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+        <div class="workshops-hero__slide{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}"{% if page_hero_slides|length > 1 %} role="group" aria-roledescription="slide" aria-label="اسلاید {{ forloop.counter }} از {{ page_hero_slides|length }}"{% endif %} aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"{% if not forloop.first %} inert{% endif %}>
           <picture>
             {% if slide.mobile_image %}<source media="(max-width: 760px)" srcset="{{ slide.mobile_image }}">{% endif %}
             <img class="workshops-hero__image" src="{{ slide.image }}" alt="{{ slide.title }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
@@ -59,8 +59,11 @@
     <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
     <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>
     <div class="page-hero__dots" aria-label="انتخاب اسلاید">
-      {% for slide in page_hero_slides %}<button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}"></button>{% endfor %}
+      {% for slide in page_hero_slides %}<button type="button" data-page-hero-dot="{{ forloop.counter0 }}"{% if forloop.first %} class="is-active"{% endif %} aria-label="اسلاید {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}"></button>{% endfor %}
     </div>
+    <button class="hero-carousel__toggle" type="button" data-page-hero-toggle aria-pressed="false">
+      <span data-carousel-toggle-label>توقف نمایش خودکار</span>
+    </button>
   {% endif %}
 </section>
 

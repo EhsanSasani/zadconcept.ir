@@ -34,7 +34,7 @@
 
       {% with gallery=product.gallery_images.all %}
         {% if gallery %}
-          <div class="item-detail__thumbs" aria-label="Product gallery">
+          <div class="item-detail__thumbs" aria-label="گالری محصول">
             {% if product.cover_image %}
               <span class="item-detail__thumb is-active">
                 <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
@@ -115,7 +115,7 @@
 
       {% with tags=product.tags.all %}
         {% if tags %}
-          <div class="item-detail__tags" aria-label="Product tags">
+          <div class="item-detail__tags" aria-label="برچسب‌های محصول">
             {% for tag in tags %}
               <span>{{ tag.name }}</span>
             {% endfor %}

@@ -255,7 +255,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 16px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -2455,4 +2455,29 @@ body:not(.page-home) .section-block:first-of-type {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+/* Lead validation response */
+.page-lead-error .lead-error-page {
+  display: grid;
+  gap: 28px;
+  max-width: 920px;
+  padding-top: 180px;
+}
+
+.lead-error-page__header {
+  display: grid;
+  gap: 12px;
+}
+
+.lead-error-page__header p {
+  color: var(--muted);
+}
+
+.lead-error-page__header .inline-link {
+  width: fit-content;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }

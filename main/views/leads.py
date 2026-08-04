@@ -1,13 +1,14 @@
 """HTTP adapter for lead submissions."""
 
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from ..forms import LeadRequestForm
 from ..services.leads import is_rate_limited, save_lead
+from .support import _default_context
 
 
 def _remote_address(request):
@@ -44,10 +45,26 @@ def submit_lead_request(request):
         save_lead(form, source_page=request.POST.get("source_page", ""))
         messages.success(
             request,
-            "Your request has been submitted. zad will contact you soon.",
+            "درخواست شما ثبت شد؛ تیم زاد به‌زودی با شما تماس می‌گیرد.",
             extra_tags="lead-success",
         )
-    else:
-        messages.error(request, "Please complete the form correctly and try again.")
+        return redirect(next_url)
 
-    return redirect(next_url)
+    context = _default_context(
+        request,
+        page_type="lead-error",
+        active_nav="",
+        meta_title="اصلاح درخواست هماهنگی | زاد",
+        meta_description="اصلاح اطلاعات فرم درخواست هماهنگی زاد.",
+        suppress_default_hero=True,
+        is_indexable=False,
+    )
+    context.update(
+        {
+            "lead_form": form,
+            "lead_default_type": request.POST.get("lead_type") or "flower",
+            "lead_next_url": next_url,
+            "lead_source_page": request.POST.get("source_page", ""),
+        }
+    )
+    return render(request, "lead_form_invalid.html", context, status=422)

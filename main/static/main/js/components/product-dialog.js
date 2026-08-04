@@ -11,7 +11,11 @@ export function initProductDialog() {
   const modalContact = modal.querySelector("[data-modal-contact]");
   const modalDialog = modal.querySelector('[role="dialog"]');
   const closeButton = modal.querySelector("[data-product-modal-close-button]");
+  const fallbackDescription = modalDescription?.textContent.trim() || "";
   let opener = null;
+  let previousBodyOverflow = "";
+  let bodyHadDialogClass = false;
+  let backgroundState = [];
 
   const typeLabels = {
     "hand-bouquet": "HAND BOUQUET",
@@ -30,6 +34,24 @@ export function initProductDialog() {
 
   function getTypeLabel(value) {
     return typeLabels[value] || value || "COLLECTION";
+  }
+
+  function setBackgroundInert(isInert) {
+    if (isInert) {
+      backgroundState = Array.from(document.body.children)
+        .filter((element) => element !== modal && element.tagName !== "SCRIPT")
+        .map((element) => ({
+          element,
+          hadInert: element.hasAttribute("inert"),
+        }));
+      backgroundState.forEach(({ element }) => element.setAttribute("inert", ""));
+      return;
+    }
+
+    backgroundState.forEach(({ element, hadInert }) => {
+      if (!hadInert) element.removeAttribute("inert");
+    });
+    backgroundState = [];
   }
 
   function openModal(card) {
@@ -66,8 +88,8 @@ export function initProductDialog() {
     }
 
     if (modalDescription) {
-      modalDescription.textContent = description;
-      modalDescription.hidden = !description;
+      modalDescription.textContent = description || fallbackDescription;
+      modalDescription.hidden = false;
     }
 
     if (modalStock) {
@@ -79,16 +101,23 @@ export function initProductDialog() {
       modalContact.textContent = contact || "برای قیمت و ثبت سفارش با ما در ارتباط باشید.";
     }
 
-    modal.hidden = false;
+    previousBodyOverflow = document.body.style.overflow;
+    bodyHadDialogClass = document.body.classList.contains("has-open-product-dialog");
+    setBackgroundInert(true);
+    document.body.classList.add("has-open-product-dialog");
     document.body.style.overflow = "hidden";
+    modal.hidden = false;
     window.requestAnimationFrame(function () {
       (closeButton || modalDialog).focus();
     });
   }
 
   function closeModal() {
+    if (modal.hidden) return;
     modal.hidden = true;
-    document.body.style.overflow = "";
+    setBackgroundInert(false);
+    document.body.style.overflow = previousBodyOverflow;
+    if (!bodyHadDialogClass) document.body.classList.remove("has-open-product-dialog");
 
     if (modalImage) {
       modalImage.src = "";
@@ -96,8 +125,8 @@ export function initProductDialog() {
     }
 
     if (modalDescription) {
-      modalDescription.textContent = "";
-      modalDescription.hidden = true;
+      modalDescription.textContent = fallbackDescription;
+      modalDescription.hidden = false;
     }
 
     if (opener && typeof opener.focus === "function") {
@@ -120,6 +149,16 @@ export function initProductDialog() {
     const card = event.target.closest("[data-zad-modal-card]");
 
     if (card) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
       event.preventDefault();
       openModal(card);
       return;
@@ -147,7 +186,10 @@ export function initProductDialog() {
 
       const first = items[0];
       const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (!modal.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -155,6 +197,12 @@ export function initProductDialog() {
         first.focus();
       }
     }
+  });
+
+  document.addEventListener("focusin", function (event) {
+    if (modal.hidden || modal.contains(event.target)) return;
+    const items = focusableItems();
+    (items[0] || modalDialog).focus();
   });
 }
 

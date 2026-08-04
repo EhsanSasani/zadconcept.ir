@@ -103,6 +103,8 @@ def _collection_landing_page(
                 "html": html,
                 "has_next": page_obj.has_next(),
                 "next_page": page_obj.next_page_number() if page_obj.has_next() else None,
+                "page_count": len(products),
+                "total_count": page_obj.paginator.count,
             }
         )
         response.headers["X-Robots-Tag"] = "noindex, nofollow"

@@ -58,8 +58,17 @@ export function initCatalog() {
     nextPage = Number(data.next_page || "0");
     loader.dataset.hasNext = hasNext ? "true" : "false";
     loader.dataset.nextPage = nextPage ? String(nextPage) : "";
-    setStatus("");
     syncLoadMoreButton(false);
+  }
+
+  function announceResults(data, replacing) {
+    const pageCount = Number(data.page_count) || 0;
+    const totalCount = Number(data.total_count) || 0;
+    setStatus(
+      replacing
+        ? `${totalCount} محصول پیدا شد؛ ${pageCount} محصول نمایش داده شد.`
+        : `${pageCount} محصول دیگر اضافه شد.`,
+    );
   }
 
   function maybeLoadNextPage() {
@@ -81,6 +90,8 @@ export function initCatalog() {
 
     loading = true;
     loader.classList.add("is-loading");
+    loader.setAttribute("aria-busy", "true");
+    grid.setAttribute("aria-busy", "true");
     setStatus("در حال بارگذاری محصولات...");
     syncLoadMoreButton(false);
 
@@ -102,6 +113,7 @@ export function initCatalog() {
       }
 
       resetPagination(data);
+      announceResults(data, replacing);
       window.requestAnimationFrame(maybeLoadNextPage);
       return true;
     } catch (error) {
@@ -114,6 +126,8 @@ export function initCatalog() {
       if (requestId === requestSequence) {
         loading = false;
         loader.classList.remove("is-loading");
+        loader.setAttribute("aria-busy", "false");
+        grid.setAttribute("aria-busy", "false");
       }
     }
   }
@@ -127,6 +141,17 @@ export function initCatalog() {
     const link = event.target.closest("[data-filter]");
     if (!link) return;
 
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
     event.preventDefault();
     const filter = link.dataset.filter || "all";
     const category = filter === "all" ? "" : filter;
@@ -134,7 +159,10 @@ export function initCatalog() {
     if (!success) return;
 
     filterRoot.querySelectorAll("[data-filter]").forEach((item) => {
-      item.classList.toggle("is-active", item === link);
+      const isCurrent = item === link;
+      item.classList.toggle("is-active", isCurrent);
+      if (isCurrent) item.setAttribute("aria-current", "page");
+      else item.removeAttribute("aria-current");
     });
 
     currentCategory = category;

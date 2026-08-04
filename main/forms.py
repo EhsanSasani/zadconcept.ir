@@ -35,13 +35,33 @@ class LeadRequestForm(forms.ModelForm):
             "note": "توضیح کوتاه",
         }
         widgets = {
-            "full_name": forms.TextInput(attrs={"placeholder": "مثال: سارا احمدی"}),
-            "mobile": forms.TextInput(attrs={"placeholder": "مثال: ۰۹۱۲۱۲۳۴۵۶۷", "inputmode": "numeric"}),
+            "full_name": forms.TextInput(
+                attrs={"placeholder": "مثال: سارا احمدی", "autocomplete": "name"}
+            ),
+            "mobile": forms.TextInput(
+                attrs={
+                    "type": "tel",
+                    "placeholder": "مثال: ۰۹۱۲۱۲۳۴۵۶۷",
+                    "inputmode": "tel",
+                    "autocomplete": "tel",
+                }
+            ),
             "lead_type": forms.Select(),
             "delivery_window": forms.Select(),
             "preferred_date": forms.DateInput(attrs={"type": "date"}),
-            "event_location": forms.TextInput(attrs={"placeholder": "مثال: مشهد، الهیه"}),
-            "note": forms.Textarea(attrs={"rows": 3, "placeholder": "در حد یک توضیح کوتاه"}),
+            "event_location": forms.TextInput(
+                attrs={
+                    "placeholder": "مثال: مشهد، الهیه",
+                    "autocomplete": "street-address",
+                }
+            ),
+            "note": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": "در حد یک توضیح کوتاه",
+                    "autocomplete": "off",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):

@@ -1,0 +1,15 @@
+<div class="lead-field{% if conditional or full_width %} field-optional{% endif %}{% if conditional == "date" %} date-only{% elif conditional == "event" %} event-only{% endif %}"{% if conditional == "date" %} data-lead-date-field{% elif conditional == "event" %} data-lead-event-field{% endif %}>
+  <label for="{{ field.id_for_label }}">
+    {{ label|default:field.label }}
+    {% if requirement_note %}
+      <small class="field-requirement">{{ requirement_note }}</small>
+    {% elif field.field.required %}
+      <span class="field-required" aria-hidden="true">*</span>
+      <span class="sr-only">(الزامی)</span>
+    {% else %}
+      <small class="field-requirement">اختیاری</small>
+    {% endif %}
+  </label>
+  {{ field }}
+  {{ field.errors }}
+</div>

@@ -35,6 +35,15 @@ class CssArchitectureContractTests(SimpleTestCase):
 
         self.assertEqual(positions, sorted(positions))
 
+    def test_accessibility_policy_is_the_last_stylesheet(self):
+        accessibility_position = self.base_template.index("accessibility.css")
+        stylesheet_positions = [
+            match.start()
+            for match in re.finditer(r'<link rel="stylesheet"', self.base_template)
+        ]
+
+        self.assertGreater(accessibility_position, stylesheet_positions[-1])
+
     def test_tokens_file_is_the_only_global_root_owner(self):
         root_owners = []
         for css_file in self.css_root.glob("*.css"):
@@ -65,7 +74,12 @@ class CssArchitectureContractTests(SimpleTestCase):
         self.assertNotRegex(all_css, r"(?<!flowers-)\.product-card(?:\b|__)")
 
     def test_legacy_important_budget_does_not_grow(self):
-        exempt_files = {"admin_custom.css", "hero-config.css", "utilities.css"}
+        exempt_files = {
+            "accessibility.css",
+            "admin_custom.css",
+            "hero-config.css",
+            "utilities.css",
+        }
         important_count = sum(
             path.read_text(encoding="utf-8").count("!important")
             for path in self.css_root.glob("*.css")
@@ -73,6 +87,35 @@ class CssArchitectureContractTests(SimpleTestCase):
         )
 
         self.assertLessEqual(important_count, 127)
+
+    def test_primary_interactive_targets_keep_44px_policy(self):
+        governed_selectors = (
+            ("components.css", ".btn"),
+            ("components.css", ".inline-links a"),
+            ("responsive.css", ".btn"),
+            ("page.css", ".faq-topic-nav a"),
+            ("catalog.css", ".catalog-filter-chip"),
+            ("catalog.css", ".flower-type-card__children a"),
+            ("flowers-landing.css", ".flowers-filter__chip"),
+            ("policy.css", ".info-language-link"),
+        )
+
+        for file_name, selector in governed_selectors:
+            source = (self.css_root / file_name).read_text(encoding="utf-8")
+            rule_bodies = re.findall(
+                rf"(?m)^\s*{re.escape(selector)}\s*\{{(?P<body>.*?)\}}",
+                source,
+                flags=re.DOTALL,
+            )
+            heights = [
+                int(height)
+                for body in rule_bodies
+                for height in re.findall(r"min-height:\s*(\d+)px", body)
+            ]
+
+            with self.subTest(file=file_name, selector=selector):
+                self.assertTrue(heights)
+                self.assertTrue(all(height >= 44 for height in heights))
 
     def test_css_lint_command_is_versioned(self):
         package = json.loads((self.root / "package.json").read_text(encoding="utf-8"))

@@ -139,6 +139,24 @@ class MainViewsTests(TestCase):
         self.assertContains(response, 'href="/flowers/"')
         self.assertContains(response, 'href="/contact/"')
 
+    def test_home_carousel_hides_inactive_slide_content_from_keyboard_and_at(self):
+        for order, title in ((1, "First"), (2, "Second")):
+            HomeHeroSlide.objects.create(
+                title=title,
+                image=f"heroes/home/{order}.jpg",
+                primary_button_text=f"Open {title}",
+                primary_button_url=f"/slide-{order}/",
+                sort_order=order,
+            )
+
+        response = self.client.get(reverse("index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data-home-hero-toggle", count=1)
+        self.assertContains(response, 'aria-roledescription="carousel"', count=1)
+        self.assertContains(response, 'aria-hidden="false"', count=1)
+        self.assertContains(response, 'aria-hidden="true" inert', count=1)
+
     def test_legacy_section_redirects_to_new_category(self):
         response = self.client.get(reverse("index"), {"section": "bakery"})
         self.assertRedirects(response, reverse("bakery"), fetch_redirect_response=False)
@@ -175,6 +193,8 @@ class MainViewsTests(TestCase):
         payload = partial.json()
         self.assertIn("html", payload)
         self.assertFalse(payload["has_next"])
+        self.assertEqual(payload["page_count"], 3)
+        self.assertEqual(payload["total_count"], 15)
         self.assertContains(partial, "Paged Bakery", status_code=200)
 
         second_page = self.client.get(reverse("bakery"), {"page": 2})
@@ -198,6 +218,22 @@ class MainViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.context["catalog_products"]), [other_product])
+
+    def test_empty_catalog_filter_keeps_a_valid_controls_target(self):
+        empty_category = Category.objects.create(
+            name="Empty Bakery",
+            slug="empty-bakery",
+            section=Category.Section.BAKERY,
+        )
+
+        response = self.client.get(
+            reverse("bakery"),
+            {"category": empty_category.slug},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="catalog-products"', count=1)
+        self.assertContains(response, 'aria-controls="catalog-products"')
 
     def test_new_published_flower_appears_and_draft_or_inactive_do_not(self):
         visible = Product.objects.create(
@@ -517,6 +553,27 @@ class MainViewsTests(TestCase):
         self.assertContains(response, "data-page-hero-slider")
         self.assertContains(response, "data-page-hero-next")
 
+    def test_custom_page_heroes_share_the_accessible_carousel_contract(self):
+        for target_page, route_name in (
+            (SiteHero.TargetPage.ABOUT, "about"),
+            (SiteHero.TargetPage.EVENTS, "events"),
+        ):
+            for order in (1, 2):
+                SiteHero.objects.create(
+                    title=f"{route_name} slide {order}",
+                    image=f"heroes/pages/{route_name}-{order}.jpg",
+                    target_page=target_page,
+                    sort_order=order,
+                )
+
+            with self.subTest(route=route_name):
+                response = self.client.get(reverse(route_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "data-page-hero-toggle", count=1)
+                self.assertContains(response, 'aria-roledescription="carousel"', count=1)
+                self.assertContains(response, 'aria-hidden="true" inert', count=1)
+                self.assertContains(response, 'aria-current="true"', count=1)
+
     def test_visit_urls_redirect_to_contact(self):
         contact_url = reverse("contact")
 
@@ -659,6 +716,55 @@ class MainViewsTests(TestCase):
         )
         self.assertRedirects(response, reverse("contact"), fetch_redirect_response=False)
         self.assertEqual(LeadRequest.objects.count(), 1)
+
+    def test_invalid_lead_form_preserves_values_and_exposes_specific_errors(self):
+        response = self.client.post(
+            reverse("lead_request"),
+            {
+                "full_name": "کاربر آزمایشی",
+                "mobile": "bad-number",
+                "lead_type": LeadRequest.LeadType.FLOWER,
+                "delivery_window": LeadRequest.DeliveryWindow.PICK_DATE,
+                "next": reverse("contact"),
+                "source_page": reverse("contact"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(LeadRequest.objects.count(), 0)
+        self.assertContains(response, 'role="alert"', status_code=422)
+        self.assertContains(response, 'data-form-error-summary', status_code=422)
+        self.assertContains(response, 'value="کاربر آزمایشی"', status_code=422)
+        self.assertContains(response, 'aria-invalid="true"', status_code=422)
+        self.assertContains(response, 'id="id_mobile_error"', status_code=422)
+        self.assertContains(response, 'id="id_preferred_date_error"', status_code=422)
+        self.assertContains(response, 'content="noindex,follow"', status_code=422)
+
+    def test_lead_inputs_expose_mobile_and_autofill_metadata(self):
+        response = self.client.get(reverse("contact"))
+
+        self.assertContains(response, 'autocomplete="name"')
+        self.assertContains(response, 'type="tel"')
+        self.assertContains(response, 'autocomplete="tel"')
+
+    def test_irrelevant_conditional_value_error_remains_repairable(self):
+        response = self.client.post(
+            reverse("lead_request"),
+            {
+                "full_name": "Conditional Error",
+                "mobile": "09121234567",
+                "lead_type": LeadRequest.LeadType.FLOWER,
+                "delivery_window": LeadRequest.DeliveryWindow.TODAY,
+                "preferred_date": "not-a-date",
+                "next": reverse("contact"),
+                "source_page": reverse("contact"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertContains(response, 'data-lead-date-field', status_code=422)
+        self.assertContains(response, 'id="id_preferred_date_error"', status_code=422)
+        self.assertContains(response, 'aria-invalid="true"', status_code=422)
 
     def test_robots_and_sitemap_routes(self):
         self.assertEqual(self.client.get(reverse("robots_txt")).status_code, 200)

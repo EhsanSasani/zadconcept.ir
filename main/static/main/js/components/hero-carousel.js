@@ -17,6 +17,7 @@ function initHomeHero(root) {
     dots,
     previous: root.querySelector("[data-home-hero-prev]"),
     next: root.querySelector("[data-home-hero-next]"),
+    toggle: root.querySelector("[data-home-hero-toggle]"),
     interval: 5000,
   });
 }
@@ -35,6 +36,7 @@ function initPageHero(root) {
     dots: Array.from(root.querySelectorAll("[data-page-hero-dot]")),
     previous: root.querySelector("[data-page-hero-prev]"),
     next: root.querySelector("[data-page-hero-next]"),
+    toggle: root.querySelector("[data-page-hero-toggle]"),
     interval: 6000,
     onChange(activeSlide) {
       if (title && activeSlide.dataset.heroTitle) title.textContent = activeSlide.dataset.heroTitle;

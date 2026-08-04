@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
 
-export function installDom(markup) {
+export function installDom(markup, { reducedMotion = true } = {}) {
   const dom = new JSDOM(markup, {
     pretendToBeVisual: true,
     url: "https://www.zadconcept.ir/",
@@ -13,7 +13,7 @@ export function installDom(markup) {
     disconnect() {}
   };
   window.matchMedia = () => ({
-    matches: true,
+    matches: reducedMotion,
     addEventListener() {},
     removeEventListener() {},
   });
