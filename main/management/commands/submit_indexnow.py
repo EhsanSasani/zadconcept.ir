@@ -8,10 +8,19 @@ from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from main.models import Category, Event, NewsPost, Product, PublishStatus, Tag
+from main.models import (
+    Category,
+    Event,
+    NewsPost,
+    Product,
+    PublishStatus,
+    Tag,
+    WeddingPageContent,
+)
 from main.sitemaps import sitemaps
 
 
@@ -33,17 +42,17 @@ def all_public_urls():
 
 def changed_public_urls(since):
     urls = set()
+    wedding_catalog_changed = Product.objects.for_weddings().filter(
+        updated_at__gte=since,
+    ).exists()
 
-    products = Product.objects.filter(
-        is_active=True,
-        publish_status=Product.PublishStatus.PUBLISHED,
-        category__is_active=True,
+    products = Product.objects.publicly_indexable().filter(
         updated_at__gte=since,
     ).select_related("category")
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in products)
 
     categories = (
-        Category.objects.filter(
+        Category.objects.for_general_catalog().filter(
             is_active=True,
             section__in=(
                 Category.Section.FLOWERS,
@@ -55,7 +64,7 @@ def changed_public_urls(since):
     )
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in categories)
 
-    occasions = Tag.objects.filter(
+    occasions = Tag.objects.for_general_catalog().filter(
         is_active=True,
         is_occasion=True,
         updated_at__gte=since,
@@ -73,6 +82,13 @@ def changed_public_urls(since):
         updated_at__gte=since,
     )
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in posts)
+
+    wedding_content = WeddingPageContent.current()
+    if wedding_catalog_changed or (
+        wedding_content and wedding_content.updated_at >= since
+    ):
+        urls.add(f"{settings.ZAD_SITE_URL}{reverse('weddings')}")
+
     return urls
 
 

@@ -344,7 +344,7 @@ JAZZMIN_SETTINGS = {
     ],
     "search_model": [
         "main.Product",
-        
+        "main.WeddingProduct",
     ],
     "topmenu_links": [
         {"name": "سایت", "url": "/", "new_window": True},
@@ -357,6 +357,8 @@ JAZZMIN_SETTINGS = {
         "main.Product",
         "main.Flower",
         "main.SameDayFlower",
+        "main.WeddingProduct",
+        "main.WeddingPageContent",
         "main.HomeHeroSlide",
         "main.SiteHero",
         "main.HeroFont",
@@ -374,6 +376,8 @@ JAZZMIN_SETTINGS = {
         "main.Product": "fas fa-box-open",
         "main.Flower": "fas fa-seedling",
         "main.SameDayFlower": "fas fa-bolt",
+        "main.WeddingProduct": "fas fa-ring",
+        "main.WeddingPageContent": "fas fa-heart",
         "main.HomeHeroSlide": "fas fa-images",
         "main.SiteHero": "fas fa-image",
         "main.HeroFont": "fas fa-font",

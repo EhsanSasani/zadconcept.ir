@@ -29,6 +29,7 @@ class StaticViewSitemap(CanonicalSitemap):
     def items(self):
         return [
             "index",
+            "weddings",
             "flowers",
             "flowers_all",
             "bakery",
@@ -65,7 +66,7 @@ class CategorySitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Category.objects.filter(
+            Category.objects.for_general_catalog().filter(
                 is_active=True,
                 section__in=(
                     Category.Section.FLOWERS,
@@ -86,9 +87,8 @@ class OccasionSitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Tag.objects.filter(is_active=True, is_occasion=True)
-            .exclude(slug="wedding")
-            .exclude(name="عروسی")
+            Tag.objects.for_general_catalog()
+            .filter(is_active=True, is_occasion=True)
             .order_by("sort_order", "name")
         )
 
@@ -102,11 +102,7 @@ class ProductSitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Product.objects.filter(
-                is_active=True,
-                publish_status=Product.PublishStatus.PUBLISHED,
-                category__is_active=True,
-            )
+            Product.objects.publicly_indexable()
             .select_related("category")
             .order_by("-updated_at")
         )
