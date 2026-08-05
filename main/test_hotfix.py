@@ -103,16 +103,38 @@ class WeddingCatalogHotfixTests(TestCase):
             publish_status=Product.PublishStatus.PUBLISHED,
         )
 
-    def test_wedding_products_only_render_on_the_dedicated_landing(self):
+    def test_wedding_products_only_render_in_their_dedicated_collections(self):
         flowers_response = self.client.get(reverse("flowers"))
         wedding_response = self.client.get(reverse("weddings"))
+        car_response = self.client.get(
+            reverse(
+            "wedding_collection",
+            kwargs={"collection_slug": "wedding-cars"},
+        )
+        )
+        bouquet_response = self.client.get(
+            reverse(
+            "wedding_collection",
+            kwargs={"collection_slug": "bridal-bouquets"},
+        )
+        )
 
         self.assertEqual(flowers_response.status_code, 200)
         self.assertEqual(wedding_response.status_code, 200)
+        self.assertEqual(car_response.status_code, 200)
+        self.assertEqual(bouquet_response.status_code, 200)
+
         self.assertNotContains(flowers_response, self.car_product.name)
         self.assertNotContains(flowers_response, self.bouquet_product.name)
-        self.assertContains(wedding_response, self.car_product.name)
-        self.assertContains(wedding_response, self.bouquet_product.name)
+
+        self.assertNotContains(wedding_response, self.car_product.name)
+        self.assertNotContains(wedding_response, self.bouquet_product.name)
+
+        self.assertContains(car_response, self.car_product.name)
+        self.assertNotContains(car_response, self.bouquet_product.name)
+
+        self.assertContains(bouquet_response, self.bouquet_product.name)
+        self.assertNotContains(bouquet_response, self.car_product.name)
 
     def test_parent_category_rejects_new_untyped_products(self):
         direct_product = Product(
