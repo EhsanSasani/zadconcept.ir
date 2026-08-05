@@ -1,4 +1,4 @@
-{% comment %} {% if breadcrumbs %}
+{% if product.is_wedding and breadcrumbs %}
 <nav class="container breadcrumbs" aria-label="Breadcrumb">
   <ol>
     {% for crumb in breadcrumbs %}
@@ -12,4 +12,4 @@
     {% endfor %}
   </ol>
 </nav>
-{% endif %} {% endcomment %}
+{% endif %}

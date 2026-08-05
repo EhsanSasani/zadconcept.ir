@@ -42,10 +42,10 @@ class SeoContractTests(TestCase):
             slug="plants",
             section=Category.Section.FLOWERS,
         )
-        self.wedding_category = Category.objects.create(
-            name="Wedding",
+        self.wedding_category, _ = Category.objects.update_or_create(
             slug="wedding",
             section=Category.Section.FLOWERS,
+            defaults={"name": "Wedding", "parent": None, "is_active": True},
         )
         self.inactive_category = Category.objects.create(
             name="Hidden",
@@ -53,16 +53,13 @@ class SeoContractTests(TestCase):
             section=Category.Section.FLOWERS,
             is_active=False,
         )
-        self.same_day = Tag.objects.create(
-            name="ارسال روز",
+        self.same_day, _ = Tag.objects.update_or_create(
             slug="same-day",
-            is_active=True,
+            defaults={"name": "ارسال روز", "is_active": True, "is_occasion": False},
         )
-        self.birthday = Tag.objects.create(
-            name="تولد",
+        self.birthday, _ = Tag.objects.update_or_create(
             slug="birthday",
-            is_active=True,
-            is_occasion=True,
+            defaults={"name": "تولد", "is_active": True, "is_occasion": True},
         )
         self.unnamed = Product.objects.create(
             name="",
@@ -163,29 +160,36 @@ class SeoContractTests(TestCase):
         self.assertFalse(any(node.get("@type") == "BreadcrumbList" for node in graph))
 
     def test_query_policy_separates_filters_partials_and_pagination(self):
-        filtered = self.client.get(reverse("flowers"), {"category": "bouquet"})
+        bakery_category = Category.objects.create(
+            name="SEO Bakery",
+            slug="seo-bakery",
+            section=Category.Section.BAKERY,
+        )
+        filtered = self.client.get(
+            reverse("bakery"), {"category": bakery_category.slug}
+        )
         filtered_parser = parse_html(filtered)
         self.assertEqual(filtered_parser.robots, "noindex,follow")
-        self.assertEqual(filtered_parser.canonical, "https://www.zadconcept.ir/flowers/")
+        self.assertEqual(filtered_parser.canonical, "https://www.zadconcept.ir/bakery/")
 
-        partial = self.client.get(reverse("flowers"), {"partial": "products"})
+        partial = self.client.get(reverse("bakery"), {"partial": "products"})
         self.assertEqual(partial.status_code, 200)
         self.assertEqual(partial.headers["X-Robots-Tag"], "noindex, nofollow")
         self.assertEqual(partial.headers["Cache-Control"], "no-store")
 
-        for index in range(12):
+        for index in range(13):
             Product.objects.create(
                 name=f"Page product {index}",
-                category=self.category,
+                category=bakery_category,
                 publish_status=Product.PublishStatus.PUBLISHED,
                 sort_order=100 + index,
             )
-        paginated = self.client.get(reverse("flowers"), {"page": "2"})
+        paginated = self.client.get(reverse("bakery"), {"page": "2"})
         paginated_parser = parse_html(paginated)
         self.assertEqual(paginated_parser.robots, "index,follow")
         self.assertEqual(
             paginated_parser.canonical,
-            "https://www.zadconcept.ir/flowers/?page=2",
+            "https://www.zadconcept.ir/bakery/?page=2",
         )
 
         irrelevant_page = self.client.get(reverse("contact"), {"page": "2"})
@@ -224,7 +228,8 @@ class SeoContractTests(TestCase):
             self.assertIn(f"https://www.zadconcept.ir{path}", xml)
 
         self.assertNotIn("/flowers/plant/", xml)
-        self.assertNotIn(self.wedding_category.get_absolute_url(), xml)
+        self.assertIn("https://www.zadconcept.ir/weddings/", xml)
+        self.assertNotIn("https://www.zadconcept.ir/flowers/wedding/", xml)
         self.assertNotIn(self.draft.get_absolute_url(), xml)
         self.assertNotIn(self.hidden.get_absolute_url(), xml)
         self.assertNotIn(self.past_event.get_absolute_url(), xml)
@@ -409,13 +414,13 @@ class SeoContractTests(TestCase):
 
     def test_semantic_main_and_modal_accessibility_do_not_change_layout(self):
         about = self.client.get(reverse("about"))
-        flowers = self.client.get(reverse("flowers"))
+        catalog = self.client.get(reverse("bakery"))
 
-        self.assertEqual(flowers.content.decode().count("<main"), 1)
+        self.assertEqual(catalog.content.decode().count("<main"), 1)
         self.assertNotContains(about, "product-modal.css")
-        self.assertContains(flowers, "product-modal.css")
-        self.assertContains(flowers, 'aria-label="بستن پنجره محصول"')
-        self.assertContains(flowers, 'aria-labelledby="zad-product-modal-title"')
+        self.assertContains(catalog, "product-modal.css")
+        self.assertContains(catalog, 'aria-label="بستن پنجره محصول"')
+        self.assertContains(catalog, 'aria-labelledby="zad-product-modal-title"')
 
     def test_rendered_public_pages_reserve_image_dimensions(self):
         for route in ("index", "flowers", "events", "about", "faq"):

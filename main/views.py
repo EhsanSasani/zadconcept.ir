@@ -21,11 +21,11 @@ from django.views.decorators.http import require_POST
 
 from .forms import LeadRequestForm
 from .models import (
+    BAKERY_WEDDING_CATEGORY_SLUGS,
     Category,
     Event,
     FLOWER_CATEGORY_SLUGS,
-    FLOWER_OCCASION_TAG_SLUGS,
-    Flower,
+    FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
     HeroFont,
     HomeHeroSlide,
     NewsPost,
@@ -35,6 +35,8 @@ from .models import (
     SAME_DAY_TAG_SLUG,
     SiteHero,
     Tag,
+    WEDDING_LEGACY_TAG_SLUGS,
+    WeddingPageContent,
     WorkshopPageContent,
 )
 from .seo import (
@@ -59,6 +61,16 @@ from .site_content import (
 
 
 security_logger = logging.getLogger("main.security")
+
+WEDDING_FLOWER_LEGACY_SLUGS = frozenset(
+    (
+        *FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+        *WEDDING_LEGACY_TAG_SLUGS,
+    )
+)
+WEDDING_BAKERY_LEGACY_SLUGS = frozenset(
+    (*BAKERY_WEDDING_CATEGORY_SLUGS, *WEDDING_LEGACY_TAG_SLUGS)
+)
 
 LEGACY_FLOWER_BRAND_PHRASES = (
     "گل‌های زاد",
@@ -868,11 +880,9 @@ def _default_context(
 # =========================
 
 def _published_products():
-    return Product.objects.filter(
-        is_active=True,
-        publish_status=Product.PublishStatus.PUBLISHED,
-        category__is_active=True,
-    )
+    """Return only products that belong to the public general catalog."""
+
+    return Product.objects.for_general_catalog().published()
 
 
 def _published_products_for_section(section):
@@ -885,7 +895,7 @@ def _published_products_for_section(section):
 
 
 def _active_categories_for_section(section):
-    queryset = Category.objects.filter(
+    queryset = Category.objects.for_general_catalog().filter(
         section=section,
         is_active=True,
         parent__isnull=True,
@@ -1127,11 +1137,9 @@ def _occasion_card(tag, *, for_flowers=False):
 
 
 def _active_occasion_tags(limit=None):
-    queryset = Tag.objects.filter(
+    queryset = Tag.objects.for_general_catalog().filter(
         is_occasion=True,
         is_active=True,
-    ).exclude(
-        Q(slug="wedding") | Q(name="عروسی")
     ).order_by("sort_order", "name")
 
     if limit:
@@ -1202,7 +1210,7 @@ def _filter_links_for_categories(
 def _flower_type_cards():
     categories = {
         category.slug: category
-        for category in Category.objects.filter(
+        for category in Category.objects.for_general_catalog().filter(
             section=Category.Section.FLOWERS,
             is_active=True,
             parent__isnull=True,
@@ -1212,7 +1220,7 @@ def _flower_type_cards():
 
     cards = []
 
-    for slug in ("hand-bouquet", "box", "bouquet", "stand", "wedding"):
+    for slug in ("hand-bouquet", "box", "bouquet", "stand"):
         category = categories.get(slug)
         if category:
             cards.append(_category_card(category))
@@ -1291,15 +1299,14 @@ def index(request):
         ).order_by("start_at")[:3]
     )
     home_same_day_products = (
-        Product.objects
+        Product.objects.for_general_catalog()
+        .published()
         .filter(
             Q(tags__slug=SAME_DAY_TAG_SLUG)
             | Q(tags__slug="same-day")
             | Q(tags__name="ارسال روز")
             | Q(tags__name="ارسال فوری"),
             category__section=Category.Section.FLOWERS,
-            is_active=True,
-            publish_status=Product.PublishStatus.PUBLISHED,
         )
         .select_related("category")
         .prefetch_related("tags")
@@ -1325,6 +1332,105 @@ def index(request):
     )
 
     return render(request, "index.html", context)
+
+
+# =========================
+# Weddings
+# =========================
+
+def _published_wedding_products(wedding_type):
+    return list(
+        Product.objects.valid_weddings()
+        .published()
+        .filter(wedding_type=wedding_type)
+        .select_related("category")
+        .prefetch_related("tags")
+        .order_by(
+            "wedding_sort_order",
+            "sort_order",
+            "-created_at",
+            "id",
+        )
+    )
+
+
+def weddings(request):
+    try:
+        managed_content = WeddingPageContent.current()
+    except DatabaseError:
+        # Keep the public route renderable during a rolling deploy before the
+        # wedding content migration has reached every application instance.
+        managed_content = None
+
+    wedding_content = managed_content or WeddingPageContent()
+
+    try:
+        wedding_gallery = (
+            list(wedding_content.gallery_images.all())
+            if wedding_content.pk
+            else []
+        )
+    except DatabaseError:
+        wedding_gallery = []
+
+    try:
+        bridal_bouquets = _published_wedding_products(
+            Product.WeddingType.BRIDAL_BOUQUET
+        )
+        wedding_cars = _published_wedding_products(Product.WeddingType.WEDDING_CAR)
+        proposal_bouquets = _published_wedding_products(
+            Product.WeddingType.PROPOSAL_BOUQUET
+        )
+        proposal_sweets = _published_wedding_products(
+            Product.WeddingType.PROPOSAL_SWEETS
+        )
+    except DatabaseError:
+        # Product Wedding fields and the managed page are introduced together;
+        # keep the route available while a rolling deployment applies them.
+        bridal_bouquets = []
+        wedding_cars = []
+        proposal_bouquets = []
+        proposal_sweets = []
+
+    meta_title = (
+        wedding_content.seo_title.strip()
+        if wedding_content.seo_title
+        else "محصولات عروسی، خواستگاری و بله‌برون در مشهد | زاد"
+    )
+    meta_description = (
+        wedding_content.meta_description.strip()
+        if wedding_content.meta_description
+        else (
+            "مجموعه اختصاصی زاد برای دسته‌گل عروس، گل‌آرایی ماشین عروس، "
+            "دسته‌گل و شیرینی خواستگاری و بله‌برون در مشهد."
+        )
+    )
+    social_image = wedding_content.open_graph_image or wedding_content.hero_image
+
+    context = _default_context(
+        request,
+        page_type="weddings",
+        active_nav="weddings",
+        meta_title=meta_title,
+        meta_description=meta_description,
+        enable_product_modal=True,
+        schema_type="CollectionPage",
+        social_image=social_image or None,
+        suppress_default_hero=True,
+    )
+    context.update(
+        {
+            "wedding_content": wedding_content,
+            "wedding_gallery": wedding_gallery,
+            "wedding_steps": wedding_content.steps,
+            "bridal_bouquets": bridal_bouquets,
+            "wedding_cars": wedding_cars,
+            "proposal_bouquets": proposal_bouquets,
+            "proposal_sweets": proposal_sweets,
+        }
+    )
+
+    return render(request, "weddings.html", context)
 
 # =========================
 # Section pages
@@ -1413,7 +1519,6 @@ FLOWER_TYPE_SLUGS = [
     "bouquet",
     "jarl",
     "stand",
-    "wedding",
     "plants",
 ]
 
@@ -1423,8 +1528,6 @@ FLOWER_OCCASION_SLUGS = [
     "congratulation",
     "apology",
     "condolence",
-    "proposal",
-    "engagement",
     "no-occasion",
 ]
 
@@ -1469,7 +1572,7 @@ def _sort_by_slug_order(items, slug_order):
 
 def _flower_occasion_cards():
     tags = list(
-        Tag.objects.filter(
+        Tag.objects.for_general_catalog().filter(
             is_active=True,
             is_occasion=True,
             slug__in=FLOWER_OCCASION_SLUGS,
@@ -1515,7 +1618,6 @@ FLOWER_FILTER_ORDER = [
     "bouquet",
     "jarl",
     "stand",
-    "wedding",
     "plants",
 ]
 
@@ -1531,7 +1633,10 @@ def _collection_landing_page(
     landing = COLLECTION_LANDING_CONTENT[section]
 
     products_qs = _published_products_for_section(section)
-    categories_qs = Category.objects.filter(section=section, is_active=True)
+    categories_qs = Category.objects.for_general_catalog().filter(
+        section=section,
+        is_active=True,
+    )
     if directory_only:
         categories_qs = categories_qs.filter(parent__isnull=True)
 
@@ -1691,7 +1796,7 @@ def _section_all_products(request, section):
     )
 
     categories = list(
-        Category.objects.filter(
+        Category.objects.for_general_catalog().filter(
             section=section,
             is_active=True,
             children__isnull=True,
@@ -1703,7 +1808,7 @@ def _section_all_products(request, section):
 
     if selected_slug:
         selected_category = get_object_or_404(
-            Category,
+            Category.objects.for_general_catalog(),
             section=section,
             slug=selected_slug,
             is_active=True,
@@ -1767,10 +1872,10 @@ def _section_all_products(request, section):
 
 def flowers_same_day(request):
     products = (
-        Product.objects.filter(
+        Product.objects.for_general_catalog()
+        .published()
+        .filter(
             category__section=Category.Section.FLOWERS,
-            is_active=True,
-            publish_status=Product.PublishStatus.PUBLISHED,
             tags__slug__in=SAME_DAY_TAG_SLUGS,
         )
         .select_related("category")
@@ -1843,7 +1948,7 @@ def gifts_all(request):
 
 def _section_subcategory(request, section, subcategory_slug):
     category = get_object_or_404(
-        Category,
+        Category.objects.for_general_catalog(),
         section=section,
         slug=subcategory_slug,
         is_active=True,
@@ -1924,6 +2029,9 @@ def _section_subcategory(request, section, subcategory_slug):
 
 
 def flower_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_FLOWER_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
     canonical_slug = CATEGORY_SLUG_ALIASES.get(subcategory_slug, subcategory_slug)
 
     if canonical_slug != subcategory_slug:
@@ -1933,6 +2041,9 @@ def flower_subcategory(request, subcategory_slug):
 
 
 def bakery_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_BAKERY_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
     return _section_subcategory(request, Category.Section.BAKERY, subcategory_slug)
 
 
@@ -1941,11 +2052,11 @@ def gift_subcategory(request, subcategory_slug):
 
 
 def flower_occasion(request, slug):
-    if slug == "wedding":
-        return redirect("flower_subcategory", subcategory_slug="wedding", permanent=True)
+    if slug in WEDDING_LEGACY_TAG_SLUGS:
+        return redirect("weddings", permanent=True)
 
     occasion = get_object_or_404(
-        Tag,
+        Tag.objects.for_general_catalog(),
         slug=slug,
         is_occasion=True,
         is_active=True,
@@ -1964,7 +2075,7 @@ def flower_occasion(request, slug):
     )
 
     available_categories = list(
-        Category.objects.filter(
+        Category.objects.for_general_catalog().filter(
             pk__in=available_category_ids,
             is_active=True,
         ).order_by("sort_order", "name")
@@ -1976,7 +2087,7 @@ def flower_occasion(request, slug):
 
     if selected_slug:
         selected_category = get_object_or_404(
-            Category,
+            Category.objects.for_general_catalog(),
             section=Category.Section.FLOWERS,
             slug=selected_slug,
             is_active=True,
@@ -2067,63 +2178,106 @@ def _item_detail_context(request, product):
     category = product.category
     category_name = category.name if category else "Product"
     section = category.section if category else ""
-    active_nav = section if section in SECTION_CONTENT else ""
-
     subcategory_url = None
     subcategory_label = None
-
-    if category and category.section in SECTION_CATEGORY_ROUTE_NAMES:
-        subcategory_url = _section_category_url(category)
-        subcategory_label = category.name
-
     breadcrumbs = [{"name": "Home", "url": reverse("index")}]
 
-    if section and section in SECTION_CONTENT:
-        breadcrumbs.append(
-            {
-                "name": SECTION_CONTENT[section]["title"],
-                "url": reverse(section),
-            }
-        )
+    if product.is_wedding:
+        active_nav = "weddings"
+        section_label = "Weddings"
+        category_url = reverse("weddings")
+        breadcrumbs.append({"name": "عروسی", "url": category_url})
 
-    if category and category.parent_id:
-        breadcrumbs.append(
-            {
-                "name": category.parent.name,
-                "url": _section_category_url(category.parent),
-            }
-        )
-
-    if subcategory_url and subcategory_label:
-        breadcrumbs.append(
-            {
-                "name": subcategory_label,
-                "url": subcategory_url,
-            }
-        )
-
-    breadcrumbs.append({"name": product.seo_name, "url": None})
-
-    similar_items = list(
-        _published_products()
-        .filter(category=category)
-        .exclude(pk=product.pk)
-        .select_related("category")
-        .prefetch_related("tags")
-        .order_by("-featured", "sort_order", "-created_at")[:6]
-    )
-
-    if len(similar_items) < 3 and section:
-        extra_items = list(
-            _published_products()
-            .filter(category__section=section)
+        wedding_related = (
+            Product.objects.valid_weddings()
+            .published()
             .exclude(pk=product.pk)
-            .exclude(pk__in=[item.pk for item in similar_items])
             .select_related("category")
             .prefetch_related("tags")
-            .order_by("-featured", "sort_order", "-created_at")[: 6 - len(similar_items)]
         )
-        similar_items.extend(extra_items)
+        similar_items = list(
+            wedding_related.filter(wedding_type=product.wedding_type).order_by(
+                "wedding_sort_order",
+                "sort_order",
+                "-created_at",
+                "id",
+            )[:6]
+        )
+        if len(similar_items) < 6:
+            extra_items = list(
+                wedding_related.exclude(
+                    pk__in=[item.pk for item in similar_items]
+                ).order_by(
+                    "wedding_sort_order",
+                    "sort_order",
+                    "-created_at",
+                    "id",
+                )[: 6 - len(similar_items)]
+            )
+            similar_items.extend(extra_items)
+    else:
+        active_nav = section if section in SECTION_CONTENT else ""
+        section_label = (
+            SECTION_CONTENT[section]["nav"].title()
+            if section in SECTION_CONTENT
+            else "Collection"
+        )
+        category_url = (
+            reverse(section) if section in SECTION_CONTENT else reverse("index")
+        )
+
+        if category and category.section in SECTION_CATEGORY_ROUTE_NAMES:
+            subcategory_url = _section_category_url(category)
+            subcategory_label = category.name
+
+        if section and section in SECTION_CONTENT:
+            breadcrumbs.append(
+                {
+                    "name": SECTION_CONTENT[section]["title"],
+                    "url": category_url,
+                }
+            )
+
+        if category and category.parent_id:
+            breadcrumbs.append(
+                {
+                    "name": category.parent.name,
+                    "url": _section_category_url(category.parent),
+                }
+            )
+
+        if subcategory_url and subcategory_label:
+            breadcrumbs.append(
+                {
+                    "name": subcategory_label,
+                    "url": subcategory_url,
+                }
+            )
+
+        similar_items = list(
+            _published_products()
+            .filter(category=category)
+            .exclude(pk=product.pk)
+            .select_related("category")
+            .prefetch_related("tags")
+            .order_by("-featured", "sort_order", "-created_at")[:6]
+        )
+
+        if len(similar_items) < 3 and section:
+            extra_items = list(
+                _published_products()
+                .filter(category__section=section)
+                .exclude(pk=product.pk)
+                .exclude(pk__in=[item.pk for item in similar_items])
+                .select_related("category")
+                .prefetch_related("tags")
+                .order_by("-featured", "sort_order", "-created_at")[
+                    : 6 - len(similar_items)
+                ]
+            )
+            similar_items.extend(extra_items)
+
+    breadcrumbs.append({"name": product.seo_name, "url": None})
 
     description = product.seo_description
 
@@ -2159,8 +2313,8 @@ def _item_detail_context(request, product):
         {
             "product": product,
             "category_name": category_name,
-            "section_label": SECTION_CONTENT[section]["nav"].title() if section in SECTION_CONTENT else "Collection",
-            "category_url": reverse(section) if section in SECTION_CONTENT else reverse("index"),
+            "section_label": section_label,
+            "category_url": category_url,
             "subcategory_url": subcategory_url,
             "subcategory_label": subcategory_label,
             "similar_items": similar_items,
@@ -2178,7 +2332,7 @@ def _item_detail_context(request, product):
 
 def product_detail(request, pk: int, slug: str):
     product = get_object_or_404(
-        _published_products()
+        Product.objects.published()
         .select_related("category", "category__parent")
         .prefetch_related("tags", "gallery_images"),
         pk=pk,
@@ -2189,14 +2343,20 @@ def product_detail(request, pk: int, slug: str):
 
 def _section_product_detail(request, section, category_slug, slug):
     product = get_object_or_404(
-        _published_products()
-        .filter(category__section=section)
+        Product.objects.published()
         .select_related("category", "category__parent")
         .prefetch_related("tags", "gallery_images"),
         slug=slug,
     )
 
-    if product.category.slug != category_slug:
+    canonical_section = product.canonical_section or product.category.section
+    canonical_category_slug = (
+        product.canonical_category_slug or product.category.slug
+    )
+    if (
+        canonical_section != section
+        or canonical_category_slug != category_slug
+    ):
         return redirect(product.get_absolute_url(), permanent=True)
 
     return render(request, "item_detail.html", _item_detail_context(request, product))
@@ -2216,10 +2376,8 @@ def gift_product_detail(request, category_slug, slug):
 
 def flower_detail(request, pk: int, slug: str):
     flower = get_object_or_404(
-        Flower.objects.filter(
-            is_active=True,
-            publish_status=Product.PublishStatus.PUBLISHED,
-        )
+        Product.objects.published()
+        .filter(category__section=Category.Section.FLOWERS)
         .select_related("category")
         .prefetch_related("tags", "gallery_images"),
         pk=pk,
@@ -2230,9 +2388,8 @@ def flower_detail(request, pk: int, slug: str):
 
 def flower_detail_redirect(request, pk: int):
     flower = get_object_or_404(
-        Flower.objects.filter(
-            is_active=True,
-            publish_status=Product.PublishStatus.PUBLISHED,
+        Product.objects.published().filter(
+            category__section=Category.Section.FLOWERS,
         ),
         pk=pk,
     )
@@ -2283,11 +2440,11 @@ def occasions(request):
 
 
 def occasion_detail(request, slug):
-    if slug == "wedding":
-        return redirect("flower_subcategory", subcategory_slug="wedding", permanent=True)
+    if slug in WEDDING_LEGACY_TAG_SLUGS:
+        return redirect("weddings", permanent=True)
 
     occasion = get_object_or_404(
-        Tag,
+        Tag.objects.for_general_catalog(),
         slug=slug,
         is_occasion=True,
         is_active=True,
@@ -2307,7 +2464,7 @@ def occasion_detail(request, slug):
         base_products_qs.values_list("category_id", flat=True).distinct()
     )
     available_categories = list(
-        Category.objects.filter(
+        Category.objects.for_general_catalog().filter(
             pk__in=available_category_ids,
             is_active=True,
         ).order_by("section", "sort_order", "name")
@@ -2328,7 +2485,10 @@ def occasion_detail(request, slug):
         if selected_section:
             category_lookup["section"] = selected_section
 
-        selected_category = get_object_or_404(Category, **category_lookup)
+        selected_category = get_object_or_404(
+            Category.objects.for_general_catalog(),
+            **category_lookup,
+        )
         products_qs = products_qs.filter(category=selected_category)
 
     products = list(products_qs[:48])

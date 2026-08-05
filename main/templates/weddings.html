@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}page-weddings{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/flowers-landing.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'main/css/weddings.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="weddings-shell" dir="rtl">
+  <section class="weddings-hero" aria-labelledby="weddings-title">
+    <div class="weddings-hero__media">
+      <picture>
+        {% if wedding_content.hero_mobile_image %}
+          <source media="(max-width: 760px)" srcset="{{ wedding_content.hero_mobile_image.url }}">
+        {% endif %}
+        {% if wedding_content.hero_image %}
+          <img src="{{ wedding_content.hero_image.url }}" alt="{{ wedding_content.hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+        {% else %}
+          <img src="{% static 'main/img/flowers-hero.webp' %}" alt="{{ wedding_content.hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+        {% endif %}
+      </picture>
+    </div>
+    <div class="weddings-hero__veil" aria-hidden="true"></div>
+    <div class="container weddings-hero__content">
+      <span class="weddings-kicker">ZAD WEDDINGS</span>
+      <h1 id="weddings-title">{{ wedding_content.hero_title }}</h1>
+      {% if wedding_content.hero_text %}<p>{{ wedding_content.hero_text }}</p>{% endif %}
+      <a class="weddings-hero__scroll" href="#proposal-and-bale-boroon">
+        مشاهده مجموعه‌ها
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="weddings-section weddings-section--proposal" id="proposal-and-bale-boroon" aria-labelledby="proposal-title">
+    <div class="container weddings-container">
+      <header class="weddings-section__head">
+        <span class="weddings-kicker">PROPOSAL &amp; BALE BOROON</span>
+        <h2 id="proposal-title">{{ wedding_content.proposal_title }}</h2>
+        {% if wedding_content.proposal_text %}<p>{{ wedding_content.proposal_text }}</p>{% endif %}
+      </header>
+
+      {% if proposal_bouquets or proposal_sweets %}
+        <div class="weddings-collections">
+          {% if proposal_bouquets %}
+            <section class="weddings-collection" aria-labelledby="proposal-bouquets-title">
+              <div class="weddings-collection__head">
+                <span>01</span>
+                <div>
+                  <h3 id="proposal-bouquets-title">دسته‌گل خواستگاری و بله‌برون</h3>
+                  <p>انتخاب‌های گل با ترکیب و رنگ‌بندی هماهنگ برای آغاز این مسیر.</p>
+                </div>
+              </div>
+              <div class="flowers-grid weddings-product-grid">
+                {% include "partials/product_card.html" with products=proposal_bouquets card_variant="landing" fallback_image="main/img/cat-flowers.webp" %}
+              </div>
+            </section>
+          {% endif %}
+
+          {% if proposal_sweets %}
+            <section class="weddings-collection" aria-labelledby="proposal-sweets-title">
+              <div class="weddings-collection__head">
+                <span>02</span>
+                <div>
+                  <h3 id="proposal-sweets-title">شیرینی خواستگاری و بله‌برون</h3>
+                  <p>شیرینی‌های منتخب برای پذیرایی و هدیه، هماهنگ با حال‌وهوای مراسم.</p>
+                </div>
+              </div>
+              <div class="flowers-grid weddings-product-grid">
+                {% include "partials/product_card.html" with products=proposal_sweets card_variant="landing" fallback_image="main/img/cat-bakery.webp" %}
+              </div>
+            </section>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="weddings-transition" aria-labelledby="weddings-transition-title">
+    <div class="container weddings-transition__inner">
+      <span aria-hidden="true">✦</span>
+      <div>
+        <h2 id="weddings-transition-title">{{ wedding_content.transition_title }}</h2>
+        {% if wedding_content.transition_text %}<p>{{ wedding_content.transition_text }}</p>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="weddings-section weddings-section--day" id="wedding-day" aria-labelledby="wedding-day-title">
+    <div class="container weddings-container">
+      <header class="weddings-section__head">
+        <span class="weddings-kicker">THE WEDDING DAY</span>
+        <h2 id="wedding-day-title">{{ wedding_content.wedding_day_title }}</h2>
+        {% if wedding_content.wedding_day_text %}<p>{{ wedding_content.wedding_day_text }}</p>{% endif %}
+      </header>
+
+      {% if bridal_bouquets or wedding_cars %}
+        <div class="weddings-collections">
+          {% if bridal_bouquets %}
+            <section class="weddings-collection" aria-labelledby="bridal-bouquets-title">
+              <div class="weddings-collection__head">
+                <span>03</span>
+                <div>
+                  <h3 id="bridal-bouquets-title">دسته‌گل عروس</h3>
+                  <p>دسته‌گل‌هایی با طراحی اختصاصی برای استایل و رنگ‌بندی روز عروسی.</p>
+                </div>
+              </div>
+              <div class="flowers-grid weddings-product-grid">
+                {% include "partials/product_card.html" with products=bridal_bouquets card_variant="landing" fallback_image="main/img/sub-bridal-bouquet.webp" %}
+              </div>
+            </section>
+          {% endif %}
+
+          {% if wedding_cars %}
+            <section class="weddings-collection" aria-labelledby="wedding-cars-title">
+              <div class="weddings-collection__head">
+                <span>04</span>
+                <div>
+                  <h3 id="wedding-cars-title">ماشین عروس</h3>
+                  <p>گل‌آرایی هماهنگ و اختصاصی متناسب با خودرو، فصل و پالت مراسم.</p>
+                </div>
+              </div>
+              <div class="flowers-grid weddings-product-grid">
+                {% include "partials/product_card.html" with products=wedding_cars card_variant="landing" fallback_image="main/img/sub-stand.webp" %}
+              </div>
+            </section>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if wedding_gallery %}
+    <section class="weddings-gallery" aria-labelledby="weddings-gallery-title">
+      <div class="container weddings-container">
+        <header class="weddings-section__head weddings-section__head--light">
+          <span class="weddings-kicker">ZAD WEDDING STORIES</span>
+          <h2 id="weddings-gallery-title">{{ wedding_content.gallery_title }}</h2>
+        </header>
+        <div class="weddings-gallery__grid">
+          {% for gallery_item in wedding_gallery %}
+            <figure class="weddings-gallery__item{% if forloop.first %} weddings-gallery__item--wide{% endif %}">
+              <img src="{{ gallery_item.image.url }}" alt="{{ gallery_item.alt_text|default:wedding_content.gallery_title }}" width="960" height="1200" loading="lazy" decoding="async">
+            </figure>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if wedding_steps %}
+    <section class="weddings-steps" aria-labelledby="weddings-steps-title">
+      <div class="container weddings-container">
+        <header class="weddings-section__head">
+          <span class="weddings-kicker">HOW TO ORDER</span>
+          <h2 id="weddings-steps-title">{{ wedding_content.steps_title }}</h2>
+        </header>
+        <ol class="weddings-steps__list">
+          {% for step in wedding_steps %}
+            <li>
+              <span>{{ forloop.counter|stringformat:"02d" }}</span>
+              <p>{{ step }}</p>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="weddings-cta" aria-labelledby="weddings-cta-title">
+    <div class="container weddings-cta__inner">
+      <span class="weddings-kicker">PERSONAL COORDINATION</span>
+      <h2 id="weddings-cta-title">{{ wedding_content.cta_title }}</h2>
+      {% if wedding_content.cta_text %}<p>{{ wedding_content.cta_text }}</p>{% endif %}
+      <div class="weddings-cta__actions">
+        <a class="btn btn-call" href="{{ wedding_content.contact_url|default:site_call_href }}">
+          <i class="bi bi-telephone" aria-hidden="true"></i>
+          تماس با زاد
+        </a>
+        <a class="btn btn-telegram" href="{{ wedding_content.telegram_url|default:site_telegram_url }}" target="_blank" rel="noopener">
+          <i class="bi bi-telegram" aria-hidden="true"></i>
+          هماهنگی در تلگرام
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

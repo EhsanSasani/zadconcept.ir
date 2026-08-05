@@ -21,6 +21,8 @@
     "wedding": "WEDDING",
     "wedding-car": "WEDDING CAR",
     "bridal-bouquet": "BRIDAL BOUQUET",
+    "proposal-bale-boroon-bouquet": "PROPOSAL BOUQUET",
+    "proposal-bale-boroon-sweets": "PROPOSAL SWEETS",
     "stand": "STAND",
     "plants": "PLANTS",
     "bakery": "BAKERY",

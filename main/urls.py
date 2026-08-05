@@ -14,6 +14,9 @@ urlpatterns = [
     # Home
     path("", views.index, name="index"),
 
+    # Weddings
+    path("weddings/", views.weddings, name="weddings"),
+
     # Flowers
     path("flowers/", views.flowers, name="flowers"),
     path("flowers/all/", views.flowers_all, name="flowers_all"),
