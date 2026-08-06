@@ -1,0 +1,89 @@
+/* Wedding page admin: compact, readable, and focused on fields still rendered publicly. */
+.change-form .wedding-admin-guide .form-row {
+  padding: 0;
+}
+
+.wedding-admin-guide__content {
+  padding: 16px 18px;
+  border: 1px solid #d8c5a7;
+  border-radius: 10px;
+  background: #fffaf2;
+  color: #332b22;
+  line-height: 1.9;
+}
+
+.wedding-admin-guide__content strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.wedding-admin-guide__content ol {
+  margin: 0 1.25rem 8px 0;
+  padding: 0;
+}
+
+.wedding-admin-guide__content p {
+  margin: 8px 0 0;
+  color: #6b5b49;
+}
+
+.change-form fieldset.module {
+  margin-bottom: 18px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.change-form fieldset.module > h2 {
+  padding: 11px 14px;
+  font-size: 0.95rem;
+}
+
+.change-form .form-row textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.change-form .help,
+.change-form p.help {
+  margin-top: 6px;
+  line-height: 1.7;
+  color: #6a6259;
+}
+
+.inline-group {
+  margin-top: 24px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.inline-group .tabular td,
+.inline-group .tabular th {
+  vertical-align: middle;
+}
+
+.inline-group .field-image_preview img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.inline-group input[type="number"] {
+  width: 90px;
+}
+
+.inline-group input[type="text"] {
+  min-width: 220px;
+}
+
+@media (max-width: 767px) {
+  .wedding-admin-guide__content {
+    padding: 13px;
+  }
+
+  .inline-group .tabular td,
+  .inline-group .tabular th {
+    min-width: 130px;
+  }
+}

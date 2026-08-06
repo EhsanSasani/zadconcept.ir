@@ -1,0 +1,151 @@
+/* Option 02 — Editorial Line
+   Fonts are already local in base.css:
+   Persian: EstedadLocal
+   English: PlusJakartaSans
+*/
+
+.weddings-intro {
+  padding-block: 0 clamp(72px, 8vw, 112px);
+  text-align: initial;
+}
+
+.weddings-intro--proposal {
+  padding-bottom: clamp(72px, 8vw, 112px);
+}
+
+.weddings-directory--wedding-day {
+  padding-block: clamp(66px, 7vw, 100px) clamp(72px, 8vw, 112px);
+}
+
+.weddings-editorial-heading {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 178px minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 58px);
+  min-height: 154px;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-block: 23px 15px;
+}
+
+.weddings-editorial-heading__en {
+  display: grid;
+  gap: 7px;
+  align-content: center;
+  color: #756f66;
+  font-family: "PlusJakartaSans", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .26em;
+  line-height: 1.65;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.weddings-editorial-heading__stage {
+  position: relative;
+  min-width: 0;
+  height: 100px;
+}
+
+.weddings-editorial-heading__line {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.weddings-editorial-heading__line-base,
+.weddings-editorial-heading__line-flourish {
+  fill: none;
+  stroke: rgba(124, 113, 100, .72);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+.weddings-editorial-heading__line-dot {
+  fill: #c49a61;
+}
+
+.weddings-editorial-heading :is(h1, h2) {
+  position: absolute;
+  z-index: 1;
+  top: 27px;
+  right: 46px;
+  max-width: min(67%, 620px);
+  margin: 0;
+  padding: 0 13px 5px;
+  color: #211f1b;
+  background: #fffaf4;
+  font-family: "EstedadLocal", "VazirmatnLocal", Tahoma, sans-serif;
+  font-size: clamp(2rem, 3.1vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -.055em;
+  line-height: 1.35;
+  text-align: right;
+  text-wrap: balance;
+}
+
+.weddings-editorial-heading--wedding-day h2 {
+  background: var(--wedding-paper);
+}
+
+.weddings-intro--proposal .weddings-directory__grid,
+.weddings-directory--wedding-day .weddings-directory__grid {
+  margin-top: clamp(27px, 3.4vw, 43px);
+}
+
+@media (max-width: 900px) {
+  .weddings-editorial-heading {
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: 24px;
+    min-height: 138px;
+  }
+
+  .weddings-editorial-heading :is(h1, h2) {
+    right: 28px;
+    max-width: 72%;
+    font-size: clamp(1.85rem, 4.8vw, 2.55rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .weddings-editorial-heading {
+    position: relative;
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 112px;
+    padding-block: 14px 4px;
+  }
+
+  .weddings-editorial-heading__en {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    z-index: 2;
+    gap: 3px;
+    font-size: 7px;
+    letter-spacing: .21em;
+  }
+
+  .weddings-editorial-heading__stage {
+    height: 94px;
+  }
+
+  .weddings-editorial-heading :is(h1, h2) {
+    top: 31px;
+    right: 16px;
+    max-width: 77%;
+    padding-inline: 8px;
+    font-size: clamp(1.62rem, 7.1vw, 2.12rem);
+    letter-spacing: -.045em;
+  }
+
+  .weddings-intro--proposal .weddings-directory__grid,
+  .weddings-directory--wedding-day .weddings-directory__grid {
+    margin-top: 20px;
+  }
+}

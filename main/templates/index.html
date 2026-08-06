@@ -30,7 +30,7 @@
             {% if slide.kicker %}
               <span class="hero-slide__kicker" data-hero-kicker>{{ slide.kicker }}</span>
             {% endif %}
-            <h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>
+            {% if slide.title %}<h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>{% endif %}
             {% if slide.description %}
               <p class="hero-slide__description" data-hero-text>{{ slide.description }}</p>
             {% endif %}

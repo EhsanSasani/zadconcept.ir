@@ -42,7 +42,7 @@
 
     <div class="container about-hero__inner" data-hero-content>
       <p class="about-eyebrow about-eyebrow--light" data-page-hero-kicker>{% if has_managed_site_hero %}{{ about_hero_kicker }}{% else %}{{ page_content.hero.kicker|default:about_hero_kicker }}{% endif %}</p>
-      <h1 id="about-hero-title" data-page-hero-title>{% if has_managed_site_hero %}{{ about_hero_title }}{% else %}{{ page_content.hero.title|default:about_hero_title }}{% endif %}</h1>
+      {% if about_hero_title %}<h1 id="about-hero-title" data-page-hero-title>{{ about_hero_title }}</h1>{% endif %}
       <p class="about-hero__lead" data-page-hero-text>{% if has_managed_site_hero %}{{ about_hero_text }}{% else %}{{ page_content.hero.body|default:about_hero_text }}{% endif %}</p>
 
       <div class="about-actions">

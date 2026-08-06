@@ -1,0 +1,333 @@
+/* =====================================================
+   Wedding collection pages — minimal editorial catalogue
+   Shared by all four Wedding collection pages.
+   ===================================================== */
+
+.page-wedding-collection,
+.wedding-collection-page {
+  background: #fbf7f1;
+}
+
+.wedding-collection-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.wedding-collection-container {
+  width: min(100% - 48px, 1280px);
+  margin-inline: auto;
+}
+
+/* Intro — no hero image */
+.wedding-collection-intro {
+  position: relative;
+  isolation: isolate;
+  padding: 92px 0 58px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.72), transparent 54%),
+    #fbf7f1;
+}
+
+.wedding-collection-intro::before,
+.wedding-collection-intro::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 250px;
+  height: 250px;
+  opacity: 0.22;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
+}
+
+.wedding-collection-intro::before {
+  top: 22px;
+  right: max(20px, calc((100vw - 1280px) / 2));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23b88955' stroke-width='1.15' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M235 23C187 52 157 94 142 151c-10 38-31 66-65 84'/%3E%3Cpath d='M188 59c-7-23 1-39 23-48 4 23-4 39-23 48Z'/%3E%3Cpath d='M166 91c-24-5-40 4-48 28 25 3 41-6 48-28Z'/%3E%3Cpath d='M148 127c19-15 38-15 57 1-18 16-37 16-57-1Z'/%3E%3Cpath d='M126 166c-23-4-39 7-46 31 24 2 40-9 46-31Z'/%3E%3Cpath d='M103 199c18-15 36-16 55-2-16 17-35 18-55 2Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.wedding-collection-intro::after {
+  left: max(12px, calc((100vw - 1280px) / 2));
+  bottom: -88px;
+  transform: rotate(178deg) scale(0.72);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 260'%3E%3Cg fill='none' stroke='%23b88955' stroke-width='1.05' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M235 23C187 52 157 94 142 151c-10 38-31 66-65 84'/%3E%3Cpath d='M188 59c-7-23 1-39 23-48 4 23-4 39-23 48Z'/%3E%3Cpath d='M166 91c-24-5-40 4-48 28 25 3 41-6 48-28Z'/%3E%3Cpath d='M148 127c19-15 38-15 57 1-18 16-37 16-57-1Z'/%3E%3Cpath d='M126 166c-23-4-39 7-46 31 24 2 40-9 46-31Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.wedding-collection-intro__content {
+  position: relative;
+  max-width: 760px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.wedding-collection-kicker {
+  display: block;
+  margin-bottom: 17px;
+  font-family: var(--font-ui-en);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #b37f49;
+}
+
+.wedding-collection-intro h1 {
+  max-width: 820px;
+  margin: 0 auto;
+  font-size: clamp(38px, 4.6vw, 66px);
+  font-weight: 650;
+  line-height: 1.34;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: #292522;
+}
+
+.wedding-collection-intro p {
+  max-width: 620px;
+  margin: 19px auto 0;
+  font-size: 15px;
+  line-height: 2;
+  color: #71685f;
+  text-wrap: balance;
+}
+
+.wedding-collection-intro__rule {
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 25px auto 0;
+  background: #c99a63;
+}
+
+.wedding-collection-intro__ornament {
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 0 auto 18px;
+  border: 1px solid rgba(179, 127, 73, 0.7);
+  transform: rotate(45deg);
+}
+
+/* Full catalogue — every product is rendered */
+.wedding-collection-products {
+  padding: 28px 0 104px;
+  background: #fbf7f1;
+}
+
+.wedding-collection-grid.flowers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 46px 20px;
+  align-items: start;
+}
+
+.page-wedding-collection .flowers-product-card {
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.page-wedding-collection .flowers-product-card__main {
+  display: block;
+}
+
+.page-wedding-collection .flowers-product-card__media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e8ded2;
+}
+
+.page-wedding-collection .flowers-product-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 520ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.page-wedding-collection .flowers-product-card:hover .flowers-product-card__media img {
+  transform: scale(1.022);
+}
+
+.page-wedding-collection .flowers-product-card__badge {
+  top: 11px;
+  right: 11px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  backdrop-filter: blur(8px);
+}
+
+.page-wedding-collection .flowers-product-card__body {
+  display: block;
+  padding: 14px 1px 0;
+  background: transparent;
+  text-align: right;
+}
+
+.page-wedding-collection .flowers-product-card__type {
+  display: none;
+}
+
+.page-wedding-collection .flowers-product-card__body h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: #302b27;
+}
+
+.page-wedding-collection .flowers-product-card__body > div > p:not(.flowers-product-card__excerpt) {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #756c63;
+}
+
+.page-wedding-collection .flowers-product-card__excerpt,
+.page-wedding-collection .flowers-product-card__arrow {
+  display: none;
+}
+
+/* Empty state */
+.wedding-collection-empty {
+  width: min(100%, 430px);
+  margin: 10px auto 0;
+  padding: 34px 28px;
+  border: 1px solid rgba(174, 128, 78, 0.18);
+  background: rgba(255, 252, 247, 0.62);
+  text-align: center;
+}
+
+.wedding-collection-empty__mark {
+  display: block;
+  margin-bottom: 15px;
+  font-family: var(--font-brand-en);
+  font-size: 18px;
+  letter-spacing: 0.28em;
+  color: #b4824e;
+}
+
+.wedding-collection-empty h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.wedding-collection-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: #776e65;
+}
+
+@media (max-width: 1120px) {
+  .wedding-collection-grid.flowers-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .wedding-collection-container {
+    width: min(100% - 24px, 1280px);
+  }
+
+  .wedding-collection-intro {
+    padding: 54px 0 32px;
+  }
+
+  .wedding-collection-intro::before {
+    top: 4px;
+    right: -70px;
+    width: 190px;
+    height: 190px;
+    opacity: 0.16;
+  }
+
+  .wedding-collection-intro::after {
+    display: none;
+  }
+
+  .wedding-collection-intro__content {
+    max-width: 340px;
+  }
+
+  .wedding-collection-kicker {
+    margin-bottom: 13px;
+    font-size: 8px;
+  }
+
+  .wedding-collection-intro__ornament {
+    margin-bottom: 14px;
+  }
+
+  .wedding-collection-intro h1 {
+    font-size: clamp(31px, 9vw, 42px);
+    line-height: 1.4;
+  }
+
+  .wedding-collection-intro p {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .wedding-collection-intro__rule {
+    margin-top: 19px;
+  }
+
+  .wedding-collection-products {
+    padding: 18px 0 70px;
+  }
+
+  .wedding-collection-grid.flowers-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 10px;
+  }
+
+  .page-wedding-collection .flowers-product-card__media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .page-wedding-collection .flowers-product-card__body {
+    padding-top: 10px;
+  }
+
+  .page-wedding-collection .flowers-product-card__body h3 {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page-wedding-collection .flowers-product-card__body > div > p:not(.flowers-product-card__excerpt) {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+}
+
+/* =====================================================
+   Wedding product cards — code only
+   ===================================================== */
+
+.wedding-product-card__body {
+  min-height: 0;
+  padding: 12px 1px 0 !important;
+  text-align: center !important;
+}
+
+.wedding-product-card__code {
+  display: block;
+  margin: 0;
+  font-family: var(--font-ui-en, sans-serif);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  color: #302b27;
+}
+
+@media (max-width: 760px) {
+  .wedding-product-card__body { padding-top: 9px !important; }
+  .wedding-product-card__code { font-size: 13px; letter-spacing: 0.08em; }
+}

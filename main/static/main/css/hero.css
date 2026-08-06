@@ -375,3 +375,15 @@
     min-height: 720px !important;
   }
 }
+
+
+/* Keep every site hero/banner image unfiltered. */
+.hero-slide__overlay,
+.page-hero__overlay,
+.flowers-hero__overlay,
+.workshops-hero__overlay,
+.about-hero__overlay,
+.weddings-hero__veil {
+  display: none !important;
+  background: none !important;
+}

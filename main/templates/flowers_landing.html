@@ -39,11 +39,13 @@
 
   <div class="flowers-hero__overlay"></div>
 
+  {% if landing_hero_eyebrow or landing_hero_title or landing_hero_text %}
   <div class="flowers-hero__content" data-hero-content>
-    <span class="flowers-hero__eyebrow" data-page-hero-kicker>{% if has_managed_site_hero %}{{ landing_hero_eyebrow }}{% else %}{{ page_content.hero.kicker|default:landing_hero_eyebrow }}{% endif %}</span>
-    <h1 data-page-hero-title>{% if has_managed_site_hero %}{{ landing_hero_title }}{% else %}{{ page_content.hero.title|default:landing_hero_title }}{% endif %}</h1>
-    <p data-page-hero-text>{% if has_managed_site_hero %}{{ landing_hero_text }}{% else %}{{ page_content.hero.body|default:landing_hero_text }}{% endif %}</p>
+    {% if landing_hero_eyebrow %}<span class="flowers-hero__eyebrow" data-page-hero-kicker>{{ landing_hero_eyebrow }}</span>{% endif %}
+    {% if landing_hero_title %}<h1 data-page-hero-title>{{ landing_hero_title }}</h1>{% endif %}
+    {% if landing_hero_text %}<p data-page-hero-text>{{ landing_hero_text }}</p>{% endif %}
   </div>
+  {% endif %}
   {% if page_hero_slides|length > 1 %}
     <button class="page-hero__nav page-hero__nav--prev" type="button" data-page-hero-prev aria-label="اسلاید قبلی">‹</button>
     <button class="page-hero__nav page-hero__nav--next" type="button" data-page-hero-next aria-label="اسلاید بعدی">›</button>

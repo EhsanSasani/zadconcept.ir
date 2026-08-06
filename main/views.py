@@ -36,6 +36,7 @@ from .models import (
     SiteHero,
     Tag,
     WEDDING_LEGACY_TAG_SLUGS,
+    WeddingCollectionContent,
     WeddingPageContent,
     WorkshopPageContent,
 )
@@ -541,7 +542,13 @@ def _get_active_home_hero_slides():
                     slide.secondary_button_text
                 ),
                 "secondary_button_url": slide.secondary_button_url,
-                "show_content": True,
+                "show_content": bool(
+                    slide.title
+                    or slide.kicker
+                    or slide.description
+                    or (slide.primary_button_text and slide.primary_button_url)
+                    or (slide.secondary_button_text and slide.secondary_button_url)
+                ),
                 **_hero_style_payload(slide, "home"),
             }
             for slide in slides
@@ -598,7 +605,7 @@ def _get_active_home_hero_slides():
 
 def _site_hero_payload(hero):
     return {
-        "kicker": _public_brand_copy(hero.kicker or "zad"),
+        "kicker": _public_brand_copy(hero.kicker),
         "title": _public_brand_copy(hero.title),
         "text": _public_brand_copy(hero.description),
         "image": hero.image.url if hero.image else "main/img/hero-2.webp",
@@ -1338,6 +1345,46 @@ def index(request):
 # Weddings
 # =========================
 
+WEDDING_COLLECTIONS = {
+    "proposal-bouquets": {
+        "type": Product.WeddingType.PROPOSAL_BOUQUET,
+        "title": "دسته‌گل خواستگاری و بله‌برون",
+        "short_title": "گل خواستگاری و بله‌برون",
+        "kicker": "PROPOSAL BOUQUETS",
+        "description": "دسته‌گل‌هایی هماهنگ با فضای خواستگاری و بله‌برون؛ با امکان هماهنگی رنگ، فرم و بودجه.",
+        "fallback_image": "main/img/sub-bridal-bouquet.webp",
+        "number": "01",
+    },
+    "proposal-sweets": {
+        "type": Product.WeddingType.PROPOSAL_SWEETS,
+        "title": "شیرینی خواستگاری و بله‌برون",
+        "short_title": "شیرینی خواستگاری",
+        "kicker": "PROPOSAL SWEETS",
+        "description": "شیرینی‌های منتخب برای پذیرایی و هدیه، با امکان هماهنگی تعداد و چیدمان.",
+        "fallback_image": "main/img/cat-bakery.webp",
+        "number": "02",
+    },
+    "bridal-bouquets": {
+        "type": Product.WeddingType.BRIDAL_BOUQUET,
+        "title": "دسته‌گل عروس",
+        "short_title": "دسته‌گل عروس",
+        "kicker": "BRIDAL BOUQUETS",
+        "description": "طراحی دسته‌گل عروس متناسب با استایل، فصل و پالت رنگ روز عروسی.",
+        "fallback_image": "main/img/sub-bridal-bouquet.webp",
+        "number": "03",
+    },
+    "wedding-cars": {
+        "type": Product.WeddingType.WEDDING_CAR,
+        "title": "ماشین عروس",
+        "short_title": "ماشین عروس",
+        "kicker": "WEDDING CARS",
+        "description": "گل‌آرایی اختصاصی خودرو با توجه به مدل ماشین، فصل و سبک مراسم.",
+        "fallback_image": "main/img/sub-stand.webp",
+        "number": "04",
+    },
+}
+
+
 def _published_wedding_products(wedding_type):
     return list(
         Product.objects.valid_weddings()
@@ -1354,16 +1401,13 @@ def _published_wedding_products(wedding_type):
     )
 
 
-def weddings(request):
+def _wedding_content_and_gallery():
     try:
         managed_content = WeddingPageContent.current()
     except DatabaseError:
-        # Keep the public route renderable during a rolling deploy before the
-        # wedding content migration has reached every application instance.
         managed_content = None
 
     wedding_content = managed_content or WeddingPageContent()
-
     try:
         wedding_gallery = (
             list(wedding_content.gallery_images.all())
@@ -1372,25 +1416,49 @@ def weddings(request):
         )
     except DatabaseError:
         wedding_gallery = []
+    return wedding_content, wedding_gallery
 
+
+def _managed_wedding_collection_content(collection_slug):
     try:
-        bridal_bouquets = _published_wedding_products(
-            Product.WeddingType.BRIDAL_BOUQUET
-        )
-        wedding_cars = _published_wedding_products(Product.WeddingType.WEDDING_CAR)
-        proposal_bouquets = _published_wedding_products(
-            Product.WeddingType.PROPOSAL_BOUQUET
-        )
-        proposal_sweets = _published_wedding_products(
-            Product.WeddingType.PROPOSAL_SWEETS
-        )
+        return WeddingCollectionContent.objects.filter(
+            collection_key=collection_slug
+        ).first()
     except DatabaseError:
-        # Product Wedding fields and the managed page are introduced together;
-        # keep the route available while a rolling deployment applies them.
-        bridal_bouquets = []
-        wedding_cars = []
-        proposal_bouquets = []
-        proposal_sweets = []
+        return None
+
+
+def weddings(request):
+    wedding_content, wedding_gallery = _wedding_content_and_gallery()
+
+    collections = []
+    collection_products = []
+    try:
+        for slug, config in WEDDING_COLLECTIONS.items():
+            products = _published_wedding_products(config["type"])
+            collection_products.append(products)
+            collections.append(
+                {
+                    **config,
+                    "slug": slug,
+                    "url": reverse("wedding_collection", args=[slug]),
+                    "preview_product": products[0] if products else None,
+                    "product_count": len(products),
+                }
+            )
+    except DatabaseError:
+        collections = [
+            {
+                **config,
+                "slug": slug,
+                "url": reverse("wedding_collection", args=[slug]),
+                "preview_product": None,
+                "product_count": 0,
+            }
+            for slug, config in WEDDING_COLLECTIONS.items()
+        ]
+        collection_products = []
+
 
     meta_title = (
         wedding_content.seo_title.strip()
@@ -1413,7 +1481,6 @@ def weddings(request):
         active_nav="weddings",
         meta_title=meta_title,
         meta_description=meta_description,
-        enable_product_modal=True,
         schema_type="CollectionPage",
         social_image=social_image or None,
         suppress_default_hero=True,
@@ -1423,14 +1490,87 @@ def weddings(request):
             "wedding_content": wedding_content,
             "wedding_gallery": wedding_gallery,
             "wedding_steps": wedding_content.steps,
-            "bridal_bouquets": bridal_bouquets,
-            "wedding_cars": wedding_cars,
-            "proposal_bouquets": proposal_bouquets,
-            "proposal_sweets": proposal_sweets,
+            "wedding_collections": collections,
         }
     )
-
     return render(request, "weddings.html", context)
+
+
+def wedding_collection(request, collection_slug):
+    config = WEDDING_COLLECTIONS.get(collection_slug)
+    if config is None:
+        raise Http404("Wedding collection not found")
+
+    managed_content = _managed_wedding_collection_content(collection_slug)
+    try:
+        products = _published_wedding_products(config["type"])
+    except DatabaseError:
+        products = []
+
+    if managed_content:
+        hero_kicker = managed_content.hero_kicker
+        hero_title = managed_content.hero_title
+        hero_text = managed_content.hero_text
+        hero_alt_text = managed_content.hero_alt_text
+        hero_image = managed_content.hero_image or None
+        hero_mobile_image = managed_content.hero_mobile_image or None
+        managed_seo_title = (managed_content.seo_title or "").strip()
+        managed_meta_description = (managed_content.meta_description or "").strip()
+    else:
+        hero_kicker = config["kicker"]
+        hero_title = config["title"]
+        hero_text = config["description"]
+        hero_alt_text = config["title"]
+        hero_image = None
+        hero_mobile_image = None
+        managed_seo_title = ""
+        managed_meta_description = ""
+
+    collection_data = {
+        **config,
+        "slug": collection_slug,
+        "hero_kicker": hero_kicker,
+        "hero_title": hero_title,
+        "hero_text": hero_text,
+        "hero_alt_text": hero_alt_text or config["title"],
+        "hero_image": hero_image,
+        "hero_mobile_image": hero_mobile_image,
+    }
+    collection_has_copy = any(
+        value.strip() for value in (hero_kicker or "", hero_title or "", hero_text or "")
+    )
+
+    breadcrumbs = _with_home(
+        [
+            {"name": "عروسی", "url": reverse("weddings")},
+            {"name": config["title"], "url": None},
+        ]
+    )
+    meta_title = managed_seo_title or f"{config['title']} در مشهد | زاد"
+    meta_description = managed_meta_description or config["description"]
+    social_image = hero_image or (products[0].cover_image if products and products[0].cover_image else None)
+
+    context = _default_context(
+        request,
+        page_type="wedding_collection",
+        active_nav="weddings",
+        meta_title=meta_title,
+        meta_description=meta_description,
+        breadcrumbs=breadcrumbs,
+        enable_product_modal=True,
+        schema_type="CollectionPage",
+        social_image=social_image,
+        suppress_default_hero=True,
+    )
+    context.update(
+        {
+            "collection": collection_data,
+            "collection_content": managed_content,
+            "collection_has_copy": collection_has_copy,
+            "products": products,
+        }
+    )
+    return render(request, "wedding_collection.html", context)
 
 # =========================
 # Section pages

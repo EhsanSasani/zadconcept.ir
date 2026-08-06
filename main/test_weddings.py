@@ -220,20 +220,35 @@ class WeddingCatalogIsolationTests(TestCase):
         self.assertContains(same_day, self.general_same_day.name)
         self.assertNotContains(same_day, self.general_flower.name)
 
-    def test_four_typed_products_only_render_in_their_wedding_groups(self):
-        response = self.client.get(reverse("weddings"))
+    def test_landing_links_to_four_collections_and_products_render_only_inside_them(self):
+        landing = self.client.get(reverse("weddings"))
+        self.assertEqual(landing.status_code, 200)
 
-        self.assertEqual(response.status_code, 200)
         expected = {
-            "bridal_bouquets": self.bridal,
-            "wedding_cars": self.car,
-            "proposal_bouquets": self.proposal_bouquet,
-            "proposal_sweets": self.proposal_sweets,
+            "bridal-bouquets": self.bridal,
+            "wedding-cars": self.car,
+            "proposal-bouquets": self.proposal_bouquet,
+            "proposal-sweets": self.proposal_sweets,
         }
-        for context_key, product in expected.items():
-            self.assertIn(product, response.context[context_key])
-            self.assertContains(response, product.name)
-        self.assertNotContains(response, self.review_product.name)
+        self.assertEqual(len(landing.context["wedding_collections"]), 4)
+        for slug, product in expected.items():
+            url = reverse("wedding_collection", args=[slug])
+            self.assertContains(landing, f'href="{url}"')
+            self.assertNotContains(landing, product.name)
+
+            collection = self.client.get(url)
+            self.assertEqual(collection.status_code, 200)
+            self.assertIn(product, collection.context["products"])
+            self.assertContains(collection, product.name)
+            for other in self.wedding_products:
+                if other.pk != product.pk:
+                    self.assertNotContains(collection, other.name)
+
+        self.assertNotContains(landing, self.review_product.name)
+        self.assertEqual(
+            self.client.get(reverse("wedding_collection", args=["unknown"])).status_code,
+            404,
+        )
 
     def test_wedding_products_do_not_leak_to_any_general_surface(self):
         paths = (
@@ -261,11 +276,17 @@ class WeddingCatalogIsolationTests(TestCase):
         self.assertNotIn(self.bridal.pk, valid_ids)
         self.assertNotIn(self.car.pk, valid_ids)
         landing = self.client.get(reverse("weddings"))
+        bridal_collection = self.client.get(
+            reverse("wedding_collection", args=["bridal-bouquets"])
+        )
+        car_collection = self.client.get(
+            reverse("wedding_collection", args=["wedding-cars"])
+        )
         same_day = self.client.get(reverse("flowers_same_day"))
         occasion = self.client.get(
             reverse("occasion_detail", args=[self.birthday.slug])
         )
-        for response in (landing, same_day, occasion):
+        for response in (landing, bridal_collection, car_collection, same_day, occasion):
             self.assertNotContains(response, self.bridal.name)
             self.assertNotContains(response, self.car.name)
 
@@ -307,22 +328,23 @@ class WeddingCatalogIsolationTests(TestCase):
         )
         self.assertContains(response, "WTEST MANAGED SEO TITLE")
         self.assertContains(response, "WTEST managed wedding description")
-        self.assertContains(response, "WTEST MANAGED WEDDING HERO")
-        self.assertContains(response, 'href="tel:+985100000000"')
-        self.assertContains(response, 'href="https://t.me/zad_test"')
+        self.assertNotContains(response, 'href="tel:+985100000000"')
+        self.assertNotContains(response, "PERSONAL COORDINATION")
 
         Product.objects.for_weddings().update(
             publish_status=Product.PublishStatus.DRAFT
         )
         empty = self.client.get(reverse("weddings"))
         self.assertEqual(empty.status_code, 200)
-        for context_key in (
-            "bridal_bouquets",
-            "wedding_cars",
-            "proposal_bouquets",
-            "proposal_sweets",
-        ):
-            self.assertEqual(empty.context[context_key], [])
+        self.assertEqual(len(empty.context["wedding_collections"]), 4)
+        self.assertTrue(
+            all(item["product_count"] == 0 for item in empty.context["wedding_collections"])
+        )
+        empty_collection = self.client.get(
+            reverse("wedding_collection", args=["bridal-bouquets"])
+        )
+        self.assertEqual(empty_collection.status_code, 200)
+        self.assertEqual(empty_collection.context["products"], [])
 
     def test_all_legacy_taxonomy_urls_are_permanent_redirects(self):
         paths = (

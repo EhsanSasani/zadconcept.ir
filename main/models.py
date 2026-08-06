@@ -278,6 +278,32 @@ def wedding_gallery_upload_to(instance, filename):
     return f"weddings/gallery/wedding-gallery-{order}.{_upload_extension(filename)}"
 
 
+def wedding_proposal_bouquet_card_upload_to(instance, filename):
+    return f"weddings/cards/proposal-bouquet-card.{_upload_extension(filename)}"
+
+
+def wedding_proposal_sweets_card_upload_to(instance, filename):
+    return f"weddings/cards/proposal-sweets-card.{_upload_extension(filename)}"
+
+
+def wedding_bridal_bouquet_card_upload_to(instance, filename):
+    return f"weddings/cards/bridal-bouquet-card.{_upload_extension(filename)}"
+
+
+def wedding_car_card_upload_to(instance, filename):
+    return f"weddings/cards/wedding-car-card.{_upload_extension(filename)}"
+
+
+def wedding_collection_hero_upload_to(instance, filename):
+    collection = _upload_slug(instance.collection_key, "collection")
+    return f"weddings/collections/{collection}/hero.{_upload_extension(filename)}"
+
+
+def wedding_collection_hero_mobile_upload_to(instance, filename):
+    collection = _upload_slug(instance.collection_key, "collection")
+    return f"weddings/collections/{collection}/hero-mobile.{_upload_extension(filename)}"
+
+
 class CategoryQuerySet(models.QuerySet):
     def for_general_catalog(self):
         return self.exclude(
@@ -1293,20 +1319,41 @@ class WeddingPageContent(TimeStampedModel):
     hero_title = models.CharField(
         "عنوان Hero",
         max_length=220,
-        default="از بله تا روز عروسی، کنار شما",
+        blank=True,
+        default="",
+        help_text="اختیاری است؛ برای بنر تصویری بدون متن خالی بگذارید.",
     )
     hero_text = models.TextField(
         "متن Hero",
-        default="انتخاب گل و شیرینی برای خواستگاری، بله‌برون و روز عروسی با هماهنگی اختصاصی زاد.",
+        blank=True,
+        default="",
+        help_text="اختیاری است؛ برای بنر تصویری بدون متن خالی بگذارید.",
     )
     proposal_title = models.CharField(
-        "عنوان بخش خواستگاری و بله‌برون",
+        "عنوان نوار خواستگاری و بله‌برون",
         max_length=220,
         default="خواستگاری و بله‌برون",
+        help_text="عنوان نوار جداکننده بین Hero و دو کارت خواستگاری است.",
     )
     proposal_text = models.TextField(
         "توضیح بخش خواستگاری و بله‌برون",
-        default="برای شروعی صمیمی و به‌یادماندنی، دسته‌گل و شیرینی را هماهنگ و یک‌جا انتخاب کنید.",
+        blank=True,
+        default="",
+        help_text="اختیاری است و در طراحی فعلی صفحه نمایش داده نمی‌شود.",
+    )
+    proposal_bouquet_card_image = models.ImageField(
+        "تصویر کارت دسته‌گل خواستگاری",
+        upload_to=wedding_proposal_bouquet_card_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر محصول یا تصویر پیش‌فرض نمایش داده می‌شود.",
+    )
+    proposal_sweets_card_image = models.ImageField(
+        "تصویر کارت شیرینی خواستگاری",
+        upload_to=wedding_proposal_sweets_card_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر محصول یا تصویر پیش‌فرض نمایش داده می‌شود.",
     )
     transition_title = models.CharField(
         "عنوان گذار روایی",
@@ -1325,6 +1372,60 @@ class WeddingPageContent(TimeStampedModel):
     wedding_day_text = models.TextField(
         "توضیح بخش روز عروسی",
         default="دسته‌گل عروس و گل‌آرایی ماشین عروس با هماهنگی رنگ، سبک و زمان تحویل.",
+    )
+    bridal_bouquet_card_image = models.ImageField(
+        "تصویر کارت دسته‌گل عروس",
+        upload_to=wedding_bridal_bouquet_card_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر محصول یا تصویر پیش‌فرض نمایش داده می‌شود.",
+    )
+    bridal_bouquet_card_kicker = models.CharField(
+        "عنوان انگلیسی کارت دسته‌گل عروس",
+        max_length=100,
+        blank=True,
+        default="BRIDAL BOUQUETS",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
+    )
+    bridal_bouquet_card_title = models.CharField(
+        "عنوان فارسی کارت دسته‌گل عروس",
+        max_length=180,
+        blank=True,
+        default="دسته‌گل عروس",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
+    )
+    bridal_bouquet_card_text = models.TextField(
+        "توضیح کارت دسته‌گل عروس",
+        blank=True,
+        default="طراحی دسته‌گل عروس متناسب با استایل، فصل و پالت رنگ روز عروسی.",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
+    )
+    wedding_car_card_image = models.ImageField(
+        "تصویر کارت ماشین عروس",
+        upload_to=wedding_car_card_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر محصول یا تصویر پیش‌فرض نمایش داده می‌شود.",
+    )
+    wedding_car_card_kicker = models.CharField(
+        "عنوان انگلیسی کارت ماشین عروس",
+        max_length=100,
+        blank=True,
+        default="WEDDING CARS",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
+    )
+    wedding_car_card_title = models.CharField(
+        "عنوان فارسی کارت ماشین عروس",
+        max_length=180,
+        blank=True,
+        default="ماشین عروس",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
+    )
+    wedding_car_card_text = models.TextField(
+        "توضیح کارت ماشین عروس",
+        blank=True,
+        default="گل‌آرایی اختصاصی خودرو با توجه به مدل ماشین، فصل و سبک مراسم.",
+        help_text="اختیاری؛ برای کارت کاملاً تصویری خالی بگذارید.",
     )
     gallery_title = models.CharField(
         "عنوان گالری",
@@ -1444,6 +1545,82 @@ class WeddingPageContent(TimeStampedModel):
     @property
     def steps(self):
         return [line.strip() for line in self.steps_text.splitlines() if line.strip()]
+
+
+class WeddingCollectionContent(TimeStampedModel):
+    class CollectionKey(models.TextChoices):
+        PROPOSAL_BOUQUETS = "proposal-bouquets", "دسته‌گل خواستگاری و بله‌برون"
+        PROPOSAL_SWEETS = "proposal-sweets", "شیرینی خواستگاری و بله‌برون"
+        BRIDAL_BOUQUETS = "bridal-bouquets", "دسته‌گل عروس"
+        WEDDING_CARS = "wedding-cars", "ماشین عروس"
+
+    collection_key = models.CharField(
+        "صفحه مجموعه",
+        max_length=40,
+        choices=CollectionKey.choices,
+        unique=True,
+    )
+    hero_image = models.ImageField(
+        "تصویر Hero دسکتاپ",
+        upload_to=wedding_collection_hero_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر اولین محصول یا تصویر پیش‌فرض استفاده می‌شود.",
+    )
+    hero_mobile_image = models.ImageField(
+        "تصویر Hero موبایل",
+        upload_to=wedding_collection_hero_mobile_upload_to,
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد تصویر دسکتاپ استفاده می‌شود.",
+    )
+    hero_kicker = models.CharField(
+        "عنوان انگلیسی Hero",
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="اختیاری است؛ برای Hero بدون متن خالی بگذارید.",
+    )
+    hero_title = models.CharField(
+        "عنوان فارسی Hero",
+        max_length=220,
+        blank=True,
+        default="",
+        help_text="اختیاری است؛ برای Hero فقط‌تصویر خالی بگذارید.",
+    )
+    hero_text = models.TextField(
+        "توضیح Hero",
+        blank=True,
+        default="",
+        help_text="اختیاری است؛ بهتر است کوتاه و حداکثر دو خط باشد.",
+    )
+    hero_alt_text = models.CharField(
+        "متن جایگزین تصویر Hero",
+        max_length=180,
+        blank=True,
+        default="",
+        help_text="اختیاری؛ برای دسترس‌پذیری و سئو تصویر.",
+    )
+    seo_title = models.CharField(
+        "SEO Title",
+        max_length=180,
+        blank=True,
+        default="",
+    )
+    meta_description = models.CharField(
+        "Meta Description",
+        max_length=320,
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = ["collection_key"]
+        verbose_name = "تنظیمات صفحه مجموعه عروسی"
+        verbose_name_plural = "تنظیمات صفحات مجموعه‌های عروسی"
+
+    def __str__(self):
+        return self.get_collection_key_display()
 
 
 class WeddingGalleryImage(TimeStampedModel):
@@ -1692,7 +1869,12 @@ class HeroFont(TimeStampedModel):
 
 
 class HomeHeroSlide(TimeStampedModel):
-    title = models.CharField("عنوان", max_length=180)
+    title = models.CharField(
+        "عنوان",
+        max_length=180,
+        blank=True,
+        help_text="اختیاری است؛ برای اسلاید تصویری بدون متن خالی بگذارید.",
+    )
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 
@@ -1781,7 +1963,7 @@ class HomeHeroSlide(TimeStampedModel):
         verbose_name_plural = "اسلایدهای هیروی خانه"
 
     def __str__(self) -> str:
-        return self.title
+        return self.title or f"اسلاید بدون عنوان #{self.pk or 'جدید'}"
 
 
 class SiteHero(TimeStampedModel):
@@ -1799,7 +1981,12 @@ class SiteHero(TimeStampedModel):
         SUBCATEGORY = "subcategory", "زیر‌دسته"
         ITEM = "item", "صفحه محصول"
 
-    title = models.CharField("عنوان", max_length=180)
+    title = models.CharField(
+        "عنوان",
+        max_length=180,
+        blank=True,
+        help_text="اختیاری است؛ برای بنر تصویری بدون متن خالی بگذارید.",
+    )
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 

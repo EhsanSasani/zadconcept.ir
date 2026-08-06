@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
@@ -24,6 +25,7 @@ from .models import (
     SameDayFlower,
     SiteHero,
     Tag,
+    WeddingCollectionContent,
     WeddingGalleryImage,
     WeddingPageContent,
     WeddingProduct,
@@ -551,8 +553,68 @@ class WeddingPageContentAdminForm(forms.ModelForm):
         field_classes = {
             "hero_image": AdminImageUploadField,
             "hero_mobile_image": AdminImageUploadField,
+            "proposal_bouquet_card_image": AdminImageUploadField,
+            "proposal_sweets_card_image": AdminImageUploadField,
+            "bridal_bouquet_card_image": AdminImageUploadField,
+            "wedding_car_card_image": AdminImageUploadField,
             "open_graph_image": AdminImageUploadField,
         }
+        widgets = {
+            "hero_text": forms.Textarea(attrs={"rows": 3}),
+            "proposal_text": forms.Textarea(attrs={"rows": 3}),
+            "wedding_day_text": forms.Textarea(attrs={"rows": 3}),
+            "bridal_bouquet_card_text": forms.Textarea(attrs={"rows": 2}),
+            "wedding_car_card_text": forms.Textarea(attrs={"rows": 2}),
+            "meta_description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        field_help = {
+            "hero_image": "تصویر اصلی دسکتاپ؛ ترجیحاً افقی و عریض (حدود 16:9).",
+            "hero_mobile_image": "اختیاری؛ نسخه عمودی یا موبایل. اگر خالی باشد تصویر دسکتاپ استفاده می‌شود.",
+            "hero_title": "تیتر بزرگ روی تصویر Hero.",
+            "hero_text": "یک توضیح کوتاه؛ بهتر است حداکثر دو خط باشد.",
+            "proposal_title": "اختیاری؛ عنوان فارسی بالای دو کارت. اگر خالی باشد این عنوان نمایش داده نمی‌شود.",
+            "proposal_text": "اختیاری؛ برای طراحی مینیمال می‌توانید خالی بگذارید.",
+            "proposal_bouquet_card_image": "تصویر مستقل کارت دسته‌گل خواستگاری؛ بهتر است افقی با نسبت حدود 5:3 باشد.",
+            "proposal_sweets_card_image": "تصویر مستقل کارت شیرینی خواستگاری؛ بهتر است افقی با نسبت حدود 5:3 باشد.",
+            "wedding_day_title": "عنوانی که بالای کارت‌های دسته‌گل عروس و ماشین عروس نمایش داده می‌شود.",
+            "wedding_day_text": "توضیح کوتاه زیر عنوان روز عروسی.",
+            "bridal_bouquet_card_image": "تصویر مستقل کارت دسته‌گل عروس؛ بهتر است با نسبت 4:3 بارگذاری شود.",
+            "bridal_bouquet_card_kicker": "اختیاری؛ عنوان انگلیسی کوچک روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "bridal_bouquet_card_title": "اختیاری؛ عنوان فارسی روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "bridal_bouquet_card_text": "اختیاری؛ توضیح کوتاه روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "wedding_car_card_image": "تصویر مستقل کارت ماشین عروس؛ بهتر است با نسبت 4:3 بارگذاری شود.",
+            "wedding_car_card_kicker": "اختیاری؛ عنوان انگلیسی کوچک روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "wedding_car_card_title": "اختیاری؛ عنوان فارسی روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "wedding_car_card_text": "اختیاری؛ توضیح کوتاه روی کارت. برای کارت فقط‌تصویر خالی بگذارید.",
+            "gallery_title": "عنوان بالای گالری تصاویر. خود تصاویر را در انتهای همین صفحه اضافه و مرتب کنید.",
+            "seo_title": "اختیاری؛ اگر خالی باشد عنوان پیش‌فرض صفحه استفاده می‌شود.",
+            "meta_description": "اختیاری؛ خلاصه صفحه برای نتایج جست‌وجو. حدود 120 تا 160 کاراکتر مناسب است.",
+            "open_graph_image": "اختیاری؛ تصویر اشتراک‌گذاری در شبکه‌های اجتماعی.",
+            "is_active": "فقط یک تنظیم فعال وجود دارد. این گزینه را معمولاً روشن نگه دارید.",
+        }
+        for name, help_text in field_help.items():
+            if name in self.fields:
+                self.fields[name].help_text = help_text
+
+        placeholders = {
+            "hero_title": "مثلاً: از بله تا روز عروسی، کنار شما",
+            "proposal_title": "مثلاً: خواستگاری و بله‌برون",
+            "wedding_day_title": "مثلاً: روز عروسی",
+            "bridal_bouquet_card_kicker": "BRIDAL BOUQUETS",
+            "bridal_bouquet_card_title": "مثلاً: دسته‌گل عروس",
+            "wedding_car_card_kicker": "WEDDING CARS",
+            "wedding_car_card_title": "مثلاً: ماشین عروس",
+            "gallery_title": "مثلاً: انتخاب‌های زاد",
+            "seo_title": "عنوان صفحه در گوگل",
+            "meta_description": "توضیح کوتاه صفحه برای گوگل",
+        }
+        for name, placeholder in placeholders.items():
+            if name in self.fields:
+                self.fields[name].widget.attrs.setdefault("placeholder", placeholder)
 
     def clean_hero_image(self):
         return validate_admin_image(self.cleaned_data.get("hero_image"))
@@ -560,8 +622,62 @@ class WeddingPageContentAdminForm(forms.ModelForm):
     def clean_hero_mobile_image(self):
         return validate_admin_image(self.cleaned_data.get("hero_mobile_image"))
 
+    def clean_proposal_bouquet_card_image(self):
+        return validate_admin_image(
+            self.cleaned_data.get("proposal_bouquet_card_image")
+        )
+
+    def clean_proposal_sweets_card_image(self):
+        return validate_admin_image(
+            self.cleaned_data.get("proposal_sweets_card_image")
+        )
+
+    def clean_bridal_bouquet_card_image(self):
+        return validate_admin_image(
+            self.cleaned_data.get("bridal_bouquet_card_image")
+        )
+
+    def clean_wedding_car_card_image(self):
+        return validate_admin_image(
+            self.cleaned_data.get("wedding_car_card_image")
+        )
+
     def clean_open_graph_image(self):
         return validate_admin_image(self.cleaned_data.get("open_graph_image"))
+
+
+class WeddingCollectionContentAdminForm(forms.ModelForm):
+    class Meta:
+        model = WeddingCollectionContent
+        fields = "__all__"
+        field_classes = {
+            "hero_image": AdminImageUploadField,
+            "hero_mobile_image": AdminImageUploadField,
+        }
+        widgets = {
+            "hero_text": forms.Textarea(attrs={"rows": 3}),
+            "meta_description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        placeholders = {
+            "hero_kicker": "مثلاً: PROPOSAL BOUQUETS",
+            "hero_title": "عنوان فارسی صفحه",
+            "hero_text": "توضیح کوتاه و حداکثر دو خط",
+            "hero_alt_text": "توضیح کوتاه تصویر برای دسترس‌پذیری",
+            "seo_title": "عنوان صفحه در گوگل",
+            "meta_description": "توضیح کوتاه صفحه برای گوگل",
+        }
+        for name, placeholder in placeholders.items():
+            if name in self.fields:
+                self.fields[name].widget.attrs.setdefault("placeholder", placeholder)
+
+    def clean_hero_image(self):
+        return validate_admin_image(self.cleaned_data.get("hero_image"))
+
+    def clean_hero_mobile_image(self):
+        return validate_admin_image(self.cleaned_data.get("hero_mobile_image"))
 
 
 class WeddingGalleryImageAdminForm(forms.ModelForm):
@@ -765,26 +881,20 @@ class ProductImageInline(AdminImagePreviewMixin, admin.StackedInline):
     verbose_name_plural = "گالری محصول"
 
 
-class WeddingGalleryImageInline(AdminImagePreviewMixin, admin.StackedInline):
+class WeddingGalleryImageInline(AdminImagePreviewMixin, admin.TabularInline):
     model = WeddingGalleryImage
     form = WeddingGalleryImageAdminForm
     extra = 1
     fields = (
-        "image",
         "image_preview",
+        "image",
         "alt_text",
         "sort_order",
-        "created_at",
-        "updated_at",
     )
-    readonly_fields = (
-        "image_preview",
-        "created_at",
-        "updated_at",
-    )
+    readonly_fields = ("image_preview",)
     ordering = ("sort_order", "id")
-    verbose_name = "تصویر گالری عروسی"
-    verbose_name_plural = "گالری صفحه عروسی"
+    verbose_name = "تصویر"
+    verbose_name_plural = "گالری تصاویر — برای جابه‌جایی، عدد ترتیب نمایش را تغییر دهید"
 
 
 class GeneralParentCategoryFilter(admin.SimpleListFilter):
@@ -2519,6 +2629,82 @@ class SiteHeroAdmin(HeroAdminBase):
     )
 
 
+@admin.register(WeddingCollectionContent)
+class WeddingCollectionContentAdmin(admin.ModelAdmin):
+    form = WeddingCollectionContentAdminForm
+    list_display = (
+        "collection_name",
+        "hero_title",
+        "has_desktop_image",
+        "has_mobile_image",
+        "updated_at",
+    )
+    list_filter = ("collection_key",)
+    search_fields = ("hero_title", "hero_kicker", "hero_text")
+    ordering = ("collection_key",)
+    save_on_top = True
+    readonly_fields = ("created_at", "updated_at")
+
+    fieldsets = (
+        (
+            "صفحه مجموعه",
+            {
+                "fields": ("collection_key",),
+                "description": "هر ردیف تنظیمات یکی از چهار صفحه محصولات عروسی را کنترل می‌کند.",
+            },
+        ),
+        (
+            "Hero صفحه",
+            {
+                "fields": (
+                    "hero_image",
+                    "hero_mobile_image",
+                    "hero_kicker",
+                    "hero_title",
+                    "hero_text",
+                    "hero_alt_text",
+                ),
+                "description": (
+                    "عنوان‌ها و توضیح اختیاری‌اند. اگر هر سه فیلد متنی خالی باشند، "
+                    "Hero فقط تصویر نمایش می‌دهد."
+                ),
+            },
+        ),
+        (
+            "SEO — اختیاری",
+            {
+                "fields": ("seo_title", "meta_description"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "اطلاعات سیستمی",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(self.readonly_fields)
+        if obj:
+            readonly.append("collection_key")
+        return tuple(readonly)
+
+    @admin.display(description="مجموعه")
+    def collection_name(self, obj):
+        return obj.get_collection_key_display()
+
+    @admin.display(description="تصویر دسکتاپ", boolean=True)
+    def has_desktop_image(self, obj):
+        return bool(obj.hero_image)
+
+    @admin.display(description="تصویر موبایل", boolean=True)
+    def has_mobile_image(self, obj):
+        return bool(obj.hero_mobile_image)
+
+
 @admin.register(WeddingPageContent)
 class WeddingPageContentAdmin(admin.ModelAdmin):
     form = WeddingPageContentAdminForm
@@ -2528,12 +2714,19 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
         "is_active",
         "updated_at",
     )
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("admin_guide", "created_at", "updated_at")
     save_on_top = True
 
     fieldsets = (
         (
-            "Hero صفحه عروسی",
+            "راهنمای سریع",
+            {
+                "fields": ("admin_guide",),
+                "classes": ("wedding-admin-guide",),
+            },
+        ),
+        (
+            "۱) تصویر و متن بالای صفحه",
             {
                 "fields": (
                     "hero_image",
@@ -2541,58 +2734,63 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
                     "hero_title",
                     "hero_text",
                 ),
+                "description": "Hero اولین بخش صفحه است. تصویر دسکتاپ ضروری و تصویر موبایل اختیاری است.",
             },
         ),
         (
-            "خواستگاری و بله‌برون",
+            "۲) بخش خواستگاری و بله‌برون",
             {
                 "fields": (
                     "proposal_title",
-                    "proposal_text",
+                    "proposal_bouquet_card_image",
+                    "proposal_sweets_card_image",
                 ),
+                "description": "عنوان این قسمت مربوط به نوار جداکننده است. خود کارت‌ها فقط تصویر نمایش می‌دهند و عنوان یا توضیح قابل‌نمایش ندارند.",
             },
         ),
         (
-            "گذار روایی",
-            {
-                "fields": (
-                    "transition_title",
-                    "transition_text",
-                ),
-            },
-        ),
-        (
-            "روز عروسی",
+            "۳) عنوان بخش روز عروسی",
             {
                 "fields": (
                     "wedding_day_title",
                     "wedding_day_text",
                 ),
+                "description": "این عنوان و توضیح بالای دو کارت روز عروسی نمایش داده می‌شوند.",
             },
         ),
         (
-            "گالری و مراحل سفارش",
+            "۴) کارت دسته‌گل عروس",
             {
                 "fields": (
-                    "gallery_title",
-                    "steps_title",
-                    "steps_text",
+                    "bridal_bouquet_card_image",
+                    "bridal_bouquet_card_kicker",
+                    "bridal_bouquet_card_title",
+                    "bridal_bouquet_card_text",
                 ),
+                "description": "عکس را مستقل از محصولات عوض کنید. برای نمایش کارت فقط به‌صورت تصویر، هر سه فیلد متنی را خالی بگذارید.",
             },
         ),
         (
-            "دعوت به اقدام",
+            "۵) کارت ماشین عروس",
             {
                 "fields": (
-                    "cta_title",
-                    "cta_text",
-                    "contact_url",
-                    "telegram_url",
+                    "wedding_car_card_image",
+                    "wedding_car_card_kicker",
+                    "wedding_car_card_title",
+                    "wedding_car_card_text",
                 ),
+                "description": "عکس را مستقل از محصولات عوض کنید. برای نمایش کارت فقط به‌صورت تصویر، هر سه فیلد متنی را خالی بگذارید.",
             },
         ),
         (
-            "SEO و اشتراک‌گذاری",
+            "۶) گالری تصاویر",
+            {
+                "fields": ("gallery_title",),
+                "description": "عنوان گالری را اینجا بنویسید و تصاویر را در جدول پایین همین فرم مدیریت کنید.",
+            },
+        ),
+        (
+            "SEO و اشتراک‌گذاری — اختیاری",
             {
                 "fields": (
                     "seo_title",
@@ -2603,7 +2801,7 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "وضعیت و زمان‌ها",
+            "تنظیمات سیستمی",
             {
                 "fields": (
                     "is_active",
@@ -2614,6 +2812,24 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    class Media:
+        css = {"all": ("main/css/admin-wedding-page.css",)}
+
+    @admin.display(description="")
+    def admin_guide(self, obj):
+        return mark_safe(
+            '<div class="wedding-admin-guide__content">'
+            '<strong>ترتیب کار پیشنهادی</strong>'
+            '<ol>'
+            '<li>Hero و عنوان‌های دو بخش اصلی را تنظیم کنید.</li>'
+            '<li>دو تصویر کارت خواستگاری را جداگانه آپلود کنید.</li>'
+            '<li>عنوان گالری را بنویسید و تصاویر گالری را در جدول پایین فرم مرتب کنید.</li>'
+            '<li>در پایان روی «ذخیره» بزنید.</li>'
+            '</ol>'
+            '<p>کارت‌های خواستگاری فقط تصویر نمایش می‌دهند؛ عنوان و توضیح روی خود کارت‌ها وجود ندارد.</p>'
+            '</div>'
+        )
 
     def has_add_permission(self, request):
         if WeddingPageContent.objects.exists():

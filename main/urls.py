@@ -16,6 +16,7 @@ urlpatterns = [
 
     # Weddings
     path("weddings/", views.weddings, name="weddings"),
+    path("weddings/<slug:collection_slug>/", views.wedding_collection, name="wedding_collection"),
 
     # Flowers
     path("flowers/", views.flowers, name="flowers"),

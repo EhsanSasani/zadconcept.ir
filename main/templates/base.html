@@ -47,7 +47,6 @@
 
   <link rel="stylesheet" href="{% static 'main/css/base.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/layout.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=3">
@@ -60,6 +59,8 @@
   {% block extra_head %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/hero-config.css' %}?v=3">
   <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
+  <link rel="stylesheet" href="{% static 'main/css/hero-global-fix.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=5">
 
   {% if structured_data_graph %}
     <script type="application/ld+json" nonce="{{ csp_nonce }}">{{ structured_data_graph|json_ld }}</script>
@@ -108,9 +109,6 @@
   </div>
 </div>
 
-    <a href="{% url 'occasions' %}" class="{% if active_nav == 'occasions' %}is-active{% endif %}">
-      مناسبت‌ها
-    </a>
 
     <a href="{% url 'weddings' %}" class="{% if active_nav == 'weddings' %}is-active{% endif %}">
       عروسی
@@ -128,6 +126,7 @@
 </nav>
   </div>
 </header>
+  <div class="site-header-spacer" aria-hidden="true"></div>
   {% endif %}
 
   {% if not suppress_default_hero and not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
@@ -168,14 +167,12 @@
       {% endif %}
     </div>
 
-    <div class="page-hero__overlay"></div>
-
     {% if page_type == "occasion-detail" or page_type == "flower-occasion" or page_hero_style_class %}
       <div class="page-hero__content container" data-hero-content>
         {% if page_hero_kicker %}
           <span class="page-hero__kicker" data-page-hero-kicker>{{ page_hero_kicker }}</span>
         {% endif %}
-        <h1 data-page-hero-title>{{ page_hero_title }}</h1>
+        {% if page_hero_title %}<h1 data-page-hero-title>{{ page_hero_title }}</h1>{% endif %}
         {% if page_hero_text %}
           <p data-page-hero-text>{{ page_hero_text }}</p>
         {% endif %}
@@ -197,7 +194,7 @@
     <section class="container section-block page-hero-mood">
       <div class="home-intro__brandline page-hero-mood__brandline">
         <span class="page-hero-mood__mark">✦</span>
-        <h2 class="home-intro__title hero-brand-text">{{ page_hero_title }}</h2>
+        {% if page_hero_title %}<h2 class="home-intro__title hero-brand-text">{{ page_hero_title }}</h2>{% endif %}
 
         {% if page_hero_text %}
           <p class="page-hero-mood__text">{{ page_hero_text }}</p>

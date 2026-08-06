@@ -41,7 +41,7 @@
   <div class="workshops-hero__content" data-hero-content>
     <p class="workshops-hero__eyebrow" data-page-hero-kicker data-hero-kicker>{{ workshops_hero_kicker }}</p>
 
-    <h1 data-page-hero-title data-hero-title>{{ workshops_hero_title }}</h1>
+    {% if workshops_hero_title %}<h1 data-page-hero-title data-hero-title>{{ workshops_hero_title }}</h1>{% endif %}
 
     <p data-page-hero-text data-hero-text>{{ workshops_hero_text }}</p>
 
