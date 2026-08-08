@@ -21,10 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return cards[0].getBoundingClientRect().width + getGap();
     };
 
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
     const move = (direction) => {
       viewport.scrollBy({
         left: direction * getStep(),
-        behavior: "smooth",
+        behavior: prefersReducedMotion.matches ? "auto" : "smooth",
       });
     };
 

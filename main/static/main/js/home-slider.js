@@ -10,10 +10,19 @@ document.addEventListener("DOMContentLoaded", function () {
   let timer = null;
   let touchStartX = 0;
   let touchStartY = 0;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   function showSlide(index) {
-    slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
-    dots.forEach((dot, i) => dot.classList.toggle("is-active", i === index));
+    slides.forEach((slide, i) => {
+      const active = i === index;
+      slide.classList.toggle("is-active", active);
+      slide.setAttribute("aria-hidden", active ? "false" : "true");
+    });
+    dots.forEach((dot, i) => {
+      const active = i === index;
+      dot.classList.toggle("is-active", active);
+      dot.setAttribute("aria-current", active ? "true" : "false");
+    });
     current = index;
   }
 
@@ -27,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function startAuto() {
     stopAuto();
+    if (prefersReducedMotion.matches) return;
     timer = setInterval(nextSlide, 5000);
   }
 
@@ -56,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   const hero = document.querySelector(".home-hero");
+  hero?.addEventListener("mouseenter", stopAuto);
+  hero?.addEventListener("mouseleave", startAuto);
+  hero?.addEventListener("focusin", stopAuto);
+  hero?.addEventListener("focusout", startAuto);
+
   hero?.addEventListener("touchstart", function (event) {
     const touch = event.changedTouches[0];
     touchStartX = touch.clientX;
@@ -77,6 +92,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) stopAuto();
+    else startAuto();
+  });
+
+  prefersReducedMotion.addEventListener?.("change", function () {
+    if (prefersReducedMotion.matches) stopAuto();
     else startAuto();
   });
 

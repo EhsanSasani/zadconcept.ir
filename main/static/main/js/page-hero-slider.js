@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let timer = null;
     let touchStartX = 0;
     let touchStartY = 0;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     function replacePrefixedClass(prefix, nextClass) {
       Array.from(root.classList).forEach((className) => {
@@ -54,6 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function start() {
       stop();
+      if (prefersReducedMotion.matches) return;
       timer = window.setInterval(() => show(current + 1), 6000);
     }
 
@@ -96,6 +98,10 @@ document.addEventListener("DOMContentLoaded", function () {
     root.addEventListener("focusout", start);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stop();
+      else start();
+    });
+    prefersReducedMotion.addEventListener?.("change", () => {
+      if (prefersReducedMotion.matches) stop();
       else start();
     });
 

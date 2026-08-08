@@ -1,0 +1,508 @@
+/* ==========================================================
+   ZAD Responsive UI System
+   Shared responsive, accessibility and sizing contract.
+   Loaded last so page-specific visuals stay intact while
+   interaction sizes, rhythm and viewport behavior converge.
+   ========================================================== */
+
+:root {
+  /* Fluid page gutters */
+  --container-max: 1380px;
+  --page-gutter: clamp(16px, 3vw, 40px);
+
+  /* Type scale */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-md: 1rem;       /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --title-sm: clamp(1.25rem, 1.05rem + 0.8vw, 1.75rem);
+  --title-md: clamp(1.625rem, 1.25rem + 1.5vw, 2.5rem);
+  --title-lg: clamp(2rem, 1.4rem + 2.4vw, 4rem);
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Interactive controls */
+  --control-sm: 40px;
+  --control-md: 44px;
+  --control-lg: 52px;
+  --tap-target: 44px;
+
+  /* Content measures */
+  --measure-copy: 65ch;
+  --measure-narrow: 48ch;
+
+  /* Responsive section rhythm */
+  --section-space: clamp(48px, 7vw, 112px);
+  --section-space-compact: clamp(32px, 5vw, 72px);
+}
+
+html {
+  min-width: 320px;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
+}
+
+body {
+  min-width: 320px;
+  font-size: var(--text-md);
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+
+/* One predictable container rule across the site. */
+.container {
+  width: min(calc(100% - (2 * var(--page-gutter))), var(--container-max));
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* Media must never create accidental horizontal overflow. */
+img,
+picture,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+}
+
+/* Comfortable copy measure. */
+.intro-text,
+.blog-detail,
+.policy-content p,
+.page-hero-mood__text,
+.lead-head p {
+  max-width: min(100%, var(--measure-copy));
+}
+
+/* Shared section rhythm without forcing specialized editorial layouts. */
+.section-block {
+  margin-top: var(--section-space-compact);
+}
+
+/* All primary interaction families share a minimum physical target. */
+.btn,
+.flowers-btn,
+.workshops-btn,
+.about-button,
+.info-button,
+.home-abroad__btn,
+.home-experience__btn,
+.flowers-load-more__button,
+.zad-product-modal__btn,
+.event-detail__reserve,
+.workshops-lead__submit,
+.ws-button,
+.ws-mini-form button {
+  min-height: var(--control-md);
+  min-width: var(--tap-target);
+  padding-inline: clamp(16px, 2vw, 24px);
+  font-size: clamp(0.875rem, 0.84rem + 0.12vw, 1rem);
+  line-height: 1.2;
+  touch-action: manipulation;
+}
+
+/* Inputs: 16px prevents Safari focus zoom and 48px is thumb-friendly. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+select,
+textarea,
+.lead-input {
+  width: 100%;
+  max-width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Pointer targets for icon-only/compact UI. */
+.hero-slider__nav,
+.page-hero__nav,
+.featured-products__nav,
+.zad-product-modal__close,
+.zad-footer__socials a {
+  min-width: var(--tap-target);
+  min-height: var(--tap-target);
+}
+
+.hero-slider__dots button,
+.page-hero__dots button {
+  position: relative;
+}
+
+.hero-slider__dots button::before,
+.page-hero__dots button::before {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  transform: translate(-50%, -50%);
+}
+
+/* Keyboard accessibility. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* Prevent common flex/grid overflow bugs. */
+.main-nav,
+.main-nav__center,
+.section-head,
+.cta-row,
+.meta-row,
+.product-card,
+.list-card,
+.featured-product-card,
+.item-detail__grid,
+.home-workshops__grid,
+.home-workshop-card,
+.lead-form > *,
+.product-grid > *,
+.list-grid > * {
+  min-width: 0;
+}
+
+/* Long URLs / English strings inside RTL layouts. */
+.intro-text,
+.policy-content,
+.blog-detail,
+.contact-help,
+.lead-box,
+.product-card,
+.list-card {
+  overflow-wrap: anywhere;
+}
+
+/* Keep readable line-height for Persian UI/body copy. */
+p,
+li,
+.intro-text,
+.blog-card__excerpt,
+.faq-card p,
+.product-card__description,
+.list-card__description {
+  line-height: 1.8;
+}
+
+/* Fluid typography for generic content surfaces only.
+   Bespoke editorial/hero typography keeps its page-level art direction. */
+.page-intro h1,
+.policy-content > h1,
+.blog-detail > h1,
+.item-detail__info > h1 {
+  font-size: var(--title-lg);
+  line-height: 1.15;
+}
+
+.page-intro h2,
+.policy-content h2,
+.blog-detail h2,
+.contact-help h2,
+.lead-head h2 {
+  font-size: var(--title-md);
+  line-height: 1.25;
+}
+
+.site-main h3 {
+  line-height: 1.4;
+}
+
+/* Safe-area support for full-bleed mobile UI. */
+.top-notice-bar,
+.site-header,
+.zad-footer {
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+.zad-footer {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* Modern viewport units avoid mobile browser chrome jumps. */
+.page-home .hero-slides {
+  min-height: 92svh;
+}
+
+.page-home .hero-slide img {
+  height: 100svh;
+}
+
+/* Tablet */
+@media (max-width: 980px) {
+  :root {
+    --page-gutter: clamp(16px, 3.5vw, 28px);
+  }
+
+  .section-head {
+    gap: var(--space-4);
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  :root {
+    --page-gutter: clamp(16px, 4.5vw, 22px);
+    --section-space: clamp(48px, 14vw, 72px);
+    --section-space-compact: clamp(28px, 9vw, 48px);
+  }
+
+  body {
+    line-height: 1.75;
+  }
+
+  /* Keep notice height content-driven; sticky header avoids overlap at 320px and zoom. */
+  .top-notice-bar {
+    min-height: 0;
+  }
+
+  .top-notice-bar__link {
+    font-size: var(--text-xs);
+    line-height: 1.7;
+  }
+
+  .site-header,
+  .site-header.is-scrolled,
+  .site-header:not(.is-scrolled) {
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+  }
+
+  .site-header-spacer {
+    display: none;
+    height: 0;
+  }
+
+  /* Existing nav is horizontally scrollable; make every item a valid tap target. */
+  .main-nav__center a,
+  .main-nav__about,
+  .nav-dropdown__trigger {
+    min-height: var(--tap-target) !important;
+    padding-block: 8px !important;
+    padding-inline: 12px !important;
+    font-size: max(0.8125rem, 13px) !important;
+  }
+
+  .main-nav__center {
+    min-height: calc(var(--tap-target) + 8px);
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--space-3);
+    scrollbar-width: none;
+  }
+
+  .main-nav__center::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* The menu needs to escape the horizontal scroller only while it is open. */
+  .main-nav__center.has-open-dropdown {
+    overflow: visible !important;
+  }
+
+  .nav-dropdown__menu a {
+    min-height: var(--tap-target);
+  }
+
+  .btn,
+  .flowers-btn,
+  .workshops-btn,
+  .about-button,
+  .info-button,
+  .home-abroad__btn,
+  .home-experience__btn,
+  .flowers-load-more__button,
+  .zad-product-modal__btn,
+  .event-detail__reserve,
+  .workshops-lead__submit,
+  .ws-button,
+  .ws-mini-form button {
+    min-height: 48px;
+  }
+
+  .hero-slider__nav,
+  .page-hero__nav,
+  .featured-products__nav {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
+
+  .page-hero,
+  .page-hero__content {
+    min-height: clamp(340px, 62svh, 520px);
+  }
+
+  .page-home .hero-slides {
+    min-height: clamp(480px, 78svh, 760px) !important;
+  }
+
+  .page-home .hero-slide img {
+    height: 78svh !important;
+    min-height: clamp(480px, 78svh, 620px) !important;
+  }
+
+  .section-head {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  /* Avoid cramped edge-to-edge forms and modal actions. */
+  .cta-row,
+  .hero-slide__actions,
+  .zad-product-modal__actions {
+    gap: var(--space-3);
+  }
+
+  .lead-form {
+    gap: var(--space-4);
+  }
+
+  /* Two-column commerce grid remains usable down to narrow phones. */
+  .page-category .product-grid,
+  .page-subcategory .product-grid,
+  .page-occasion-detail .product-grid,
+  .page-category .list-grid,
+  .page-subcategory .list-grid,
+  .page-occasion-detail .list-grid {
+    gap: clamp(10px, 3vw, 14px);
+  }
+
+  .page-category .product-card__body,
+  .page-subcategory .product-card__body,
+  .page-occasion-detail .product-card__body,
+  .page-category .list-card__body,
+  .page-subcategory .list-card__body,
+  .page-occasion-detail .list-card__body {
+    padding: clamp(10px, 3vw, 14px);
+  }
+
+  .page-category .product-card h3,
+  .page-subcategory .product-card h3,
+  .page-occasion-detail .product-card h3,
+  .page-category .list-card h3,
+  .page-subcategory .list-card h3,
+  .page-occasion-detail .list-card h3 {
+    font-size: clamp(0.875rem, 3.4vw, 1rem);
+  }
+
+  /* Footer icon links are icon-only controls, so the hit area is explicit. */
+  .zad-footer__socials a {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
+
+  .zad-footer__item span,
+  .zad-footer__bottom p,
+  .zad-footer__brand p {
+    font-size: var(--text-xs);
+  }
+
+  .zad-footer__legal a {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Dynamic viewport units keep the modal usable behind mobile browser chrome. */
+  .zad-product-modal__dialog {
+    height: 100dvh;
+    max-height: 100dvh;
+    grid-template-rows: minmax(220px, 48dvh) minmax(0, 1fr);
+  }
+
+  .zad-product-modal__media,
+  .zad-product-modal__media img {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .zad-product-modal__content {
+    min-height: 0;
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Very narrow phones: preserve two columns only where content still fits. */
+@media (max-width: 360px) {
+  :root {
+    --page-gutter: 14px;
+  }
+
+  .main-nav__center a,
+  .main-nav__about,
+  .nav-dropdown__trigger {
+    padding-inline: 10px !important;
+  }
+
+  .page-home .hero-slide img {
+    min-height: clamp(460px, 78svh, 580px) !important;
+  }
+}
+
+/* Landscape phones: avoid giant viewport-height heroes. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .page-home .hero-slides,
+  .page-home .hero-slide img {
+    min-height: 360px !important;
+    height: 100svh !important;
+  }
+
+  .page-hero,
+  .page-hero__content {
+    min-height: 320px;
+  }
+}
+
+/* Respect OS motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Better high-zoom robustness: never force one-line controls/content. */
+@media (min-resolution: 1dppx) {
+  .btn,
+  .flowers-btn,
+  .workshops-btn,
+  .about-button,
+  .info-button {
+    white-space: normal;
+    text-align: center;
+  }
+}
