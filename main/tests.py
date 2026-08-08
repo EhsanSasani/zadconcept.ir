@@ -149,7 +149,15 @@ class MainViewsTests(TestCase):
         self.assertTrue(response.context["directory_only"])
         self.assertContains(response, self.flowers_category.name)
         self.assertContains(response, self.flowers_category.get_absolute_url())
+    def test_flowers_legacy_page_query_redirects_to_clean_landing(self):
+        response = self.client.get(reverse("flowers"), {"page": 2})
 
+        self.assertRedirects(
+            response,
+            reverse("flowers"),
+            status_code=301,
+            fetch_redirect_response=False,
+        )
     def test_collection_landing_paginates_initial_products_and_partial_next_page(self):
         for index in range(14):
             Product.objects.create(

@@ -1771,7 +1771,16 @@ def _collection_landing_page(
 ):
     config = SECTION_CONTENT[section]
     landing = COLLECTION_LANDING_CONTENT[section]
+    page = request.GET.get("page")
 
+    if (
+        directory_only
+        and set(request.GET) == {"page"}
+        and page
+        and page.isdigit()
+        and int(page) >= 1
+    ):
+        return redirect(reverse(section), permanent=True)
     products_qs = _published_products_for_section(section)
     categories_qs = Category.objects.for_general_catalog().filter(
         section=section,

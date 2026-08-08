@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils import timezone
 
 
-PAGINATED_ROUTE_NAMES = {"flowers", "bakery", "gifts"}
+PAGINATED_ROUTE_NAMES = {"bakery", "gifts"}
 
 
 def is_public_pagination(request):
