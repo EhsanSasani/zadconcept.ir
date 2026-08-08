@@ -2465,7 +2465,8 @@ def _item_detail_context(request, product):
         }
     )
 
-    context["structured_data_graph"].append(product_node(product))
+    if product.has_price:
+        context["structured_data_graph"].append(product_node(product))
 
     return context
 
