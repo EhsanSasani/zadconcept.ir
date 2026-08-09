@@ -56,7 +56,7 @@ class TemplateComponentContractTests(TestCase):
         self.assertIn(self.first.display_name, rendered)
         self.assertNotIn(self.second.display_name, rendered)
         self.assertIn(
-            'sizes="(max-width: 768px) 46vw, (max-width: 1100px) 46vw, 360px"',
+            'sizes="(max-width: 900px) 46vw, (max-width: 1180px) 31vw, 360px"',
             rendered,
         )
 
