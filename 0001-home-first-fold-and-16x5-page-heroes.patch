@@ -1,0 +1,139 @@
+diff --git a/main/static/main/css/responsive-system.css b/main/static/main/css/responsive-system.css
+index 82cd9cf..4bd9d58 100644
+--- a/main/static/main/css/responsive-system.css
++++ b/main/static/main/css/responsive-system.css
+@@ -506,3 +506,121 @@ li,
+     text-align: center;
+   }
+ }
++
++
++/* =========================================================
++   ZAD DESKTOP HERO CONTRACT — production hotfix
++
++   Desktop only:
++   - Home first fold: Notice + Navbar + Hero + Trust = 100svh
++   - Home artwork crop favors lower content so the ZAD mark stays visible
++   - All other primary page heroes = 16:5
++
++   Mobile is intentionally unchanged.
++   ========================================================= */
++
++@media (min-width: 761px) {
++
++  :root {
++    --zad-home-notice-desktop: 40px;
++    --zad-home-navbar-desktop: 68px;
++    --zad-home-trust-desktop: 176px;
++  }
++
++  /* -------------------------------------------------------
++     HOME — Hero + existing Trust strip complete first fold
++     ------------------------------------------------------- */
++
++  .page-home .home-trust-strip {
++    box-sizing: border-box !important;
++    height: var(--zad-home-trust-desktop) !important;
++    min-height: var(--zad-home-trust-desktop) !important;
++    margin: 0 !important;
++    padding: 34px 0 30px !important;
++  }
++
++  .page-home .home-hero,
++  .page-home .hero-slides {
++    box-sizing: border-box !important;
++    width: 100% !important;
++    height: calc(
++      100svh
++      - var(--zad-home-notice-desktop)
++      - var(--zad-home-navbar-desktop)
++      - var(--zad-home-trust-desktop)
++    ) !important;
++    min-height: 0 !important;
++    max-height: none !important;
++    margin-top: 0 !important;
++    aspect-ratio: auto !important;
++  }
++
++  .page-home .hero-slide,
++  .page-home .hero-slide picture {
++    width: 100% !important;
++    height: 100% !important;
++    min-height: 0 !important;
++    max-height: none !important;
++  }
++
++  .page-home .hero-slide img {
++    display: block !important;
++    width: 100% !important;
++    height: 100% !important;
++    min-height: 0 !important;
++    max-height: none !important;
++    object-fit: cover !important;
++
++    /* Crop more from the top; preserve the lower ZAD artwork. */
++    object-position: center 74% !important;
++  }
++
++
++  /* -------------------------------------------------------
++     NON-HOME PRIMARY HEROES — canonical desktop ratio 16:5
++     ------------------------------------------------------- */
++
++  .page-hero,
++  .flowers-hero,
++  .workshops-hero,
++  .page-about .about-hero,
++  .weddings-hero {
++    box-sizing: border-box !important;
++    width: 100% !important;
++    height: auto !important;
++    min-height: 0 !important;
++    max-height: none !important;
++    aspect-ratio: 16 / 5 !important;
++  }
++
++  .page-hero__slides,
++  .page-hero__slide,
++  .page-hero__slide picture,
++  .flowers-hero__media,
++  .flowers-hero__media picture,
++  .workshops-hero__slides,
++  .workshops-hero__slide,
++  .workshops-hero__slide picture,
++  .page-about .about-hero__media,
++  .page-about .about-hero__media picture,
++  .weddings-hero__media,
++  .weddings-hero__media picture {
++    width: 100% !important;
++    height: 100% !important;
++    min-height: 0 !important;
++    max-height: none !important;
++  }
++
++  .page-hero__slide img,
++  .flowers-hero__media img,
++  .workshops-hero__image,
++  .page-about .about-hero__media img,
++  .weddings-hero__media img {
++    display: block !important;
++    width: 100% !important;
++    height: 100% !important;
++    min-height: 0 !important;
++    max-height: none !important;
++    object-fit: cover !important;
++  }
++}
+diff --git a/main/templates/base.html b/main/templates/base.html
+index fbf3b2b..ca104ff 100644
+--- a/main/templates/base.html
++++ b/main/templates/base.html
+@@ -61,7 +61,7 @@
+   <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
+   <link rel="stylesheet" href="{% static 'main/css/hero-global-fix.css' %}?v=2">
+   <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=5">
+-  <link rel="stylesheet" href="{% static 'main/css/responsive-system.css' %}?v=2">
++  <link rel="stylesheet" href="{% static 'main/css/responsive-system.css' %}?v=15">
+ 
+   {% if structured_data_graph %}
+     <script type="application/ld+json" nonce="{{ csp_nonce }}">{{ structured_data_graph|json_ld }}</script>
