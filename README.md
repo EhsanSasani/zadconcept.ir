@@ -25,7 +25,8 @@ The experience is intentionally closer to a curated lookbook than a conventional
 - **Flowers** &mdash; bouquets, boxes, stands, jars, plants, and same-day selections
 - **Bakery** &mdash; cakes, cookies, chocolates, and seasonal pieces
 - **Gifts** &mdash; curated objects and gift combinations
-- **Occasions** &mdash; collections for birthdays, romantic moments, congratulations, sympathy, weddings, and more
+- **Occasions** &mdash; collections for birthdays, romantic moments, congratulations, sympathy, and more
+- **Weddings** &mdash; an isolated editorial catalog for proposals, bridal bouquets, sweets, and wedding cars
 - **Workshops** &mdash; public, private, and corporate experiences
 - **Journal** &mdash; editorial notes and brand stories
 - **Lead coordination** &mdash; contact, Telegram, phone, and structured request forms
@@ -40,6 +41,7 @@ Highlights include:
 - Unified responsive catalog experience across Flowers, Bakery, and Gifts
 - Server-backed category filtering with resilient no-JavaScript fallbacks
 - Same-day flower collection and occasion-based browsing
+- Dedicated Wedding landing and collection pages with isolated catalog and admin workflows
 - Dedicated product, category, occasion, workshop, blog, and local landing pages
 - Admin-managed page heroes and editable content blocks
 - Persian-first localization with Tehran timezone support
@@ -69,14 +71,16 @@ Recommendation surfaces are intentionally paused in this release while a more de
 ```text
 config/                     Django settings, URLs, WSGI and ASGI
 main/
-|-- management/             Custom management commands
-|-- migrations/             Database migrations
-|-- static/main/            CSS, JavaScript and brand assets
+|-- admin/                  Domain-focused Django Admin modules
+|-- content/                Stable copy and presentation configuration
+|-- management/             Custom management and audit commands
+|-- migrations/             Schema and reversible data migrations
+|-- models/                 Catalog, Wedding, content, and lead domains
+|-- selectors/              Shared public-query policies
+|-- static/main/            CSS, JavaScript, and brand assets
 |-- templates/              Pages and reusable template partials
-|-- admin.py                Admin configuration
-|-- models.py               Catalog and content models
-|-- views.py                Page, catalog and lead flows
-`-- tests.py                Application test suite
+|-- views/                  Domain-focused HTTP views
+`-- test_*.py, tests.py     Application and architecture test suites
 manage.py
 requirements.txt
 .env.example
@@ -144,6 +148,7 @@ Run the full test suite:
 
 ```bash
 python manage.py test
+npm run test:js
 ```
 
 Run Django checks before a production release:
@@ -151,8 +156,25 @@ Run Django checks before a production release:
 ```bash
 python manage.py check
 python manage.py check --deploy
+python manage.py makemigrations --check --dry-run
 python manage.py migrate --plan
+npm run lint:css
+npm run lint:js
 ```
+
+## Wedding catalog operations
+
+Wedding products use a dedicated scope, type, query policy, URL space, and Admin area. They remain directly accessible through their canonical product URLs but never leak into generic Flowers, Bakery, Gifts, occasion, same-day, home, or related-product discovery surfaces.
+
+Before deploying the Wedding migrations, back up the production database and media independently. Then migrate in place and run the integrity and SEO audits:
+
+```bash
+python manage.py migrate
+python manage.py audit_weddings --strict
+python manage.py audit_seo --fail-on-error
+```
+
+Legacy Wedding category and occasion URLs are permanent redirects to `/weddings/`; keep those compatibility routes in place during future catalog cleanup.
 
 ## Static files and media
 

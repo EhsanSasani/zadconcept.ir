@@ -100,30 +100,6 @@ CATEGORY_CONTENT_OVERRIDES = {
         "hero_image": "main/img/hero-subcategory.webp",
         },
 
-    "wedding": {
-        "label": "عروسی",
-        "meta_title": "گل‌آرایی عروسی در مشهد | ZAD",
-        "meta_description": "مجموعه عروسی زاد شامل دسته‌گل عروس و گل‌آرایی ماشین عروس در مشهد.",
-        "intro": "انتخاب دسته‌گل عروس یا گل‌آرایی ماشین عروس برای روزی به‌یادماندنی.",
-        "image": "main/img/sub-bridal-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "wedding-car": {
-        "label": "ماشین عروس",
-        "meta_title": "گل‌آرایی ماشین عروس در مشهد | ZAD",
-        "meta_description": "مدل‌های گل‌آرایی ماشین عروس زاد با طراحی هماهنگ و اجرای اختصاصی در مشهد.",
-        "intro": "گل‌آرایی هماهنگ و اختصاصی برای ماشین عروس.",
-        "image": "main/img/sub-stand.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "bridal-bouquet": {
-        "label": "دسته‌گل عروس",
-        "meta_title": "دسته‌گل عروس در مشهد | ZAD",
-        "meta_description": "دسته‌گل عروس زاد با چیدمان لطیف، مینیمال و هماهنگ با مراسم.",
-        "intro": "دسته‌گلی لطیف و هماهنگ برای یکی از مهم‌ترین لحظه‌ها.",
-        "image": "main/img/sub-bridal-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
     "jarl": {
         "label": "جار گل",
         "meta_title": "جار گل در مشهد | ZAD",
@@ -169,7 +145,6 @@ CATEGORY_CONTENT_OVERRIDES = {
 CATEGORY_SLUG_ALIASES = {
     "plant": "plants",
     "wreath": "stand",
-    "wedding-decoration": "wedding",
 }
 
 PAGE_HERO_CONTENT = {
@@ -453,6 +428,5 @@ FLOWER_FILTER_ORDER = [
     "bouquet",
     "jarl",
     "stand",
-    "wedding",
     "plants",
 ]

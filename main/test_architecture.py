@@ -134,3 +134,20 @@ class ArchitectureContractTests(TestCase):
         self.assertIn("aspect-ratio: 16 / 5", responsive)
         self.assertIn("viewport-fit=cover", base)
         self.assertIn("hero-global-fix.css", base)
+
+    def test_generic_catalog_has_no_wedding_presentation_fallbacks(self):
+        content = (
+            Path(settings.BASE_DIR) / "main" / "content" / "catalog.py"
+        ).read_text(encoding="utf-8")
+        templates = Path(settings.BASE_DIR) / "main" / "templates"
+        flowers_landing = (templates / "flowers_landing.html").read_text(
+            encoding="utf-8"
+        )
+        subcategory = (templates / "subcategory.html").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertNotIn('"wedding": {', content)
+        self.assertNotIn('"wedding-decoration": "wedding"', content)
+        self.assertNotIn('category.slug == "wedding"', flowers_landing)
+        self.assertNotIn('subcategory_slug == "wedding"', subcategory)
