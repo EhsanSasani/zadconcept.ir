@@ -4,13 +4,14 @@ Extracted from the historical view module; shared presentation policy remains in
 ``main.views.legacy`` until its dedicated lower layer is complete.
 """
 
+from ..forms import LeadRequestForm
+
 from .support import (
     FAQ_PAGE_GROUPS,
     FAQ_PAGE_ITEMS,
     Http404,
     INTERNATIONAL_FAQ_EN,
     INTERNATIONAL_FAQ_FA,
-    LeadRequestForm,
     POLICY_PAGES,
     _default_context,
     _get_site_hero,
@@ -31,6 +32,7 @@ def contact(request):
         meta_title="تماس با زاد | هماهنگی سفارش و ارسال",
         meta_description="تماس با زاد برای سفارش، مشاوره، بررسی موجودی و هماهنگی زمان ارسال در مشهد.",
         breadcrumbs=breadcrumbs,
+        content_page="contact",
     )
 
     hero_data = _hero_from_key("contact")
@@ -85,6 +87,7 @@ def about(request):
         meta_title="درباره زاد | گل، سوئیت‌بار و ورکشاپ در مشهد",
         meta_description="با فضای واقعی زاد، گل‌ها، سوئیت‌بار و ورکشاپ‌های خلاقانه زاد در مشهد آشنا شوید.",
         breadcrumbs=breadcrumbs,
+        content_page="about",
     )
 
     hero_data = _hero_from_key("about")
@@ -160,7 +163,6 @@ def policy_page(request, policy_slug):
         meta_title=policy["meta_title"],
         meta_description=policy["meta_description"],
         breadcrumbs=breadcrumbs,
-        content_page="policy",
         suppress_default_hero=True,
     )
     context["policy"] = _normalized_policy(policy)
@@ -182,7 +184,6 @@ def international_orders(request):
             {"language": "en", "url": en_url},
             {"language": "x-default", "url": fa_url},
         ],
-        content_page="international-orders",
         suppress_default_hero=True,
     )
     return render(request, "international_orders.html", context)
@@ -209,6 +210,5 @@ def international_orders_en(request):
         ],
         hide_global_chrome=True,
         suppress_default_hero=True,
-        content_page="international-orders",
     )
     return render(request, "international_orders_en.html", context)

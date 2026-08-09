@@ -19,8 +19,9 @@ def category_filter_links(
         links.append(
             {
                 "label": category.name,
-                "url": category_url(category),
+                "url": filter_url,
                 "filter_url": filter_url,
+                "category_url": category_url(category),
                 "is_active": (
                     selected_slug == category.slug
                     and (not include_section or selected_section == category.section)
@@ -28,15 +29,3 @@ def category_filter_links(
             }
         )
     return links
-
-
-def featured_selection(queryset, limit=10):
-    """Prefer featured records, then fill without duplicates."""
-
-    featured = list(queryset.filter(featured=True)[:limit])
-    if len(featured) >= limit:
-        return featured
-
-    excluded_ids = [item.pk for item in featured]
-    fallback = list(queryset.exclude(pk__in=excluded_ids)[: limit - len(featured)])
-    return featured + fallback

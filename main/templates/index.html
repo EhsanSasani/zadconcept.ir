@@ -164,6 +164,7 @@
           class="home-sameday-card"
           data-catalog-card
           data-product-type="{{ product.category.slug|default:'collection' }}"
+          data-product-type-label="{{ product.card_type_label }}"
           data-product-code="{{ product.product_code }}"
           data-product-name="{{ product.name|default:'' }}"
           data-product-price="{{ product.display_price }}"

@@ -1,6 +1,12 @@
 from django.test import TestCase
 
-from .models import Category, Product, Tag, category_cover_upload_to
+from .models import (
+    Category,
+    Product,
+    SameDayFlower,
+    Tag,
+    category_cover_upload_to,
+)
 from .selectors.catalog import (
     active_occasion_tags,
     published_products,
@@ -81,5 +87,24 @@ class ArchitectureContractTests(TestCase):
         product.tags.add(same_day)
 
         self.assertEqual(list(same_day_flower_products()), [product])
+        self.assertEqual(list(SameDayFlower.objects.all()), [product])
         self.assertIn(birthday, active_occasion_tags())
         self.assertNotIn(wedding, active_occasion_tags())
+
+    def test_product_queryset_contracts_are_composable(self):
+        published = Product.objects.create(
+            name="Published flower",
+            category=self.category,
+            is_active=True,
+            publish_status=Product.PublishStatus.PUBLISHED,
+        )
+        Product.objects.create(
+            name="Draft flower",
+            category=self.category,
+            is_active=True,
+            publish_status=Product.PublishStatus.DRAFT,
+        )
+
+        queryset = Product.objects.published().for_section(Category.Section.FLOWERS)
+
+        self.assertEqual(list(queryset), [published])

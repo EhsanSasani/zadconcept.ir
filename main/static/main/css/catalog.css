@@ -218,6 +218,59 @@
   justify-content: center;
 }
 
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-7);
+}
+
+.catalog-pagination__pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-pagination__control,
+.catalog-pagination__page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.catalog-pagination__control {
+  padding-inline: var(--space-4);
+}
+
+.catalog-pagination__page.is-current {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--white);
+}
+
+.catalog-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 44px;
+  color: var(--muted);
+}
+
 .flowers-product-card {
   display: block;
   min-width: 0;

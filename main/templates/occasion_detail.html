@@ -23,26 +23,9 @@
   {% endif %}
 
   {% include "partials/product_grid.html" with products=products %}
+  {% include "components/pagination.html" %}
 </section>
 
-{% comment %}
-{% if suggested_sections %}
-  {% for block in suggested_sections %}
-    <section class="container section-block featured-products-section catalog-suggestion-section">
-      <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
-        <div>
-          <h2 class="section-title-en">{{ block.title }}</h2>
-        </div>
-        {% if block.more_url %}
-          <a href="{{ block.more_url }}" class="section-link">View All</a>
-        {% endif %}
-      </div>
-
-      {% include "partials/featured_products_slider.html" with products=block.products %}
-    </section>
-  {% endfor %}
-{% endif %}
-{% endcomment %}
 {% endblock %}
 
 {% block extra_js %}

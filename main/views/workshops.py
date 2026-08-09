@@ -4,9 +4,10 @@ Extracted from the historical view module; shared presentation policy remains in
 ``main.views.legacy`` until its dedicated lower layer is complete.
 """
 
+from ..forms import LeadRequestForm
+
 from .support import (
     Event,
-    LeadRequestForm,
     PublishStatus,
     WorkshopPageContent,
     _default_context,
@@ -76,11 +77,6 @@ def events(request):
             ),
             "events": published_events,
             "workshop_copy": workshop_copy,
-            "lead_form": LeadRequestForm(
-                initial_lead_type="event",
-                include_event_fields=True,
-            ),
-            "lead_default_type": "event",
         }
     )
 

@@ -11,7 +11,12 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from main.models import Category, Event, NewsPost, Product, PublishStatus, Tag
+from main.models import Category, Event, NewsPost, PublishStatus
+from main.selectors.catalog import (
+    catalog_categories,
+    catalog_occasion_tags,
+    published_products,
+)
 from main.sitemaps import sitemaps
 
 
@@ -34,17 +39,13 @@ def all_public_urls():
 def changed_public_urls(since):
     urls = set()
 
-    products = Product.objects.filter(
-        is_active=True,
-        publish_status=Product.PublishStatus.PUBLISHED,
-        category__is_active=True,
+    products = published_products().filter(
         updated_at__gte=since,
     ).select_related("category")
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in products)
 
     categories = (
-        Category.objects.filter(
-            is_active=True,
+        catalog_categories().filter(
             section__in=(
                 Category.Section.FLOWERS,
                 Category.Section.BAKERY,
@@ -55,9 +56,7 @@ def changed_public_urls(since):
     )
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in categories)
 
-    occasions = Tag.objects.filter(
-        is_active=True,
-        is_occasion=True,
+    occasions = catalog_occasion_tags().filter(
         updated_at__gte=since,
     )
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in occasions)

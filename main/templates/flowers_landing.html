@@ -193,7 +193,7 @@
       {% if catalog_products %}
           <div class="flowers-grid" id="catalog-products" data-catalog-grid aria-busy="false">
             {% for product in catalog_products %}
-              {% include "components/product_card.html" with product=product card_variant="grid" fallback_image=landing_fallback_image only %}
+              {% include "components/product_card.html" with product=product card_variant="grid" only %}
             {% endfor %}
           </div>
           <div

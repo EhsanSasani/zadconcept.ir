@@ -1,0 +1,42 @@
+{% if catalog_page_obj and catalog_page_obj.paginator.num_pages > 1 %}
+  <nav class="catalog-pagination" aria-label="صفحه‌بندی محصولات">
+    {% if catalog_page_obj.has_previous %}
+      <a
+        class="catalog-pagination__control"
+        href="?page={{ catalog_page_obj.previous_page_number }}{{ pagination_query_suffix }}"
+        rel="prev"
+      >صفحه قبل</a>
+    {% endif %}
+
+    <ol class="catalog-pagination__pages">
+      {% for item in pagination_links %}
+        <li>
+          {% if item.is_ellipsis %}
+            <span class="catalog-pagination__ellipsis" aria-hidden="true">…</span>
+          {% elif item.is_current %}
+            <a
+              class="catalog-pagination__page is-current"
+              href="?page={{ item.number }}{{ pagination_query_suffix }}"
+              aria-current="page"
+              aria-label="صفحه {{ item.number }}، صفحه فعلی"
+            >{{ item.number }}</a>
+          {% else %}
+            <a
+              class="catalog-pagination__page"
+              href="?page={{ item.number }}{{ pagination_query_suffix }}"
+              aria-label="صفحه {{ item.number }}"
+            >{{ item.number }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+
+    {% if catalog_page_obj.has_next %}
+      <a
+        class="catalog-pagination__control"
+        href="?page={{ catalog_page_obj.next_page_number }}{{ pagination_query_suffix }}"
+        rel="next"
+      >صفحه بعد</a>
+    {% endif %}
+  </nav>
+{% endif %}

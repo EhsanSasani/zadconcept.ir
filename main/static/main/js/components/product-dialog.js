@@ -17,25 +17,6 @@ export function initProductDialog() {
   let bodyHadDialogClass = false;
   let backgroundState = [];
 
-  const typeLabels = {
-    "hand-bouquet": "HAND BOUQUET",
-    "box": "BOX",
-    "bouquet": "BOUQUET",
-    "jarl": "JARL",
-    "wedding": "WEDDING",
-    "wedding-car": "WEDDING CAR",
-    "bridal-bouquet": "BRIDAL BOUQUET",
-    "stand": "STAND",
-    "plants": "PLANTS",
-    "bakery": "BAKERY",
-    "gifts": "GIFTS",
-    "event": "EVENT",
-  };
-
-  function getTypeLabel(value) {
-    return typeLabels[value] || value || "COLLECTION";
-  }
-
   function setBackgroundInert(isInert) {
     if (isInert) {
       backgroundState = Array.from(document.body.children)
@@ -62,7 +43,7 @@ export function initProductDialog() {
     const imageSrc = image ? image.getAttribute("src") : "";
     const imageAlt = image ? image.getAttribute("alt") : "";
 
-    const type = getTypeLabel(card.dataset.productType);
+    const type = card.dataset.productTypeLabel || "COLLECTION";
     const code = card.dataset.productCode || "";
     const name = card.dataset.productName || "";
     const price = card.dataset.productPrice || "استعلام قیمت";

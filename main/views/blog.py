@@ -1,18 +1,11 @@
-"""Blog HTTP views.
-
-Extracted from the historical view module; shared presentation policy remains in
-``main.views.legacy`` until its dedicated lower layer is complete.
-"""
+"""Blog HTTP views."""
 
 from .support import (
-    Category,
     NewsPost,
     PublishStatus,
-    _active_categories_for_section,
     _default_context,
     _get_site_hero,
     _hero_from_key,
-    _published_products,
     _with_home,
     article_node,
     get_object_or_404,
@@ -55,23 +48,6 @@ def blog_detail(request, slug):
         status=PublishStatus.PUBLISHED,
     )
 
-    recommended_items = list(
-        _published_products()
-        .select_related("category")
-        .prefetch_related("tags")
-        .order_by("-featured", "sort_order", "-created_at")[:3]
-    )
-
-    flower_category = _active_categories_for_section(Category.Section.FLOWERS).first()
-
-    recommended_subcategory = None
-
-    if flower_category:
-        recommended_subcategory = {
-            "label": flower_category.name,
-            "url": reverse("flower_subcategory", args=[flower_category.slug]),
-        }
-
     breadcrumbs = _with_home(
         [
             {"name": "Journal", "url": reverse("blog")},
@@ -86,8 +62,6 @@ def blog_detail(request, slug):
         meta_title=f"{post.title} | مجله زاد",
         meta_description=post.excerpt or "مطالعه این مطلب از مجله زاد درباره گل، هدیه و مناسبت‌ها.",
         breadcrumbs=breadcrumbs,
-        enable_product_modal=True,
-        content_page="blog-detail",
         og_type="article",
         social_image=post.cover_image if post.cover_image else None,
     )
@@ -106,22 +80,7 @@ def blog_detail(request, slug):
 
     context.update(hero_data)
 
-    recommended_category = {"label": "Flowers", "url": reverse("flowers")}
-    related_links = [recommended_category]
-
-    if recommended_subcategory:
-        related_links.append(recommended_subcategory)
-
-    context.update(
-        {
-            "post": post,
-            "recommended_category": recommended_category,
-            "recommended_subcategory": recommended_subcategory,
-            "recommended_items": recommended_items,
-            "related_links": related_links,
-            "related_products": recommended_items,
-        }
-    )
+    context["post"] = post
     context["structured_data_graph"].append(article_node(post))
 
     return render(request, "blog_detail.html", context)

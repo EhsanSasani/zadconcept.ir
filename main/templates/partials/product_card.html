@@ -1,5 +1,5 @@
 {% for product in products %}
-  {% include "components/product_card.html" with product=product card_variant=card_variant fallback_image=fallback_image only %}
+  {% include "components/product_card.html" with product=product card_variant=card_variant only %}
 {% empty %}
   <div class="flowers-empty">{{ empty_text|default:"فعلاً محصولی برای نمایش وجود ندارد." }}</div>
 {% endfor %}

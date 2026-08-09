@@ -62,6 +62,24 @@ PRODUCT_SEO_CATEGORY_LABELS = {
     "bridal-bouquet": "دسته‌گل عروس",
 }
 
+PRODUCT_CARD_TYPE_LABELS = {
+    "hand-bouquet": "HAND BOUQUET",
+    "box": "BOX",
+    "bouquet": "BOUQUET",
+    "jarl": "JARL",
+    "wedding": "WEDDING",
+    "wedding-car": "WEDDING CAR",
+    "bridal-bouquet": "BRIDAL BOUQUET",
+    "stand": "STAND",
+    "plants": "PLANTS",
+}
+
+PRODUCT_CARD_FALLBACK_IMAGES = {
+    "flowers": "main/img/cat-flowers.webp",
+    "bakery": "main/img/cat-bakery.webp",
+    "gifts": "main/img/cat-gifts.webp",
+}
+
 HERO_POSITION_CHOICES = (
     ("top-left", "بالا چپ"),
     ("top-center", "بالا وسط"),
@@ -424,6 +442,35 @@ class Tag(TimeStampedModel):
         return reverse("occasion_detail", args=[self.slug])
 
 
+class ProductQuerySet(models.QuerySet):
+    """Composable product policy shared by selectors and proxy admins."""
+
+    def active(self):
+        return self.filter(
+            Q(category__parent__isnull=True) | Q(category__parent__is_active=True),
+            is_active=True,
+            category__is_active=True,
+        )
+
+    def published(self):
+        return self.active().filter(publish_status="published")
+
+    def for_section(self, section):
+        return self.filter(category__section=section)
+
+    def same_day(self):
+        return self.filter(tags__slug=SAME_DAY_TAG_SLUG).distinct()
+
+    def with_card_relations(self):
+        return self.select_related("category", "category__parent")
+
+    def with_detail_relations(self):
+        return self.with_card_relations().prefetch_related(
+            "tags",
+            "gallery_images",
+        )
+
+
 class Product(TimeStampedModel):
     class PricingType(models.TextChoices):
         FIXED = "fixed", "قیمت ثابت"
@@ -525,6 +572,8 @@ class Product(TimeStampedModel):
     featured = models.BooleanField("ویژه باشد؟", default=False, db_index=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
 
+    objects = ProductQuerySet.as_manager()
+
     class Meta:
         ordering = ["sort_order", "-created_at"]
         verbose_name = "محصول"
@@ -564,6 +613,22 @@ class Product(TimeStampedModel):
     def display_name(self):
         clean_name = self.name.strip() if self.name else ""
         return clean_name or self.product_code or f"{self.pk or 'NEW'}"
+
+    @property
+    def card_type_label(self):
+        if not self.category_id:
+            return "COLLECTION"
+        return PRODUCT_CARD_TYPE_LABELS.get(
+            self.category.slug,
+            self.category.slug.replace("-", " ").upper(),
+        )
+
+    @property
+    def card_fallback_image(self):
+        return PRODUCT_CARD_FALLBACK_IMAGES.get(
+            self.section,
+            "main/img/cat-flowers.webp",
+        )
 
     @property
     def seo_category_name(self):
@@ -757,25 +822,30 @@ class Product(TimeStampedModel):
         return reverse(route_name, args=[self.category.slug, self.slug])
 
 
-class FlowerManager(models.Manager):
+class FlowerManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
         return super().get_queryset().filter(
             category__section=Category.Section.FLOWERS,
         )
 
 
-class BakeryItemManager(models.Manager):
+class BakeryItemManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
         return super().get_queryset().filter(
             category__section=Category.Section.BAKERY,
         )
 
 
-class GiftItemManager(models.Manager):
+class GiftItemManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
         return super().get_queryset().filter(
             category__section=Category.Section.GIFTS,
         )
+
+
+class SameDayFlowerManager(FlowerManager):
+    def get_queryset(self):
+        return super().get_queryset().same_day()
 
 
 class Flower(Product):
@@ -791,7 +861,7 @@ class Flower(Product):
 class SameDayFlower(Product):
     """Admin-only proxy for the fast same-day selection workflow."""
 
-    objects = FlowerManager()
+    objects = SameDayFlowerManager()
 
     class Meta:
         proxy = True

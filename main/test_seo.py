@@ -138,11 +138,7 @@ class SeoContractTests(TestCase):
         self.assertTrue(parser.description)
 
         graph = graph_for(response)
-        product = next(node for node in graph if node.get("@type") == "Product")
-        self.assertEqual(product["name"], self.unnamed.seo_name)
-        self.assertEqual(product["sku"], self.unnamed.product_code)
-        self.assertNotIn("offers", product)
-        self.assertNotIn("seller", product)
+        self.assertFalse(any(node.get("@type") == "Product" for node in graph))
         self.assertFalse(any(node.get("@type") == "BreadcrumbList" for node in graph))
 
     def test_fixed_price_product_has_complete_offer(self):

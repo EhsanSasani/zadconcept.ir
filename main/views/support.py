@@ -8,20 +8,17 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import DatabaseError
-from django.db.models import Case, IntegerField, Q, Value, When
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from ..forms import LeadRequestForm
 from ..content.catalog import (
     CATALOG_PAGE_SIZE,
     CATEGORY_CONTENT_OVERRIDES,
     CATEGORY_SLUG_ALIASES,
     COLLECTION_LANDING_CONTENT,
-    FLOWER_FILTER_ORDER,
     HERO_FONT_CSS_STACKS,
     HERO_POSITION_VALUES,
     OCCASION_CARD_CONTENT,
@@ -36,16 +33,12 @@ from ..content.catalog import (
 from ..models import (
     Category,
     Event,
-    FLOWER_CATEGORY_SLUGS,
     FLOWER_OCCASION_TAG_SLUGS,
-    Flower,
     HeroFont,
     HomeHeroSlide,
     NewsPost,
     PageContentBlock,
-    Product,
     PublishStatus,
-    SAME_DAY_TAG_SLUG,
     SiteHero,
     Tag,
     WorkshopPageContent,
@@ -69,17 +62,8 @@ from ..site_content import (
     INTERNATIONAL_FAQ_FA,
     POLICY_PAGES,
 )
-from ..presenters.catalog import (
-    category_filter_links,
-    featured_selection,
-)
-from ..selectors.catalog import (
-    active_occasion_tags,
-    active_root_categories,
-    published_products,
-    published_products_for_section,
-    same_day_flower_products,
-)
+from ..presenters.catalog import category_filter_links
+from ..selectors.catalog import active_occasion_tags
 
 LEGACY_FLOWER_BRAND_PHRASES = (
     "گل‌های زاد",
@@ -480,6 +464,21 @@ def _default_context(
     )
     social_width, social_height = social_image_dimensions(social_image)
     page_robots = robots_content(request) if is_indexable else "noindex,follow"
+    page_content = {}
+    if content_page:
+        page_content = {
+            block.section_key: {
+                "kicker": _public_brand_copy(block.kicker),
+                "title": _public_brand_copy(block.title),
+                "body": _public_brand_copy(block.body),
+                "cta_text": _public_brand_copy(block.cta_text),
+                "cta_url": block.cta_url,
+            }
+            for block in PageContentBlock.objects.filter(
+                page=content_page,
+                is_active=True,
+            ).order_by("sort_order", "section_key")
+        }
     context = {
         "page_type": page_type,
         "active_nav": active_nav,
@@ -494,28 +493,14 @@ def _default_context(
         "social_image_height": social_height,
         "item_id": item_id,
         "structured_data_graph": structured_data_graph,
-        "is_homepage": False,
         "enable_product_modal": enable_product_modal,
-        "flowers_url": reverse("flowers"),
         "html_lang": html_lang,
         "html_dir": html_dir,
         "alternate_links": alternate_links or [],
         "hide_global_chrome": hide_global_chrome,
         "suppress_default_hero": suppress_default_hero,
         "has_managed_site_hero": False,
-        "page_content": {
-            block.section_key: {
-                "kicker": _public_brand_copy(block.kicker),
-                "title": _public_brand_copy(block.title),
-                "body": _public_brand_copy(block.body),
-                "cta_text": _public_brand_copy(block.cta_text),
-                "cta_url": block.cta_url,
-            }
-            for block in PageContentBlock.objects.filter(
-                page=content_page or page_type,
-                is_active=True,
-            ).order_by("sort_order", "section_key")
-        },
+        "page_content": page_content,
         **_hero_defaults(meta_title, meta_description),
     }
 
@@ -537,48 +522,6 @@ def _default_context(
 # =========================
 # Product / category helpers
 # =========================
-
-def _published_products():
-    """Compatibility wrapper; new code imports the selector directly."""
-
-    return published_products()
-
-
-def _published_products_for_section(section):
-    """Compatibility wrapper; new code imports the selector directly."""
-
-    return published_products_for_section(section)
-
-
-def _active_categories_for_section(section):
-    return active_root_categories(section)
-
-
-
-
-def _catalog_ordered_products(queryset, section):
-    if section == Category.Section.FLOWERS:
-        order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
-        cases = [
-            When(category__slug=slug, then=Value(index))
-            for slug, index in order.items()
-        ]
-        queryset = queryset.annotate(
-            category_rank=Case(
-                *cases,
-                default=Value(len(order)),
-                output_field=IntegerField(),
-            )
-        )
-        return queryset.order_by(
-            "category_rank",
-            "-featured",
-            "sort_order",
-            "-created_at",
-            "id",
-        )
-
-    return queryset.order_by("-featured", "sort_order", "-created_at", "id")
 
 
 def _paginate_products(request, queryset):
@@ -665,7 +608,6 @@ def _section_category_url(category):
 
 def _category_card(category):
     content = _category_content(category)
-    has_children = category.children.filter(is_active=True).exists()
 
     return {
         "slug": category.slug,
@@ -673,7 +615,7 @@ def _category_card(category):
         "url": _section_category_url(category),
         "image": category.cover_image.url if category.cover_image else content["image"],
         "intro": category.description or content["intro"],
-        "has_children": has_children,
+        "has_children": category.has_active_children,
     }
 
 
@@ -705,22 +647,14 @@ def _occasion_card(tag, *, for_flowers=False):
     }
 
 
-def _active_occasion_tags(limit=None):
-    return active_occasion_tags(limit=limit)
-
-
 def _occasion_links(limit=4):
     return [
         {
             "label": tag.name,
             "url": reverse("occasion_detail", args=[tag.slug]),
         }
-        for tag in _active_occasion_tags(limit=limit)
+        for tag in active_occasion_tags(limit=limit)
     ]
-
-
-def _featured_selection(queryset, limit=10):
-    return featured_selection(queryset, limit=limit)
 
 
 def _filter_links_for_categories(
@@ -739,37 +673,6 @@ def _filter_links_for_categories(
         include_section=include_section,
         category_url=_section_category_url,
     )
-
-
-def _flower_type_cards():
-    categories = {
-        category.slug: category
-        for category in Category.objects.filter(
-            section=Category.Section.FLOWERS,
-            is_active=True,
-            parent__isnull=True,
-            slug__in=FLOWER_CATEGORY_SLUGS,
-        ).order_by("sort_order", "name")
-    }
-
-    cards = []
-
-    for slug in ("hand-bouquet", "box", "bouquet", "stand", "wedding"):
-        category = categories.get(slug)
-        if category:
-            cards.append(_category_card(category))
-
-
-    for slug in ("jarl", "plants"):
-        category = categories.get(slug)
-        if category:
-            cards.append(_category_card(category))
-
-    return cards
-
-
-def _flower_same_day_products(limit=12):
-    return list(same_day_flower_products()[:limit])
 
 
 # =========================

@@ -34,6 +34,7 @@ class TemplateComponentContractTests(TestCase):
             "components/product_card.html",
             "components/product_grid.html",
             "components/product_rail.html",
+            "components/pagination.html",
             "components/hero/standard.html",
         )
 
@@ -54,6 +55,10 @@ class TemplateComponentContractTests(TestCase):
         self.assertEqual(rendered.count("data-catalog-card"), 1)
         self.assertIn(self.first.display_name, rendered)
         self.assertNotIn(self.second.display_name, rendered)
+        self.assertIn(
+            'sizes="(max-width: 768px) 46vw, (max-width: 1100px) 46vw, 360px"',
+            rendered,
+        )
 
     def test_grid_and_rail_own_collection_iteration(self):
         context = {

@@ -6,7 +6,7 @@ import { installDom } from "./dom-helpers.mjs";
 test("product dialog opens from an enhanced link and restores focus on Escape", async () => {
   const cleanup = installDom(`
     <main data-background>
-      <article data-catalog-card data-product-code="Z1" data-product-name="Rose" data-product-price="100" data-product-type="box">
+      <article data-catalog-card data-product-code="Z1" data-product-name="Rose" data-product-price="100" data-product-type="box" data-product-type-label="BOX">
         <a href="/flowers/box/z1/" data-zad-modal-card><img src="/rose.jpg" alt="Rose" data-product-image></a>
       </article>
     </main>
@@ -34,6 +34,7 @@ test("product dialog opens from an enhanced link and restores focus on Escape", 
   assert.equal(document.body.classList.contains("has-open-product-dialog"), true);
   assert.equal(document.body.style.overflow, "hidden");
   assert.equal(document.querySelector("[data-modal-title]").textContent, "Rose");
+  assert.equal(document.querySelector("[data-modal-type]").textContent, "BOX");
   assert.equal(document.activeElement, document.querySelector("[data-product-modal-close-button]"));
 
   document.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));

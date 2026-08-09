@@ -1,6 +1,6 @@
 <div class="flowers-grid product-grid">
   {% for product in products %}
-    {% include "components/product_card.html" with product=product card_variant="grid" fallback_image=fallback_image only %}
+    {% include "components/product_card.html" with product=product card_variant="grid" only %}
   {% empty %}
     <div class="empty-box">{{ empty_text|default:"فعلاً محصولی برای نمایش وجود ندارد." }}</div>
   {% endfor %}

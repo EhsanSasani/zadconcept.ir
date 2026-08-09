@@ -6,7 +6,6 @@ domains are extracted from :mod:`main.views.legacy`.
 """
 
 from .support import *  # noqa: F401,F403
-from .support import _active_occasion_tags
 from .blog import blog, blog_detail
 from .catalog import (
     bakery,

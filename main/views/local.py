@@ -1,20 +1,19 @@
-"""Local HTTP views.
+"""Local landing HTTP views."""
 
-Extracted from the historical view module; shared presentation policy remains in
-``main.views.legacy`` until its dedicated lower layer is complete.
-"""
+from ..selectors.catalog import (
+    active_root_categories,
+    catalog_products_for_section,
+    ordered_catalog_products,
+)
 
 from .support import (
     Category,
     Http404,
-    LeadRequestForm,
-    _active_categories_for_section,
     _category_card,
     _default_context,
     _get_site_hero,
     _hero_from_key,
     _occasion_links,
-    _published_products_for_section,
     _with_home,
     render,
     reverse,
@@ -22,10 +21,8 @@ from .support import (
 
 def mashhad_hub(request):
     curated_items = list(
-        _published_products_for_section(Category.Section.FLOWERS).order_by(
-            "-featured",
-            "sort_order",
-            "-created_at",
+        ordered_catalog_products(
+            catalog_products_for_section(Category.Section.FLOWERS)
         )[:6]
     )
 
@@ -50,8 +47,6 @@ def mashhad_hub(request):
     context.update(
         {
             "curated_items": curated_items,
-            "lead_form": LeadRequestForm(initial_lead_type="flower"),
-            "lead_default_type": "flower",
         }
     )
 
@@ -72,27 +67,10 @@ def _local_landing(request, landing_type):
         raise Http404("Landing page not found")
 
     curated_items = list(
-        _published_products_for_section(Category.Section.FLOWERS).order_by(
-            "-featured",
-            "sort_order",
-            "-created_at",
+        ordered_catalog_products(
+            catalog_products_for_section(Category.Section.FLOWERS)
         )[:8]
     )
-
-    local_faq = [
-        {
-            "question": "کدام محدوده‌های مشهد برای سفارش فوری پوشش داده می‌شوند؟",
-            "answer": "بیشتر محدوده‌های شهری مشهد در ساعات کاری قابل بررسی‌اند و امکان دقیق پس از دریافت نشانی تأیید می‌شود.",
-        },
-        {
-            "question": "برای ارسال همان‌روز چقدر زودتر هماهنگ کنم؟",
-            "answer": "بهتر است حداقل دو تا سه ساعت زودتر پیام بدهید؛ امکان نهایی به موجودی و ظرفیت آماده‌سازی بستگی دارد.",
-        },
-        {
-            "question": "آیا قبل از ارسال تصویر نهایی را دریافت می‌کنم؟",
-            "answer": "در صورت درخواست، امکان هماهنگی برای ارسال تصویر نهایی پیش از تحویل وجود دارد.",
-        },
-    ]
 
     breadcrumbs = _with_home(
         [
@@ -109,7 +87,6 @@ def _local_landing(request, landing_type):
         meta_description=meta_description,
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
-        content_page="mashhad",
     )
 
     hero_data = _hero_from_key("mashhad", title=title, text=subtitle)
@@ -129,7 +106,7 @@ def _local_landing(request, landing_type):
     if not occasion_links:
         occasion_links = [
             _category_card(category)
-            for category in _active_categories_for_section(Category.Section.FLOWERS)[:4]
+            for category in active_root_categories(Category.Section.FLOWERS)[:4]
         ]
 
     context.update(
@@ -144,8 +121,6 @@ def _local_landing(request, landing_type):
                 "بسته‌بندی حرفه‌ای و آماده هدیه",
             ],
             "occasion_links": occasion_links,
-            "lead_form": LeadRequestForm(initial_lead_type="flower"),
-            "lead_default_type": "flower",
         }
     )
 

@@ -87,7 +87,7 @@
     {% if items %}
       <div class="flowers-grid same-day-grid">
         {% for product in items %}
-          {% include "components/product_card.html" with product=product card_variant="grid" fallback_image="main/img/cat-flowers.webp" only %}
+          {% include "components/product_card.html" with product=product card_variant="grid" only %}
         {% endfor %}
       </div>
     {% else %}
@@ -135,6 +135,7 @@
   {% endif %}
 
   {% include "partials/product_grid.html" with products=items %}
+  {% include "components/pagination.html" %}
 </section>
 {% endif %}
 

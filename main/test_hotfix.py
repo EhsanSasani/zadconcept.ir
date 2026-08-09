@@ -7,7 +7,7 @@ from django.urls import reverse
 from .context_processors import full_address_text
 from .models import Category, PageContentBlock, Product, Tag
 from .sitemaps import OccasionSitemap
-from .views import _active_occasion_tags
+from .selectors.catalog import active_occasion_tags
 
 
 class AdminResponsiveHotfixTests(SimpleTestCase):
@@ -175,7 +175,7 @@ class WeddingCatalogHotfixTests(TestCase):
             reverse("flower_occasion", args=["wedding"])
         )
 
-        self.assertNotIn(wedding_tag, _active_occasion_tags())
+        self.assertNotIn(wedding_tag, active_occasion_tags())
         self.assertNotIn(wedding_tag, list(OccasionSitemap().items()))
         self.assertRedirects(
             old_global_url,

@@ -7,6 +7,7 @@
     data-card-variant="{{ card_variant|default:'grid' }}"
     data-category="{{ product.category.slug|default:'uncategorized' }}"
     data-product-type="{{ product.category.slug|default:'collection' }}"
+    data-product-type-label="{{ product.card_type_label }}"
     data-product-code="{{ product.product_code }}"
     data-product-name="{{ product.name|default:'' }}"
     data-product-price="{{ product.display_price }}"
@@ -23,18 +24,18 @@
             {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %}
             width="520"
             height="650"
-            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            sizes="(max-width: 768px) 46vw, (max-width: 1100px) 46vw, 360px"
             loading="lazy"
             decoding="async"
             data-product-image
           >
         {% else %}
           <img
-            src="{% static fallback_image|default:'main/img/cat-flowers.webp' %}"
+            src="{% static product.card_fallback_image %}"
             alt="{{ product.seo_name }}"
             width="520"
             height="650"
-            sizes="(max-width: 640px) 92vw, (max-width: 1100px) 46vw, 360px"
+            sizes="(max-width: 768px) 46vw, (max-width: 1100px) 46vw, 360px"
             loading="lazy"
             decoding="async"
             data-product-image
@@ -53,27 +54,7 @@
       <div class="flowers-product-card__body">
         <div>
           <span class="flowers-product-card__type">
-            {% if product.category.slug == "hand-bouquet" %}
-              HAND BOUQUET
-            {% elif product.category.slug == "box" %}
-              BOX
-            {% elif product.category.slug == "bouquet" %}
-              BOUQUET
-            {% elif product.category.slug == "jarl" %}
-              JARL
-            {% elif product.category.slug == "wedding" %}
-              WEDDING
-            {% elif product.category.slug == "wedding-car" %}
-              WEDDING CAR
-            {% elif product.category.slug == "bridal-bouquet" %}
-              BRIDAL BOUQUET
-            {% elif product.category.slug == "stand" %}
-              STAND
-            {% elif product.category %}
-              {{ product.category.slug|cut:"-"|upper }}
-            {% else %}
-              COLLECTION
-            {% endif %}
+            {{ product.card_type_label }}
           </span>
 
           <h3{% if not product.name %} class="flowers-product-card__code"{% endif %}>{{ product.display_name }}</h3>

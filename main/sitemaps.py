@@ -6,7 +6,12 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Category, Event, NewsPost, Product, PublishStatus, Tag
+from .models import Category, Event, NewsPost, PublishStatus
+from .selectors.catalog import (
+    catalog_categories,
+    catalog_occasion_tags,
+    published_products,
+)
 
 
 class CanonicalSitemap(Sitemap):
@@ -65,8 +70,7 @@ class CategorySitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Category.objects.filter(
-                is_active=True,
+            catalog_categories().filter(
                 section__in=(
                     Category.Section.FLOWERS,
                     Category.Section.BAKERY,
@@ -86,10 +90,7 @@ class OccasionSitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Tag.objects.filter(is_active=True, is_occasion=True)
-            .exclude(slug="wedding")
-            .exclude(name="عروسی")
-            .order_by("sort_order", "name")
+            catalog_occasion_tags()
         )
 
     def lastmod(self, obj):
@@ -102,11 +103,7 @@ class ProductSitemap(CanonicalSitemap):
 
     def items(self):
         return (
-            Product.objects.filter(
-                is_active=True,
-                publish_status=Product.PublishStatus.PUBLISHED,
-                category__is_active=True,
-            )
+            published_products()
             .select_related("category")
             .order_by("-updated_at")
         )

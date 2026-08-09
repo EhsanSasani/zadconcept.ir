@@ -1,24 +1,28 @@
-"""Catalog HTTP views.
+"""Catalog HTTP views."""
 
-Extracted from the historical view module; shared presentation policy remains in
-``main.views.legacy`` until its dedicated lower layer is complete.
-"""
+from ..content.catalog import FLOWER_FILTER_ORDER
+from ..presenters.pagination import pagination_context
+from ..selectors.catalog import (
+    active_child_categories,
+    catalog_categories,
+    catalog_categories_with_child_state,
+    catalog_products_for_occasion,
+    catalog_products_for_section,
+    ordered_catalog_products,
+    ordered_section_catalog_products,
+    products_for_category,
+    same_day_flower_products,
+)
 
 from .support import (
-    CATALOG_PAGE_SIZE,
     CATEGORY_SLUG_ALIASES,
     COLLECTION_LANDING_CONTENT,
     Category,
-    FLOWER_FILTER_ORDER,
     Http404,
     JsonResponse,
-    LeadRequestForm,
     OCCASION_CARD_CONTENT,
-    Product,
-    SAME_DAY_TAG_SLUG,
     SECTION_CONTENT,
     Tag,
-    _catalog_ordered_products,
     _category_card,
     _category_content,
     _default_context,
@@ -27,8 +31,6 @@ from .support import (
     _hero_from_key,
     _occasion_detail_hero,
     _paginate_products,
-    _published_products,
-    _published_products_for_section,
     _section_all_url,
     _section_category_url,
     _with_home,
@@ -44,20 +46,25 @@ def _collection_landing_page(
     request,
     section,
     *,
-    excluded_category_slugs=(),
     directory_only=False,
 ):
     config = SECTION_CONTENT[section]
     landing = COLLECTION_LANDING_CONTENT[section]
+    page = request.GET.get("page")
 
-    products_qs = _published_products_for_section(section)
-    categories_qs = Category.objects.filter(section=section, is_active=True)
+    if (
+        directory_only
+        and set(request.GET) == {"page"}
+        and page
+        and page.isdigit()
+        and int(page) >= 1
+    ):
+        return redirect(reverse(section), permanent=True)
+
+    products_qs = catalog_products_for_section(section)
+    categories_qs = catalog_categories_with_child_state(section)
     if directory_only:
         categories_qs = categories_qs.filter(parent__isnull=True)
-
-    if excluded_category_slugs:
-        products_qs = products_qs.exclude(category__slug__in=excluded_category_slugs)
-        categories_qs = categories_qs.exclude(slug__in=excluded_category_slugs)
 
     selected_category_slug = request.GET.get("category") or ""
     selected_category = None
@@ -80,7 +87,7 @@ def _collection_landing_page(
         page_obj = None
         products = []
     else:
-        products_qs = _catalog_ordered_products(products_qs, section)
+        products_qs = ordered_section_catalog_products(products_qs, section)
         page_obj = _paginate_products(request, products_qs)
         products = list(page_obj.object_list)
 
@@ -92,7 +99,6 @@ def _collection_landing_page(
             {
                 "products": products,
                 "card_variant": "landing",
-                "fallback_image": landing["fallback_image"],
                 "empty_text": landing["empty_text"],
             },
             request=request,
@@ -116,15 +122,21 @@ def _collection_landing_page(
         order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
         categories.sort(key=lambda category: order.get(category.slug, len(order)))
 
-    filter_categories = [
-        {
-            "name": category.name,
-            "slug": category.slug,
-            "url": _section_category_url(category),
-        }
-        for category in categories
-    ]
-    landing_category_cards = [_category_card(category) for category in categories]
+    filter_categories = []
+    if not directory_only:
+        filter_categories = [
+            {
+                "name": category.name,
+                "slug": category.slug,
+                "url": _section_category_url(category),
+            }
+            for category in categories
+        ]
+    landing_category_cards = (
+        [_category_card(category) for category in categories]
+        if directory_only
+        else []
+    )
 
     context = _default_context(
         request,
@@ -147,7 +159,6 @@ def _collection_landing_page(
             "landing_category_cards": landing_category_cards,
             "directory_only": directory_only,
             "selected_category_slug": selected_category.slug if selected_category else "",
-            "catalog_page_size": CATALOG_PAGE_SIZE,
             "catalog_load_url": reverse(section),
             "landing_hero_eyebrow": (
                 page_hero["page_hero_kicker"]
@@ -172,7 +183,6 @@ def _collection_landing_page(
             "landing_hero_mobile_image": (
                 page_hero["page_hero_mobile_image"] if page_hero else ""
             ),
-            "landing_fallback_image": landing["fallback_image"],
             "landing_empty_text": landing["empty_text"],
             "landing_why_items": landing["why_items"],
             "landing_cta_kicker": landing["cta_kicker"],
@@ -180,8 +190,6 @@ def _collection_landing_page(
             "landing_cta_text": landing["cta_text"],
             "landing_cta_image": landing["cta_image"],
             "landing_cta_alt": landing["cta_alt"],
-            "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
-            "lead_default_type": config["lead_type"],
         }
     )
 
@@ -202,18 +210,14 @@ def gifts(request):
 
 def _section_all_products(request, section):
     config = SECTION_CONTENT[section]
-    products_qs = _published_products_for_section(section).order_by(
-        "-featured",
-        "sort_order",
-        "-created_at",
+    products_qs = ordered_catalog_products(
+        catalog_products_for_section(section)
     )
 
     categories = list(
-        Category.objects.filter(
-            section=section,
-            is_active=True,
-            children__isnull=True,
-        ).order_by("sort_order", "name")
+        catalog_categories_with_child_state(section).filter(
+            has_active_children=False
+        )
     )
 
     selected_category = None
@@ -221,16 +225,15 @@ def _section_all_products(request, section):
 
     if selected_slug:
         selected_category = get_object_or_404(
-            Category,
-            section=section,
+            catalog_categories_with_child_state(section),
             slug=selected_slug,
-            is_active=True,
         )
-        if selected_category.children.filter(is_active=True).exists():
+        if selected_category.has_active_children:
             return redirect(selected_category.get_absolute_url(), permanent=True)
         products_qs = products_qs.filter(category=selected_category)
 
-    items = list(products_qs[:48])
+    page_obj = _paginate_products(request, products_qs)
+    items = list(page_obj.object_list)
     title = config["title"]
 
     if selected_category:
@@ -266,6 +269,7 @@ def _section_all_products(request, section):
         hero_data = db_hero
 
     context.update(hero_data)
+    context.update(pagination_context(request, page_obj))
     context.update(
         {
             "collection_title": title,
@@ -276,26 +280,13 @@ def _section_all_products(request, section):
                 categories,
                 selected_slug=selected_slug,
             ),
-            "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
-            "lead_default_type": config["lead_type"],
         }
     )
 
     return render(request, "subcategory.html", context)
 
 def flowers_same_day(request):
-    products = (
-        Product.objects.filter(
-            category__section=Category.Section.FLOWERS,
-            is_active=True,
-            publish_status=Product.PublishStatus.PUBLISHED,
-            tags__slug=SAME_DAY_TAG_SLUG,
-        )
-        .select_related("category")
-        .prefetch_related("tags")
-        .distinct()
-        .order_by("sort_order", "-updated_at")
-    )
+    products = same_day_flower_products()
 
     breadcrumbs = _with_home(
         [
@@ -355,26 +346,18 @@ def gifts_all(request):
 
 def _section_subcategory(request, section, subcategory_slug):
     category = get_object_or_404(
-        Category,
-        section=section,
+        catalog_categories_with_child_state(section),
         slug=subcategory_slug,
-        is_active=True,
     )
 
     config = SECTION_CONTENT[section]
     content = _category_content(category)
-    child_categories = list(
-        category.children.filter(is_active=True).order_by("sort_order", "name")
+    child_categories = list(active_child_categories(category))
+    page_obj = _paginate_products(
+        request,
+        ordered_catalog_products(products_for_category(category)),
     )
-
-    visible_category_ids = [category.pk, *[child.pk for child in child_categories]]
-    items = list(
-        _published_products()
-        .filter(category_id__in=visible_category_ids)
-        .select_related("category")
-        .prefetch_related("tags")
-        .order_by("-featured", "sort_order", "-created_at")[:48]
-    )
+    items = list(page_obj.object_list)
 
     breadcrumb_items = [{"name": config["title"], "url": reverse(section)}]
     if category.parent_id:
@@ -409,6 +392,7 @@ def _section_subcategory(request, section, subcategory_slug):
         hero_data = db_hero
 
     context.update(hero_data)
+    context.update(pagination_context(request, page_obj))
     context.update(
         {
             "subcategory_slug": category.slug,
@@ -427,8 +411,6 @@ def _section_subcategory(request, section, subcategory_slug):
             "child_categories": [
                 _category_card(child) for child in child_categories
             ],
-            "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
-            "lead_default_type": config["lead_type"],
         }
     )
 
@@ -461,10 +443,11 @@ def flower_occasion(request, slug):
 
     card = OCCASION_CARD_CONTENT.get(occasion.slug, {})
 
-    base_products_qs = (
-        _published_products_for_section(Category.Section.FLOWERS)
-        .filter(tags=occasion)
-        .order_by("-featured", "sort_order", "-created_at")
+    base_products_qs = ordered_catalog_products(
+        catalog_products_for_occasion(
+            occasion,
+            section=Category.Section.FLOWERS,
+        )
     )
 
     available_category_ids = list(
@@ -472,10 +455,9 @@ def flower_occasion(request, slug):
     )
 
     available_categories = list(
-        Category.objects.filter(
+        catalog_categories(Category.Section.FLOWERS).filter(
             pk__in=available_category_ids,
-            is_active=True,
-        ).order_by("sort_order", "name")
+        )
     )
 
     selected_slug = request.GET.get("category") or ""
@@ -484,36 +466,14 @@ def flower_occasion(request, slug):
 
     if selected_slug:
         selected_category = get_object_or_404(
-            Category,
-            section=Category.Section.FLOWERS,
+            catalog_categories(Category.Section.FLOWERS),
             slug=selected_slug,
-            is_active=True,
             pk__in=available_category_ids,
         )
         products_qs = products_qs.filter(category=selected_category)
 
-    products = list(products_qs[:48])
-    suggested_sections = []
-
-    for suggestion_section, title in (
-        (Category.Section.BAKERY, "Matching Bakery"),
-        (Category.Section.GIFTS, "Complementary Gifts"),
-    ):
-        section_products = list(
-            _published_products_for_section(suggestion_section)
-            .filter(tags=occasion)
-            .order_by("-featured", "sort_order", "-created_at")[:6]
-        )
-
-        if section_products:
-            suggested_sections.append(
-                {
-                    "title": title,
-                    "products": section_products,
-                    "more_url": reverse("occasion_detail", args=[occasion.slug]),
-                }
-            )
-
+    page_obj = _paginate_products(request, products_qs)
+    products = list(page_obj.object_list)
     title = card.get("hero_title") or f"{occasion.name} Flowers"
 
     if selected_category:
@@ -534,7 +494,6 @@ def flower_occasion(request, slug):
         meta_description=f"مشاهده انتخاب‌های {title} و هماهنگی سریع سفارش و ارسال در مشهد از زاد.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
-        content_page="occasion-detail",
     )
 
     hero_data = _occasion_detail_hero(occasion, title=title)
@@ -548,6 +507,7 @@ def flower_occasion(request, slug):
 
     base_url = reverse("flower_occasion", args=[occasion.slug])
 
+    context.update(pagination_context(request, page_obj))
     context.update(
         {
             "occasion": occasion,
@@ -557,10 +517,6 @@ def flower_occasion(request, slug):
                 available_categories,
                 selected_slug=selected_slug,
             ),
-            "selected_category": selected_category,
-            "suggested_sections": suggested_sections,
-            "global_occasion_url": reverse("occasion_detail", args=[occasion.slug]),
-            "is_flower_occasion": True,
         }
     )
 
