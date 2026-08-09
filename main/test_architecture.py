@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.test import TestCase
 
 from .models import (
@@ -28,6 +31,8 @@ class ArchitectureContractTests(TestCase):
         self.assertEqual(views.index.__module__, "main.views.home")
         self.assertEqual(views.flowers.__module__, "main.views.catalog")
         self.assertEqual(views.product_detail.__module__, "main.views.products")
+        self.assertEqual(views.weddings.__module__, "main.views.weddings")
+        self.assertEqual(views.wedding_collection.__module__, "main.views.weddings")
         self.assertEqual(views.occasions.__module__, "main.views.occasions")
         self.assertEqual(views.events.__module__, "main.views.workshops")
         self.assertEqual(views.submit_lead_request.__module__, "main.views.leads")
@@ -108,3 +113,24 @@ class ArchitectureContractTests(TestCase):
         queryset = Product.objects.published().for_section(Category.Section.FLOWERS)
 
         self.assertEqual(list(queryset), [published])
+
+    def test_responsive_shell_contract_has_clear_owners(self):
+        static_css = Path(settings.BASE_DIR) / "main" / "static" / "main" / "css"
+        templates = Path(settings.BASE_DIR) / "main" / "templates"
+        navbar = (static_css / "navbar.css").read_text(encoding="utf-8")
+        responsive = (static_css / "responsive.css").read_text(encoding="utf-8")
+        tokens = (static_css / "tokens.css").read_text(encoding="utf-8")
+        header = (templates / "layout" / "site_header.html").read_text(
+            encoding="utf-8"
+        )
+        base = (templates / "base.html").read_text(encoding="utf-8")
+
+        self.assertIn("position: sticky", navbar)
+        self.assertIn("var(--rendered-notice-height)", navbar)
+        self.assertIn("site-header-spacer", navbar)
+        self.assertIn("site-header-spacer", header)
+        self.assertNotIn(".nav-wrap", responsive)
+        self.assertIn("--primary-hero-mobile", tokens)
+        self.assertIn("aspect-ratio: 16 / 5", responsive)
+        self.assertIn("viewport-fit=cover", base)
+        self.assertIn("hero-global-fix.css", base)

@@ -200,12 +200,12 @@ class AdminImagePreviewMixin:
 class ActiveActionsMixin:
     actions = ("activate_selected", "deactivate_selected")
 
-    @admin.action(description="فعال‌کردن موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="فعال‌کردن موارد انتخاب‌شده")
     def activate_selected(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} مورد فعال شد.")
 
-    @admin.action(description="غیرفعال‌کردن موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="غیرفعال‌کردن موارد انتخاب‌شده")
     def deactivate_selected(self, request, queryset):
         updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} مورد غیرفعال شد.")
@@ -222,37 +222,37 @@ class ProductActionsMixin(ActiveActionsMixin):
         "make_inquiry_pricing",
     )
 
-    @admin.action(description="ویژه‌کردن موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="ویژه‌کردن موارد انتخاب‌شده")
     def mark_featured(self, request, queryset):
         updated = queryset.update(featured=True)
         self.message_user(request, f"{updated} مورد ویژه شد.")
 
-    @admin.action(description="حذف از موارد ویژه")
+    @admin.action(permissions=["change"], description="حذف از موارد ویژه")
     def remove_featured(self, request, queryset):
         updated = queryset.update(featured=False)
         self.message_user(request, f"{updated} مورد از ویژه‌ها حذف شد.")
 
-    @admin.action(description="انتشار موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="انتشار موارد انتخاب‌شده")
     def publish_selected_products(self, request, queryset):
         updated = queryset.update(publish_status=Product.PublishStatus.PUBLISHED)
         self.message_user(request, f"{updated} مورد منتشر شد.")
 
-    @admin.action(description="بازگردانی به پیش‌نویس")
+    @admin.action(permissions=["change"], description="بازگردانی به پیش‌نویس")
     def draft_selected_products(self, request, queryset):
         updated = queryset.update(publish_status=Product.PublishStatus.DRAFT)
         self.message_user(request, f"{updated} مورد به پیش‌نویس برگشت.")
 
-    @admin.action(description="علامت‌گذاری به عنوان موجود")
+    @admin.action(permissions=["change"], description="علامت‌گذاری به عنوان موجود")
     def mark_in_stock(self, request, queryset):
         updated = queryset.update(stock_status=Product.StockStatus.IN_STOCK)
         self.message_user(request, f"{updated} مورد موجود شد.")
 
-    @admin.action(description="علامت‌گذاری به عنوان ناموجود")
+    @admin.action(permissions=["change"], description="علامت‌گذاری به عنوان ناموجود")
     def mark_out_of_stock(self, request, queryset):
         updated = queryset.update(stock_status=Product.StockStatus.OUT_OF_STOCK)
         self.message_user(request, f"{updated} مورد ناموجود شد.")
 
-    @admin.action(description="قیمت‌گذاری به حالت استعلامی")
+    @admin.action(permissions=["change"], description="قیمت‌گذاری به حالت استعلامی")
     def make_inquiry_pricing(self, request, queryset):
         updated = queryset.update(pricing_type=Product.PricingType.INQUIRY, price=None, price_usd=None)
         self.message_user(request, f"{updated} مورد استعلامی شد.")
@@ -261,7 +261,7 @@ class ProductActionsMixin(ActiveActionsMixin):
 class PublishActionsMixin:
     actions = ("publish_selected", "unpublish_selected")
 
-    @admin.action(description="انتشار موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="انتشار موارد انتخاب‌شده")
     def publish_selected(self, request, queryset):
         updated = queryset.update(
             status=PublishStatus.PUBLISHED,
@@ -269,7 +269,7 @@ class PublishActionsMixin:
         )
         self.message_user(request, f"{updated} مورد منتشر شد.")
 
-    @admin.action(description="بازگردانی به پیش‌نویس")
+    @admin.action(permissions=["change"], description="بازگردانی به پیش‌نویس")
     def unpublish_selected(self, request, queryset):
         updated = queryset.update(
             status=PublishStatus.DRAFT,
@@ -297,7 +297,9 @@ class CategoryAdminForm(forms.ModelForm):
 
         if "parent" in self.fields:
             section = self.data.get("section") or getattr(self.instance, "section", "")
-            queryset = Category.objects.filter(parent__isnull=True)
+            queryset = Category.objects.for_general_catalog().filter(
+                parent__isnull=True
+            )
             if section:
                 queryset = queryset.filter(section=section)
             if self.instance and self.instance.pk:
@@ -308,6 +310,18 @@ class CategoryAdminForm(forms.ModelForm):
 
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        section = cleaned_data.get("section") or ""
+        slug = slugify(cleaned_data.get("slug") or "", allow_unicode=True)
+        parent = cleaned_data.get("parent")
+        candidate = Category(section=section, slug=slug, parent=parent)
+        if candidate.is_wedding_category:
+            raise forms.ValidationError(
+                "دسته‌های سیستمی عروسی فقط از بخش مستقل عروسی مدیریت می‌شوند."
+            )
+        return cleaned_data
 
 
 class TagAdminForm(forms.ModelForm):
@@ -332,14 +346,19 @@ class TagAdminForm(forms.ModelForm):
         slug = (cleaned_data.get("slug") or "").strip().casefold()
         name = (cleaned_data.get("name") or "").strip()
 
+        if Tag(slug=slug).is_wedding_legacy:
+            raise forms.ValidationError(
+                "برچسب‌های قدیمی عروسی، خواستگاری و بله‌برون محافظت شده‌اند."
+            )
+
         if (slug == "wedding" or name == "عروسی") and cleaned_data.get(
             "is_occasion"
         ):
             self.add_error(
                 "is_occasion",
                 (
-                    "عروسی در ساختار فعلی یک دستهٔ گل با دو زیر‌دستهٔ "
-                    "«ماشین عروس» و «دسته‌گل عروس» است و نباید مناسبت شود."
+                    "عروسی، خواستگاری و بله‌برون در بخش مستقل عروسی مدیریت "
+                    "می‌شوند و نباید به‌عنوان مناسبت عمومی ساخته شوند."
                 ),
             )
 
@@ -367,7 +386,9 @@ class ProductAdminForm(forms.ModelForm):
         if "category" in self.fields:
             section_filter = getattr(self, "section_filter", None)
 
-            category_queryset = Category.objects.filter(is_active=True)
+            category_queryset = Category.objects.for_general_catalog().filter(
+                is_active=True
+            )
 
             if section_filter:
                 category_queryset = category_queryset.filter(section=section_filter)
@@ -384,9 +405,8 @@ class ProductAdminForm(forms.ModelForm):
 
         if "tags" in self.fields:
             self.fields["tags"].queryset = (
-                Tag.objects.filter(is_active=True)
-                .exclude(slug="wedding")
-                .exclude(name="عروسی")
+                Tag.objects.for_general_catalog()
+                .filter(is_active=True)
                 .order_by("sort_order", "name")
             )
 
@@ -413,7 +433,7 @@ class ProductAdminForm(forms.ModelForm):
             self.fields["tags"].help_text = (
                 "برچسب می‌تواند داخلی باشد یا اگر گزینه مناسبت روشن است، "
                 "در بخش مناسبت‌های سایت نمایش داده شود. برچسب ارسال روز "
-                "برای فیلتر ارسال فوری است؛ عروسی از نوع محصول انتخاب می‌شود."
+                "برای فیلتر ارسال فوری است؛ عروسی از بخش مستقل مدیریت می‌شود."
             )
 
     def clean(self):
@@ -596,6 +616,11 @@ class ProductImageAdminForm(forms.ModelForm):
         fields = "__all__"
         field_classes = {"image": AdminImageUploadField}
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "product" in self.fields:
+            self.fields["product"].queryset = Product.objects.for_general_catalog()
+
     def clean_image(self):
         return validate_admin_image(self.cleaned_data.get("image"))
 
@@ -625,6 +650,24 @@ class ProductImageInline(AdminImagePreviewMixin, admin.StackedInline):
     verbose_name_plural = "گالری محصول"
 
 
+class GeneralParentCategoryFilter(admin.SimpleListFilter):
+    title = "دسته والد"
+    parameter_name = "parent__id__exact"
+
+    def lookups(self, request, model_admin):
+        return [
+            (str(category.pk), category.name)
+            for category in Category.objects.for_general_catalog()
+            .filter(parent__isnull=True)
+            .order_by("section", "sort_order", "name")
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(parent_id=self.value())
+        return queryset
+
+
 @admin.register(Category)
 class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     form = CategoryAdminForm
@@ -641,7 +684,7 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
     )
     list_filter = (
         "section",
-        "parent",
+        GeneralParentCategoryFilter,
         "is_active",
     )
     search_fields = (
@@ -673,9 +716,9 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
             {
                 "description": (
                     "زیر‌دسته یعنی نوع فیزیکی محصول؛ مثل دسته گل، باکس، استند، "
-                    "کیک تولد یا شمع. ساختار عروسی دو مرحله‌ای است: «عروسی» "
-                    "والد «ماشین عروس» و «دسته‌گل عروس» است. محصولاتی که هنوز "
-                    "زیردسته دقیق ندارند می‌توانند مستقیم در والد بمانند و "
+                    "کیک تولد یا شمع. دسته‌های سیستمی عروسی در بخش مستقل عروسی "
+                    "مدیریت می‌شوند و در این فرم نمایش داده نمی‌شوند. محصولاتی "
+                    "که هنوز زیردسته دقیق ندارند می‌توانند مستقیم در والد بمانند "
                     "همچنان در صفحه آن نمایش داده می‌شوند."
                 ),
                 "fields": (
@@ -721,11 +764,19 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
     )
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        queryset = super().get_queryset(request).for_general_catalog()
         return queryset.annotate(
             products_total=Count("products", distinct=True),
             child_products_total=Count("children__products", distinct=True),
         )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.is_wedding_category:
+            return False
+        return super().has_delete_permission(request, obj=obj)
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(request, queryset.for_general_catalog())
 
     @admin.display(description="تعداد محصول")
     def product_count(self, obj):
@@ -823,8 +874,16 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        queryset = super().get_queryset(request).for_general_catalog()
         return queryset.annotate(products_total=Count("products"))
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.is_wedding_legacy:
+            return False
+        return super().has_delete_permission(request, obj=obj)
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(request, queryset.for_general_catalog())
 
     @admin.display(description="تعداد محصول")
     def product_count(self, obj):
@@ -844,7 +903,11 @@ class SectionCategoryFilter(admin.SimpleListFilter):
     parameter_name = "category"
 
     def lookups(self, request, model_admin):
-        queryset = Category.objects.filter(is_active=True).select_related("parent")
+        queryset = (
+            Category.objects.for_general_catalog()
+            .filter(is_active=True)
+            .select_related("parent")
+        )
 
         if getattr(model_admin, "section_filter", None):
             queryset = queryset.filter(section=model_admin.section_filter)
@@ -871,6 +934,7 @@ class SectionCategoryFilter(admin.SimpleListFilter):
 class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     form = ProductAdminForm
     section_filter = None
+    catalog_scope_filter = Product.CatalogScope.GENERAL
 
     list_display = (
         "image_preview",
@@ -1002,6 +1066,11 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
             .prefetch_related("tags")
         )
 
+        if self.catalog_scope_filter == Product.CatalogScope.WEDDING:
+            queryset = queryset.for_weddings()
+        else:
+            queryset = queryset.for_general_catalog()
+
         if self.section_filter:
             queryset = queryset.filter(category__section=self.section_filter)
 
@@ -1075,7 +1144,7 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
         if self.section_filter:
             first_category = (
-                Category.objects.filter(
+                Category.objects.for_general_catalog().filter(
                     section=self.section_filter,
                     is_active=True,
                     children__isnull=True,
@@ -1091,7 +1160,7 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "category":
-            queryset = Category.objects.filter(is_active=True)
+            queryset = Category.objects.for_general_catalog().filter(is_active=True)
 
             if self.section_filter:
                 queryset = queryset.filter(section=self.section_filter)
@@ -1103,9 +1172,8 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "tags":
             kwargs["queryset"] = (
-                Tag.objects.filter(is_active=True)
-                .exclude(slug="wedding")
-                .exclude(name="عروسی")
+                Tag.objects.for_general_catalog()
+                .filter(is_active=True)
                 .order_by(
                     "sort_order",
                     "name",
@@ -1115,6 +1183,12 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
+        if self.catalog_scope_filter == Product.CatalogScope.GENERAL:
+            obj.catalog_scope = Product.CatalogScope.GENERAL
+            obj.wedding_type = ""
+            obj.wedding_needs_review = False
+            obj.wedding_sort_order = 0
+
         if obj.pricing_type == Product.PricingType.INQUIRY:
             obj.price = None
             obj.price_usd = None

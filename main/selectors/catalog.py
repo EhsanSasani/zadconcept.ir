@@ -20,13 +20,13 @@ DEFAULT_PRODUCT_ORDER = ("-featured", "sort_order", "-created_at", "id")
 def published_products():
     """Return products whose canonical detail URLs may be served publicly."""
 
-    return Product.objects.published()
+    return Product.objects.publicly_indexable()
 
 
 def catalog_products():
     """Return products discoverable in generic lists, with card relations ready."""
 
-    return published_products().with_card_relations()
+    return published_products().for_general_catalog().with_card_relations()
 
 
 def catalog_products_for_section(section):
@@ -84,7 +84,7 @@ def ordered_section_catalog_products(queryset, section):
 def catalog_categories(section=None):
     """Return categories discoverable in generic catalog navigation."""
 
-    queryset = Category.objects.filter(
+    queryset = Category.objects.for_general_catalog().filter(
         Q(parent__isnull=True) | Q(parent__is_active=True),
         is_active=True,
     )
@@ -123,7 +123,7 @@ def catalog_occasion_tags():
     """Return occasion tags discoverable outside dedicated campaign domains."""
 
     return (
-        Tag.objects.filter(is_occasion=True, is_active=True)
+        Tag.objects.for_general_catalog().filter(is_occasion=True, is_active=True)
         .exclude(Q(slug__in=DEDICATED_OCCASION_SLUGS) | Q(name="عروسی"))
         .order_by("sort_order", "name")
     )

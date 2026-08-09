@@ -224,6 +224,11 @@ class SeoContractTests(TestCase):
             reverse("service_area"),
             reverse("international_orders"),
             reverse("international_orders_en"),
+            reverse("weddings"),
+            reverse("wedding_collection", args=["proposal-bouquets"]),
+            reverse("wedding_collection", args=["proposal-sweets"]),
+            reverse("wedding_collection", args=["bridal-bouquets"]),
+            reverse("wedding_collection", args=["wedding-cars"]),
             self.future_event.get_absolute_url(),
             self.category.get_absolute_url(),
             self.plants_category.get_absolute_url(),
@@ -234,6 +239,7 @@ class SeoContractTests(TestCase):
             self.assertIn(f"https://www.zadconcept.ir{path}", xml)
 
         self.assertNotIn("/flowers/plant/", xml)
+        self.assertNotIn("/flowers/wedding/", xml)
         self.assertNotIn(self.draft.get_absolute_url(), xml)
         self.assertNotIn(self.hidden.get_absolute_url(), xml)
         self.assertNotIn(self.past_event.get_absolute_url(), xml)
@@ -419,15 +425,20 @@ class SeoContractTests(TestCase):
     def test_semantic_main_and_modal_accessibility_do_not_change_layout(self):
         about = self.client.get(reverse("about"))
         catalog = self.client.get(reverse("bakery"))
+        wedding_collection = self.client.get(
+            reverse("wedding_collection", args=["proposal-bouquets"])
+        )
 
         self.assertEqual(catalog.content.decode().count("<main"), 1)
+        self.assertEqual(wedding_collection.content.decode().count("<main"), 1)
+        self.assertContains(wedding_collection, "viewport-fit=cover")
         self.assertNotContains(about, "product-modal.css")
         self.assertContains(catalog, "product-modal.css")
         self.assertContains(catalog, 'aria-label="بستن پنجره محصول"')
         self.assertContains(catalog, 'aria-labelledby="zad-product-modal-title"')
 
     def test_rendered_public_pages_reserve_image_dimensions(self):
-        for route in ("index", "flowers", "events", "about", "faq"):
+        for route in ("index", "flowers", "events", "about", "weddings", "faq"):
             with self.subTest(route=route):
                 parser = parse_html(self.client.get(reverse(route)))
                 self.assertEqual(parser.images_missing_dimensions, [])

@@ -1,0 +1,31 @@
+/* Global primary-hero media policy. Navbar spacing remains owned by navbar.css. */
+
+.hero-slide__overlay,
+.page-hero__overlay,
+.flowers-hero__overlay,
+.workshops-hero__overlay,
+.about-hero__overlay,
+.weddings-hero__veil {
+  display: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+.global-hero img,
+.page-hero img,
+.flowers-hero img,
+.workshops-hero img,
+.about-hero img,
+.weddings-hero img,
+.ws-hero img,
+.event-hero img,
+.local-hero img,
+.occasions-hero img,
+.category-hero img,
+.subcategory-hero img {
+  opacity: 1 !important;
+  filter: none !important;
+}

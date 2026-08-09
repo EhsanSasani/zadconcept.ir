@@ -1,6 +1,8 @@
 """Product detail and canonical redirect HTTP views."""
 
+from ..content.weddings import WEDDING_COLLECTION_SLUG_BY_TYPE
 from ..selectors.catalog import product_detail_products, related_catalog_products
+from ..selectors.weddings import related_wedding_products
 
 from .support import (
     Category,
@@ -21,44 +23,69 @@ from .support import (
 def _item_detail_context(request, product):
     category = product.category
     section = category.section if category else ""
-    active_nav = section if section in SECTION_CONTENT else ""
-
     subcategory_url = None
     subcategory_label = None
-
-    if category and category.section in SECTION_CATEGORY_ROUTE_NAMES:
-        subcategory_url = _section_category_url(category)
-        subcategory_label = category.name
-
     breadcrumbs = [{"name": "Home", "url": reverse("index")}]
 
-    if section and section in SECTION_CONTENT:
-        breadcrumbs.append(
-            {
-                "name": SECTION_CONTENT[section]["title"],
-                "url": reverse(section),
-            }
+    if product.is_wedding:
+        active_nav = "weddings"
+        section_label = "Weddings"
+        category_url = reverse("weddings")
+        breadcrumbs.append({"name": "عروسی", "url": category_url})
+        collection_slug = WEDDING_COLLECTION_SLUG_BY_TYPE.get(
+            product.wedding_type
+        )
+        if collection_slug:
+            subcategory_url = reverse(
+                "wedding_collection", args=[collection_slug]
+            )
+            subcategory_label = product.get_wedding_type_display()
+            breadcrumbs.append(
+                {"name": subcategory_label, "url": subcategory_url}
+            )
+        similar_items = related_wedding_products(product)
+    else:
+        active_nav = section if section in SECTION_CONTENT else ""
+        section_label = (
+            SECTION_CONTENT[section]["nav"].title()
+            if section in SECTION_CONTENT
+            else "Collection"
+        )
+        category_url = (
+            reverse(section) if section in SECTION_CONTENT else reverse("index")
         )
 
-    if category and category.parent_id:
-        breadcrumbs.append(
-            {
-                "name": category.parent.name,
-                "url": _section_category_url(category.parent),
-            }
-        )
+        if category and category.section in SECTION_CATEGORY_ROUTE_NAMES:
+            subcategory_url = _section_category_url(category)
+            subcategory_label = category.name
 
-    if subcategory_url and subcategory_label:
-        breadcrumbs.append(
-            {
-                "name": subcategory_label,
-                "url": subcategory_url,
-            }
-        )
+        if section and section in SECTION_CONTENT:
+            breadcrumbs.append(
+                {
+                    "name": SECTION_CONTENT[section]["title"],
+                    "url": category_url,
+                }
+            )
+
+        if category and category.parent_id:
+            breadcrumbs.append(
+                {
+                    "name": category.parent.name,
+                    "url": _section_category_url(category.parent),
+                }
+            )
+
+        if subcategory_url and subcategory_label:
+            breadcrumbs.append(
+                {
+                    "name": subcategory_label,
+                    "url": subcategory_url,
+                }
+            )
+
+        similar_items = related_catalog_products(product)
 
     breadcrumbs.append({"name": product.seo_name, "url": None})
-
-    similar_items = related_catalog_products(product)
 
     description = product.seo_description
 
@@ -93,8 +120,8 @@ def _item_detail_context(request, product):
     context.update(
         {
             "product": product,
-            "section_label": SECTION_CONTENT[section]["nav"].title() if section in SECTION_CONTENT else "Collection",
-            "category_url": reverse(section) if section in SECTION_CONTENT else reverse("index"),
+            "section_label": section_label,
+            "category_url": category_url,
             "subcategory_url": subcategory_url,
             "subcategory_label": subcategory_label,
             "similar_items": similar_items,
@@ -120,11 +147,15 @@ def product_detail(request, pk: int, slug: str):
 
 def _section_product_detail(request, section, category_slug, slug):
     product = get_object_or_404(
-        product_detail_products().filter(category__section=section),
+        product_detail_products(),
         slug=slug,
     )
 
-    if product.category.slug != category_slug:
+    canonical_section = product.canonical_section or product.category.section
+    canonical_category_slug = (
+        product.canonical_category_slug or product.category.slug
+    )
+    if canonical_section != section or canonical_category_slug != category_slug:
         return redirect(product.get_absolute_url(), permanent=True)
 
     return render(request, "item_detail.html", _item_detail_context(request, product))

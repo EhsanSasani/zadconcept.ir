@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Category, Event, NewsPost, PublishStatus
+from .content.weddings import WEDDING_COLLECTIONS
 from .selectors.catalog import (
     catalog_categories,
     catalog_occasion_tags,
@@ -34,6 +35,7 @@ class StaticViewSitemap(CanonicalSitemap):
     def items(self):
         return [
             "index",
+            "weddings",
             "flowers",
             "flowers_all",
             "bakery",
@@ -62,6 +64,17 @@ class StaticViewSitemap(CanonicalSitemap):
 
     def location(self, item):
         return reverse(item)
+
+
+class WeddingCollectionSitemap(CanonicalSitemap):
+    changefreq = "weekly"
+    priority = 0.8
+
+    def items(self):
+        return tuple(WEDDING_COLLECTIONS)
+
+    def location(self, item):
+        return reverse("wedding_collection", args=[item])
 
 
 class CategorySitemap(CanonicalSitemap):
@@ -141,6 +154,7 @@ class BlogSitemap(CanonicalSitemap):
 
 sitemaps = {
     "static": StaticViewSitemap,
+    "wedding_collections": WeddingCollectionSitemap,
     "categories": CategorySitemap,
     "occasions": OccasionSitemap,
     "products": ProductSitemap,

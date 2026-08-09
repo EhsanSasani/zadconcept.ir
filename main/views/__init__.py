@@ -41,4 +41,5 @@ from .products import (
     product_detail,
 )
 from .system import csp_report, custom_404, indexnow_key, robots_txt
+from .weddings import wedding_collection, weddings
 from .workshops import event_detail, events

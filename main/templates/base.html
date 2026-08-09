@@ -3,7 +3,7 @@
 <html lang="{{ html_lang|default:'fa' }}" dir="{{ html_dir|default:'rtl' }}">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{{ meta_title|default:"zad" }}</title>
   <meta name="description" content="{{ meta_description|default:'zad concept store for flowers, bakery, gifts, and event coordination in Mashhad.' }}">
   <meta name="robots" content="{{ robots_content|default:'index,follow' }}">
@@ -45,22 +45,23 @@
     </script>
   {% endif %}
 
-  <link rel="stylesheet" href="{% static 'main/css/tokens.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/tokens.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/base.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/utilities.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/layout.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/navbar.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/hero.css' %}?v=4">
   <link rel="stylesheet" href="{% static 'main/css/components.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/page.css' %}?v=3">
   {% block page_css %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/footer.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}?v=2">
   {% if enable_product_modal %}<link rel="stylesheet" href="{% static 'main/css/product-modal.css' %}?v=4">{% endif %}
   <link rel="stylesheet" href="{% static 'main/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   {% block extra_head %}{% endblock %}
   <link rel="stylesheet" href="{% static 'main/css/hero-config.css' %}?v=3">
   <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
+  <link rel="stylesheet" href="{% static 'main/css/hero-global-fix.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/accessibility.css' %}?v=1">
 
   {% if structured_data_graph %}

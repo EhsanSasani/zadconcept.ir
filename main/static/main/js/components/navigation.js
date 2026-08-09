@@ -4,6 +4,7 @@ function initDropdown(dropdown) {
   if (!trigger || !menu) return;
 
   const isNativeDisclosure = dropdown.tagName === "DETAILS";
+  const navigationCenter = dropdown.closest(".main-nav__center");
 
   function isOpen() {
     return isNativeDisclosure ? dropdown.open : dropdown.classList.contains("is-open");
@@ -12,6 +13,7 @@ function initDropdown(dropdown) {
   function setOpen(isOpen, { restoreFocus = false } = {}) {
     if (isNativeDisclosure) dropdown.open = isOpen;
     dropdown.classList.toggle("is-open", isOpen);
+    navigationCenter?.classList.toggle("has-open-dropdown", isOpen);
     trigger.setAttribute("aria-expanded", String(isOpen));
     if (!isOpen && restoreFocus) trigger.focus();
   }
@@ -44,6 +46,17 @@ function initStickyHeader() {
   const header = document.querySelector("[data-site-header]");
   if (!header) return;
 
+  const notice = document.querySelector(".top-notice-bar");
+  const syncNoticeHeight = () => {
+    const height = Math.ceil(notice?.getBoundingClientRect().height || 0);
+    if (height > 0) {
+      document.documentElement.style.setProperty(
+        "--rendered-notice-height",
+        `${height}px`,
+      );
+    }
+  };
+
   let scheduled = false;
   const update = () => {
     header.classList.toggle("is-scrolled", window.scrollY > 80);
@@ -59,6 +72,11 @@ function initStickyHeader() {
     },
     { passive: true },
   );
+  window.addEventListener("resize", syncNoticeHeight, { passive: true });
+  if (notice && "ResizeObserver" in window) {
+    new window.ResizeObserver(syncNoticeHeight).observe(notice);
+  }
+  syncNoticeHeight();
   update();
 }
 

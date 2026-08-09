@@ -14,6 +14,14 @@ urlpatterns = [
     # Home
     path("", views.index, name="index"),
 
+    # Weddings
+    path("weddings/", views.weddings, name="weddings"),
+    path(
+        "weddings/<slug:collection_slug>/",
+        views.wedding_collection,
+        name="wedding_collection",
+    ),
+
     # Flowers
     path("flowers/", views.flowers, name="flowers"),
     path("flowers/all/", views.flowers_all, name="flowers_all"),

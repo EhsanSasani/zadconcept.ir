@@ -62,109 +62,6 @@
     width: min(var(--container), 92%);
   }
 
-  .top-notice-bar__link {
-    padding: 9px 0;
-    font-size: 0.8rem;
-    line-height: 1.8;
-  }
-
-  .site-header {
-    background: rgba(251, 248, 244, 0.94);
-  }
-
-  .nav-wrap {
-    min-height: 58px !important;
-    display: block !important;
-    padding: 7px 0 !important;
-  }
-
-  .brand,
-  .brand--logo {
-    display: none !important;
-  }
-
-  .main-nav {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
-    align-items: center !important;
-    gap: 8px !important;
-    min-height: 44px;
-    padding: 0 !important;
-    margin: 0 !important;
-    direction: rtl !important;
-  }
-
-  .main-nav__center {
-    display: flex !important;
-    justify-content: flex-start !important;
-    gap: 4px !important;
-    min-width: 0 !important;
-    min-height: 44px;
-    padding: 4px !important;
-    margin: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    border-radius: var(--radius-pill);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .main-nav__center::-webkit-scrollbar {
-    display: none;
-  }
-
-  .main-nav__center a,
-  .main-nav__about,
-  .nav-dropdown__trigger {
-    flex: 0 0 auto !important;
-    min-height: 44px !important;
-    padding: 6px 11px !important;
-    margin: 0 !important;
-    font-size: 0.78rem !important;
-    font-weight: 800 !important;
-    white-space: nowrap !important;
-  }
-
-  .main-nav__about {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    justify-self: end !important;
-  }
-
-  .brand--nav {
-    display: inline-flex !important;
-    min-width: max-content;
-    font-size: 0.9rem;
-  }
-
-  .brand--nav span {
-    font-size: 0.5rem;
-  }
-
-  .nav-dropdown {
-    position: relative;
-  }
-
-  .nav-dropdown__menu {
-    top: calc(100% + 8px);
-    right: 50%;
-    display: grid !important;
-    min-width: 150px;
-  }
-
-  .nav-dropdown:hover .nav-dropdown__menu {
-    opacity: 0;
-    visibility: hidden;
-    transform: translate(50%, 8px);
-  }
-
-  .nav-dropdown.is-open .nav-dropdown__menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translate(50%, 0);
-  }
-
   .page-hero,
   .page-hero__content {
     min-height: 360px;
@@ -426,16 +323,6 @@
   }
 }
 
-/* Very small mobile */
-
-@media (max-width: 390px) {
-  .main-nav__center a,
-  .main-nav__about,
-  .nav-dropdown__trigger {
-    padding-inline: 9px !important;
-    font-size: 0.74rem !important;
-  }
-}
 @media (max-width:768px){
 
     .flowers-hero__media img{
@@ -489,8 +376,6 @@
     max-width: 100%;
   }
 
-  .site-header,
-  .top-notice-bar,
   .global-hero,
   .site-main,
   .zad-footer {
@@ -498,28 +383,8 @@
     overflow-x: clip;
   }
 
-  .nav-wrap,
-  .main-nav {
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-  }
-
-  .main-nav {
-    grid-template-columns: minmax(0, 1fr) auto !important;
-  }
-
-  .main-nav__center {
-    max-width: 100%;
-    scroll-padding-inline: 10px;
-  }
-
-  .nav-dropdown__menu {
-    max-width: calc(100vw - 28px);
-  }
-
   .page-home .hero-slide img {
-    object-position: left center !important;
+    object-position: left 70% !important;
   }
 
   .home-trust-strip {
@@ -666,7 +531,7 @@
 
 @media (max-width: 760px) {
   .page-home .hero-slide img {
-    object-position: left center !important;
+    object-position: left 70% !important;
   }
 
   .home-trust-strip__inner {
@@ -744,7 +609,7 @@
   }
 }
 
-/* Mobile fixes for index abroad section and products dropdown */
+/* Mobile fixes for the index abroad section. */
 
 @media (max-width: 760px) {
   .home-abroad-premium-section {
@@ -843,57 +708,6 @@
     white-space: normal;
   }
 
-  .site-header,
-  .nav-wrap,
-  .main-nav,
-  .nav-dropdown {
-    overflow: visible !important;
-  }
-
-  .main-nav__center {
-    overflow: visible !important;
-  }
-
-  .nav-dropdown {
-    z-index: 900;
-  }
-
-  .nav-dropdown__menu {
-    position: absolute !important;
-    top: calc(100% + 8px) !important;
-    right: 50% !important;
-    left: auto !important;
-    width: min(190px, calc(100vw - 32px)) !important;
-    min-width: 0 !important;
-    max-width: calc(100vw - 32px) !important;
-    transform: translateX(50%) translateY(8px) !important;
-    z-index: 1200 !important;
-  }
-
-  .site-header.is-scrolled .nav-dropdown__menu {
-    top: calc(100% + 8px) !important;
-  }
-
-  .nav-dropdown.is-open .nav-dropdown__menu {
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    transform: translateX(50%) translateY(0) !important;
-  }
-
-  .nav-dropdown:hover .nav-dropdown__menu {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    transform: translateX(50%) translateY(8px) !important;
-  }
-
-  .nav-dropdown.is-open:hover .nav-dropdown__menu {
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    transform: translateX(50%) translateY(0) !important;
-  }
 }
 
 @media (max-width: 390px) {
@@ -901,9 +715,229 @@
     width: calc(100vw - 32px);
   }
 
-  .nav-dropdown__menu {
-    right: 50% !important;
-    width: min(180px, calc(100vw - 24px)) !important;
-    max-width: calc(100vw - 24px) !important;
+}
+
+/* =========================
+   Transferred responsive contracts
+   ========================= */
+
+html {
+  min-width: 320px;
+  overflow-x: clip;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  overflow-wrap: break-word;
+}
+
+img,
+picture,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+}
+
+.top-notice-bar,
+.site-header,
+.zad-footer {
+  padding-right: max(0px, env(safe-area-inset-right));
+  padding-left: max(0px, env(safe-area-inset-left));
+}
+
+.top-notice-bar {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+.zad-footer {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+@media (max-width: 760px) {
+  .btn,
+  .flowers-btn,
+  .workshops-btn,
+  .about-button,
+  .info-button,
+  .home-abroad__btn,
+  .home-experience__btn,
+  .flowers-load-more__button,
+  .zad-product-modal__btn,
+  .event-detail__reserve,
+  .workshops-lead__submit,
+  .ws-button,
+  .ws-mini-form button {
+    min-width: var(--control-min-size);
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+
+  .page-home .home-hero,
+  .page-home .hero-slides,
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    width: 100%;
+    height: var(--primary-hero-mobile);
+    min-height: var(--primary-hero-mobile);
+    max-height: var(--primary-hero-mobile);
+    aspect-ratio: auto;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture,
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .page-home .hero-slide img,
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .zad-product-modal__dialog {
+    height: 100dvh;
+    max-height: 100dvh;
+    grid-template-rows: minmax(220px, 48dvh) minmax(0, 1fr);
+  }
+
+  .zad-product-modal__content {
+    min-height: 0;
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 760px) and (max-height: 520px) and (orientation: landscape) {
+  .page-home .home-hero,
+  .page-home .hero-slides,
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    height: clamp(320px, calc(72svh + 12px), 420px);
+    min-height: clamp(320px, calc(72svh + 12px), 420px);
+    max-height: clamp(320px, calc(72svh + 12px), 420px);
+  }
+}
+
+@media (min-width: 761px) {
+  .page-home .home-trust-strip {
+    height: 176px;
+    min-height: 176px;
+    margin: 0;
+    padding: 34px 0 30px;
+  }
+
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    width: 100%;
+    height: calc(100svh - 40px - 68px - 176px);
+    min-height: 0;
+    max-height: none;
+    margin-top: 0;
+    aspect-ratio: auto;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .page-home .hero-slide img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    object-fit: cover;
+    object-position: center 74%;
+  }
+
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 16 / 5;
+  }
+
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    object-fit: cover;
   }
 }

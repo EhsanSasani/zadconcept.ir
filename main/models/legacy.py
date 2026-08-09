@@ -27,14 +27,38 @@ FLOWER_CATEGORY_SLUGS = (
     "bouquet",
     "stand",
     "jarl",
-    "wedding",
-    "wedding-car",
-    "bridal-bouquet",
     "plants",
 )
 
+WEDDING_ROOT_CATEGORY_SLUG = "wedding"
+WEDDING_CAR_CATEGORY_SLUG = "wedding-car"
+BRIDAL_BOUQUET_CATEGORY_SLUG = "bridal-bouquet"
+PROPOSAL_BOUQUET_CATEGORY_SLUG = "proposal-bale-boroon-bouquet"
+PROPOSAL_SWEETS_CATEGORY_SLUG = "proposal-bale-boroon-sweets"
+
 FLOWER_WEDDING_CATEGORY_SLUGS = (
+    WEDDING_ROOT_CATEGORY_SLUG,
+    WEDDING_CAR_CATEGORY_SLUG,
+    BRIDAL_BOUQUET_CATEGORY_SLUG,
+    PROPOSAL_BOUQUET_CATEGORY_SLUG,
+)
+
+FLOWER_WEDDING_LEGACY_CATEGORY_SLUGS = (
+    "wedding-bouquet",
+    "wedding-decoration",
+)
+
+FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS = (
+    *FLOWER_WEDDING_CATEGORY_SLUGS,
+    *FLOWER_WEDDING_LEGACY_CATEGORY_SLUGS,
+)
+
+BAKERY_WEDDING_CATEGORY_SLUGS = (PROPOSAL_SWEETS_CATEGORY_SLUG,)
+
+WEDDING_LEGACY_TAG_SLUGS = (
     "wedding",
+    "proposal",
+    "engagement",
 )
 
 FLOWER_OCCASION_TAG_SLUGS = (
@@ -60,6 +84,8 @@ PRODUCT_SEO_CATEGORY_LABELS = {
     "wedding": "گل‌آرایی عروسی",
     "wedding-car": "گل‌آرایی ماشین عروس",
     "bridal-bouquet": "دسته‌گل عروس",
+    "proposal-bale-boroon-bouquet": "دسته‌گل خواستگاری و بله‌برون",
+    "proposal-bale-boroon-sweets": "شیرینی خواستگاری و بله‌برون",
 }
 
 PRODUCT_CARD_TYPE_LABELS = {
@@ -250,6 +276,48 @@ def hero_font_upload_to(instance, filename):
     return f"heroes/fonts/hero-font-{name}.{extension}"
 
 
+class CategoryQuerySet(models.QuerySet):
+    def for_general_catalog(self):
+        return self.exclude(
+            Q(
+                section="flowers",
+                slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+            )
+            | Q(
+                section="flowers",
+                parent__slug=WEDDING_ROOT_CATEGORY_SLUG,
+            )
+            | Q(
+                section="bakery",
+                slug__in=BAKERY_WEDDING_CATEGORY_SLUGS,
+            )
+        )
+
+    def for_weddings(self):
+        return self.filter(
+            Q(
+                section="flowers",
+                slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+            )
+            | Q(
+                section="flowers",
+                parent__slug=WEDDING_ROOT_CATEGORY_SLUG,
+            )
+            | Q(
+                section="bakery",
+                slug__in=BAKERY_WEDDING_CATEGORY_SLUGS,
+            )
+        ).distinct()
+
+
+class TagQuerySet(models.QuerySet):
+    def for_general_catalog(self):
+        return self.exclude(slug__in=WEDDING_LEGACY_TAG_SLUGS)
+
+    def protected_wedding_legacy(self):
+        return self.filter(slug__in=WEDDING_LEGACY_TAG_SLUGS)
+
+
 class Category(TimeStampedModel):
     class Section(models.TextChoices):
         FLOWERS = "flowers", "گل‌ها"
@@ -299,6 +367,8 @@ class Category(TimeStampedModel):
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
 
+    objects = CategoryQuerySet.as_manager()
+
     class Meta:
         ordering = ["section", "sort_order", "name"]
         verbose_name = "زیر‌دسته"
@@ -328,12 +398,18 @@ class Category(TimeStampedModel):
 
     @property
     def is_wedding_flower_category(self):
-        return self.section == self.Section.FLOWERS and (
-            self.slug in FLOWER_WEDDING_CATEGORY_SLUGS
-            or (
+        return self.section == self.Section.FLOWERS and self.is_wedding_category
+
+    @property
+    def is_wedding_category(self):
+        if self.section == self.Section.FLOWERS:
+            return self.slug in FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS or (
                 self.parent_id
-                and self.parent.slug in FLOWER_WEDDING_CATEGORY_SLUGS
+                and self.parent.slug == WEDDING_ROOT_CATEGORY_SLUG
             )
+        return (
+            self.section == self.Section.BAKERY
+            and self.slug in BAKERY_WEDDING_CATEGORY_SLUGS
         )
 
     @property
@@ -371,6 +447,9 @@ class Category(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
+        if self.is_wedding_category:
+            return reverse("weddings")
+
         route_name = {
             self.Section.FLOWERS: "flower_subcategory",
             self.Section.BAKERY: "bakery_subcategory",
@@ -411,6 +490,8 @@ class Tag(TimeStampedModel):
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
     sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
 
+    objects = TagQuerySet.as_manager()
+
     class Meta:
         ordering = ["sort_order", "name"]
         verbose_name = "برچسب"
@@ -430,6 +511,10 @@ class Tag(TimeStampedModel):
     def is_same_day(self):
         return self.slug == SAME_DAY_TAG_SLUG
 
+    @property
+    def is_wedding_legacy(self):
+        return self.slug in WEDDING_LEGACY_TAG_SLUGS
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = make_unique_slug(self, self.name)
@@ -439,11 +524,78 @@ class Tag(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
+        if self.is_wedding_legacy:
+            return reverse("weddings")
         return reverse("occasion_detail", args=[self.slug])
+
+
+def valid_wedding_product_q():
+    """Return the complete public invariant for a typed Wedding product."""
+
+    flower_parent = Q(
+        category__parent__section=Category.Section.FLOWERS,
+        category__parent__slug=WEDDING_ROOT_CATEGORY_SLUG,
+        category__parent__is_active=True,
+    )
+    return Q(
+        catalog_scope="wedding",
+        wedding_needs_review=False,
+        tags__isnull=True,
+    ) & (
+        (
+            Q(
+                wedding_type="bridal_bouquet",
+                category__section=Category.Section.FLOWERS,
+                category__slug=BRIDAL_BOUQUET_CATEGORY_SLUG,
+            )
+            & flower_parent
+        )
+        | (
+            Q(
+                wedding_type="wedding_car",
+                category__section=Category.Section.FLOWERS,
+                category__slug=WEDDING_CAR_CATEGORY_SLUG,
+            )
+            & flower_parent
+        )
+        | (
+            Q(
+                wedding_type="proposal_bouquet",
+                category__section=Category.Section.FLOWERS,
+                category__slug=PROPOSAL_BOUQUET_CATEGORY_SLUG,
+            )
+            & flower_parent
+        )
+        | Q(
+            wedding_type="proposal_sweets",
+            category__section=Category.Section.BAKERY,
+            category__slug=PROPOSAL_SWEETS_CATEGORY_SLUG,
+            category__parent__isnull=True,
+        )
+    )
 
 
 class ProductQuerySet(models.QuerySet):
     """Composable product policy shared by selectors and proxy admins."""
+
+    def for_general_catalog(self):
+        return self.filter(catalog_scope="general").exclude(
+            Q(
+                category__section="flowers",
+                category__slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+            )
+            | Q(
+                category__section="flowers",
+                category__parent__slug=WEDDING_ROOT_CATEGORY_SLUG,
+            )
+            | Q(
+                category__section="bakery",
+                category__slug__in=BAKERY_WEDDING_CATEGORY_SLUGS,
+            )
+        )
+
+    def for_weddings(self):
+        return self.filter(catalog_scope="wedding")
 
     def active(self):
         return self.filter(
@@ -461,6 +613,29 @@ class ProductQuerySet(models.QuerySet):
     def same_day(self):
         return self.filter(tags__slug=SAME_DAY_TAG_SLUG).distinct()
 
+    def valid_weddings(self):
+        return self.filter(valid_wedding_product_q())
+
+    def publicly_indexable(self):
+        return self.published().filter(
+            (
+                Q(catalog_scope="general")
+                & ~Q(
+                    category__section="flowers",
+                    category__slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+                )
+                & ~Q(
+                    category__section="flowers",
+                    category__parent__slug=WEDDING_ROOT_CATEGORY_SLUG,
+                )
+                & ~Q(
+                    category__section="bakery",
+                    category__slug__in=BAKERY_WEDDING_CATEGORY_SLUGS,
+                )
+            )
+            | valid_wedding_product_q()
+        ).distinct()
+
     def with_card_relations(self):
         return self.select_related("category", "category__parent")
 
@@ -472,6 +647,22 @@ class ProductQuerySet(models.QuerySet):
 
 
 class Product(TimeStampedModel):
+    class CatalogScope(models.TextChoices):
+        GENERAL = "general", "کاتالوگ عمومی"
+        WEDDING = "wedding", "عروسی"
+
+    class WeddingType(models.TextChoices):
+        BRIDAL_BOUQUET = "bridal_bouquet", "دسته‌گل عروس"
+        WEDDING_CAR = "wedding_car", "ماشین عروس"
+        PROPOSAL_BOUQUET = (
+            "proposal_bouquet",
+            "دسته‌گل خواستگاری و بله‌برون",
+        )
+        PROPOSAL_SWEETS = (
+            "proposal_sweets",
+            "شیرینی خواستگاری و بله‌برون",
+        )
+
     class PricingType(models.TextChoices):
         FIXED = "fixed", "قیمت ثابت"
         INQUIRY = "inquiry", "استعلام قیمت"
@@ -484,6 +675,25 @@ class Product(TimeStampedModel):
     class PublishStatus(models.TextChoices):
         DRAFT = "draft", "پیش‌نویس"
         PUBLISHED = "published", "منتشرشده"
+
+    WEDDING_CATEGORY_MAP = {
+        WeddingType.BRIDAL_BOUQUET: (
+            Category.Section.FLOWERS,
+            BRIDAL_BOUQUET_CATEGORY_SLUG,
+        ),
+        WeddingType.WEDDING_CAR: (
+            Category.Section.FLOWERS,
+            WEDDING_CAR_CATEGORY_SLUG,
+        ),
+        WeddingType.PROPOSAL_BOUQUET: (
+            Category.Section.FLOWERS,
+            PROPOSAL_BOUQUET_CATEGORY_SLUG,
+        ),
+        WeddingType.PROPOSAL_SWEETS: (
+            Category.Section.BAKERY,
+            PROPOSAL_SWEETS_CATEGORY_SLUG,
+        ),
+    }
 
     name = models.CharField("نام محصول", max_length=120, blank=True)
     product_code = models.CharField(
@@ -500,6 +710,50 @@ class Product(TimeStampedModel):
         blank=True,
         allow_unicode=True,
         help_text="اگر خالی بماند، خودکار از نام محصول ساخته می‌شود.",
+    )
+
+    catalog_scope = models.CharField(
+        "محدوده کاتالوگ",
+        max_length=16,
+        choices=CatalogScope.choices,
+        default=CatalogScope.GENERAL,
+        db_index=True,
+        editable=False,
+    )
+    wedding_type = models.CharField(
+        "نوع محصول عروسی",
+        max_length=32,
+        choices=WeddingType.choices,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    wedding_needs_review = models.BooleanField(
+        "نیازمند تعیین نوع عروسی",
+        default=False,
+        db_index=True,
+        editable=False,
+    )
+    wedding_sort_order = models.PositiveIntegerField(
+        "ترتیب نمایش در عروسی",
+        default=0,
+        db_index=True,
+    )
+    canonical_section = models.CharField(
+        "بخش ثابت نشانی محصول",
+        max_length=20,
+        choices=Category.Section.choices,
+        blank=True,
+        default="",
+        editable=False,
+    )
+    canonical_category_slug = models.SlugField(
+        "دسته ثابت نشانی محصول",
+        max_length=120,
+        blank=True,
+        default="",
+        allow_unicode=True,
+        editable=False,
     )
 
     description = models.TextField("توضیحات", blank=True)
@@ -583,12 +837,41 @@ class Product(TimeStampedModel):
                 condition=Q(price__isnull=True) | Q(price__gte=0),
                 name="product_price_is_positive_or_null",
             ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        catalog_scope="general",
+                        wedding_type="",
+                        wedding_needs_review=False,
+                    )
+                    | Q(
+                        catalog_scope="wedding",
+                        wedding_type="",
+                        wedding_needs_review=True,
+                    )
+                    | Q(
+                        catalog_scope="wedding",
+                        wedding_type__in=(
+                            "bridal_bouquet",
+                            "wedding_car",
+                            "proposal_bouquet",
+                            "proposal_sweets",
+                        ),
+                        wedding_needs_review=False,
+                    )
+                ),
+                name="product_wedding_scope_state_valid",
+            ),
         ]
         indexes = [
             models.Index(fields=["category", "is_active", "publish_status"]),
             models.Index(fields=["featured", "sort_order"]),
             models.Index(fields=["sort_order", "-created_at"]),
             models.Index(fields=["pricing_type", "stock_status"]),
+            models.Index(
+                fields=["catalog_scope", "wedding_type", "wedding_sort_order"],
+                name="product_wedding_listing_idx",
+            ),
         ]
 
     def __str__(self):
@@ -620,7 +903,7 @@ class Product(TimeStampedModel):
             return "COLLECTION"
         return PRODUCT_CARD_TYPE_LABELS.get(
             self.category.slug,
-            self.category.slug.replace("-", " ").upper(),
+            "COLLECTION",
         )
 
     @property
@@ -690,6 +973,33 @@ class Product(TimeStampedModel):
         return self.category_id and self.category.section == Category.Section.GIFTS
 
     @property
+    def is_wedding(self):
+        return self.catalog_scope == self.CatalogScope.WEDDING
+
+    @property
+    def has_valid_wedding_type(self):
+        if not self.is_wedding or self.wedding_needs_review:
+            return False
+        expected = self.WEDDING_CATEGORY_MAP.get(self.wedding_type)
+        category_matches = bool(
+            expected
+            and self.category_id
+            and (self.category.section, self.category.slug) == expected
+        )
+        if not category_matches:
+            return False
+        if self.wedding_type == self.WeddingType.PROPOSAL_SWEETS:
+            taxonomy_matches = self.category.parent_id is None
+        else:
+            taxonomy_matches = bool(
+                self.category.parent_id
+                and self.category.parent.section == Category.Section.FLOWERS
+                and self.category.parent.slug == WEDDING_ROOT_CATEGORY_SLUG
+                and self.category.parent.is_active
+            )
+        return taxonomy_matches and (not self.pk or not self.tags.exists())
+
+    @property
     def is_fixed_price(self):
         return self.pricing_type == self.PricingType.FIXED
 
@@ -756,25 +1066,81 @@ class Product(TimeStampedModel):
     def clean(self):
         super().clean()
 
+        field_errors = {}
+        invariant_errors = []
+
         if self.category_id and self.is_active and not self.category.is_active:
-            raise ValidationError(
-                {
-                    "category": "زیردسته غیرفعال است. برای نمایش محصول، ابتدا زیردسته را فعال کنید."
-                }
+            field_errors["category"] = (
+                "زیردسته غیرفعال است. برای نمایش محصول، ابتدا زیردسته را فعال کنید."
             )
 
         if self.pricing_type == self.PricingType.FIXED and self.price is None:
-            raise ValidationError(
-                {"price": "برای قیمت ثابت، وارد کردن قیمت الزامی است."}
-            )
+            field_errors["price"] = "برای قیمت ثابت، وارد کردن قیمت الزامی است."
+
+        if self.catalog_scope == self.CatalogScope.GENERAL:
+            if self.wedding_type or self.wedding_needs_review:
+                invariant_errors.append(
+                    "محصول عمومی نمی‌تواند نوع یا وضعیت بررسی عروسی داشته باشد."
+                )
+            if self.category_id and self.category.is_wedding_category:
+                field_errors["category"] = (
+                    "دسته‌های سیستمی عروسی فقط از بخش مستقل عروسی قابل استفاده‌اند."
+                )
+        elif self.catalog_scope == self.CatalogScope.WEDDING:
+            if self.wedding_needs_review:
+                if self._state.adding:
+                    invariant_errors.append(
+                        "محصول جدید عروسی باید یکی از چهار نوع مجاز را داشته باشد."
+                    )
+                if self.wedding_type:
+                    invariant_errors.append(
+                        "محصول نیازمند بررسی نباید هم‌زمان نوع قطعی عروسی داشته باشد."
+                    )
+                if self.category_id and not (
+                    self.category.section == Category.Section.FLOWERS
+                    and self.category.slug == WEDDING_ROOT_CATEGORY_SLUG
+                ):
+                    invariant_errors.append(
+                        "محصول مبهم عروسی باید موقتاً در دستهٔ سیستمی عروسی نگهداری شود."
+                    )
+            else:
+                expected_category = self.WEDDING_CATEGORY_MAP.get(self.wedding_type)
+                if not expected_category:
+                    invariant_errors.append(
+                        "برای محصول عروسی یکی از چهار نوع مجاز را انتخاب کنید."
+                    )
+                elif self.category_id and not self.has_valid_wedding_type:
+                    invariant_errors.append(
+                        "نوع عروسی با بخش و دستهٔ سیستمی محصول سازگار نیست."
+                    )
+
+            if self.pk and self.tags.exists():
+                invariant_errors.append(
+                    "محصول عروسی نمی‌تواند برچسب عمومی یا برچسب ارسال روز داشته باشد."
+                )
+        else:
+            invariant_errors.append("محدودهٔ کاتالوگ محصول معتبر نیست.")
+
+        if field_errors:
+            raise ValidationError(field_errors)
+        if invariant_errors:
+            raise ValidationError(invariant_errors)
 
     def save(self, *args, **kwargs):
+        generated_fields = set()
+
+        if self.category_id and not self.canonical_section:
+            self.canonical_section = self.category.section
+            generated_fields.add("canonical_section")
+        if self.category_id and not self.canonical_category_slug:
+            self.canonical_category_slug = self.category.slug
+            generated_fields.add("canonical_category_slug")
+
         if self.pricing_type == self.PricingType.INQUIRY:
             self.price = None
             self.price_usd = None
 
         if self.pk:
-            generated_fields = set()
             if not self.product_code:
                 self.product_code = self._final_product_code()
                 generated_fields.add("product_code")
@@ -788,12 +1154,14 @@ class Product(TimeStampedModel):
             if kwargs.get("update_fields") is not None and generated_fields:
                 kwargs["update_fields"] = set(kwargs["update_fields"]) | generated_fields
 
+            self.clean()
             super().save(*args, **kwargs)
             return
 
         if not self.product_code:
             self.product_code = f"pending-{uuid.uuid4().hex[:12]}"
 
+        self.clean()
         super().save(*args, **kwargs)
 
         update_fields = []
@@ -810,35 +1178,40 @@ class Product(TimeStampedModel):
             super().save(update_fields=update_fields)
 
     def get_absolute_url(self):
+        canonical_section = self.canonical_section or self.section
+        canonical_category_slug = (
+            self.canonical_category_slug
+            or (self.category.slug if self.category_id else "")
+        )
         route_name = {
             Category.Section.FLOWERS: "flower_product_detail",
             Category.Section.BAKERY: "bakery_product_detail",
             Category.Section.GIFTS: "gift_product_detail",
-        }.get(self.section, "product_detail")
+        }.get(canonical_section, "product_detail")
 
         if route_name == "product_detail":
             return reverse(route_name, args=[self.pk, self.slug])
 
-        return reverse(route_name, args=[self.category.slug, self.slug])
+        return reverse(route_name, args=[canonical_category_slug, self.slug])
 
 
 class FlowerManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
-        return super().get_queryset().filter(
+        return super().get_queryset().for_general_catalog().filter(
             category__section=Category.Section.FLOWERS,
         )
 
 
 class BakeryItemManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
-        return super().get_queryset().filter(
+        return super().get_queryset().for_general_catalog().filter(
             category__section=Category.Section.BAKERY,
         )
 
 
 class GiftItemManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
-        return super().get_queryset().filter(
+        return super().get_queryset().for_general_catalog().filter(
             category__section=Category.Section.GIFTS,
         )
 
@@ -846,6 +1219,11 @@ class GiftItemManager(models.Manager.from_queryset(ProductQuerySet)):
 class SameDayFlowerManager(FlowerManager):
     def get_queryset(self):
         return super().get_queryset().same_day()
+
+
+class WeddingProductManager(models.Manager.from_queryset(ProductQuerySet)):
+    def get_queryset(self):
+        return super().get_queryset().for_weddings()
 
 
 class Flower(Product):
@@ -888,6 +1266,16 @@ class GiftItem(Product):
         ordering = ["sort_order", "-created_at"]
         verbose_name = "هدیه"
         verbose_name_plural = "هدایا"
+
+
+class WeddingProduct(Product):
+    objects = WeddingProductManager()
+
+    class Meta:
+        proxy = True
+        ordering = ["wedding_sort_order", "-updated_at"]
+        verbose_name = "محصول عروسی"
+        verbose_name_plural = "عروسی"
 
 
 class ProductImage(TimeStampedModel):
@@ -1104,7 +1492,12 @@ class HeroFont(TimeStampedModel):
 
 
 class HomeHeroSlide(TimeStampedModel):
-    title = models.CharField("عنوان", max_length=180)
+    title = models.CharField(
+        "عنوان",
+        max_length=180,
+        blank=True,
+        help_text="اختیاری است؛ برای اسلاید تصویری بدون متن خالی بگذارید.",
+    )
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 
@@ -1211,7 +1604,12 @@ class SiteHero(TimeStampedModel):
         SUBCATEGORY = "subcategory", "زیر‌دسته"
         ITEM = "item", "صفحه محصول"
 
-    title = models.CharField("عنوان", max_length=180)
+    title = models.CharField(
+        "عنوان",
+        max_length=180,
+        blank=True,
+        help_text="اختیاری است؛ برای بنر تصویری بدون متن خالی بگذارید.",
+    )
     kicker = models.CharField("متن کوتاه بالا", max_length=100, blank=True)
     description = models.TextField("توضیح", blank=True)
 

@@ -10,6 +10,7 @@ from .selectors.catalog import (
     ordered_catalog_products,
     product_detail_products,
 )
+from .selectors.weddings import wedding_products_by_type
 
 
 class CatalogQueryBudgetTests(TestCase):
@@ -150,3 +151,102 @@ class CatalogQueryBudgetTests(TestCase):
             status_code=301,
             fetch_redirect_response=False,
         )
+
+
+class WeddingQueryBudgetTests(TestCase):
+    """Wedding landing and collections stay constant-query as products grow."""
+
+    @classmethod
+    def setUpTestData(cls):
+        root, _ = Category.objects.update_or_create(
+            slug="wedding",
+            section=Category.Section.FLOWERS,
+            defaults={
+                "name": "Query Wedding",
+                "parent": None,
+                "is_active": True,
+            },
+        )
+        category_specs = (
+            (
+                Product.WeddingType.PROPOSAL_BOUQUET,
+                Category.Section.FLOWERS,
+                "proposal-bale-boroon-bouquet",
+                "Query Proposal Bouquets",
+                root,
+            ),
+            (
+                Product.WeddingType.PROPOSAL_SWEETS,
+                Category.Section.BAKERY,
+                "proposal-bale-boroon-sweets",
+                "Query Proposal Sweets",
+                None,
+            ),
+            (
+                Product.WeddingType.BRIDAL_BOUQUET,
+                Category.Section.FLOWERS,
+                "bridal-bouquet",
+                "Query Bridal Bouquets",
+                root,
+            ),
+            (
+                Product.WeddingType.WEDDING_CAR,
+                Category.Section.FLOWERS,
+                "wedding-car",
+                "Query Wedding Cars",
+                root,
+            ),
+        )
+        cls.categories = {}
+        for wedding_type, section, slug, name, parent in category_specs:
+            category, _ = Category.objects.update_or_create(
+                section=section,
+                slug=slug,
+                defaults={"name": name, "parent": parent, "is_active": True},
+            )
+            cls.categories[wedding_type] = category
+            for index in range(12):
+                Product.objects.create(
+                    name=f"Wedding Query {wedding_type} {index}",
+                    category=category,
+                    catalog_scope=Product.CatalogScope.WEDDING,
+                    wedding_type=wedding_type,
+                    wedding_sort_order=index,
+                    publish_status=Product.PublishStatus.PUBLISHED,
+                )
+
+    def assert_page_query_budget(self, path, maximum):
+        with CaptureQueriesContext(connection) as captured:
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            response.content
+        self.assertLessEqual(
+            len(captured),
+            maximum,
+            f"{path} used {len(captured)} queries; budget is {maximum}.",
+        )
+
+    def test_grouping_all_wedding_cards_is_one_query(self):
+        with self.assertNumQueries(1):
+            grouped = wedding_products_by_type()
+            rendered_state = [
+                (product.category.name, product.card_type_label)
+                for products in grouped.values()
+                for product in products
+            ]
+
+        self.assertEqual(len(rendered_state), 48)
+
+    def test_wedding_public_page_budgets(self):
+        self.assert_page_query_budget(reverse("weddings"), 10)
+        for slug in (
+            "proposal-bouquets",
+            "proposal-sweets",
+            "bridal-bouquets",
+            "wedding-cars",
+        ):
+            with self.subTest(slug=slug):
+                self.assert_page_query_budget(
+                    reverse("wedding_collection", args=[slug]),
+                    10,
+                )

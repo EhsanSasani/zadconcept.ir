@@ -1,0 +1,758 @@
+/* Wedding catalog: one scoped visual system for landing and collection pages. */
+
+.page-weddings {
+  background: #f7f1e8;
+}
+
+.weddings-shell,
+.wedding-collection-page {
+  --wedding-paper: #f7f1e8;
+  --wedding-card: #fffaf4;
+  --wedding-ink: #292821;
+  --wedding-muted: #6f6a61;
+  --wedding-gold: #b78a55;
+  --wedding-dark: #243752;
+  color: var(--wedding-ink);
+  background: var(--wedding-paper);
+}
+
+.weddings-shell,
+.wedding-collection-page {
+  overflow: hidden;
+}
+
+.weddings-container,
+.wedding-collection-container {
+  width: min(100% - 48px, 1280px);
+  margin-inline: auto;
+}
+
+.weddings-kicker,
+.wedding-collection-kicker {
+  display: block;
+  color: var(--wedding-gold);
+  font-family: var(--font-ui-en), var(--font-fa);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+/* Landing hero */
+
+.weddings-hero {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 16 / 5;
+  overflow: hidden;
+  background: var(--wedding-dark);
+}
+
+.weddings-hero__media,
+.weddings-hero__media picture,
+.weddings-hero__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.weddings-hero__media img {
+  object-fit: cover;
+  object-position: center calc(50% + 10px);
+}
+
+/* Editorial headings */
+
+.weddings-intro {
+  padding-block: 0 clamp(68px, 8vw, 108px);
+  background: var(--wedding-card);
+}
+
+.weddings-directory {
+  padding-block: clamp(62px, 7vw, 96px) clamp(68px, 8vw, 108px);
+}
+
+.weddings-editorial-heading {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 178px minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 58px);
+  min-height: 154px;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-block: 23px 15px;
+}
+
+.weddings-editorial-heading__en {
+  display: grid;
+  gap: 7px;
+  align-content: center;
+  color: #756f66;
+  font-family: var(--font-ui-en), sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  line-height: 1.65;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.weddings-editorial-heading__stage {
+  position: relative;
+  min-width: 0;
+  height: 100px;
+}
+
+.weddings-editorial-heading__line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.weddings-editorial-heading__line-base,
+.weddings-editorial-heading__line-flourish {
+  fill: none;
+  stroke: rgba(124, 113, 100, 0.72);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+
+.weddings-editorial-heading__line-dot {
+  fill: #c49a61;
+}
+
+.weddings-editorial-heading :is(h1, h2) {
+  position: absolute;
+  z-index: 1;
+  top: 27px;
+  right: 46px;
+  max-width: min(67%, 620px);
+  margin: 0;
+  padding: 0 13px 5px;
+  color: #211f1b;
+  background: var(--wedding-card);
+  font-size: clamp(2rem, 3.1vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 1.35;
+  text-align: right;
+  text-wrap: balance;
+}
+
+.weddings-editorial-heading--wedding-day h2 {
+  background: var(--wedding-paper);
+}
+
+/* Landing collection cards */
+
+.weddings-directory__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: clamp(26px, 3.4vw, 42px);
+}
+
+.weddings-category-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(72, 60, 48, 0.12);
+  background: #d9d0c4;
+  color: #fff;
+}
+
+.weddings-category-card__media,
+.weddings-category-card__media img,
+.weddings-category-card__shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.weddings-category-card__media {
+  z-index: -2;
+}
+
+.weddings-category-card__media img {
+  object-fit: cover;
+  transition: transform var(--motion-slow) ease;
+}
+
+.weddings-category-card__shade {
+  z-index: -1;
+  background: linear-gradient(0deg, rgba(15, 17, 18, 0.82), rgba(15, 17, 18, 0.04) 68%);
+}
+
+.weddings-category-card__number {
+  position: absolute;
+  inset: 20px 20px auto auto;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--font-brand-en), serif;
+  letter-spacing: 0.12em;
+}
+
+.weddings-category-card__content {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  gap: 10px;
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.weddings-category-card__content small {
+  color: #ead1b3;
+  font-family: var(--font-ui-en), sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+}
+
+.weddings-category-card__content strong {
+  font-size: clamp(1.45rem, 2.6vw, 2.45rem);
+  line-height: 1.45;
+}
+
+.weddings-category-card__content > span {
+  max-width: 47ch;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.86rem;
+  line-height: 1.9;
+}
+
+.weddings-category-card__content em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 4px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.weddings-category-card:hover img,
+.weddings-category-card:focus-visible img {
+  transform: scale(1.035);
+}
+
+/* Managed gallery */
+
+.weddings-gallery {
+  padding-block: 38px clamp(72px, 8vw, 96px);
+}
+
+.weddings-gallery__head--compact {
+  display: grid;
+  grid-template-columns: auto minmax(50px, 1fr);
+  grid-template-areas:
+    "kicker line"
+    "title title";
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 24px;
+}
+
+.weddings-gallery__head--compact::after {
+  content: "";
+  grid-area: line;
+  height: 1px;
+  background: linear-gradient(to left, rgba(180, 133, 76, 0.5), transparent);
+}
+
+.weddings-gallery__head--compact .weddings-kicker {
+  grid-area: kicker;
+  margin: 0;
+  font-size: 9px;
+}
+
+.weddings-gallery__head--compact h2 {
+  grid-area: title;
+  margin: 0;
+  font-size: clamp(30px, 3vw, 46px);
+  font-weight: 600;
+  line-height: 1.22;
+}
+
+.weddings-gallery__mosaic {
+  direction: ltr;
+  display: grid;
+  grid-template-columns: 1.35fr 0.9fr 1fr 0.82fr;
+  grid-template-rows: repeat(2, minmax(210px, 250px));
+  gap: 8px;
+}
+
+.weddings-gallery__tile,
+.weddings-gallery__fallback-item {
+  margin: 0;
+  overflow: hidden;
+  background: #e8ded1;
+}
+
+.weddings-gallery__tile--1 {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.weddings-gallery__tile--2 {
+  grid-column: 2 / 4;
+  grid-row: 1;
+}
+
+.weddings-gallery__tile--3 {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.weddings-gallery__tile--4 {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.weddings-gallery__tile--5 {
+  display: none;
+}
+
+.weddings-gallery__tile img,
+.weddings-gallery__fallback-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--motion-slow) ease;
+}
+
+.weddings-gallery__tile:hover img {
+  transform: scale(1.025);
+}
+
+.weddings-gallery__editorial {
+  direction: rtl;
+  position: relative;
+  grid-column: 4;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: flex-end;
+  padding: 34px 30px;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(239, 229, 215, 0.95), rgba(213, 195, 171, 0.88));
+  text-align: right;
+}
+
+.weddings-gallery__editorial::before {
+  content: "";
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 44px;
+  height: 1px;
+  background: rgba(151, 110, 61, 0.75);
+}
+
+.weddings-gallery__editorial-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 220px;
+}
+
+.weddings-gallery__editorial-inner::before {
+  content: "ZAD";
+  position: absolute;
+  top: -80px;
+  left: 0;
+  color: rgba(255, 255, 255, 0.22);
+  font-family: var(--font-brand-en), serif;
+  font-size: clamp(72px, 7vw, 112px);
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.weddings-gallery__editorial small {
+  display: block;
+  margin-bottom: 13px;
+  color: #9d7346;
+  font-family: var(--font-ui-en), sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.weddings-gallery__editorial h3 {
+  margin: 0 0 18px;
+  font-size: clamp(27px, 2.15vw, 37px);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.weddings-gallery__editorial p {
+  margin: 0;
+  padding-top: 15px;
+  border-top: 1px solid rgba(87, 69, 51, 0.2);
+  color: rgba(53, 44, 36, 0.65);
+  font-family: var(--font-ui-en), sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.weddings-gallery__fallback {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weddings-gallery__fallback-item {
+  aspect-ratio: 4 / 5;
+}
+
+/* Collection intro */
+
+.wedding-collection-intro {
+  position: relative;
+  isolation: isolate;
+  padding-block: 82px 54px;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.72), transparent 54%);
+}
+
+.wedding-collection-intro__content {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.wedding-collection-kicker {
+  margin-bottom: 17px;
+  font-size: 10px;
+}
+
+.wedding-collection-intro h1 {
+  margin: 0 auto;
+  color: var(--wedding-ink);
+  font-size: clamp(38px, 4.6vw, 66px);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 1.34;
+  text-wrap: balance;
+}
+
+.wedding-collection-intro p {
+  max-width: 620px;
+  margin: 19px auto 0;
+  color: var(--wedding-muted);
+  font-size: 15px;
+  line-height: 2;
+  text-wrap: balance;
+}
+
+.wedding-collection-intro__rule,
+.wedding-collection-intro__ornament {
+  display: block;
+  background: #c99a63;
+}
+
+.wedding-collection-intro__ornament {
+  width: 6px;
+  height: 6px;
+  margin: 0 auto 18px;
+  transform: rotate(45deg);
+}
+
+.wedding-collection-intro__rule {
+  width: 48px;
+  height: 1px;
+  margin: 25px auto 0;
+}
+
+/* Collection product cards: image and code are the only visible fields. */
+
+.wedding-collection-products {
+  padding-block: 38px 104px;
+}
+
+.wedding-collection-grid.product-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 46px 20px;
+}
+
+.page-wedding-collection .wedding-product-card {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.page-wedding-collection .wedding-product-card .flowers-product-card__media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #e8ded2;
+}
+
+.page-wedding-collection .wedding-product-card .flowers-product-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--motion-slow) ease;
+}
+
+.page-wedding-collection .wedding-product-card:hover .flowers-product-card__media img,
+.page-wedding-collection .wedding-product-card:focus-within .flowers-product-card__media img {
+  transform: scale(1.022);
+}
+
+.wedding-product-card__body {
+  display: block;
+  min-height: 0;
+  padding: 12px 1px 0;
+  background: transparent;
+  text-align: center;
+}
+
+.wedding-product-card__code {
+  display: block;
+  color: #302b27;
+  font-family: var(--font-ui-en), sans-serif;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+
+.wedding-collection-empty {
+  width: min(100%, 430px);
+  margin: 10px auto 0;
+  padding: 34px 28px;
+  border: 1px solid rgba(174, 128, 78, 0.18);
+  background: rgba(255, 252, 247, 0.62);
+  text-align: center;
+}
+
+.wedding-collection-empty__mark {
+  display: block;
+  margin-bottom: 15px;
+  color: #b4824e;
+  font-family: var(--font-brand-en), serif;
+  font-size: 18px;
+  letter-spacing: 0.28em;
+}
+
+.wedding-collection-empty h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.wedding-collection-empty p {
+  margin: 0;
+  color: #776e65;
+  font-size: 14px;
+}
+
+.weddings-shell a:focus-visible,
+.wedding-collection-page a:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@media (max-width: 1100px) {
+  .weddings-gallery__mosaic {
+    grid-template-columns: 1.2fr 1fr 0.78fr;
+    grid-template-rows: 240px 210px;
+  }
+
+  .weddings-gallery__tile--1 {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .weddings-gallery__tile--2 {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .weddings-gallery__tile--3 {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .weddings-gallery__tile--4 {
+    display: none;
+  }
+
+  .weddings-gallery__editorial {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+
+  .wedding-collection-grid.product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .weddings-container,
+  .wedding-collection-container {
+    width: min(100% - 24px, 560px);
+  }
+
+  .weddings-hero {
+    height: 66svh;
+    min-height: 440px;
+    max-height: 650px;
+    aspect-ratio: auto;
+  }
+
+  .weddings-editorial-heading {
+    position: relative;
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: 112px;
+    padding-block: 14px 4px;
+  }
+
+  .weddings-editorial-heading__en {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    z-index: 2;
+    gap: 3px;
+    font-size: 7px;
+    letter-spacing: 0.21em;
+  }
+
+  .weddings-editorial-heading__stage {
+    height: 94px;
+  }
+
+  .weddings-editorial-heading :is(h1, h2) {
+    top: 31px;
+    right: 16px;
+    max-width: 77%;
+    padding-inline: 8px;
+    font-size: clamp(1.62rem, 7.1vw, 2.12rem);
+    letter-spacing: -0.045em;
+  }
+
+  .weddings-directory__grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .weddings-category-card__content {
+    padding: 20px;
+  }
+
+  .weddings-category-card__content > span {
+    display: none;
+  }
+
+  .weddings-gallery {
+    padding-block: 26px 54px;
+  }
+
+  .weddings-gallery__head--compact {
+    gap: 6px 12px;
+    margin-bottom: 18px;
+  }
+
+  .weddings-gallery__head--compact h2 {
+    font-size: 27px;
+  }
+
+  .weddings-gallery__mosaic {
+    grid-template-columns: 1.15fr 0.85fr;
+    grid-template-rows: 220px 160px 150px;
+    gap: 6px;
+  }
+
+  .weddings-gallery__tile--1 {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+
+  .weddings-gallery__tile--2 {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .weddings-gallery__tile--3 {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .weddings-gallery__editorial {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .weddings-gallery__editorial h3 {
+    margin-bottom: 9px;
+    font-size: 25px;
+    line-height: 1.3;
+  }
+
+  .weddings-gallery__editorial p {
+    padding-top: 9px;
+    font-size: 8px;
+  }
+
+  .weddings-gallery__fallback {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .wedding-collection-intro {
+    padding-block: 54px 32px;
+  }
+
+  .wedding-collection-intro__content {
+    max-width: 340px;
+  }
+
+  .wedding-collection-kicker {
+    margin-bottom: 13px;
+    font-size: 8px;
+  }
+
+  .wedding-collection-intro h1 {
+    font-size: clamp(31px, 9vw, 42px);
+    line-height: 1.4;
+  }
+
+  .wedding-collection-intro p {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+
+  .wedding-collection-products {
+    padding-block: 18px 70px;
+  }
+
+  .wedding-collection-grid.product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 10px;
+  }
+
+  .wedding-product-card__body {
+    padding-top: 9px;
+  }
+
+  .wedding-product-card__code {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weddings-category-card__media img,
+  .weddings-gallery__tile img,
+  .wedding-product-card .flowers-product-card__media img {
+    transition: none;
+  }
+}

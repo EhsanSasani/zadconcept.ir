@@ -1,6 +1,11 @@
 """Catalog HTTP views."""
 
 from ..content.catalog import FLOWER_FILTER_ORDER
+from ..content.weddings import (
+    WEDDING_BAKERY_LEGACY_SLUGS,
+    WEDDING_FLOWER_LEGACY_SLUGS,
+)
+from ..models import WEDDING_LEGACY_TAG_SLUGS
 from ..presenters.pagination import pagination_context
 from ..selectors.catalog import (
     active_child_categories,
@@ -417,6 +422,9 @@ def _section_subcategory(request, section, subcategory_slug):
     return render(request, "subcategory.html", context)
 
 def flower_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_FLOWER_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
     canonical_slug = CATEGORY_SLUG_ALIASES.get(subcategory_slug, subcategory_slug)
 
     if canonical_slug != subcategory_slug:
@@ -425,17 +433,20 @@ def flower_subcategory(request, subcategory_slug):
     return _section_subcategory(request, Category.Section.FLOWERS, canonical_slug)
 
 def bakery_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_BAKERY_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
     return _section_subcategory(request, Category.Section.BAKERY, subcategory_slug)
 
 def gift_subcategory(request, subcategory_slug):
     return _section_subcategory(request, Category.Section.GIFTS, subcategory_slug)
 
 def flower_occasion(request, slug):
-    if slug == "wedding":
-        return redirect("flower_subcategory", subcategory_slug="wedding", permanent=True)
+    if slug in WEDDING_LEGACY_TAG_SLUGS:
+        return redirect("weddings", permanent=True)
 
     occasion = get_object_or_404(
-        Tag,
+        Tag.objects.for_general_catalog(),
         slug=slug,
         is_occasion=True,
         is_active=True,

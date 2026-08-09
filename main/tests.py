@@ -377,9 +377,9 @@ class MainViewsTests(TestCase):
             )["is_active"]
         )
 
-    def test_wedding_is_a_catalog_parent_not_an_occasion(self):
+    def test_wedding_uses_dedicated_catalog_and_not_an_occasion_page(self):
         wedding_category = Category.objects.get(
-            slug="wedding",
+            slug="bridal-bouquet",
             section=Category.Section.FLOWERS,
         )
         wedding_tag, _ = Tag.objects.update_or_create(
@@ -395,28 +395,32 @@ class MainViewsTests(TestCase):
             name="Wedding Arrangement",
             publish_status=Product.PublishStatus.PUBLISHED,
             category=wedding_category,
+            catalog_scope=Product.CatalogScope.WEDDING,
+            wedding_type=Product.WeddingType.BRIDAL_BOUQUET,
         )
-        wedding_product.tags.add(wedding_tag)
 
         occasions_response = self.client.get(reverse("occasions"))
-        wedding_response = self.client.get(
-            reverse("flower_subcategory", args=["wedding"])
+        wedding_response = self.client.get(reverse("weddings"))
+        collection_response = self.client.get(
+            reverse("wedding_collection", args=["bridal-bouquets"])
         )
 
         self.assertNotContains(
             occasions_response,
             f'href="{reverse("occasion_detail", args=["wedding"])}"',
         )
-        self.assertTemplateUsed(wedding_response, "subcategory.html")
-        self.assertEqual(wedding_response.context["active_nav"], "flowers")
-        self.assertContains(wedding_response, wedding_product.name)
+        self.assertNotIn(wedding_tag, Tag.objects.for_general_catalog())
+        self.assertTemplateUsed(wedding_response, "weddings.html")
+        self.assertEqual(wedding_response.context["active_nav"], "weddings")
+        self.assertNotContains(wedding_response, wedding_product.name)
+        self.assertContains(collection_response, wedding_product.name)
 
-    def test_legacy_wedding_occasion_url_redirects_to_the_catalog_parent(self):
+    def test_legacy_wedding_occasion_url_redirects_to_weddings(self):
         response = self.client.get(reverse("occasion_detail", args=["wedding"]))
 
         self.assertRedirects(
             response,
-            reverse("flower_subcategory", args=["wedding"]),
+            reverse("weddings"),
             status_code=301,
             fetch_redirect_response=False,
         )
@@ -822,7 +826,10 @@ class MainViewsTests(TestCase):
             name="Hidden by category",
             category=inactive_category,
             publish_status=Product.PublishStatus.PUBLISHED,
+            is_active=False,
         )
+        Product.objects.filter(pk=hidden_product.pk).update(is_active=True)
+        hidden_product.refresh_from_db()
 
         response = self.client.get(reverse("flowers"))
         self.assertNotContains(response, hidden_product.display_name)

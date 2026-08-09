@@ -37,8 +37,16 @@
   --space-6: 2rem;
   --space-7: 3rem;
   --container: 1380px;
-  --header-height: 72px;
+  --header-height: 68px;
+  --mobile-header-height: 52px;
+  --mobile-notice-height: 52px;
+  --rendered-notice-height: var(--mobile-notice-height);
+  --hero-overlap: 8px;
   --control-min-size: 44px;
+  --primary-hero-mobile: clamp(440px, calc(65svh + 20px), 620px);
+  --notice-background: #263f46;
+  --notice-text: #f7f3ec;
+  --notice-accent: #e8c98b;
 
   /* Shape and depth */
   --radius: 0px;

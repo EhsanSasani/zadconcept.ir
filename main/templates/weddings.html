@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}page-weddings{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/catalog.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/weddings.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="weddings-shell" dir="rtl">
+  <section class="weddings-hero" aria-label="{{ wedding_content.hero_title|default:'عروسی زاد' }}">
+    <div class="weddings-hero__media">
+      <picture>
+        {% if wedding_content.hero_mobile_image %}<source media="(max-width: 760px)" srcset="{{ wedding_content.hero_mobile_image.url }}">{% endif %}
+        {% if wedding_content.hero_image %}
+          <img src="{{ wedding_content.hero_image.url }}" alt="{{ wedding_content.hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+        {% else %}
+          <img src="{% static 'main/img/flowers-hero.webp' %}" alt="{{ wedding_content.hero_title }}" width="1920" height="1080" fetchpriority="high" decoding="async">
+        {% endif %}
+      </picture>
+    </div>
+  </section>
+
+  <section class="weddings-intro weddings-intro--proposal" aria-labelledby="weddings-intro-title">
+    <div class="container weddings-container">
+      <header class="weddings-editorial-heading">
+        <span class="weddings-editorial-heading__en" dir="ltr">
+          <span>FROM YES TO</span>
+          <span>THE WEDDING DAY</span>
+        </span>
+
+        <div class="weddings-editorial-heading__stage">
+          <svg class="weddings-editorial-heading__line" viewBox="0 0 860 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path class="weddings-editorial-heading__line-base" d="M4 72 H360" />
+            <path class="weddings-editorial-heading__line-flourish" d="M360 72 C430 72 470 57 531 31 C577 11 615 10 606 35 C596 61 526 59 548 76 C570 93 656 73 842 72" />
+            <circle class="weddings-editorial-heading__line-dot" cx="850" cy="72" r="7" />
+          </svg>
+          <h1 id="weddings-intro-title">{{ wedding_content.proposal_title|default:"خواستگاری و بله‌برون" }}</h1>
+        </div>
+      </header>
+
+      <div class="weddings-directory__grid weddings-directory__grid--proposal" id="wedding-collections">
+        {% for item in wedding_collections|slice:":2" %}
+          <a
+            class="weddings-category-card weddings-category-card--image-only"
+            href="{{ item.url }}"
+            aria-label="{{ item.title }}"
+          >
+            <span class="weddings-category-card__media">
+              {% if item.slug == "proposal-bouquets" and wedding_content.proposal_bouquet_card_image %}
+                <img src="{{ wedding_content.proposal_bouquet_card_image.url }}" alt="{{ item.title }}" width="1200" height="720" loading="eager" decoding="async">
+              {% elif item.slug == "proposal-sweets" and wedding_content.proposal_sweets_card_image %}
+                <img src="{{ wedding_content.proposal_sweets_card_image.url }}" alt="{{ item.title }}" width="1200" height="720" loading="lazy" decoding="async">
+              {% elif item.preview_product and item.preview_product.cover_image %}
+                <img src="{{ item.preview_product.cover_image.url }}" alt="{{ item.title }}" width="1200" height="720" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async">
+              {% else %}
+                <img src="{% static item.fallback_image %}" alt="{{ item.title }}" width="1200" height="720" loading="lazy" decoding="async">
+              {% endif %}
+            </span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="weddings-directory weddings-directory--wedding-day" aria-labelledby="wedding-day-title">
+    <div class="container weddings-container">
+      <header class="weddings-editorial-heading weddings-editorial-heading--wedding-day">
+        <span class="weddings-editorial-heading__en" dir="ltr">
+          <span>THE</span>
+          <span>WEDDING DAY</span>
+        </span>
+
+        <div class="weddings-editorial-heading__stage">
+          <svg class="weddings-editorial-heading__line" viewBox="0 0 860 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path class="weddings-editorial-heading__line-base" d="M4 72 H360" />
+            <path class="weddings-editorial-heading__line-flourish" d="M360 72 C430 72 470 57 531 31 C577 11 615 10 606 35 C596 61 526 59 548 76 C570 93 656 73 842 72" />
+            <circle class="weddings-editorial-heading__line-dot" cx="850" cy="72" r="7" />
+          </svg>
+          <h2 id="wedding-day-title">{{ wedding_content.wedding_day_title }}</h2>
+        </div>
+      </header>
+
+      <div class="weddings-directory__grid">
+        {% for item in wedding_collections|slice:"2:" %}
+          <a
+            class="weddings-category-card{% if item.slug == 'bridal-bouquets' and not wedding_content.bridal_bouquet_card_kicker and not wedding_content.bridal_bouquet_card_title and not wedding_content.bridal_bouquet_card_text %} weddings-category-card--image-only{% elif item.slug == 'wedding-cars' and not wedding_content.wedding_car_card_kicker and not wedding_content.wedding_car_card_title and not wedding_content.wedding_car_card_text %} weddings-category-card--image-only{% endif %}"
+            href="{{ item.url }}"
+            aria-label="{{ item.title }}"
+          >
+            <span class="weddings-category-card__media">
+              {% if item.slug == "bridal-bouquets" and wedding_content.bridal_bouquet_card_image %}
+                <img src="{{ wedding_content.bridal_bouquet_card_image.url }}" alt="{{ wedding_content.bridal_bouquet_card_title|default:item.title }}" width="1200" height="900" loading="lazy" decoding="async">
+              {% elif item.slug == "wedding-cars" and wedding_content.wedding_car_card_image %}
+                <img src="{{ wedding_content.wedding_car_card_image.url }}" alt="{{ wedding_content.wedding_car_card_title|default:item.title }}" width="1200" height="900" loading="lazy" decoding="async">
+              {% elif item.preview_product and item.preview_product.cover_image %}
+                <img src="{{ item.preview_product.cover_image.url }}" alt="{{ item.title }}" width="1200" height="900" loading="lazy" decoding="async">
+              {% else %}
+                <img src="{% static item.fallback_image %}" alt="{{ item.title }}" width="1200" height="900" loading="lazy" decoding="async">
+              {% endif %}
+            </span>
+
+            {% if item.slug == "bridal-bouquets" %}
+              {% if wedding_content.bridal_bouquet_card_kicker or wedding_content.bridal_bouquet_card_title or wedding_content.bridal_bouquet_card_text %}
+                <span class="weddings-category-card__shade" aria-hidden="true"></span>
+                <span class="weddings-category-card__number">{{ item.number }}</span>
+                <span class="weddings-category-card__content">
+                  {% if wedding_content.bridal_bouquet_card_kicker %}<small>{{ wedding_content.bridal_bouquet_card_kicker }}</small>{% endif %}
+                  {% if wedding_content.bridal_bouquet_card_title %}<strong>{{ wedding_content.bridal_bouquet_card_title }}</strong>{% endif %}
+                  {% if wedding_content.bridal_bouquet_card_text %}<span>{{ wedding_content.bridal_bouquet_card_text }}</span>{% endif %}
+                  <em>مشاهده محصولات <b aria-hidden="true">←</b></em>
+                </span>
+              {% endif %}
+            {% elif item.slug == "wedding-cars" %}
+              {% if wedding_content.wedding_car_card_kicker or wedding_content.wedding_car_card_title or wedding_content.wedding_car_card_text %}
+                <span class="weddings-category-card__shade" aria-hidden="true"></span>
+                <span class="weddings-category-card__number">{{ item.number }}</span>
+                <span class="weddings-category-card__content">
+                  {% if wedding_content.wedding_car_card_kicker %}<small>{{ wedding_content.wedding_car_card_kicker }}</small>{% endif %}
+                  {% if wedding_content.wedding_car_card_title %}<strong>{{ wedding_content.wedding_car_card_title }}</strong>{% endif %}
+                  {% if wedding_content.wedding_car_card_text %}<span>{{ wedding_content.wedding_car_card_text }}</span>{% endif %}
+                  <em>مشاهده محصولات <b aria-hidden="true">←</b></em>
+                </span>
+              {% endif %}
+            {% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {% if wedding_gallery %}
+  <section class="weddings-gallery" aria-labelledby="weddings-gallery-title">
+    <div class="container weddings-container">
+      <header class="weddings-gallery__head weddings-gallery__head--compact">
+        <span class="weddings-kicker">ZAD GALLERY</span>
+        <h2 id="weddings-gallery-title">
+          {{ wedding_content.gallery_title|default:"روایت‌های عروسی زاد" }}
+        </h2>
+      </header>
+
+      {% if wedding_gallery|length >= 5 %}
+        <div class="weddings-gallery__mosaic">
+          {% for gallery_item in wedding_gallery|slice:":5" %}
+            <figure class="weddings-gallery__tile weddings-gallery__tile--{{ forloop.counter }}">
+              <img
+                src="{{ gallery_item.image.url }}"
+                alt="{{ gallery_item.alt_text|default:wedding_content.gallery_title|default:'گالری عروسی زاد' }}"
+                width="900"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+              >
+            </figure>
+          {% endfor %}
+
+          <aside class="weddings-gallery__editorial" aria-label="پیام گالری">
+            <div class="weddings-gallery__editorial-inner">
+              <small>ZAD WEDDING STORIES</small>
+              <h3>عشق، در زیباترین شکل</h3>
+              <p>LOVE IN ITS MOST BEAUTIFUL FORM</p>
+            </div>
+          </aside>
+        </div>
+      {% else %}
+        <div class="weddings-gallery__fallback" role="list" aria-label="گالری تصاویر عروسی زاد">
+          {% for gallery_item in wedding_gallery %}
+            <figure class="weddings-gallery__fallback-item" role="listitem">
+              <img
+                src="{{ gallery_item.image.url }}"
+                alt="{{ gallery_item.alt_text|default:wedding_content.gallery_title|default:'گالری عروسی زاد' }}"
+                width="900"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+              >
+            </figure>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
+</div>
+{% endblock %}

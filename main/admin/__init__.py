@@ -5,3 +5,4 @@ historical ``main.admin`` form imports used by tests and integrations.
 """
 
 from .legacy import *  # noqa: F401,F403
+from .weddings import *  # noqa: F401,F403

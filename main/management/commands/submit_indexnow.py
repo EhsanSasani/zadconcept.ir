@@ -8,10 +8,20 @@ from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from main.models import Category, Event, NewsPost, PublishStatus
+from main.content.weddings import WEDDING_COLLECTIONS
+from main.models import (
+    Category,
+    Event,
+    NewsPost,
+    Product,
+    PublishStatus,
+    WeddingCollectionContent,
+    WeddingPageContent,
+)
 from main.selectors.catalog import (
     catalog_categories,
     catalog_occasion_tags,
@@ -38,6 +48,9 @@ def all_public_urls():
 
 def changed_public_urls(since):
     urls = set()
+    wedding_catalog_changed = Product.objects.for_weddings().filter(
+        updated_at__gte=since,
+    ).exists()
 
     products = published_products().filter(
         updated_at__gte=since,
@@ -72,6 +85,20 @@ def changed_public_urls(since):
         updated_at__gte=since,
     )
     urls.update(f"{settings.ZAD_SITE_URL}{item.get_absolute_url()}" for item in posts)
+
+    wedding_content = WeddingPageContent.current()
+    wedding_collection_content_changed = WeddingCollectionContent.objects.filter(
+        updated_at__gte=since
+    ).exists()
+    if wedding_catalog_changed or wedding_collection_content_changed or (
+        wedding_content and wedding_content.updated_at >= since
+    ):
+        urls.add(f"{settings.ZAD_SITE_URL}{reverse('weddings')}")
+        urls.update(
+            f"{settings.ZAD_SITE_URL}"
+            f"{reverse('wedding_collection', args=[collection_slug])}"
+            for collection_slug in WEDDING_COLLECTIONS
+        )
     return urls
 
 

@@ -5,6 +5,7 @@ facade keeps those paths stable while model domains move into dedicated files.
 """
 
 from .legacy import *  # noqa: F401,F403
+from .weddings import *  # noqa: F401,F403
 
 
 _MIGRATION_CALLBACKS = (
@@ -20,6 +21,16 @@ _MIGRATION_CALLBACKS = (
     site_hero_upload_to,
     tag_cover_upload_to,
     validate_hero_font_file_size,
+    wedding_bridal_bouquet_card_upload_to,
+    wedding_car_card_upload_to,
+    wedding_collection_hero_mobile_upload_to,
+    wedding_collection_hero_upload_to,
+    wedding_gallery_upload_to,
+    wedding_hero_mobile_upload_to,
+    wedding_hero_upload_to,
+    wedding_open_graph_upload_to,
+    wedding_proposal_bouquet_card_upload_to,
+    wedding_proposal_sweets_card_upload_to,
 )
 
 for _callback in _MIGRATION_CALLBACKS:

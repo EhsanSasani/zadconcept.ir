@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
@@ -90,73 +91,51 @@ class WeddingCatalogHotfixTests(TestCase):
         self.car_product = Product.objects.create(
             name="گل‌آرایی خودرو تست",
             category=self.wedding_car,
+            catalog_scope=Product.CatalogScope.WEDDING,
+            wedding_type=Product.WeddingType.WEDDING_CAR,
             publish_status=Product.PublishStatus.PUBLISHED,
         )
         self.bouquet_product = Product.objects.create(
             name="دسته‌گل عروس تست",
             category=self.bridal_bouquet,
-            publish_status=Product.PublishStatus.PUBLISHED,
-        )
-        self.direct_product = Product.objects.create(
-            name="محصول مستقیم عروسی تست",
-            category=self.wedding,
+            catalog_scope=Product.CatalogScope.WEDDING,
+            wedding_type=Product.WeddingType.BRIDAL_BOUQUET,
             publish_status=Product.PublishStatus.PUBLISHED,
         )
 
-    def test_wedding_is_one_parent_with_two_product_collections(self):
+    def test_wedding_products_only_render_in_their_dedicated_collections(self):
         flowers_response = self.client.get(reverse("flowers"))
-        wedding_response = self.client.get(
-            reverse("flower_subcategory", args=["wedding"])
-        )
+        wedding_response = self.client.get(reverse("weddings"))
         car_response = self.client.get(
-            reverse("flower_subcategory", args=["wedding-car"])
+            reverse("wedding_collection", args=["wedding-cars"])
         )
         bouquet_response = self.client.get(
-            reverse("flower_subcategory", args=["bridal-bouquet"])
+            reverse("wedding_collection", args=["bridal-bouquets"])
         )
 
         self.assertEqual(flowers_response.status_code, 200)
-        self.assertContains(
-            flowers_response,
-            f'href="{self.wedding.get_absolute_url()}"',
-        )
-
         self.assertEqual(wedding_response.status_code, 200)
-        self.assertContains(
-            wedding_response,
-            f'href="{self.wedding_car.get_absolute_url()}"',
-        )
-        self.assertContains(
-            wedding_response,
-            f'href="{self.bridal_bouquet.get_absolute_url()}"',
-        )
-        self.assertEqual(
-            {product.pk for product in wedding_response.context["items"]},
-            {
-                self.direct_product.pk,
-                self.car_product.pk,
-                self.bouquet_product.pk,
-            },
-        )
-        self.assertEqual(
-            len(wedding_response.context["items"]),
-            len({product.pk for product in wedding_response.context["items"]}),
-        )
+        self.assertEqual(car_response.status_code, 200)
+        self.assertEqual(bouquet_response.status_code, 200)
+
+        self.assertNotContains(flowers_response, self.car_product.name)
+        self.assertNotContains(flowers_response, self.bouquet_product.name)
+        self.assertNotContains(wedding_response, self.car_product.name)
+        self.assertNotContains(wedding_response, self.bouquet_product.name)
 
         self.assertContains(car_response, self.car_product.name)
-        self.assertNotContains(car_response, self.direct_product.name)
         self.assertNotContains(car_response, self.bouquet_product.name)
         self.assertContains(bouquet_response, self.bouquet_product.name)
-        self.assertNotContains(bouquet_response, self.direct_product.name)
         self.assertNotContains(bouquet_response, self.car_product.name)
 
-    def test_parent_category_accepts_direct_products(self):
+    def test_parent_category_rejects_new_untyped_products(self):
         direct_product = Product(
             name="محصول مستقیم عروسی",
             category=self.wedding,
         )
 
-        direct_product.full_clean()
+        with self.assertRaises(ValidationError):
+            direct_product.full_clean()
 
     def test_wedding_is_not_an_occasion_and_legacy_urls_are_canonicalized(self):
         wedding_tag, _ = Tag.objects.update_or_create(
@@ -179,13 +158,13 @@ class WeddingCatalogHotfixTests(TestCase):
         self.assertNotIn(wedding_tag, list(OccasionSitemap().items()))
         self.assertRedirects(
             old_global_url,
-            self.wedding.get_absolute_url(),
+            reverse("weddings"),
             status_code=301,
             fetch_redirect_response=False,
         )
         self.assertRedirects(
             old_flower_url,
-            self.wedding.get_absolute_url(),
+            reverse("weddings"),
             status_code=301,
             fetch_redirect_response=False,
         )

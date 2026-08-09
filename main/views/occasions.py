@@ -1,5 +1,6 @@
 """Occasion HTTP views."""
 
+from ..models import WEDDING_LEGACY_TAG_SLUGS
 from ..presenters.pagination import pagination_context
 from ..selectors.catalog import (
     active_occasion_tags,
@@ -62,11 +63,11 @@ def occasions(request):
     return render(request, "occasions.html", context)
 
 def occasion_detail(request, slug):
-    if slug == "wedding":
-        return redirect("flower_subcategory", subcategory_slug="wedding", permanent=True)
+    if slug in WEDDING_LEGACY_TAG_SLUGS:
+        return redirect("weddings", permanent=True)
 
     occasion = get_object_or_404(
-        Tag,
+        Tag.objects.for_general_catalog(),
         slug=slug,
         is_occasion=True,
         is_active=True,
