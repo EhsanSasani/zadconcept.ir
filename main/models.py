@@ -68,14 +68,15 @@ FLOWER_OCCASION_TAG_SLUGS = (
     "birthday",
     "romantic",
     "congratulation",
-    "apology",
     "condolence",
     "proposal",
     "engagement",
+    "formal-visit",
     "no-occasion",
 )
 
 SAME_DAY_TAG_SLUG = "same-day"
+PROPOSAL_COLLECTION_TAG_SLUG = "proposal-bouquet-selection"
 
 PRODUCT_SEO_CATEGORY_LABELS = {
     "hand-bouquet": "دسته گل",

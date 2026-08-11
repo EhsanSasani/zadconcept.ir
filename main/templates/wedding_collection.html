@@ -36,6 +36,20 @@
 
   <section class="wedding-collection-products" aria-label="محصولات {{ collection.short_title }}">
     <div class="container wedding-collection-container">
+      {% if filter_links %}
+        <div class="catalog-filter-row" aria-label="فیلتر نوع بسته‌بندی">
+          {% for item in filter_links %}
+            <a
+              href="{{ item.url }}"
+              {% if item.filter_url %}data-filter-target="{{ item.filter_url }}"{% endif %}
+              class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}"
+            >
+              {{ item.label }}
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       {% if products %}
         <div class="flowers-grid wedding-collection-grid">
           {% for product in products %}
@@ -103,4 +117,8 @@
     </div>
   </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  {% if filter_links %}<script src="{% static 'main/js/filter-fallback.js' %}"></script>{% endif %}
 {% endblock %}

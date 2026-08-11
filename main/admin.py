@@ -8,6 +8,7 @@ from django.utils.text import slugify
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .models import (
+    PROPOSAL_COLLECTION_TAG_SLUG,
     SAME_DAY_TAG_SLUG,
     BakeryItem,
     Category,
@@ -460,6 +461,21 @@ class ProductAdminForm(forms.ModelForm):
 
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
+
+    def _save_m2m(self):
+        protected_tag_ids = ()
+        if self.instance.pk:
+            protected_tag_ids = tuple(
+                self.instance.tags.filter(
+                    slug=PROPOSAL_COLLECTION_TAG_SLUG,
+                    is_active=False,
+                ).values_list("pk", flat=True)
+            )
+
+        super()._save_m2m()
+
+        if protected_tag_ids:
+            self.instance.tags.add(*protected_tag_ids)
 
 
 class WeddingProductAdminForm(ProductAdminForm):
@@ -1616,7 +1632,11 @@ class SameDayFlowerAdmin(FlowerAdmin):
             raise forms.ValidationError(
                 "محصول عروسی را نمی‌توان از بخش ارسال روز ذخیره کرد."
             )
-        product.tags.add(self._ensure_same_day_tag())
+        # Adding through this proxy must create a same-day product. On change,
+        # however, the submitted checkbox selection is authoritative: removing
+        # the tag intentionally removes the product from this proxy list.
+        if not change:
+            product.tags.add(self._ensure_same_day_tag())
 
     @admin.display(description="برچسب‌ها")
     def tags_summary(self, obj):

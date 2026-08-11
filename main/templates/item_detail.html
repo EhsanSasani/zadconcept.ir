@@ -113,7 +113,7 @@
 
       
 
-      {% with tags=product.tags.all %}
+      {% with tags=product_tags %}
         {% if tags %}
           <div class="item-detail__tags" aria-label="Product tags">
             {% for tag in tags %}

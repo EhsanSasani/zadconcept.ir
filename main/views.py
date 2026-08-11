@@ -31,6 +31,7 @@ from .models import (
     NewsPost,
     PageContentBlock,
     Product,
+    PROPOSAL_COLLECTION_TAG_SLUG,
     PublishStatus,
     SAME_DAY_TAG_SLUG,
     SiteHero,
@@ -1036,9 +1037,16 @@ OCCASION_CARD_CONTENT = {
         "hero_text": "برای جشنی صمیمی و شیرین در آغاز یک همراهی.",
         "image": "main/img/occasions/special.webp",
     },
+    "formal-visit": {
+        "title": "دیدار رسمی",
+        "hero_title": "گل برای دیدار رسمی",
+        "intro": "برای دیدارهایی محترمانه و سنجیده.",
+        "hero_text": "انتخاب‌هایی آراسته و متعادل برای دیدارهای رسمی و حرفه‌ای.",
+        "image": "main/img/occasions/special.webp",
+    },
     "no-occasion": {
-        "title": "بدون مناسبت",
-        "hero_title": "گل بدون مناسبت",
+        "title": "بی‌بهانه",
+        "hero_title": "گل بی‌بهانه",
         "intro": "برای بی‌دلیل دوست داشتن.",
         "hero_text": "برای همان روزهای معمولی که با یک یاد کوچک، خاص می‌شوند.",
         "image": "main/img/occasions/special.webp",
@@ -1052,6 +1060,7 @@ OCCASION_EN_LABELS = {
     "condolence": "Sympathy",
     "proposal": "Proposal",
     "engagement": "Engagement",
+    "formal-visit": "Formal Visit",
     "no-occasion": "Just Because",
 }
 
@@ -1386,7 +1395,7 @@ WEDDING_COLLECTIONS = {
 
 
 def _published_wedding_products(wedding_type):
-    return list(
+    wedding_products = list(
         Product.objects.valid_weddings()
         .published()
         .filter(wedding_type=wedding_type)
@@ -1399,6 +1408,76 @@ def _published_wedding_products(wedding_type):
             "id",
         )
     )
+
+    if wedding_type != Product.WeddingType.PROPOSAL_BOUQUET:
+        return wedding_products
+
+    selected_general_products = _catalog_ordered_products(
+        _published_products_for_section(Category.Section.FLOWERS)
+        .filter(tags__slug=PROPOSAL_COLLECTION_TAG_SLUG)
+        .distinct(),
+        Category.Section.FLOWERS,
+    )
+    return wedding_products + list(selected_general_products)
+
+
+def _proposal_collection_filter_data(request, products, collection_slug):
+    general_products = [
+        product
+        for product in products
+        if product.catalog_scope == Product.CatalogScope.GENERAL
+    ]
+    available_category_ids = {
+        product.category_id for product in general_products if product.category_id
+    }
+    categories = list(
+        Category.objects.for_general_catalog()
+        .filter(
+            pk__in=available_category_ids,
+            section=Category.Section.FLOWERS,
+            is_active=True,
+        )
+        .order_by("sort_order", "name")
+    )
+    category_order = {
+        slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)
+    }
+    categories.sort(
+        key=lambda category: category_order.get(
+            category.slug,
+            len(category_order),
+        )
+    )
+
+    selected_slug = request.GET.get("category") or ""
+    selected_category = None
+    filtered_products = products
+
+    if selected_slug:
+        selected_category = get_object_or_404(
+            Category.objects.for_general_catalog(),
+            section=Category.Section.FLOWERS,
+            slug=selected_slug,
+            is_active=True,
+            pk__in=available_category_ids,
+        )
+        filtered_products = [
+            product
+            for product in general_products
+            if product.category_id == selected_category.pk
+        ]
+
+    base_url = reverse("wedding_collection", args=[collection_slug])
+    filter_links = (
+        _filter_links_for_categories(
+            base_url,
+            categories,
+            selected_slug=selected_slug,
+        )
+        if categories
+        else []
+    )
+    return filtered_products, filter_links, selected_category
 
 
 def _wedding_content_and_gallery():
@@ -1507,6 +1586,15 @@ def wedding_collection(request, collection_slug):
     except DatabaseError:
         products = []
 
+    filter_links = []
+    selected_category = None
+    if config["type"] == Product.WeddingType.PROPOSAL_BOUQUET:
+        products, filter_links, selected_category = _proposal_collection_filter_data(
+            request,
+            products,
+            collection_slug,
+        )
+
     if managed_content:
         hero_kicker = managed_content.hero_kicker
         hero_title = managed_content.hero_title
@@ -1568,6 +1656,8 @@ def wedding_collection(request, collection_slug):
             "collection_content": managed_content,
             "collection_has_copy": collection_has_copy,
             "products": products,
+            "filter_links": filter_links,
+            "selected_category": selected_category,
         }
     )
     return render(request, "wedding_collection.html", context)
@@ -1666,8 +1756,8 @@ FLOWER_OCCASION_SLUGS = [
     "birthday",
     "romantic",
     "congratulation",
-    "apology",
     "condolence",
+    "formal-visit",
     "no-occasion",
 ]
 
@@ -1698,6 +1788,7 @@ OCCASION_FALLBACK_IMAGES = {
     "condolence": "main/img/occasions/condolence.webp",
     "proposal": "main/img/occasions/special.webp",
     "engagement": "main/img/occasions/special.webp",
+    "formal-visit": "main/img/occasions/special.webp",
     "no-occasion": "main/img/occasions/special.webp",
 }
 
@@ -2461,6 +2552,10 @@ def _item_detail_context(request, product):
     context.update(
         {
             "product": product,
+            "product_tags": product.tags.filter(is_active=True).order_by(
+                "sort_order",
+                "name",
+            ),
             "category_name": category_name,
             "section_label": section_label,
             "category_url": category_url,

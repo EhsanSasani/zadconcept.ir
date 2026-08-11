@@ -161,6 +161,7 @@ class Command(BaseCommand):
             "name": "معذرت خواهی",
             "slug": "apology",
             "sort_order": 50,
+            "is_occasion": False,
             "legacy_slugs": ["apology"],
             "legacy_names": ["عذرخواهی"],
         },
@@ -172,7 +173,12 @@ class Command(BaseCommand):
             "legacy_names": ["تسلیت"],
         },
         {
-            "name": "بدون مناسبت",
+            "name": "دیدار رسمی",
+            "slug": "formal-visit",
+            "sort_order": 70,
+        },
+        {
+            "name": "بی‌بهانه",
             "slug": "no-occasion",
             "sort_order": 90,
             "legacy_slugs": ["no-occasion"],
