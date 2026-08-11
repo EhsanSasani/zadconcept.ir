@@ -507,51 +507,553 @@ li,
   }
 }
 
-
 /* =========================================================
-   ZAD DESKTOP HERO CONTRACT — production hotfix
-
-   Desktop only:
-   - Home first fold: Notice + Navbar + Hero + Trust = 100svh
-   - Home artwork crop favors lower content so the ZAD mark stays visible
-   - All other primary page heroes = 16:5
-
-   Mobile is intentionally unchanged.
+   HOTFIX — Home hero starts behind navbar
    ========================================================= */
 
-@media (min-width: 761px) {
+/* Desktop / tablet: pull hero upward by full navbar height */
+.page-home .home-hero {
+  margin-top: calc(var(--zad-header-height) * -1) !important;
+}
 
-  :root {
-    --zad-home-notice-desktop: 40px;
-    --zad-home-navbar-desktop: 68px;
-    --zad-home-trust-desktop: 176px;
+/* Mobile: navbar is fixed, so remove its flow spacer entirely */
+@media (max-width: 760px) {
+  .page-home .site-header-spacer {
+    height: 0 !important;
   }
 
-  /* -------------------------------------------------------
-     HOME — Hero + existing Trust strip complete first fold
-     ------------------------------------------------------- */
+  .page-home .home-hero {
+    margin-top: 0 !important;
+  }
+}
 
-  .page-home .home-trust-strip {
-    box-sizing: border-box !important;
-    height: var(--zad-home-trust-desktop) !important;
-    min-height: var(--zad-home-trust-desktop) !important;
-    margin: 0 !important;
-    padding: 34px 0 30px !important;
+
+
+/* =========================================================
+   HOME HERO FINAL HOTFIX
+   - navbar overlays hero
+   - hero fits first viewport
+   - show more of the bottom of the hero image
+   ========================================================= */
+
+/* ---------- Desktop ---------- */
+@media (min-width: 761px) {
+
+  /* Pull hero exactly behind the navbar */
+  .page-home .home-hero {
+    margin-top: calc(var(--zad-header-height) * -1) !important;
+  }
+
+  /*
+   * Desktop notice bar is ~40px.
+   * Navbar is overlayed, so only notice height is subtracted.
+   */
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    height: calc(100svh - 40px) !important;
+    min-height: 0 !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .page-home .hero-slide picture {
+    display: block !important;
+  }
+
+  .page-home .hero-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    object-fit: cover !important;
+  }
+
+  /* First/home slide: reveal more of the bottom → ZAD becomes visible */
+  .page-home .hero-slide--1 img {
+    object-position: center 64% !important;
+  }
+}
+
+
+/* ---------- Tablet ---------- */
+@media (min-width: 761px) and (max-width: 1180px) {
+
+  /* Preserve the existing horizontal composition */
+  .page-home .hero-slide--1 img {
+    object-position: 35% 64% !important;
+  }
+}
+
+
+/* ---------- Mobile ---------- */
+@media (max-width: 760px) {
+
+  /* Navbar is fixed on mobile: remove the fake flow-space */
+  .page-home .site-header-spacer {
+    display: block !important;
+    height: 0 !important;
+  }
+
+  .page-home .home-hero {
+    margin-top: 0 !important;
+  }
+
+  /*
+   * Hero begins where navbar begins, directly after notice.
+   * Never becomes taller than the initial viewport.
+   */
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    height: calc(100svh - var(--zad-mobile-notice-height)) !important;
+    min-height: 0 !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .page-home .hero-slide picture {
+    display: block !important;
+  }
+
+  .page-home .hero-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    object-fit: cover !important;
+  }
+
+  /* Keep mobile's left crop, but move image content upward */
+  .page-home .hero-slide--1 img {
+    object-position: left 64% !important;
+  }
+}
+
+
+/* Kill the old 390px / 720px forced hero height */
+@media (max-width: 390px) {
+  .page-home .hero-slide img {
+    min-height: 0 !important;
+  }
+}
+
+
+
+/************************************************************
+ * HOME HERO — MOBILE FINAL HEIGHT
+ * Hero ≈ 2/3 viewport so next section remains visible
+ ************************************************************/
+
+@media (max-width: 760px) {
+
+  .page-home .site-header-spacer {
+    height: 0 !important;
   }
 
   .page-home .home-hero,
   .page-home .hero-slides {
-    box-sizing: border-box !important;
+    height: 65svh !important;
+    min-height: 420px !important;
+    max-height: 620px !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .page-home .hero-slide img {
     width: 100% !important;
-    height: calc(
-      100svh
-      - var(--zad-home-notice-desktop)
-      - var(--zad-home-navbar-desktop)
-      - var(--zad-home-trust-desktop)
+    height: 100% !important;
+    min-height: 0 !important;
+
+    object-fit: cover !important;
+
+    /* show more of the lower part of image / ZAD mark */
+    object-position: left 68% !important;
+  }
+}
+
+
+/* very small phones */
+@media (max-width: 390px) {
+
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    height: 63svh !important;
+    min-height: 390px !important;
+  }
+
+  .page-home .hero-slide img {
+    object-position: left 70% !important;
+  }
+}
+
+
+
+/* =========================================================
+   HOTFIX — Sticky mobile navbar + premium notice bar
+   ========================================================= */
+
+/* ---------- Notice Bar ---------- */
+
+.site-notice,
+.notice-bar,
+.top-notice {
+  background: #314756 !important;
+  color: #F7F4EE !important;
+  border: 0 !important;
+}
+
+.site-notice a,
+.notice-bar a,
+.top-notice a {
+  color: #E8C98B !important;
+}
+
+
+/* ---------- Mobile Sticky Navbar ---------- */
+
+@media (max-width: 760px) {
+
+  .site-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+
+    /*
+     * Header stays in normal flow for sticky behavior,
+     * but negative bottom margin lets Hero begin behind it.
+     */
+    margin-bottom: calc(var(--zad-mobile-header-height) * -1) !important;
+  }
+
+  /* Old fixed-header spacer is no longer needed */
+  .page-home .site-header-spacer {
+    display: none !important;
+    height: 0 !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   FINAL HOTFIX — mobile sticky navbar + notice color
+   ========================================================= */
+
+/* Premium dark teal notice */
+body .top-notice-bar {
+  background: #263f46 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+body .top-notice-bar__link {
+  color: #f7f3ec !important;
+}
+
+body .top-notice-bar__paypal {
+  color: #e8c98b !important;
+}
+
+
+/* Mobile navbar */
+@media (max-width: 760px) {
+
+  body .site-header,
+  body .site-header.is-scrolled,
+  body .site-header:not(.is-scrolled) {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 1200 !important;
+  }
+
+  /* Fixed navbar spacer is no longer required */
+  body .site-header-spacer {
+    display: none !important;
+    height: 0 !important;
+  }
+
+  /*
+   * Only on Home:
+   * keep Hero beginning behind navbar just like now.
+   */
+  body.page-home .site-header {
+    margin-bottom: calc(var(--zad-mobile-header-height) * -1) !important;
+  }
+}
+
+
+
+/* =========================================================
+   FINAL MOBILE STICKY NAV FIX
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  /*
+   * overflow-x:hidden on html/body breaks sticky behavior.
+   * clip prevents horizontal overflow without creating
+   * a scrolling ancestor.
+   */
+  html,
+  body {
+    overflow-x: clip !important;
+  }
+
+  .site-header,
+  .site-header.is-scrolled,
+  .site-header:not(.is-scrolled) {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+
+    width: 100% !important;
+    z-index: 1200 !important;
+
+    /* Don't create a transformed containing layer for sticky */
+    transform: none !important;
+  }
+
+  .site-header-spacer {
+    display: none !important;
+    height: 0 !important;
+  }
+
+  /*
+   * Home only:
+   * Hero still begins behind navbar.
+   */
+  body.page-home .site-header {
+    margin-bottom: calc(
+      var(--zad-mobile-header-height) * -1
     ) !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   ZAD — GLOBAL PRIMARY HERO SIZE CONTRACT
+   One sizing system for all main image heroes
+   ========================================================= */
+
+:root {
+  /*
+   * Desktop primary hero
+   * Same visual height across main pages.
+   */
+  --zad-primary-hero-desktop:
+    clamp(560px, calc(100svh - 40px), 820px);
+
+  /*
+   * Mobile:
+   * Current approved ~65svh composition + ~20px
+   * so lower artwork / ZAD mark remains visible.
+   */
+  --zad-primary-hero-mobile:
+    clamp(440px, calc(65svh + 20px), 620px);
+}
+
+
+/* =========================================================
+   DESKTOP / TABLET
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /* All PRIMARY image heroes */
+  .page-home .home-hero,
+  .page-home .hero-slides,
+
+  .page-hero,
+
+  .flowers-hero,
+
+  .workshops-hero,
+
+  .page-about .about-hero,
+
+  .weddings-hero {
+    height: var(--zad-primary-hero-desktop) !important;
+    min-height: var(--zad-primary-hero-desktop) !important;
+    max-height: var(--zad-primary-hero-desktop) !important;
+  }
+
+
+  /* Make every media layer obey its hero container */
+  .page-home .hero-slide,
+  .page-home .hero-slide picture,
+
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    height: 100% !important;
     min-height: 0 !important;
     max-height: none !important;
-    margin-top: 0 !important;
+  }
+
+
+  /* Unified image behaviour */
+  .page-home .hero-slide img,
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+  .page-home .home-hero,
+  .page-home .hero-slides,
+
+  .page-hero,
+
+  .flowers-hero,
+
+  .workshops-hero,
+
+  .page-about .about-hero,
+
+  .weddings-hero {
+    height: var(--zad-primary-hero-mobile) !important;
+    min-height: var(--zad-primary-hero-mobile) !important;
+    max-height: var(--zad-primary-hero-mobile) !important;
+  }
+
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture,
+
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+
+  .page-home .hero-slide img,
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+  }
+
+
+  /*
+   * HOME composition:
+   * Preserve approved horizontal crop and expose
+   * slightly more of the lower artwork / ZAD mark.
+   */
+  .page-home .hero-slide img {
+    object-position: left 70% !important;
+  }
+}
+
+
+/* Small phones: DO NOT revert to legacy 700/720px hero rules */
+@media (max-width: 390px) {
+
+  .page-home .home-hero,
+  .page-home .hero-slides,
+
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    height: var(--zad-primary-hero-mobile) !important;
+    min-height: var(--zad-primary-hero-mobile) !important;
+    max-height: var(--zad-primary-hero-mobile) !important;
+  }
+}
+
+
+
+/* =========================================================
+   DESKTOP HERO CONTRACT — FINAL FIX
+   Home = fullscreen
+   Other primary heroes = 16:5
+   Mobile remains unchanged
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  /* -------------------------------------------------------
+     HOME
+     Full first-screen hero.
+     Notice bar is ~40px, navbar is visually part of hero.
+     ------------------------------------------------------- */
+
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    width: 100% !important;
+
+    height: calc(100svh - 40px) !important;
+    min-height: 560px !important;
+    max-height: none !important;
+
     aspect-ratio: auto !important;
   }
 
@@ -564,20 +1066,15 @@ li,
   }
 
   .page-home .hero-slide img {
-    display: block !important;
     width: 100% !important;
     height: 100% !important;
-    min-height: 0 !important;
-    max-height: none !important;
     object-fit: cover !important;
-
-    /* Crop more from the top; preserve the lower ZAD artwork. */
-    object-position: center 74% !important;
   }
 
 
   /* -------------------------------------------------------
-     NON-HOME PRIMARY HEROES — canonical desktop ratio 16:5
+     ALL OTHER PRIMARY PAGE HEROES
+     Standard banner ratio: 16:5
      ------------------------------------------------------- */
 
   .page-hero,
@@ -585,42 +1082,237 @@ li,
   .workshops-hero,
   .page-about .about-hero,
   .weddings-hero {
-    box-sizing: border-box !important;
     width: 100% !important;
+
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
+
     aspect-ratio: 16 / 5 !important;
   }
+
+
+  /* Media layers fill the 16:5 container */
 
   .page-hero__slides,
   .page-hero__slide,
   .page-hero__slide picture,
+
   .flowers-hero__media,
   .flowers-hero__media picture,
+
   .workshops-hero__slides,
   .workshops-hero__slide,
   .workshops-hero__slide picture,
+
   .page-about .about-hero__media,
   .page-about .about-hero__media picture,
+
   .weddings-hero__media,
   .weddings-hero__media picture {
     width: 100% !important;
     height: 100% !important;
+
     min-height: 0 !important;
     max-height: none !important;
   }
+
+
+  /* Images always cover the banner safely */
 
   .page-hero__slide img,
   .flowers-hero__media img,
   .workshops-hero__image,
   .page-about .about-hero__media img,
   .weddings-hero__media img {
-    display: block !important;
     width: 100% !important;
+    height: 100% !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    object-fit: cover !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   HOME DESKTOP FIRST SCREEN
+   Hero + existing Trust Strip = one viewport composition
+   Mobile remains unchanged
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  :root {
+    /*
+     * Desktop chrome:
+     * Notice ≈ 40px
+     * Navbar = existing --zad-header-height (68px)
+     */
+    --zad-desktop-notice-height: 40px;
+  }
+
+
+  /*
+   * Everything below the global chrome fits inside
+   * the remaining visible viewport.
+   */
+  .page-home .home-first-screen {
+    display: grid !important;
+
+    grid-template-rows:
+      minmax(0, 1fr)
+      auto;
+
+    height: calc(
+      100svh
+      - var(--zad-desktop-notice-height)
+      - var(--zad-header-height)
+    ) !important;
+
+    min-height: 560px;
+
+    overflow: hidden;
+  }
+
+
+  /*
+   * HERO takes ONLY the remaining space.
+   * This intentionally overrides the old desktop
+   * fullscreen Hero contract.
+   */
+  .page-home .home-first-screen .home-hero,
+  .page-home .home-first-screen .hero-slides {
+    width: 100% !important;
+
     height: 100% !important;
     min-height: 0 !important;
     max-height: none !important;
+
+    margin-top: 0 !important;
+    aspect-ratio: auto !important;
+  }
+
+
+  .page-home .home-first-screen .hero-slide,
+  .page-home .home-first-screen .hero-slide picture {
+    width: 100% !important;
+    height: 100% !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+
+  .page-home .home-first-screen .hero-slide img {
+    width: 100% !important;
+    height: 100% !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
     object-fit: cover !important;
+  }
+
+
+  /*
+   * IMPORTANT:
+   * Trust strip keeps its CURRENT design and natural height.
+   */
+  .page-home .home-first-screen .home-trust-strip {
+    margin: 0 !important;
+    flex-shrink: 0;
+  }
+
+}
+
+
+
+/* =========================================================
+   HOME DESKTOP FIRST VIEW — HARD FIX
+   Notice + Navbar + Hero + existing Trust = 100svh
+   No HTML wrapper required.
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  :root {
+    --zad-home-notice-desktop: 40px;
+    --zad-home-navbar-desktop: 68px;
+    --zad-home-trust-desktop: 176px;
+  }
+
+  /* Trust keeps its current visual design,
+     but gets a predictable measured height. */
+  .page-home .home-trust-strip {
+    box-sizing: border-box !important;
+    height: var(--zad-home-trust-desktop) !important;
+    min-height: var(--zad-home-trust-desktop) !important;
+    margin: 0 !important;
+    padding: 34px 0 30px !important;
+  }
+
+  /* Hero receives exactly the remaining viewport space. */
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    box-sizing: border-box !important;
+
+    height: calc(
+      100svh
+      - var(--zad-home-notice-desktop)
+      - var(--zad-home-navbar-desktop)
+      - var(--zad-home-trust-desktop)
+    ) !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin-top: 0 !important;
+    aspect-ratio: auto !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .page-home .hero-slide img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    object-fit: cover !important;
+  }
+
+}
+
+
+
+/* =========================================================
+   HOME DESKTOP HERO CROP FIX
+   Crop more from top so lower ZAD area stays visible
+   ========================================================= */
+
+@media (min-width: 761px) {
+
+  .page-home .hero-slide img {
+    object-position: center 74% !important;
+  }
+
+}
+
+
+
+@media (min-width: 761px) {
+  .page-home .hero-slide--1 img {
+    object-position: center 78% !important;
   }
 }

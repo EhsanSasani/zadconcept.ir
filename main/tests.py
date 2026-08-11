@@ -386,7 +386,7 @@ class MainViewsTests(TestCase):
         self.assertFalse(wedding_tag in Tag.objects.for_general_catalog())
         self.assertTemplateUsed(wedding_response, "weddings.html")
         self.assertEqual(wedding_response.context["active_nav"], "weddings")
-        self.assertContains(wedding_response, wedding_product.name)
+        self.assertNotContains(wedding_response, wedding_product.name)
         self.assertRedirects(
             legacy_response,
             reverse("weddings"),
