@@ -158,6 +158,13 @@ CACHES = {
     }
 }
 
+# --- Telegram notification for new lead requests ---
+TELEGRAM_LEAD_BOT_TOKEN = os.getenv("TELEGRAM_LEAD_BOT_TOKEN", "").strip()
+TELEGRAM_LEAD_CHAT_ID = os.getenv("TELEGRAM_LEAD_CHAT_ID", "").strip()
+TELEGRAM_LEAD_TIMEOUT_SECONDS = float(
+    os.getenv("TELEGRAM_LEAD_TIMEOUT_SECONDS", "5")
+)
+
 # --- اعتبارسنجی رمز عبور ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

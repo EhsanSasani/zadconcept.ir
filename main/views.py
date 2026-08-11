@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .forms import LeadRequestForm
+from .telegram_notifications import send_lead_request_notification
 from .models import (
     BAKERY_WEDDING_CATEGORY_SLUGS,
     Category,
@@ -3452,6 +3453,9 @@ def submit_lead_request(request):
         lead = form.save(commit=False)
         lead.source_page = request.POST.get("source_page", "")
         lead.save()
+        transaction.on_commit(
+            lambda lead_id=lead.pk: send_lead_request_notification(lead_id)
+        )
         messages.success(
             request,
             "Your request has been submitted. zad will contact you soon.",
