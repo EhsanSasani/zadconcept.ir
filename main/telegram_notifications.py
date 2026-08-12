@@ -48,7 +48,67 @@ def format_lead_request_message(lead):
     )
 
 
+def _send_via_relay(lead_id, lead, relay_url, relay_secret):
+    payload = json.dumps(
+        {"text": format_lead_request_message(lead)}
+    ).encode("utf-8")
+    request = Request(
+        relay_url,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {relay_secret}",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(
+            request,
+            timeout=settings.TELEGRAM_LEAD_TIMEOUT_SECONDS,
+        ) as response:
+            result = json.load(response)
+        if result.get("ok") is True:
+            return True
+        logger.error(
+            "Telegram relay rejected lead notification; lead_id=%s",
+            lead_id,
+        )
+    except HTTPError as exc:
+        logger.error(
+            "Telegram relay HTTP error; lead_id=%s status=%s",
+            lead_id,
+            exc.code,
+        )
+    except (URLError, TimeoutError, OSError, ValueError):
+        logger.exception(
+            "Telegram relay notification failed; lead_id=%s",
+            lead_id,
+        )
+
+    return False
+
+
 def send_lead_request_notification(lead_id):
+    relay_url = settings.TELEGRAM_LEAD_RELAY_URL
+    relay_secret = settings.TELEGRAM_LEAD_RELAY_SECRET
+    if relay_url or relay_secret:
+        if not relay_url or not relay_secret:
+            logger.warning(
+                "Telegram lead relay is incomplete; lead_id=%s",
+                lead_id,
+            )
+            return False
+        try:
+            lead = LeadRequest.objects.select_related("product").get(pk=lead_id)
+        except LeadRequest.DoesNotExist:
+            logger.error(
+                "Telegram lead notification target is missing; lead_id=%s",
+                lead_id,
+            )
+            return False
+        return _send_via_relay(lead_id, lead, relay_url, relay_secret)
+
     token = settings.TELEGRAM_LEAD_BOT_TOKEN
     chat_id = settings.TELEGRAM_LEAD_CHAT_ID
     if not token or not chat_id:
