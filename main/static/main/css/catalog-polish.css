@@ -92,40 +92,6 @@
   margin-top: 14px;
 }
 
-.catalog-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin: -4px auto 28px;
-}
-
-.catalog-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  padding: 0 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--bg-card);
-  color: var(--text);
-  font-size: 0.86rem;
-  font-weight: 800;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.catalog-filter-chip:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-}
-
-.catalog-filter-chip.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--white);
-}
-
 .product-card__image-wrap,
 .featured-product-card__image-wrap {
   position: relative;
@@ -205,16 +171,6 @@
     min-height: 300px;
   }
 
-  .catalog-filter-row {
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 4px;
-  }
-
-  .catalog-filter-chip {
-    flex: 0 0 auto;
-  }
 }
 
 @media (max-width: 520px) {
@@ -249,7 +205,6 @@
   display: none;
 }
 
-.catalog-filter-chip,
 .section-link {
   font-family: var(--font-ui-en), var(--font-fa);
 }
@@ -1611,4 +1566,154 @@
   letter-spacing: 0.38em;
   line-height: 1;
   text-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
+}
+
+/* =====================================================
+   Occasion detail — compact mobile hero
+   ===================================================== */
+
+@media (max-width: 760px) {
+  body.page-occasion-detail .page-hero {
+    --zad-occasion-hero-mobile: clamp(260px, min(75vw, 42svh), 330px);
+
+    height: var(--zad-occasion-hero-mobile) !important;
+    min-height: var(--zad-occasion-hero-mobile) !important;
+    max-height: var(--zad-occasion-hero-mobile) !important;
+    aspect-ratio: auto !important;
+  }
+
+  body.page-occasion-detail .page-hero::after {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      to top,
+      rgba(248, 243, 237, 0.98) 0%,
+      rgba(248, 243, 237, 0.9) 31%,
+      rgba(248, 243, 237, 0.5) 58%,
+      rgba(248, 243, 237, 0) 82%
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  body.page-occasion-detail .page-hero.hero-configurable [data-hero-content] {
+    top: auto !important;
+    right: 18px !important;
+    bottom: 16px !important;
+    left: 18px !important;
+    width: auto !important;
+    min-height: 0 !important;
+    align-items: flex-end !important;
+    color: #49382e !important;
+    text-align: right !important;
+    transform: none !important;
+  }
+
+  body.page-occasion-detail .page-hero__kicker {
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 0.56rem !important;
+    letter-spacing: 0.13em;
+  }
+
+  body.page-occasion-detail .page-hero__kicker::before {
+    width: 20px;
+  }
+
+  body.page-occasion-detail .page-hero__content h1 {
+    max-width: 100%;
+    font-size: clamp(2rem, 8.6vw, 2.4rem) !important;
+    font-weight: 550;
+    line-height: 1.18 !important;
+    text-shadow: none;
+  }
+
+  body.page-occasion-detail .page-hero__content p {
+    display: -webkit-box;
+    max-width: 34ch !important;
+    margin-top: 5px !important;
+    overflow: hidden;
+    font-size: clamp(0.76rem, 3.25vw, 0.84rem) !important;
+    line-height: 1.7 !important;
+    text-shadow: none;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
+
+/* =====================================================
+   Occasion detail — compact mobile hero
+   Keeps the editorial image, but returns products to the fold.
+   ===================================================== */
+
+@media (max-width: 760px) {
+  body.page-occasion-detail .page-hero {
+    --zad-occasion-hero-mobile: clamp(260px, min(75vw, 42svh), 330px);
+
+    height: var(--zad-occasion-hero-mobile) !important;
+    min-height: var(--zad-occasion-hero-mobile) !important;
+    max-height: var(--zad-occasion-hero-mobile) !important;
+    aspect-ratio: auto !important;
+  }
+
+  body.page-occasion-detail .page-hero::after {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      to top,
+      rgba(248, 243, 237, 0.98) 0%,
+      rgba(248, 243, 237, 0.9) 31%,
+      rgba(248, 243, 237, 0.5) 58%,
+      rgba(248, 243, 237, 0) 82%
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  body.page-occasion-detail .page-hero.hero-configurable [data-hero-content] {
+    top: auto !important;
+    right: 18px !important;
+    bottom: 16px !important;
+    left: 18px !important;
+    width: auto !important;
+    min-height: 0 !important;
+    align-items: flex-end !important;
+    color: #49382e !important;
+    text-align: right !important;
+    transform: none !important;
+  }
+
+  body.page-occasion-detail .page-hero__kicker {
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 0.56rem !important;
+    letter-spacing: 0.13em;
+  }
+
+  body.page-occasion-detail .page-hero__kicker::before {
+    width: 20px;
+  }
+
+  body.page-occasion-detail .page-hero__content h1 {
+    max-width: 100%;
+    font-size: clamp(2rem, 8.6vw, 2.4rem) !important;
+    font-weight: 550;
+    line-height: 1.18 !important;
+    text-shadow: none;
+  }
+
+  body.page-occasion-detail .page-hero__content p {
+    display: -webkit-box;
+    max-width: 34ch !important;
+    margin-top: 5px !important;
+    overflow: hidden;
+    font-size: clamp(0.76rem, 3.25vw, 0.84rem) !important;
+    line-height: 1.7 !important;
+    text-shadow: none;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
 }

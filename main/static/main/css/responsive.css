@@ -602,21 +602,6 @@
     overflow-wrap: anywhere;
   }
 
-  .catalog-filter-row {
-    width: 100%;
-    max-width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-inline: 8px;
-    scroll-padding-inline: 8px;
-    scrollbar-width: none;
-  }
-
-  .catalog-filter-row::-webkit-scrollbar {
-    display: none;
-  }
-
   .page-category .product-grid,
   .page-subcategory .product-grid,
   .page-occasion-detail .product-grid {

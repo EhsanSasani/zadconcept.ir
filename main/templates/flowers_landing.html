@@ -5,6 +5,7 @@
 
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'main/css/flowers-landing.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-filter.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -92,99 +93,8 @@
     <div class="flowers-container">
 
 
-      {% if catalog_filter_categories %}
-          <div class="flowers-filter-wrap">
-              <div class="flowers-filter" data-catalog-filter>
-            <a href="{{ catalog_load_url }}" class="flowers-filter__chip {% if not selected_category_slug %}is-active{% endif %}" data-filter="all">
-              <span>همه</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 4h6v6H4z"></path>
-                <path d="M14 4h6v6h-6z"></path>
-                <path d="M4 14h6v6H4z"></path>
-                <path d="M14 14h6v6h-6z"></path>
-              </svg>
-            </a>
-
-            {% for category in catalog_filter_categories %}
-              <a
-                href="{{ category.url }}"
-                class="flowers-filter__chip {% if selected_category_slug == category.slug %}is-active{% endif %}"
-                data-filter="{{ category.slug }}"
-              >
-                <span>{{ category.name }}</span>
-
-                {% if category.slug == "bouquet" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 21s-5-5.2-5-10a5 5 0 0 1 10 0c0 4.8-5 10-5 10z"></path>
-                    <path d="M9.5 9.5c1.2-2 3.8-2 5 0"></path>
-                    <path d="M12 14v7"></path>
-                  </svg>
-
-                {% elif category.slug == "box" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 9h14v11H5z"></path>
-                    <path d="M4 9l2-4h12l2 4"></path>
-                    <path d="M12 5v15"></path>
-                    <path d="M8 13h8"></path>
-                  </svg>
-
-                {% elif category.slug == "basket" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 10h14l-1.5 10h-11z"></path>
-                    <path d="M8 10a4 4 0 0 1 8 0"></path>
-                    <path d="M9 14h6"></path>
-                  </svg>
-
-                {% elif category.slug == "stand" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 4c3 0 5.5 2.2 5.5 5s-2.5 5-5.5 5-5.5-2.2-5.5-5S9 4 12 4z"></path>
-                    <path d="M12 14v7"></path>
-                    <path d="M8 21h8"></path>
-                  </svg>
-
-                {% elif category.slug == "jarl" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M9 3h6"></path>
-                    <path d="M10 3v5l-2 3v8a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-8l-2-3V3"></path>
-                    <path d="M9 14h6"></path>
-                  </svg>
-
-                {% elif category.slug == "wedding" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 5.5l2.2 3.2 3.8.9-2.4 3.1.2 3.9-3.8-1.3-3.8 1.3.2-3.9L6 9.6l3.8-.9z"></path>
-                    <path d="M9 20h6"></path>
-                  </svg>
-
-                {% elif section == "bakery" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 10h12l-1 10H7z"></path>
-                    <path d="M8 10a4 4 0 0 1 8 0"></path>
-                    <path d="M9 5c0-1 1-2 2-2s2 1 2 2"></path>
-                  </svg>
-
-                {% elif section == "gifts" %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 9h16v11H4z"></path>
-                    <path d="M3 6h18v4H3z"></path>
-                    <path d="M12 6v14"></path>
-                    <path d="M12 6c-3 0-5-1-5-3 3 0 5 1 5 3z"></path>
-                    <path d="M12 6c3 0 5-1 5-3-3 0-5 1-5 3z"></path>
-                  </svg>
-
-                {% else %}
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 21s-6-4.5-6-10a6 6 0 0 1 12 0c0 5.5-6 10-6 10z"></path>
-                    <path d="M9 10c1.5-1.8 4.5-1.8 6 0"></path>
-                    <path d="M12 14v6"></path>
-                  </svg>
-                {% endif %}
-              </a>
-            {% endfor %}
-            </div>
-              <div class="flowers-filter-scrollbar" aria-hidden="true">
-                <span></span>
-              </div>
-            </div>
+      {% if catalog_filter_items %}
+        {% include "partials/catalog_filter.html" with filter_items=catalog_filter_items ajax_filter=True only %}
       {% endif %}
 
       {% if catalog_products %}

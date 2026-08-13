@@ -287,9 +287,13 @@ class MainViewsTests(TestCase):
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
                 self.assertTemplateUsed(response, "flowers_landing.html")
+                self.assertTemplateUsed(response, "partials/catalog_filter.html")
                 self.assertContains(response, 'class="flowers-hero ')
+                self.assertContains(response, 'data-filter-count="2"')
+                self.assertContains(response, '>همه<')
                 self.assertContains(response, f'data-filter="{category.slug}"')
                 self.assertContains(response, f'data-category="{category.slug}"')
+                self.assertNotContains(response, "flowers-filter__chip")
                 self.assertContains(response, product.product_code)
 
     def test_subcategory_page_loads(self):
@@ -329,8 +333,12 @@ class MainViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             [item["label"] for item in response.context["filter_links"]],
-            ["All", "Daily Bakery", "Bouquet", "Gift Box"],
+            ["همه", "Daily Bakery", "Bouquet", "Gift Box"],
         )
+        self.assertTemplateUsed(response, "partials/catalog_filter.html")
+        self.assertContains(response, 'data-filter-count="4"')
+        self.assertContains(response, 'aria-label="فیلتر نوع محصول"')
+        self.assertNotContains(response, "catalog-filter-chip")
         self.assertContains(response, "?category=bouquet&amp;section=flowers")
 
         filtered = self.client.get(
@@ -347,6 +355,28 @@ class MainViewsTests(TestCase):
                 if item["label"] == "Bouquet"
             )["is_active"]
         )
+
+    def test_catalog_filter_keeps_five_managed_names_immediately_available(self):
+        fifth_category = Category.objects.create(
+            name="دسته گل ویژه",
+            slug="special-bouquet",
+            section=Category.Section.FLOWERS,
+        )
+        fifth_product = Product.objects.create(
+            name="Special Birthday Bouquet",
+            publish_status=Product.PublishStatus.PUBLISHED,
+            category=fifth_category,
+        )
+        fifth_product.tags.add(self.birthday_tag)
+
+        response = self.client.get(reverse("occasion_detail", args=["birthday"]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["filter_links"]), 5)
+        self.assertContains(response, 'data-filter-count="5"')
+        self.assertContains(response, 'class="catalog-filter__item"', count=5)
+        self.assertContains(response, "دسته گل ویژه")
+        self.assertEqual(response.context["filter_links"][0]["label"], "همه")
 
     def test_wedding_uses_the_dedicated_landing_and_not_an_occasion_page(self):
         wedding_root, _ = Category.objects.update_or_create(

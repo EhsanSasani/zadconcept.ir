@@ -6,6 +6,7 @@
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/catalog-polish.css' %}?v=3">
   <link rel="stylesheet" href="{% static 'main/css/flowers-landing.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'main/css/catalog-filter.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -13,13 +14,7 @@
 
 <section class="container section-block catalog-products-section">
   {% if filter_links %}
-    <div class="catalog-filter-row" aria-label="Catalog filters">
-      {% for item in filter_links %}
-        <a href="{{ item.url }}"{% if item.filter_url %} data-filter-target="{{ item.filter_url }}"{% endif %} class="catalog-filter-chip {% if item.is_active %}is-active{% endif %}">
-          {{ item.label }}
-        </a>
-      {% endfor %}
-    </div>
+    {% include "partials/catalog_filter.html" with filter_items=filter_links only %}
   {% endif %}
 
   {% include "partials/product_grid.html" with products=products %}

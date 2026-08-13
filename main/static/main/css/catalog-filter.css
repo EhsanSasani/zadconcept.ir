@@ -1,0 +1,204 @@
+/* ZAD catalog filter — approved Model 03 */
+
+.catalog-filter {
+  width: 100%;
+  margin: 0 auto 28px;
+  direction: rtl;
+}
+
+.catalog-filter__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-filter__item {
+  flex: 0 1 82px;
+  min-width: 0;
+}
+
+.catalog-filter-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 84px;
+  height: 100%;
+  padding: 10px 6px 9px;
+  border: 1px solid rgba(157, 111, 63, 0.28);
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(255, 250, 244, 0.72);
+  box-shadow: 0 8px 20px rgba(70, 50, 35, 0.025);
+  color: rgba(55, 43, 35, 0.78);
+  text-align: center;
+  touch-action: manipulation;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.catalog-filter-card__icon {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 180ms ease;
+}
+
+.catalog-filter-card__label {
+  display: block;
+  max-width: 100%;
+  color: inherit;
+  font-family: var(--font-fa);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.catalog-filter-card:hover {
+  border-color: rgba(157, 111, 63, 0.58);
+  background: rgba(255, 250, 244, 0.96);
+  color: #4b3528;
+  transform: translateY(-1px);
+}
+
+.catalog-filter-card:hover .catalog-filter-card__icon {
+  transform: translateY(-1px);
+}
+
+.catalog-filter-card:active {
+  transform: scale(0.98);
+}
+
+.catalog-filter-card:focus-visible {
+  outline: 3px solid rgba(185, 138, 87, 0.28);
+  outline-offset: 3px;
+}
+
+.catalog-filter-card.is-active {
+  border-color: #b77f49;
+  background: #f1e3d3;
+  box-shadow:
+    0 10px 24px rgba(112, 76, 45, 0.09),
+    inset 0 0 0 1px rgba(183, 127, 73, 0.18);
+  color: #3f2d22;
+}
+
+.catalog-filter-card.is-active::after {
+  position: absolute;
+  right: 14px;
+  bottom: 6px;
+  left: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: #b77f49;
+  content: "";
+}
+
+.page-flowers-landing .catalog-filter {
+  margin-bottom: 26px;
+  padding-top: 24px;
+}
+
+@media (max-width: 760px) {
+  .catalog-filter {
+    margin-bottom: 22px;
+  }
+
+  .catalog-filter__grid {
+    gap: 6px;
+    width: min(100%, 364px);
+  }
+
+  .catalog-filter__item {
+    flex-basis: 68px;
+  }
+
+  .catalog-filter-card {
+    min-height: 76px;
+    padding: 8px 4px 9px;
+    border-radius: 12px;
+    gap: 5px;
+  }
+
+  .catalog-filter-card__icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .catalog-filter-card__label {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .page-flowers-landing .catalog-filter {
+    margin-bottom: 20px;
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 390px) {
+  .catalog-filter__grid {
+    gap: 4px;
+  }
+
+  /* Five cards: 5 × 64px + 4 × 4px = 336px. */
+  .catalog-filter__item {
+    flex-basis: 64px;
+  }
+
+  .catalog-filter-card {
+    min-height: 72px;
+    padding-inline: 3px;
+  }
+
+  .catalog-filter-card__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .catalog-filter-card__label {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .catalog-filter__item {
+    flex-basis: 60px;
+  }
+}
+
+@media (max-width: 340px) {
+  /* At the 320px site minimum: 5 × 55px + 4 × 4px = 291px. */
+  .catalog-filter__item {
+    flex-basis: 55px;
+  }
+
+  .catalog-filter-card__label {
+    font-size: 0.64rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-filter-card,
+  .catalog-filter-card__icon {
+    transition: none;
+  }
+}

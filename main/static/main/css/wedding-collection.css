@@ -331,3 +331,343 @@
   .wedding-product-card__body { padding-top: 9px !important; }
   .wedding-product-card__code { font-size: 13px; letter-spacing: 0.08em; }
 }
+
+/* =====================================================
+   Wedding collection filter — Model 03 adapter
+   Production still renders the legacy row/chip markup.
+   ===================================================== */
+
+.page-wedding-collection .catalog-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 auto 28px;
+  direction: rtl;
+}
+
+.page-wedding-collection .catalog-filter-chip {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21v-7'/%3E%3Cpath d='M8 13c-2.8-1.4-3.6-4.5-1.7-6.5 2.5.2 4.3 1.5 5.7 4'/%3E%3Cpath d='M16 13c2.8-1.4 3.6-4.5 1.7-6.5-2.5.2-4.3 1.5-5.7 4'/%3E%3Cpath d='M9 21h6'/%3E%3C/svg%3E");
+
+  position: relative;
+  display: flex;
+  flex: 0 1 82px;
+  min-width: 0;
+  min-height: 84px;
+  padding: 10px 6px 9px;
+  border: 1px solid rgba(157, 111, 63, 0.28);
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(255, 250, 244, 0.72);
+  box-shadow: 0 8px 20px rgba(70, 50, 35, 0.025);
+  color: rgba(55, 43, 35, 0.78);
+  font-family: var(--font-fa);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.page-wedding-collection .catalog-filter-chip::before {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  background: currentColor;
+  content: "";
+  -webkit-mask: var(--wedding-filter-icon) center / contain no-repeat;
+  mask: var(--wedding-filter-icon) center / contain no-repeat;
+}
+
+.page-wedding-collection .catalog-filter-chip:not([data-filter-target]) {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55'%3E%3Crect x='4' y='4' width='6' height='6' rx='1'/%3E%3Crect x='14' y='4' width='6' height='6' rx='1'/%3E%3Crect x='4' y='14' width='6' height='6' rx='1'/%3E%3Crect x='14' y='14' width='6' height='6' rx='1'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="hand-bouquet"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='7' r='2.5'/%3E%3Ccircle cx='15.5' cy='6.5' r='2.5'/%3E%3Ccircle cx='12' cy='10' r='2.5'/%3E%3Cpath d='M8.5 9.2 12 20M15 9l-3 11M7 13l5 7 5-7'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="category=box"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9h14v11H5zM4 9l2-4h12l2 4M12 5v15M8 13h8'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="category=bouquet"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21v-9'/%3E%3Cpath d='M12 12c-4.2 0-7-2.4-7-6 4.2 0 7 2.4 7 6zM12 12c4.2 0 7-2.4 7-6-4.2 0-7 2.4-7 6zM8 21h8M9.5 16l2.5 2 2.5-2'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip:hover {
+  border-color: rgba(157, 111, 63, 0.58);
+  background: rgba(255, 250, 244, 0.96);
+  color: #4b3528;
+  transform: translateY(-1px);
+}
+
+.page-wedding-collection .catalog-filter-chip:active {
+  transform: scale(0.98);
+}
+
+.page-wedding-collection .catalog-filter-chip:focus-visible {
+  outline: 3px solid rgba(185, 138, 87, 0.28);
+  outline-offset: 3px;
+}
+
+.page-wedding-collection .catalog-filter-chip.is-active {
+  border-color: #b77f49;
+  background: #f1e3d3;
+  box-shadow:
+    0 10px 24px rgba(112, 76, 45, 0.09),
+    inset 0 0 0 1px rgba(183, 127, 73, 0.18);
+  color: #3f2d22;
+}
+
+.page-wedding-collection .catalog-filter-chip.is-active::after {
+  position: absolute;
+  right: 14px;
+  bottom: 6px;
+  left: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: #b77f49;
+  content: "";
+}
+
+@media (max-width: 760px) {
+  .page-wedding-collection .catalog-filter-row {
+    gap: 6px;
+    width: min(100%, 364px);
+    margin-bottom: 22px;
+  }
+
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 68px;
+    min-height: 76px;
+    padding: 8px 4px 9px;
+    border-radius: 12px;
+    gap: 5px;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .page-wedding-collection .catalog-filter-chip::before {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 390px) {
+  .page-wedding-collection .catalog-filter-row {
+    gap: 4px;
+  }
+
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 64px;
+    min-height: 72px;
+    padding-inline: 3px;
+    font-size: 0.68rem;
+  }
+
+  .page-wedding-collection .catalog-filter-chip::before {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 370px) {
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 60px;
+  }
+}
+
+@media (max-width: 340px) {
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 55px;
+    font-size: 0.64rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-wedding-collection .catalog-filter-chip {
+    transition: none;
+  }
+}
+
+/* =====================================================
+   Wedding collection filter — Model 03 adapter
+   Production still renders the legacy row/chip markup.
+   ===================================================== */
+
+.page-wedding-collection .catalog-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 auto 28px;
+  direction: rtl;
+}
+
+.page-wedding-collection .catalog-filter-chip {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21v-7'/%3E%3Cpath d='M8 13c-2.8-1.4-3.6-4.5-1.7-6.5 2.5.2 4.3 1.5 5.7 4'/%3E%3Cpath d='M16 13c2.8-1.4 3.6-4.5 1.7-6.5-2.5.2-4.3 1.5-5.7 4'/%3E%3Cpath d='M9 21h6'/%3E%3C/svg%3E");
+
+  position: relative;
+  display: flex;
+  flex: 0 1 82px;
+  min-width: 0;
+  min-height: 84px;
+  padding: 10px 6px 9px;
+  border: 1px solid rgba(157, 111, 63, 0.28);
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(255, 250, 244, 0.72);
+  box-shadow: 0 8px 20px rgba(70, 50, 35, 0.025);
+  color: rgba(55, 43, 35, 0.78);
+  font-family: var(--font-fa);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.page-wedding-collection .catalog-filter-chip::before {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  background: currentColor;
+  content: "";
+  -webkit-mask: var(--wedding-filter-icon) center / contain no-repeat;
+  mask: var(--wedding-filter-icon) center / contain no-repeat;
+}
+
+.page-wedding-collection .catalog-filter-chip:not([data-filter-target]) {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55'%3E%3Crect x='4' y='4' width='6' height='6' rx='1'/%3E%3Crect x='14' y='4' width='6' height='6' rx='1'/%3E%3Crect x='4' y='14' width='6' height='6' rx='1'/%3E%3Crect x='14' y='14' width='6' height='6' rx='1'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="hand-bouquet"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='7' r='2.5'/%3E%3Ccircle cx='15.5' cy='6.5' r='2.5'/%3E%3Ccircle cx='12' cy='10' r='2.5'/%3E%3Cpath d='M8.5 9.2 12 20M15 9l-3 11M7 13l5 7 5-7'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="category=box"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 9h14v11H5zM4 9l2-4h12l2 4M12 5v15M8 13h8'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip[data-filter-target*="category=bouquet"] {
+  --wedding-filter-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.55' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21v-9'/%3E%3Cpath d='M12 12c-4.2 0-7-2.4-7-6 4.2 0 7 2.4 7 6zM12 12c4.2 0 7-2.4 7-6-4.2 0-7 2.4-7 6zM8 21h8M9.5 16l2.5 2 2.5-2'/%3E%3C/svg%3E");
+}
+
+.page-wedding-collection .catalog-filter-chip:hover {
+  border-color: rgba(157, 111, 63, 0.58);
+  background: rgba(255, 250, 244, 0.96);
+  color: #4b3528;
+  transform: translateY(-1px);
+}
+
+.page-wedding-collection .catalog-filter-chip:active {
+  transform: scale(0.98);
+}
+
+.page-wedding-collection .catalog-filter-chip:focus-visible {
+  outline: 3px solid rgba(185, 138, 87, 0.28);
+  outline-offset: 3px;
+}
+
+.page-wedding-collection .catalog-filter-chip.is-active {
+  border-color: #b77f49;
+  background: #f1e3d3;
+  box-shadow:
+    0 10px 24px rgba(112, 76, 45, 0.09),
+    inset 0 0 0 1px rgba(183, 127, 73, 0.18);
+  color: #3f2d22;
+}
+
+.page-wedding-collection .catalog-filter-chip.is-active::after {
+  position: absolute;
+  right: 14px;
+  bottom: 6px;
+  left: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: #b77f49;
+  content: "";
+}
+
+@media (max-width: 760px) {
+  .page-wedding-collection .catalog-filter-row {
+    gap: 6px;
+    width: min(100%, 364px);
+    margin-bottom: 22px;
+  }
+
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 68px;
+    min-height: 76px;
+    padding: 8px 4px 9px;
+    border-radius: 12px;
+    gap: 5px;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .page-wedding-collection .catalog-filter-chip::before {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 390px) {
+  .page-wedding-collection .catalog-filter-row {
+    gap: 4px;
+  }
+
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 64px;
+    min-height: 72px;
+    padding-inline: 3px;
+    font-size: 0.68rem;
+  }
+
+  .page-wedding-collection .catalog-filter-chip::before {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 370px) {
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 60px;
+  }
+}
+
+@media (max-width: 340px) {
+  .page-wedding-collection .catalog-filter-chip {
+    flex-basis: 55px;
+    font-size: 0.64rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-wedding-collection .catalog-filter-chip {
+    transition: none;
+  }
+}

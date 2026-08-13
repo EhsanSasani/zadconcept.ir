@@ -1197,7 +1197,10 @@ def _filter_links_for_categories(
 ):
     links = [
         {
-            "label": "All",
+            "label": "همه",
+            "slug": "all",
+            "section": "",
+            "filter_value": "all",
             "url": base_url,
             "is_active": not selected_slug,
         }
@@ -1212,6 +1215,9 @@ def _filter_links_for_categories(
         links.append(
             {
                 "label": category.name,
+                "slug": category.slug,
+                "section": category.section,
+                "filter_value": category.slug,
                 "url": _section_category_url(category),
                 "filter_url": filter_url,
                 "is_active": (
@@ -1940,14 +1946,11 @@ def _collection_landing_page(
         order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
         categories.sort(key=lambda category: order.get(category.slug, len(order)))
 
-    filter_categories = [
-        {
-            "name": category.name,
-            "slug": category.slug,
-            "url": _section_category_url(category),
-        }
-        for category in categories
-    ]
+    catalog_filter_items = _filter_links_for_categories(
+        reverse(section),
+        categories,
+        selected_slug=selected_category.slug if selected_category else None,
+    )
     landing_category_cards = [_category_card(category) for category in categories]
 
     context = _default_context(
@@ -1967,7 +1970,7 @@ def _collection_landing_page(
             "section": section,
             "catalog_products": products,
             "catalog_page_obj": page_obj,
-            "catalog_filter_categories": filter_categories,
+            "catalog_filter_items": catalog_filter_items,
             "landing_category_cards": landing_category_cards,
             "directory_only": directory_only,
             "selected_category_slug": selected_category.slug if selected_category else "",

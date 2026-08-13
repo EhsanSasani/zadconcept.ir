@@ -452,114 +452,10 @@
   transform: translateX(-3px);
 }
 
-.flowers-filter {
-  position: relative;
-  z-index: 30;
-
-  display: flex;
-  justify-content: flex-start;
-  gap: 7px;
-
-  width: max-content;
-  max-width: 100%;
-  margin: -36px auto 34px;
-  padding: 7px;
-
-  border: 1px solid rgba(157, 111, 63, 0.12);
-  border-radius: 999px;
-
-  background: rgba(255, 250, 244, 0.92);
-  box-shadow:
-    0 18px 46px rgba(70, 50, 35, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(18px);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-inline: 10px;
-  direction: rtl;
-}
-
 .flowers-hero__media picture {
   display: block;
   width: 100%;
   height: 100%;
-}
-
-.flowers-filter::-webkit-scrollbar {
-  display: none;
-}
-
-.flowers-filter__chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: row-reverse;
-  gap: 9px;
-
-  min-height: 42px;
-  padding: 0 20px;
-
-  border: 0;
-  border-radius: 999px;
-
-  background: transparent;
-  color: rgba(45, 42, 39, 0.62);
-
-  font-family: var(--font-fa);
-  font-size: 0.84rem;
-  font-weight: 800;
-
-  white-space: nowrap;
-  cursor: pointer;
-  text-decoration: none;
-
-  transition:
-    background 180ms ease,
-    color 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.flowers-filter__chip svg {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.58;
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.flowers-filter__chip:hover {
-  transform: translateY(-1px);
-  color: var(--fl-text);
-  background: rgba(185, 138, 87, 0.09);
-}
-
-.flowers-filter__chip:hover svg {
-  opacity: 1;
-  transform: scale(1.08);
-}
-
-.flowers-filter__chip:active {
-  transform: scale(0.97);
-}
-
-.flowers-filter__chip.is-active {
-  color: #fffaf4;
-  background: linear-gradient(135deg, #2f251f 0%, #1f1713 100%);
-  box-shadow:
-    0 10px 24px rgba(47, 37, 31, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.flowers-filter__chip.is-active svg {
-  opacity: 1;
 }
 
 /* =========================
@@ -1175,26 +1071,6 @@
     margin-left: auto;
   }
 
-  .flowers-filter {
-    width: 100%;
-    max-width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    overflow-y: hidden;
-    margin: -32px auto 28px;
-    border-radius: 24px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .flowers-filter::-webkit-scrollbar {
-    display: none;
-  }
-
-  .flowers-filter__chip {
-    flex: 0 0 auto;
-  }
-
   .flowers-category-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1388,28 +1264,6 @@
     padding: 22px;
   }
 
-  .flowers-filter {
-    width: 100%;
-    margin: -34px 0 24px;
-    padding: 6px;
-    gap: 6px;
-    border-radius: 22px;
-    direction: ltr;
-  }
-
-  .flowers-filter__chip {
-    min-height: 36px;
-    padding-inline: 12px;
-    gap: 6px;
-    direction: rtl;
-    font-size: 0.76rem;
-  }
-
-  .flowers-filter__chip svg {
-    width: 15px;
-    height: 15px;
-  }
-
   .flowers-grid {
     gap: 10px;
   }
@@ -1488,10 +1342,6 @@
 
   .flowers-grid {
     gap: 10px;
-  }
-
-  .flowers-filter__chip {
-    padding-inline: 10px;
   }
 
   .flowers-product-card__body {
@@ -1617,69 +1467,6 @@
     font-size: 0.82rem;
   }
 }
-@media (max-width: 760px) {
-  .flowers-filter-wrap {
-    position: relative;
-    margin-bottom: 14px;
-  }
-
-  .flowers-filter-scrollbar {
-    width: 44px;
-    height: 2px;
-    margin: 5px auto 0;
-    border-radius: 999px;
-    background: rgba(47, 37, 31, 0.10);
-    overflow: hidden;
-    direction: ltr;
-  }
-
-  .flowers-filter-scrollbar span {
-    display: block;
-    width: 14px;
-    height: 100%;
-    border-radius: inherit;
-    background: rgba(47, 37, 31, 0.42);
-    transform: translateX(15px);
-    transition: transform 0.08s linear;
-  }
-
-  .flowers-grid {
-    margin-top: 8px;
-  }
-}@media (max-width: 760px) {
-  .flowers-filter-wrap {
-    margin-bottom: 6px;
-  }
-
-  .flowers-filter-scrollbar {
-    margin-top: 2px;
-  }
-
-  .flowers-grid {
-    margin-top: 0;
-  }
-}
-@media (max-width: 760px) {
-  .flowers-filter-scrollbar {
-    margin-top: -2px;
-  }
-
-  .flowers-filter-wrap {
-    margin-bottom: 2px;
-  }
-}
-@media (max-width: 760px) {
-  .flowers-filter-scrollbar {
-    position: relative;
-    top: -17px;
-    margin-top: 0;
-  }
-
-  .flowers-filter-wrap {
-    margin-bottom: 0;
-  }
-}
-
 /* Gifts landing: editorial typography and crop tuning */
 .page-gifts-landing .flowers-hero__content {
   padding-left: 5%;

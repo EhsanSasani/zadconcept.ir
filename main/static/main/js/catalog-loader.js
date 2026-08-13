@@ -4,7 +4,6 @@
   const loader = document.querySelector("[data-catalog-loader]");
   const status = document.querySelector("[data-catalog-loader-status]");
   const loadMoreButton = document.querySelector("[data-catalog-load-more]");
-  const scrollbarThumb = document.querySelector(".flowers-filter-scrollbar span");
 
   if (!filterRoot || !grid || !loader) return;
 
@@ -24,22 +23,6 @@
 
     loadMoreButton.hidden = !errorMode && !hasNext;
     loadMoreButton.textContent = errorMode ? "تلاش دوباره" : "نمایش محصولات بیشتر";
-  }
-
-  function updateFilterScrollbar() {
-    if (!scrollbarThumb) return;
-
-    const maxScroll = filterRoot.scrollWidth - filterRoot.clientWidth;
-    if (maxScroll <= 0) {
-      scrollbarThumb.parentElement.style.display = "none";
-      return;
-    }
-
-    scrollbarThumb.parentElement.style.display = "block";
-    const trackWidth = scrollbarThumb.parentElement.clientWidth;
-    const maxThumbMove = trackWidth - 16;
-    const progress = Math.min(1, Math.max(0, Math.abs(filterRoot.scrollLeft) / maxScroll));
-    scrollbarThumb.style.transform = `translateX(${progress * maxThumbMove}px)`;
   }
 
   function buildUrl(page, category) {
@@ -132,7 +115,13 @@
     if (!success) return;
 
     filterRoot.querySelectorAll("[data-filter]").forEach((item) => {
-      item.classList.toggle("is-active", item === link);
+      const isActive = item === link;
+      item.classList.toggle("is-active", isActive);
+      if (isActive) {
+        item.setAttribute("aria-current", "page");
+      } else {
+        item.removeAttribute("aria-current");
+      }
     });
 
     currentCategory = category;
@@ -144,14 +133,6 @@
     scrollToGridStart();
   });
 
-  filterRoot.addEventListener("wheel", function (event) {
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    filterRoot.scrollLeft += event.deltaY;
-    event.preventDefault();
-  }, {passive: false});
-
-  filterRoot.addEventListener("scroll", updateFilterScrollbar, {passive: true});
-  window.addEventListener("resize", updateFilterScrollbar);
   window.addEventListener("popstate", function () {
     window.location.reload();
   });
@@ -169,6 +150,5 @@
     observer.observe(loader);
   }
 
-  updateFilterScrollbar();
   syncLoadMoreButton(false);
 })();
