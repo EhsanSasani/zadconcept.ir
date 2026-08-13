@@ -3,6 +3,7 @@ from django.views.generic import RedirectView
 from django.templatetags.static import static
 
 from . import views
+from .telegram_product_lookup import telegram_product_lookup
 
 urlpatterns = [
     path(
@@ -68,6 +69,11 @@ urlpatterns = [
 
     # Forms / utility
     path("lead-request/", views.submit_lead_request, name="lead_request"),
+    path(
+        "internal/telegram/product-lookup/",
+        telegram_product_lookup,
+        name="telegram_product_lookup",
+    ),
     path("robots.txt", views.robots_txt, name="robots_txt"),
     path("hero-styles.css", views.hero_styles_css, name="hero_styles_css"),
     path("csp-report/", views.csp_report, name="csp_report"),
