@@ -12,6 +12,9 @@ from .models import LeadRequest
 
 logger = logging.getLogger(__name__)
 TELEGRAM_SEND_MESSAGE_URL = "https://api.telegram.org/bot{token}/sendMessage"
+TELEGRAM_RELAY_USER_AGENT = (
+    "Mozilla/5.0 (compatible; ZAD-Backend/1.0; +https://www.zadconcept.ir/)"
+)
 
 
 def _text(value, *, limit):
@@ -58,6 +61,7 @@ def _send_via_relay(lead_id, lead, relay_url, relay_secret):
         headers={
             "Authorization": f"Bearer {relay_secret}",
             "Content-Type": "application/json; charset=utf-8",
+            "User-Agent": TELEGRAM_RELAY_USER_AGENT,
         },
         method="POST",
     )

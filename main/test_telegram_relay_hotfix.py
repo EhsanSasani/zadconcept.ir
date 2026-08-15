@@ -1,8 +1,13 @@
+from io import StringIO
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
-from .telegram_notifications import send_lead_request_notification
+from .telegram_notifications import (
+    TELEGRAM_RELAY_USER_AGENT,
+    _send_via_relay,
+    send_lead_request_notification,
+)
 
 
 class TelegramRelayHotfixTests(SimpleTestCase):
@@ -43,3 +48,35 @@ class TelegramRelayHotfixTests(SimpleTestCase):
     ):
         result = send_lead_request_notification(42)
 
+        self.assertFalse(result)
+        select_related.assert_not_called()
+
+    @override_settings(TELEGRAM_LEAD_TIMEOUT_SECONDS=5)
+    @patch(
+        "main.telegram_notifications.format_lead_request_message",
+        return_value="test message",
+    )
+    @patch("main.telegram_notifications.urlopen")
+    def test_relay_request_uses_cloudflare_compatible_user_agent(
+        self,
+        urlopen,
+        format_message,
+    ):
+        lead = object()
+        urlopen.return_value = StringIO('{"ok": true}')
+
+        result = _send_via_relay(
+            42,
+            lead,
+            "https://relay.example/",
+            "shared-secret",
+        )
+
+        self.assertTrue(result)
+        format_message.assert_called_once_with(lead)
+        request = urlopen.call_args.args[0]
+        self.assertEqual(
+            request.get_header("User-agent"),
+            TELEGRAM_RELAY_USER_AGENT,
+        )
+        self.assertEqual(urlopen.call_args.kwargs["timeout"], 5)

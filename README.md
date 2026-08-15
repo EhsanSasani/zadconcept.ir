@@ -28,7 +28,7 @@ The experience is intentionally closer to a curated lookbook than a conventional
 - **Occasions** &mdash; collections for birthdays, romantic moments, congratulations, sympathy, weddings, and more
 - **Workshops** &mdash; public, private, and corporate experiences
 - **Journal** &mdash; editorial notes and brand stories
-- **Lead coordination** &mdash; contact, Telegram, phone, and structured request forms
+- **Lead coordination** &mdash; contact, Telegram, phone, and structured request forms ([Telegram integration](docs/telegram-integration.md))
 - **Content management** &mdash; products, categories, tags, heroes, page copy, events, and inquiries through Django Admin
 
 ## Version 1.1.0
