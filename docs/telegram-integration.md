@@ -1,35 +1,41 @@
-# ZAD Telegram integration v1
+# ZAD Telegram integration
 
-This document is the repository reference for the Telegram integration currently
-deployed for ZAD. It intentionally documents variable names and operational
-flows without storing credentials.
+This document is the repository reference for the Telegram integration
+maintained for ZAD. It intentionally documents variable names and operational
+flows without storing credentials. The immutable v1 baseline is tagged as
+`telegram-integration-v1`; the current implementation is v2.
 
 ## Scope
 
-Version 1 provides two flows:
+Version 2 provides two permission-controlled flows:
 
-1. New website lead forms are delivered to one authorized Telegram chat.
-2. The authorized Telegram user can send a product code and receive the first
-   product gallery image with its code and name.
+1. New website lead forms are delivered to every active user with
+   `can_receive_leads` enabled.
+2. An active user with `can_lookup_products` can send a product code and
+   receive its first gallery image (or cover-image fallback), code, name, and
+   current display price.
 
-Dynamic users, permissions, prices, stock, and reports are not part of v1.
+Users and both permissions are managed in Django Admin. A user may have either
+permission, both permissions, or neither permission.
 
 ## Architecture
 
 ```text
 Website form
   -> Django / PostgreSQL
+  -> active Telegram users with lead permission
   -> Cloudflare Worker relay
   -> Telegram Bot API
-  -> authorized chat
+  -> authorized private chats
 
-Authorized Telegram user
+Telegram user
   -> Telegram webhook
   -> Cloudflare Worker
   -> protected Django product lookup endpoint
+  -> active-user and lookup-permission check
   -> PostgreSQL / public media URL
   -> Telegram Bot API
-  -> product image
+  -> product image and price
 ```
 
 The Worker is used because direct outbound access from the production VPS to
@@ -41,6 +47,9 @@ the shared relay secret.
 ```text
 .env.example
 config/settings.py
+main/models.py
+main/admin.py
+main/migrations/0024_telegram_bot_user.py
 main/telegram_notifications.py
 main/test_telegram_lead_notifications.py
 main/test_telegram_relay_hotfix.py
@@ -48,6 +57,7 @@ main/telegram_product_lookup.py
 main/test_telegram_product_lookup.py
 main/urls.py
 ops/cloudflare/zad-telegram-relay-worker.js
+ops/cloudflare/zad-telegram-relay-worker.test.mjs
 ```
 
 ## Runtime configuration
@@ -69,13 +79,31 @@ Cloudflare Worker variables and secrets:
 
 ```text
 TELEGRAM_BOT_TOKEN
-TELEGRAM_CHAT_ID
 RELAY_SECRET
 TELEGRAM_WEBHOOK_SECRET
 ```
 
 `RELAY_SECRET` and `TELEGRAM_LEAD_RELAY_SECRET` must have the same value.
-No real values belong in Git.
+The old `TELEGRAM_CHAT_ID` value may remain in Cloudflare for rollback to v1,
+but v2 does not use it for routing or authorization. No real values belong in
+Git.
+
+## Admin access control
+
+Open **کاربران ربات تلگرام** in Django Admin and create one row per person.
+The numeric `telegram_user_id` is the private-chat identifier used for both
+authorization and delivery. Ask the person to send `/id` to the bot and copy
+the returned number into Admin. The username is optional and informational.
+
+The two independent checkboxes map to these behaviors:
+
+| Permission | Result |
+| --- | --- |
+| `can_receive_leads` | Receives new website form messages |
+| `can_lookup_products` | Can request product image and price |
+
+Turning off `is_active` disables all bot access immediately without deleting
+the user.
 
 ## Outbound lead flow
 
@@ -91,8 +119,11 @@ User-Agent: Mozilla/5.0 (compatible; ZAD-Backend/1.0; +https://www.zadconcept.ir
 The User-Agent is required because Cloudflare Browser Integrity Check rejected
 Python urllib's default signature with HTTP 403 / Cloudflare error 1010.
 
-The Worker validates `RELAY_SECRET`, then calls Telegram `sendMessage` for
-`TELEGRAM_CHAT_ID`.
+Django adds the permitted recipients as a `chat_ids` array and makes one relay
+request. The Worker validates `RELAY_SECRET`, removes duplicate IDs, and sends
+the message to all recipients concurrently. If Django has no active user with
+lead permission, it does not call the Worker and logs a warning; the submitted
+lead remains saved in the database.
 
 ## Inbound product lookup flow
 
@@ -103,19 +134,22 @@ https://<worker-subdomain>.workers.dev/telegram-webhook
 ```
 
 The Worker validates `X-Telegram-Bot-Api-Secret-Token` against
-`TELEGRAM_WEBHOOK_SECRET`, and only accepts a private message whose sender and
-chat IDs both equal `TELEGRAM_CHAT_ID`.
+`TELEGRAM_WEBHOOK_SECRET`, accepts only private messages whose sender and chat
+IDs match, and forwards the sender's numeric ID to Django.
 
 For a product code, the Worker calls:
 
 ```text
 POST /internal/telegram/product-lookup/
 Authorization: Bearer <shared-secret>
+
+{"code": "0568", "telegram_user_id": "123456789"}
 ```
 
-Django performs a case-insensitive lookup on `Product.product_code`, selects
-the first image returned by the product's `gallery_images` relation, and
-returns only:
+Django first requires an active `TelegramBotUser` with product lookup enabled.
+It then performs a case-insensitive lookup on `Product.product_code`, selects
+the first valid image returned by the product's `gallery_images` relation (or
+the product cover image when the gallery is empty), and returns:
 
 ```json
 {
@@ -123,26 +157,31 @@ returns only:
   "product": {
     "code": "0568",
     "name": "Product name",
+    "price_display": "2,500,000 تومان",
     "image_url": "https://www.zadconcept.ir/media/.../product.webp"
   }
 }
 ```
 
 The endpoint does not expose arbitrary database access and does not write to
-the database.
+the database. A missing, inactive, unknown, or unauthorized Telegram user ID
+is rejected; possession of the relay secret alone does not grant user access.
 
 ## Deployment sequence
 
-1. Deploy the Django commit and set the relay URL and shared secret in the
-   production `.env`.
-2. Restart the Django service and run `python manage.py check`.
-3. In Cloudflare Workers, replace the current Worker code with
-   `ops/cloudflare/zad-telegram-relay-worker.js`.
-4. Configure the four Worker variables/secrets listed above and deploy it.
-5. Register the Telegram webhook using the deployed Worker URL and webhook
-   secret.
-6. Run both smoke tests: submit a website lead and send a known product code
-   to the bot.
+1. Deploy the Django v2 commit without changing the Worker.
+2. Run `migrate`, `check`, the Telegram tests, and restart Django. Product
+   lookup is intentionally unavailable until step 4 because the v1 Worker does
+   not send a Telegram user ID.
+3. In Django Admin, create the current Telegram admin and enable both
+   permissions. Lead delivery continues through the v1 Worker's existing chat
+   during this transition.
+4. Replace the current Cloudflare code with
+   `ops/cloudflare/zad-telegram-relay-worker.js` and deploy it.
+5. Confirm the existing webhook is still registered, then test one known
+   product code and one real website lead.
+6. Add the remaining team members in Django Admin and assign only the access
+   each person needs.
 
 The Worker root accepts outbound lead relay requests. `/telegram-webhook`
 accepts inbound Telegram updates. Do not expose either shared secret in source,
@@ -172,6 +211,7 @@ python manage.py test \
   main.test_telegram_relay_hotfix \
   main.test_telegram_product_lookup \
   --verbosity 1
+node --test ops/cloudflare/zad-telegram-relay-worker.test.mjs
 git diff --check
 ```
 
@@ -180,7 +220,9 @@ Production smoke tests:
 1. Confirm the `zad` systemd service is active.
 2. Confirm `https://www.zadconcept.ir/` returns HTTP 200.
 3. Submit a real test lead and confirm Telegram delivery.
-4. Send a known product code to the bot and confirm the image response.
+4. Send a known product code as a permitted user and confirm image and price.
+5. Confirm a user without lookup permission receives an access-denied message.
+6. Submit a lead with two permitted recipients and confirm both receive it.
 
 ## Secret rotation
 
@@ -190,15 +232,9 @@ Production smoke tests:
 - If the bot token is exposed, revoke it in BotFather and replace
   `TELEGRAM_BOT_TOKEN` in Cloudflare.
 
-## Current limitations and next version
+## Current limitations
 
-Version 1 has one authorized Telegram ID. The planned v2 moves access control
-to Django Admin using Telegram users plus assignable capabilities such as:
-
-```text
-receive_leads
-lookup_products
-```
-
-That change should be implemented on top of the tagged v1 baseline rather than
-mixed into this consolidation patch.
+Version 2 intentionally supports private chats only. Users are added manually
+in Django Admin; there is no self-registration, audit log, stock reporting, or
+command menu. A future capability should be added as another explicit boolean
+permission with a migration, keeping authorization visible and easy to edit.

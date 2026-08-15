@@ -49,6 +49,35 @@ async function sendText(env, chatId, text) {
   });
 }
 
+function relayChatIds(payload) {
+  if (
+    !Object.prototype.hasOwnProperty.call(payload, "chat_ids") ||
+    !Array.isArray(payload.chat_ids) ||
+    !payload.chat_ids.length
+  ) {
+    return null;
+  }
+
+  const rawIds = payload.chat_ids;
+
+  if (rawIds.length > 50) {
+    return null;
+  }
+
+  const chatIds = [
+    ...new Set(rawIds.map((value) => String(value ?? "").trim())),
+  ];
+
+  if (
+    !chatIds.length ||
+    chatIds.some((chatId) => !/^-?\d+$/.test(chatId))
+  ) {
+    return null;
+  }
+
+  return chatIds;
+}
+
 async function handleOutboundRelay(request, env) {
   const authorization = request.headers.get("Authorization");
 
@@ -64,29 +93,44 @@ async function handleOutboundRelay(request, env) {
     return jsonResponse({ ok: false, error: "Invalid JSON" }, 400);
   }
 
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return jsonResponse({ ok: false, error: "Invalid JSON" }, 400);
+  }
+
   const text = typeof payload.text === "string" ? payload.text.trim() : "";
+  const chatIds = relayChatIds(payload);
 
   if (!text || text.length > 4096) {
     return jsonResponse({ ok: false, error: "Invalid message text" }, 400);
   }
 
-  const telegram = await sendText(env, env.TELEGRAM_CHAT_ID, text);
+  if (!chatIds) {
+    return jsonResponse({ ok: false, error: "Invalid chat IDs" }, 400);
+  }
 
-  if (!telegram.ok) {
+  const deliveries = await Promise.allSettled(
+    chatIds.map((chatId) => sendText(env, chatId, text))
+  );
+  const failed = deliveries.filter(
+    (delivery) => delivery.status === "rejected" || !delivery.value.ok
+  ).length;
+
+  if (failed) {
     return jsonResponse(
       {
         ok: false,
-        error: "Telegram rejected the message",
-        status: telegram.status,
+        error: "Telegram rejected one or more messages",
+        delivered: deliveries.length - failed,
+        failed,
       },
       502
     );
   }
 
-  return jsonResponse({ ok: true });
+  return jsonResponse({ ok: true, delivered: deliveries.length });
 }
 
-async function lookupProduct(env, code) {
+async function lookupProduct(env, code, telegramUserId) {
   const response = await fetch(PRODUCT_LOOKUP_URL, {
     method: "POST",
     headers: {
@@ -95,7 +139,10 @@ async function lookupProduct(env, code) {
       "User-Agent":
         "Mozilla/5.0 (compatible; ZAD-Telegram-Worker/1.0; +https://www.zadconcept.ir/)",
     },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({
+      code,
+      telegram_user_id: telegramUserId,
+    }),
   });
 
   let result;
@@ -136,16 +183,34 @@ async function handleTelegramWebhook(request, env) {
   const message = update?.message;
   const fromId = String(message?.from?.id ?? "");
   const chatId = String(message?.chat?.id ?? "");
-  const allowedId = String(env.TELEGRAM_CHAT_ID ?? "");
+  const chatType = String(message?.chat?.type ?? "");
 
-  if (!message || !allowedId || fromId !== allowedId || chatId !== allowedId) {
+  if (
+    !message ||
+    chatType !== "private" ||
+    !fromId ||
+    fromId !== chatId
+  ) {
     return jsonResponse({ ok: true, ignored: true });
   }
 
   const text = typeof message.text === "string" ? message.text.trim() : "";
 
+  if (text === "/id") {
+    await sendText(
+      env,
+      chatId,
+      `شناسه عددی تلگرام شما: <code>${escapeHtml(fromId)}</code>`
+    );
+    return jsonResponse({ ok: true });
+  }
+
   if (text === "/start" || text === "/help") {
-    await sendText(env, chatId, "کد محصول را ارسال کنید.");
+    await sendText(
+      env,
+      chatId,
+      "کد محصول را ارسال کنید. برای دیدن شناسه عددی خودتان /id را بفرستید."
+    );
     return jsonResponse({ ok: true });
   }
 
@@ -154,10 +219,16 @@ async function handleTelegramWebhook(request, env) {
     return jsonResponse({ ok: true });
   }
 
-  const lookup = await lookupProduct(env, text);
+  const lookup = await lookupProduct(env, text, fromId);
 
   if (!lookup.ok) {
-    if (lookup.status === 404) {
+    if (lookup.status === 403) {
+      await sendText(
+        env,
+        chatId,
+        "شما اجازه دریافت اطلاعات محصول را ندارید."
+      );
+    } else if (lookup.status === 404) {
       const messageText =
         lookup.result?.error === "Product image not found"
           ? "برای این محصول تصویری ثبت نشده است."
@@ -171,9 +242,11 @@ async function handleTelegramWebhook(request, env) {
   }
 
   const product = lookup.result.product;
-  const caption = `<b>${escapeHtml(product.code)}</b>\n${escapeHtml(
-    product.name
-  )}`;
+  const caption = [
+    `<b>${escapeHtml(product.code)}</b>`,
+    escapeHtml(product.name),
+    `💰 ${escapeHtml(product.price_display)}`,
+  ].join("\n");
   const telegram = await telegramRequest(env, "sendPhoto", {
     chat_id: chatId,
     photo: product.image_url,

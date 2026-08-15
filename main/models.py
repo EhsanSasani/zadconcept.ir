@@ -1775,6 +1775,48 @@ class Event(TimeStampedModel):
             )
 
 
+class TelegramBotUser(TimeStampedModel):
+    name = models.CharField(
+        "نام کاربر",
+        max_length=120,
+        help_text="نامی که تیم در پنل مدیریت می‌شناسد.",
+    )
+    telegram_user_id = models.PositiveBigIntegerField(
+        "شناسه عددی تلگرام",
+        unique=True,
+        help_text="User ID عددی تلگرام؛ برای چت خصوصی با Chat ID یکسان است.",
+    )
+    telegram_username = models.CharField(
+        "نام کاربری تلگرام",
+        max_length=64,
+        blank=True,
+        help_text="اختیاری؛ با یا بدون @ قابل ثبت است.",
+    )
+    can_receive_leads = models.BooleanField(
+        "پیام فرم‌های سایت را دریافت کند؟",
+        default=False,
+    )
+    can_lookup_products = models.BooleanField(
+        "تصویر و قیمت محصول را دریافت کند؟",
+        default=False,
+    )
+    is_active = models.BooleanField(
+        "فعال باشد؟",
+        default=True,
+    )
+    notes = models.TextField("یادداشت داخلی", blank=True)
+
+    class Meta:
+        ordering = ["name", "telegram_user_id"]
+        verbose_name = "کاربر ربات تلگرام"
+        verbose_name_plural = "کاربران ربات تلگرام"
+
+    def __str__(self):
+        username = self.telegram_username.strip().lstrip("@")
+        identity = f"@{username}" if username else str(self.telegram_user_id)
+        return f"{self.name} ({identity})"
+
+
 class LeadRequest(TimeStampedModel):
     class LeadType(models.TextChoices):
         FLOWER = "flower", "گل"

@@ -7,7 +7,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.utils import timezone
 
-from .models import LeadRequest
+from .models import LeadRequest, TelegramBotUser
 
 
 logger = logging.getLogger(__name__)
@@ -51,10 +51,19 @@ def format_lead_request_message(lead):
     )
 
 
-def _send_via_relay(lead_id, lead, relay_url, relay_secret):
-    payload = json.dumps(
-        {"text": format_lead_request_message(lead)}
-    ).encode("utf-8")
+def _send_via_relay(
+    lead_id,
+    lead,
+    relay_url,
+    relay_secret,
+    *,
+    chat_ids,
+):
+    payload_data = {
+        "text": format_lead_request_message(lead),
+        "chat_ids": [str(chat_id) for chat_id in chat_ids],
+    }
+    payload = json.dumps(payload_data).encode("utf-8")
     request = Request(
         relay_url,
         data=payload,
@@ -111,7 +120,28 @@ def send_lead_request_notification(lead_id):
                 lead_id,
             )
             return False
-        return _send_via_relay(lead_id, lead, relay_url, relay_secret)
+        recipient_ids = list(
+            TelegramBotUser.objects.filter(
+                is_active=True,
+                can_receive_leads=True,
+            )
+            .order_by("telegram_user_id")
+            .values_list("telegram_user_id", flat=True)
+        )
+        if not recipient_ids:
+            logger.warning(
+                "Telegram lead notification has no active recipients; "
+                "lead_id=%s",
+                lead_id,
+            )
+            return False
+        return _send_via_relay(
+            lead_id,
+            lead,
+            relay_url,
+            relay_secret,
+            chat_ids=recipient_ids,
+        )
 
     token = settings.TELEGRAM_LEAD_BOT_TOKEN
     chat_id = settings.TELEGRAM_LEAD_CHAT_ID

@@ -2,17 +2,22 @@ import json
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase, override_settings
+from django.test import TestCase, override_settings
+
+from .models import TelegramBotUser
 
 
 @override_settings(TELEGRAM_LEAD_RELAY_SECRET="test-relay-secret")
-class TelegramProductLookupTests(SimpleTestCase):
+class TelegramProductLookupTests(TestCase):
     url = "/internal/telegram/product-lookup/"
 
-    def post(self, payload, *, authorized=True):
+    def post(self, payload, *, authorized=True, telegram_user_id=None):
         headers = {}
         if authorized:
             headers["HTTP_AUTHORIZATION"] = "Bearer test-relay-secret"
+        payload = dict(payload)
+        if telegram_user_id is not None:
+            payload["telegram_user_id"] = telegram_user_id
         return self.client.post(
             self.url,
             data=json.dumps(payload),
@@ -20,9 +25,9 @@ class TelegramProductLookupTests(SimpleTestCase):
             **headers,
         )
 
-    def product(self, *, with_image=True):
+    def product(self, *, gallery_image=True, cover_image=False):
         images = []
-        if with_image:
+        if gallery_image:
             images.append(
                 SimpleNamespace(
                     image=SimpleNamespace(url="/media/products/zad-101.webp")
@@ -31,8 +36,23 @@ class TelegramProductLookupTests(SimpleTestCase):
         return SimpleNamespace(
             product_code="ZAD-101",
             display_name="Test bouquet",
+            display_price="2,500,000 تومان",
+            cover_image=(
+                SimpleNamespace(url="/media/products/zad-101-cover.webp")
+                if cover_image
+                else None
+            ),
             gallery_images=SimpleNamespace(all=lambda: images),
         )
+
+    def telegram_user(self, **overrides):
+        values = {
+            "name": "Sales user",
+            "telegram_user_id": 123456789,
+            "can_lookup_products": True,
+        }
+        values.update(overrides)
+        return TelegramBotUser.objects.create(**values)
 
     def product_query(self, result):
         filtered = Mock()
@@ -48,16 +68,79 @@ class TelegramProductLookupTests(SimpleTestCase):
         self.assertEqual(response.json()["error"], "Unauthorized")
 
     def test_rejects_invalid_product_code(self):
-        response = self.post({"code": ""})
+        user = self.telegram_user()
+
+        response = self.post(
+            {"code": ""},
+            telegram_user_id=user.telegram_user_id,
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "Invalid product code")
 
+    def test_rejects_missing_telegram_user_id(self):
+        response = self.post({"code": "ZAD-101"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "Invalid Telegram user ID")
+
+    def test_rejects_invalid_telegram_user_id(self):
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id="not-a-number",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "Invalid Telegram user ID")
+
+    def test_rejects_user_without_lookup_permission(self):
+        user = self.telegram_user(
+            can_receive_leads=True,
+            can_lookup_products=False,
+        )
+
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id=user.telegram_user_id,
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["error"],
+            "Telegram user is not allowed",
+        )
+
+    def test_rejects_unknown_telegram_user(self):
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id=987654321,
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["error"],
+            "Telegram user is not allowed",
+        )
+
+    def test_rejects_inactive_lookup_user(self):
+        user = self.telegram_user(is_active=False)
+
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id=user.telegram_user_id,
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     @patch("main.telegram_product_lookup.Product.objects.prefetch_related")
     def test_returns_product_and_first_image(self, prefetch_related):
+        user = self.telegram_user()
         prefetch_related.return_value = self.product_query(self.product())
 
-        response = self.post({"code": "zad-101"})
+        response = self.post(
+            {"code": "zad-101"},
+            telegram_user_id=user.telegram_user_id,
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -67,6 +150,7 @@ class TelegramProductLookupTests(SimpleTestCase):
                 "product": {
                     "code": "ZAD-101",
                     "name": "Test bouquet",
+                    "price_display": "2,500,000 تومان",
                     "image_url": "http://testserver/media/products/zad-101.webp",
                 },
             },
@@ -78,20 +162,46 @@ class TelegramProductLookupTests(SimpleTestCase):
 
     @patch("main.telegram_product_lookup.Product.objects.prefetch_related")
     def test_returns_404_when_product_does_not_exist(self, prefetch_related):
+        user = self.telegram_user()
         prefetch_related.return_value = self.product_query(None)
 
-        response = self.post({"code": "ZAD-404"})
+        response = self.post(
+            {"code": "ZAD-404"},
+            telegram_user_id=user.telegram_user_id,
+        )
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["error"], "Product not found")
 
     @patch("main.telegram_product_lookup.Product.objects.prefetch_related")
     def test_returns_404_when_product_has_no_image(self, prefetch_related):
+        user = self.telegram_user()
         prefetch_related.return_value = self.product_query(
-            self.product(with_image=False)
+            self.product(gallery_image=False)
         )
 
-        response = self.post({"code": "ZAD-101"})
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id=user.telegram_user_id,
+        )
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["error"], "Product image not found")
+
+    @patch("main.telegram_product_lookup.Product.objects.prefetch_related")
+    def test_uses_cover_image_when_gallery_is_empty(self, prefetch_related):
+        user = self.telegram_user()
+        prefetch_related.return_value = self.product_query(
+            self.product(gallery_image=False, cover_image=True)
+        )
+
+        response = self.post(
+            {"code": "ZAD-101"},
+            telegram_user_id=user.telegram_user_id,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["product"]["image_url"],
+            "http://testserver/media/products/zad-101-cover.webp",
+        )

@@ -26,6 +26,7 @@ from .models import (
     SameDayFlower,
     SiteHero,
     Tag,
+    TelegramBotUser,
     WeddingCollectionContent,
     WeddingGalleryImage,
     WeddingPageContent,
@@ -2220,6 +2221,72 @@ class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
                     "created_at",
                     "updated_at",
                 ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
+@admin.register(TelegramBotUser)
+class TelegramBotUserAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "telegram_user_id",
+        "telegram_username",
+        "can_receive_leads",
+        "can_lookup_products",
+        "is_active",
+        "updated_at",
+    )
+    list_filter = (
+        "is_active",
+        "can_receive_leads",
+        "can_lookup_products",
+    )
+    list_editable = (
+        "can_receive_leads",
+        "can_lookup_products",
+        "is_active",
+    )
+    search_fields = (
+        "name",
+        "=telegram_user_id",
+        "telegram_username",
+        "notes",
+    )
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("name", "telegram_user_id")
+    save_on_top = True
+    list_per_page = 30
+
+    fieldsets = (
+        (
+            "کاربر تلگرام",
+            {
+                "fields": (
+                    "name",
+                    "telegram_user_id",
+                    "telegram_username",
+                    "is_active",
+                )
+            },
+        ),
+        (
+            "دسترسی‌ها",
+            {
+                "description": (
+                    "هر دسترسی مستقل است؛ می‌توان فقط یکی یا هر دو را فعال کرد."
+                ),
+                "fields": (
+                    "can_receive_leads",
+                    "can_lookup_products",
+                ),
+            },
+        ),
+        (
+            "یادداشت و زمان‌ها",
+            {
+                "fields": ("notes", "created_at", "updated_at"),
                 "classes": ("collapse",),
             },
         ),
