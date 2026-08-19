@@ -327,6 +327,26 @@ class MainViewsTests(TestCase):
             condolence.context["page_hero_text"],
         )
 
+    def test_occasion_all_products_follow_category_sort_order(self):
+        self.flowers_category.sort_order = 30
+        self.flowers_category.save(update_fields=["sort_order"])
+        self.bakery_category.sort_order = 10
+        self.bakery_category.save(update_fields=["sort_order"])
+        self.gifts_category.sort_order = 20
+        self.gifts_category.save(update_fields=["sort_order"])
+
+        response = self.client.get(reverse("occasion_detail", args=["birthday"]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [product.pk for product in response.context["products"]],
+            [
+                self.bakery.pk,
+                self.gift_product.pk,
+                self.flower.pk,
+            ],
+        )
+
     def test_occasion_detail_always_exposes_available_product_filters(self):
         response = self.client.get(reverse("occasion_detail", args=["birthday"]))
 

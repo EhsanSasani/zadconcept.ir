@@ -2714,7 +2714,14 @@ def occasion_detail(request, slug):
         .filter(tags=occasion)
         .select_related("category")
         .prefetch_related("tags")
-        .order_by("category__section", "-featured", "sort_order", "-created_at")
+        .order_by(
+            "category__sort_order",
+            "category__section",
+            "category__name",
+            "-featured",
+            "sort_order",
+            "-created_at",
+        )
     )
 
     available_category_ids = list(
