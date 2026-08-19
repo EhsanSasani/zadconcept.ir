@@ -429,21 +429,47 @@ li,
     align-items: center;
   }
 
-  /* Dynamic viewport units keep the modal usable behind mobile browser chrome. */
-  .zad-product-modal__dialog {
-    height: 100dvh;
-    max-height: 100dvh;
-    grid-template-rows: minmax(220px, 48dvh) minmax(0, 1fr);
+  /* Mobile product modal keeps the full image at its natural ratio. */
+  .zad-product-modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .zad-product-modal__media,
-  .zad-product-modal__media img {
+  .zad-product-modal__overlay {
+    position: fixed;
+  }
+
+  .zad-product-modal__dialog {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .zad-product-modal__media {
+    width: 100%;
+    height: auto;
     min-height: 0;
-    height: 100%;
+  }
+
+  .zad-product-modal__media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    object-fit: contain;
+    object-position: center center;
   }
 
   .zad-product-modal__content {
+    height: auto;
     min-height: 0;
+    overflow: visible;
     padding-bottom: max(32px, env(safe-area-inset-bottom));
   }
 }

@@ -2591,19 +2591,27 @@ def product_detail(request, pk: int, slug: str):
 
 
 def _section_product_detail(request, section, category_slug, slug):
-    product = get_object_or_404(
+    products = (
         Product.objects.published()
         .select_related("category", "category__parent")
-        .prefetch_related("tags", "gallery_images"),
-        slug=slug,
+        .prefetch_related("tags", "gallery_images")
     )
+
+    # Preserve the existing SEO/canonical contract: the current product slug
+    # remains the primary public identifier. product_code is accepted only as
+    # a stable, human-facing alias and is permanently redirected to canonical.
+    try:
+        product = products.get(slug=slug)
+    except Product.DoesNotExist:
+        product = get_object_or_404(products, product_code=slug)
 
     canonical_section = product.canonical_section or product.category.section
     canonical_category_slug = (
         product.canonical_category_slug or product.category.slug
     )
     if (
-        canonical_section != section
+        slug != product.slug
+        or canonical_section != section
         or canonical_category_slug != category_slug
     ):
         return redirect(product.get_absolute_url(), permanent=True)
