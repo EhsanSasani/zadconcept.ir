@@ -130,6 +130,19 @@
   line-height: 1.6;
 }
 
+.zad-product-modal__code {
+  margin: 6px 0 0;
+  color: rgba(45, 42, 39, 0.48);
+  font-family: var(--font-ui-en);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: right;
+}
+
 .zad-product-modal__line {
   width: 58px;
   height: 1px;
@@ -142,6 +155,7 @@
   color: rgba(45, 42, 39, 0.64);
   font-size: 0.94rem;
   line-height: 2.05;
+  white-space: pre-wrap;
 }
 
 .zad-product-modal__price {

@@ -166,7 +166,7 @@
           data-product-price="{{ product.display_price }}"
           data-product-contact="{{ product.order_contact_text }}"
           data-product-stock="{{ product.stock_status_label }}"
-          data-product-description="{{ product.description|default:''|truncatechars:140 }}"
+          data-product-description="{{ product.description|default:'' }}"
         >
           <a class="home-sameday-card__main" href="{{ product.get_absolute_url }}" data-zad-modal-card>
           <div class="home-sameday-card__media">

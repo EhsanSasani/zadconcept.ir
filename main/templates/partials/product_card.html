@@ -12,7 +12,7 @@
       data-product-price="{{ product.display_price }}"
       data-product-contact="{{ product.order_contact_text }}"
       data-product-stock="{{ product.stock_status_label }}"
-      data-product-description="{{ product.description|default:''|truncatechars:140 }}"
+      data-product-description="{{ product.description|default:'' }}"
     >
       <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main" data-zad-modal-card>
         <div class="flowers-product-card__media">
@@ -74,13 +74,16 @@
               {% elif product.category.slug == "stand" %}
                 STAND
               {% elif product.category %}
-                {{ product.category.slug|cut:"-"|upper }}
+                {{ product.category.name }}
               {% else %}
                 COLLECTION
               {% endif %}
             </span>
 
             <h3{% if not product.name %} class="flowers-product-card__code"{% endif %}>{{ product.display_name }}</h3>
+            {% if product.name and product.product_code %}
+              <span class="flowers-product-card__code-meta">{{ product.product_code }}</span>
+            {% endif %}
             <p class="{% if not product.has_price %}flowers-product-card__price-muted{% endif %}">{{ product.display_price }}</p>
             {% if product.description %}<p class="flowers-product-card__excerpt">{{ product.description|truncatechars:72 }}</p>{% endif %}
           </div>
@@ -100,7 +103,7 @@
       data-product-price="{{ product.display_price }}"
       data-product-contact="{{ product.order_contact_text }}"
       data-product-stock="{{ product.stock_status_label }}"
-      data-product-description="{{ product.description|default:''|truncatechars:140 }}"
+      data-product-description="{{ product.description|default:'' }}"
     >
       <a href="{{ product.get_absolute_url }}" class="product-card__main" data-zad-modal-card>
         <div class="product-card__image-wrap">
@@ -142,6 +145,9 @@
 
         <div class="product-card__body">
           <h3 class="product-card__title">{{ product.display_name }}</h3>
+          {% if product.name and product.product_code %}
+            <span class="product-card__code-meta">{{ product.product_code }}</span>
+          {% endif %}
           <p class="product-card__price {% if not product.has_price %}product-card__price--muted{% endif %}">{{ product.display_price }}</p>
           {% if product.description %}<p class="product-card__excerpt">{{ product.description|truncatechars:72 }}</p>{% endif %}
           <p class="product-card__contact">{{ product.order_contact_text }}</p>

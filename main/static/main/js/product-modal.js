@@ -5,6 +5,7 @@
   const modalImage = modal.querySelector("[data-modal-image]");
   const modalType = modal.querySelector("[data-modal-type]");
   const modalTitle = modal.querySelector("[data-modal-title]");
+  const modalCode = modal.querySelector("[data-modal-code]");
   const modalPrice = modal.querySelector("[data-modal-price]");
   const modalDescription = modal.querySelector("[data-modal-description]");
   const modalStock = modal.querySelector("[data-modal-stock]");
@@ -43,8 +44,8 @@
     const imageAlt = image ? image.getAttribute("alt") : "";
 
     const type = getTypeLabel(card.dataset.productType);
-    const code = card.dataset.productCode || "";
-    const name = card.dataset.productName || "";
+    const code = (card.dataset.productCode || "").trim();
+    const name = (card.dataset.productName || "").trim();
     const price = card.dataset.productPrice || "استعلام قیمت";
     const description = card.dataset.productDescription || "";
     const stock = card.dataset.productStock || "";
@@ -61,6 +62,12 @@
 
     if (modalTitle) {
       modalTitle.textContent = name || code || "ZAD";
+    }
+
+    if (modalCode) {
+      const showCodeBelowName = Boolean(name && code);
+      modalCode.textContent = showCodeBelowName ? code : "";
+      modalCode.hidden = !showCodeBelowName;
     }
 
     if (modalPrice) {
@@ -95,6 +102,11 @@
     if (modalImage) {
       modalImage.src = "";
       modalImage.alt = "";
+    }
+
+    if (modalCode) {
+      modalCode.textContent = "";
+      modalCode.hidden = true;
     }
 
     if (modalDescription) {

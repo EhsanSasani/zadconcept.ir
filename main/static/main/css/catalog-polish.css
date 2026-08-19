@@ -399,6 +399,20 @@
   font-family: var(--font-ui-en);
 }
 
+.flowers-product-card__code-meta,
+.product-card__code-meta {
+  display: block;
+  margin-top: 2px;
+  color: rgba(45, 42, 39, 0.42);
+  font-family: var(--font-ui-en);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 .flowers-product-card__body p,
 .flowers-product-card__price-muted {
   margin: 4px 0 0;
