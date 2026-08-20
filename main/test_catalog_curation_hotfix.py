@@ -138,7 +138,7 @@ class ProposalCollectionFilterTests(TestCase):
         self.assertNotContains(response, self.unselected.product_code)
         self.assertEqual(
             [item["label"] for item in response.context["filter_links"]],
-            ["All", "دسته گل", "باکس گل"],
+            ["همه", "دسته گل", "باکس گل"],
         )
         self.assertContains(response, "?category=hand-bouquet")
 
