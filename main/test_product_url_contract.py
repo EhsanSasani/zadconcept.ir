@@ -104,6 +104,103 @@ class ProductUrlContractTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_remaining_public_redirects_keep_exact_status_and_destination(self):
+        draft = Product.objects.create(
+            name="URL Contract Legacy Draft",
+            category=self.flower_category,
+            publish_status=Product.PublishStatus.DRAFT,
+        )
+        inactive = Product.objects.create(
+            name="URL Contract Legacy Inactive",
+            category=self.flower_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            is_active=False,
+        )
+
+        cases = (
+            (
+                "product detail flower",
+                reverse(
+                    "product_detail",
+                    args=[self.flower.pk, self.flower.slug],
+                ),
+                301,
+                self.flower.get_absolute_url(),
+            ),
+            (
+                "product detail bakery",
+                reverse(
+                    "product_detail",
+                    args=[self.bakery.pk, self.bakery.slug],
+                ),
+                301,
+                self.bakery.get_absolute_url(),
+            ),
+            (
+                "product detail gift",
+                reverse(
+                    "product_detail",
+                    args=[self.gift.pk, self.gift.slug],
+                ),
+                301,
+                self.gift.get_absolute_url(),
+            ),
+            (
+                "flower detail",
+                reverse(
+                    "flower_detail",
+                    args=[self.flower.pk, self.flower.slug],
+                ),
+                301,
+                self.flower.get_absolute_url(),
+            ),
+            (
+                "flower detail redirect",
+                reverse("flower_detail_redirect", args=[self.flower.pk]),
+                301,
+                self.flower.get_absolute_url(),
+            ),
+            (
+                "bakery through flower product detail",
+                reverse(
+                    "flower_product_detail",
+                    args=[self.bakery_category.slug, self.bakery.slug],
+                ),
+                301,
+                self.bakery.get_absolute_url(),
+            ),
+            (
+                "draft through legacy product detail",
+                reverse("product_detail", args=[draft.pk, draft.slug]),
+                404,
+                None,
+            ),
+            (
+                "inactive through legacy product detail",
+                reverse("product_detail", args=[inactive.pk, inactive.slug]),
+                404,
+                None,
+            ),
+            (
+                "plant category alias",
+                reverse("flower_subcategory", args=["plant"]),
+                302,
+                reverse("flower_subcategory", args=["plants"]),
+            ),
+            (
+                "wreath category alias",
+                reverse("flower_subcategory", args=["wreath"]),
+                302,
+                reverse("flower_subcategory", args=["stand"]),
+            ),
+        )
+
+        for case, source_url, status_code, destination_url in cases:
+            with self.subTest(case=case, source_url=source_url):
+                response = self.client.get(source_url)
+                self.assertEqual(response.status_code, status_code)
+                self.assertEqual(response.headers.get("Location"), destination_url)
+
     def test_draft_and_inactive_products_are_not_exposed_through_code_aliases(self):
         draft = Product.objects.create(
             name="URL Contract Draft",

@@ -1,6 +1,7 @@
 import base64
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -115,6 +116,144 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("flowers"))
+
+    def test_general_catalog_surfaces_preserve_exact_membership_and_order(self):
+        featured = self.bakery
+        featured.featured = True
+        featured.sort_order = 100
+        featured.save(update_fields=["featured", "sort_order", "updated_at"])
+
+        older_tied = Product.objects.create(
+            name="Older tied bakery product",
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            sort_order=10,
+        )
+        newer_tied = Product.objects.create(
+            name="Newer tied bakery product",
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            sort_order=10,
+        )
+        later_sort = Product.objects.create(
+            name="Later-sort bakery product",
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            sort_order=20,
+        )
+        draft = Product.objects.create(
+            name="Draft bakery control",
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.DRAFT,
+            sort_order=0,
+        )
+        inactive = Product.objects.create(
+            name="Inactive bakery control",
+            category=self.bakery_category,
+            publish_status=Product.PublishStatus.PUBLISHED,
+            is_active=False,
+            sort_order=0,
+        )
+
+        reference_time = timezone.now()
+        Product.objects.filter(pk=older_tied.pk).update(
+            created_at=reference_time - timedelta(days=2)
+        )
+        Product.objects.filter(pk=newer_tied.pk).update(
+            created_at=reference_time - timedelta(days=1)
+        )
+
+        expected_ids = [
+            featured.pk,
+            newer_tied.pk,
+            older_tied.pk,
+            later_sort.pk,
+        ]
+        surfaces = (
+            (reverse("bakery"), "catalog_products"),
+            (reverse("bakery_all"), "items"),
+            (
+                reverse(
+                    "bakery_subcategory",
+                    args=[self.bakery_category.slug],
+                ),
+                "items",
+            ),
+        )
+
+        for url, context_key in surfaces:
+            with self.subTest(url=url, context_key=context_key):
+                response = self.client.get(url)
+                actual_ids = [
+                    product.pk for product in response.context[context_key]
+                ]
+                self.assertEqual(actual_ids, expected_ids)
+                self.assertNotIn(draft.pk, actual_ids)
+                self.assertNotIn(inactive.pk, actual_ids)
+
+    def test_representative_pages_keep_shared_context_envelope(self):
+        pages = (
+            (
+                reverse("index"),
+                "index.html",
+                "home",
+                "home",
+                True,
+            ),
+            (
+                reverse("bakery"),
+                "flowers_landing.html",
+                "flowers_landing",
+                "bakery",
+                True,
+            ),
+            (
+                self.flower.get_absolute_url(),
+                "item_detail.html",
+                "item",
+                "flowers",
+                True,
+            ),
+            (
+                reverse("occasion_detail", args=[self.birthday_tag.slug]),
+                "occasion_detail.html",
+                "occasion-detail",
+                "occasions",
+                True,
+            ),
+            (
+                reverse("contact"),
+                "contact.html",
+                "contact",
+                "",
+                False,
+            ),
+        )
+
+        for url, template, page_type, active_nav, enable_product_modal in pages:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                expected_canonical = f"{settings.ZAD_SITE_URL}{url}"
+                page_graph_nodes = [
+                    node
+                    for node in response.context["structured_data_graph"]
+                    if node.get("@id") == f"{expected_canonical}#webpage"
+                ]
+
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, template)
+                self.assertEqual(response.context["page_type"], page_type)
+                self.assertEqual(response.context["active_nav"], active_nav)
+                self.assertEqual(
+                    response.context["enable_product_modal"],
+                    enable_product_modal,
+                )
+                self.assertEqual(
+                    response.context["canonical_url"],
+                    expected_canonical,
+                )
+                self.assertEqual(response.context["robots_content"], "index,follow")
+                self.assertEqual(len(page_graph_nodes), 1)
 
     def test_home_hero_uses_all_admin_managed_fields(self):
         HomeHeroSlide.objects.create(
