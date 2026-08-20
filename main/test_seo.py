@@ -4,6 +4,7 @@ from io import StringIO
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from django.conf import settings
 from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -11,7 +12,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .management.commands.audit_seo import SeoHTMLParser
-from .models import Category, Event, LeadRequest, Product, PublishStatus, Tag
+from .models import (
+    Category,
+    Event,
+    LeadRequest,
+    NewsPost,
+    Product,
+    PublishStatus,
+    Tag,
+)
 
 
 def parse_html(response):
@@ -286,6 +295,58 @@ class SeoContractTests(TestCase):
                 types = [node.get("@type") for node in graph]
                 self.assertNotIn("FAQPage", types)
                 self.assertNotIn("BreadcrumbList", types)
+
+    def test_blog_and_wedding_collection_keep_view_owned_schema_contracts(self):
+        post = NewsPost.objects.create(
+            title="ZAD schema contract article",
+            slug="zad-schema-contract-article",
+            excerpt="A focused article schema contract.",
+            body="Article body for the view-owned schema contract.",
+            status=PublishStatus.PUBLISHED,
+            published_at=timezone.now().replace(microsecond=0),
+        )
+
+        blog_response = self.client.get(post.get_absolute_url())
+        blog_canonical = f"{settings.ZAD_SITE_URL}{post.get_absolute_url()}"
+        article_nodes = [
+            node
+            for node in blog_response.context["structured_data_graph"]
+            if node.get("@type") == "Article"
+        ]
+
+        self.assertEqual(blog_response.status_code, 200)
+        self.assertEqual(blog_response.context["canonical_url"], blog_canonical)
+        self.assertEqual(blog_response.context["robots_content"], "index,follow")
+        self.assertEqual(blog_response.context["og_type"], "article")
+        self.assertEqual(len(article_nodes), 1)
+        article = article_nodes[0]
+        self.assertEqual(article["headline"], post.title)
+        self.assertEqual(article["url"], blog_canonical)
+        self.assertEqual(article["datePublished"], post.published_at.isoformat())
+        self.assertEqual(
+            article["mainEntityOfPage"],
+            {"@id": f"{blog_canonical}#webpage"},
+        )
+
+        collection_url = reverse(
+            "wedding_collection",
+            args=["proposal-bouquets"],
+        )
+        collection_response = self.client.get(collection_url)
+        collection_canonical = f"{settings.ZAD_SITE_URL}{collection_url}"
+        page_nodes = [
+            node
+            for node in collection_response.context["structured_data_graph"]
+            if node.get("@id") == f"{collection_canonical}#webpage"
+        ]
+
+        self.assertEqual(collection_response.status_code, 200)
+        self.assertEqual(
+            collection_response.context["canonical_url"],
+            collection_canonical,
+        )
+        self.assertEqual(len(page_nodes), 1)
+        self.assertEqual(page_nodes[0]["@type"], "CollectionPage")
 
     def test_international_pages_are_real_language_variants(self):
         fa_response = self.client.get(reverse("international_orders"))

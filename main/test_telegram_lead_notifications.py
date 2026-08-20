@@ -91,3 +91,26 @@ class TelegramLeadNotificationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         lead = LeadRequest.objects.get(full_name="Telegram Lead")
         mocked_sender.assert_called_once_with(lead.pk)
+
+    def test_invalid_lead_has_no_write_callback_or_external_redirect(self):
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.client.post(
+                reverse("lead_request"),
+                {
+                    "full_name": "Invalid Telegram Lead",
+                    "mobile": "123",
+                    "lead_type": LeadRequest.LeadType.FLOWER,
+                    "delivery_window": LeadRequest.DeliveryWindow.TODAY,
+                    "next": "https://external.invalid/redirect-target",
+                    "source_page": "/contact/",
+                },
+                HTTP_X_REAL_IP="203.0.113.99",
+            )
+
+        self.assertRedirects(
+            response,
+            reverse("index"),
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(LeadRequest.objects.exists())
+        self.assertEqual(callbacks, [])

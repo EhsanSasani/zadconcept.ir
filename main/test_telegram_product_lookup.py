@@ -1,10 +1,13 @@
+import base64
 import json
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import TelegramBotUser
+from .models import Category, Product, TelegramBotUser
 
 
 @override_settings(TELEGRAM_LEAD_RELAY_SECRET="test-relay-secret")
@@ -131,6 +134,65 @@ class TelegramProductLookupTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_authorized_lookup_includes_nonpublic_products(self):
+        user = self.telegram_user()
+        valid_png = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        )
+
+        with TemporaryDirectory() as media_root, self.settings(MEDIA_ROOT=media_root):
+            category = Category.objects.create(
+                name="Internal lookup products",
+                slug="internal-lookup-products",
+                section=Category.Section.FLOWERS,
+            )
+            draft = Product.objects.create(
+                name="Internal lookup draft",
+                product_code="LOOKUP-DRAFT-001",
+                category=category,
+                publish_status=Product.PublishStatus.DRAFT,
+                cover_image=SimpleUploadedFile(
+                    "lookup-draft.png",
+                    valid_png,
+                    content_type="image/png",
+                ),
+            )
+            inactive = Product.objects.create(
+                name="Internal lookup inactive",
+                product_code="LOOKUP-INACTIVE-002",
+                category=category,
+                publish_status=Product.PublishStatus.PUBLISHED,
+                is_active=False,
+                cover_image=SimpleUploadedFile(
+                    "lookup-inactive.png",
+                    valid_png,
+                    content_type="image/png",
+                ),
+            )
+
+            for product in (draft, inactive):
+                with self.subTest(product_code=product.product_code):
+                    response = self.post(
+                        {"code": product.product_code},
+                        telegram_user_id=user.telegram_user_id,
+                    )
+
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(
+                        response.json(),
+                        {
+                            "ok": True,
+                            "product": {
+                                "code": product.product_code,
+                                "name": product.display_name,
+                                "price_display": product.display_price,
+                                "image_url": (
+                                    f"http://testserver{product.cover_image.url}"
+                                ),
+                            },
+                        },
+                    )
 
     @patch("main.telegram_product_lookup.Product.objects.prefetch_related")
     def test_returns_product_and_first_image(self, prefetch_related):

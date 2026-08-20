@@ -1,4 +1,5 @@
 import base64
+from datetime import timedelta
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -13,6 +14,7 @@ from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from .admin import WeddingProductAdminForm
 from .models import (
@@ -248,6 +250,74 @@ class WeddingCatalogIsolationTests(TestCase):
         self.assertEqual(
             self.client.get(reverse("wedding_collection", args=["unknown"])).status_code,
             404,
+        )
+
+    def test_wedding_collection_preserves_explicit_product_order(self):
+        Product.objects.filter(pk=self.bridal.pk).update(
+            publish_status=Product.PublishStatus.DRAFT
+        )
+        bridal_category = self.taxonomy[Product.WeddingType.BRIDAL_BOUQUET]
+        wedding_rank = create_wedding_product(
+            "WTEST ORDER WEDDING RANK",
+            Product.WeddingType.BRIDAL_BOUQUET,
+            bridal_category,
+            wedding_sort_order=1,
+            sort_order=99,
+        )
+        sort_rank = create_wedding_product(
+            "WTEST ORDER SORT RANK",
+            Product.WeddingType.BRIDAL_BOUQUET,
+            bridal_category,
+            wedding_sort_order=2,
+            sort_order=1,
+        )
+        newer_rank = create_wedding_product(
+            "WTEST ORDER NEWER RANK",
+            Product.WeddingType.BRIDAL_BOUQUET,
+            bridal_category,
+            wedding_sort_order=2,
+            sort_order=2,
+        )
+        id_rank_first = create_wedding_product(
+            "WTEST ORDER ID RANK FIRST",
+            Product.WeddingType.BRIDAL_BOUQUET,
+            bridal_category,
+            wedding_sort_order=2,
+            sort_order=2,
+        )
+        id_rank_second = create_wedding_product(
+            "WTEST ORDER ID RANK SECOND",
+            Product.WeddingType.BRIDAL_BOUQUET,
+            bridal_category,
+            wedding_sort_order=2,
+            sort_order=2,
+        )
+
+        newer_time = timezone.now()
+        older_time = newer_time - timedelta(days=1)
+        Product.objects.filter(
+            pk__in=(
+                wedding_rank.pk,
+                sort_rank.pk,
+                id_rank_first.pk,
+                id_rank_second.pk,
+            )
+        ).update(created_at=older_time)
+        Product.objects.filter(pk=newer_rank.pk).update(created_at=newer_time)
+
+        response = self.client.get(
+            reverse("wedding_collection", args=["bridal-bouquets"])
+        )
+
+        self.assertEqual(
+            [product.pk for product in response.context["products"]],
+            [
+                wedding_rank.pk,
+                sort_rank.pk,
+                newer_rank.pk,
+                id_rank_first.pk,
+                id_rank_second.pk,
+            ],
         )
 
     def test_wedding_products_do_not_leak_to_any_general_surface(self):
