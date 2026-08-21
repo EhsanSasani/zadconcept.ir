@@ -1,4 +1,4 @@
-﻿# ZAD Refactor V2 - Canonical State
+# ZAD Refactor V2 - Canonical State
 
 ## Contract
 BEFORE == AFTER.
@@ -23,8 +23,11 @@ Golden baseline:
 main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
-Current target:
+Refactor code checkpoint described by this document:
 refactor/zad-v2 @ 810cf27
+
+Always confirm the live branch HEAD with:
+git rev-parse --short HEAD
 
 Old donor/reference only:
 archive/refactor-v1 @ 5618c74
