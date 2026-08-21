@@ -255,6 +255,57 @@ class MainViewsTests(TestCase):
                 self.assertEqual(response.context["robots_content"], "index,follow")
                 self.assertEqual(len(page_graph_nodes), 1)
 
+    def test_default_page_presentation_fallbacks_remain_exact(self):
+        bakery_response = self.client.get(reverse("bakery"))
+        self.assertEqual(
+            bakery_response.context["meta_title"],
+            "سفارش سوئیت‌بار و شیرینی در مشهد | زاد",
+        )
+        self.assertEqual(
+            bakery_response.context["meta_description"],
+            "سفارش محصولات سوئیت‌بار زاد برای هدیه، پذیرایی و مناسبت‌ها در مشهد.",
+        )
+        self.assertEqual(bakery_response.context["active_nav"], "bakery")
+        self.assertEqual(bakery_response.context["lead_default_type"], "bakery")
+
+        contact_response = self.client.get(reverse("contact"))
+        self.assertEqual(contact_response.context["page_hero_kicker"], "Contact zad")
+        self.assertEqual(
+            contact_response.context["page_hero_title"],
+            "Let’s Arrange It",
+        )
+        self.assertEqual(
+            contact_response.context["page_hero_text"],
+            "For availability, timing and order details.",
+        )
+        self.assertEqual(
+            contact_response.context["page_hero_image"],
+            "main/img/hero-contact.webp",
+        )
+
+        privacy_response = self.client.get(reverse("privacy"))
+        self.assertEqual(
+            privacy_response.context["page_hero_title"],
+            privacy_response.context["meta_title"],
+        )
+        self.assertEqual(
+            privacy_response.context["page_hero_text"],
+            privacy_response.context["meta_description"],
+        )
+        self.assertEqual(
+            privacy_response.context["page_hero_image"],
+            "main/img/hero-2.webp",
+        )
+        self.assertEqual(privacy_response.context["page_hero_style_class"], "")
+        self.assertEqual(
+            privacy_response.context["page_hero_content_position"],
+            "center-left",
+        )
+        self.assertEqual(
+            privacy_response.context["page_hero_mobile_content_position"],
+            "bottom-center",
+        )
+
     def test_home_hero_uses_all_admin_managed_fields(self):
         HomeHeroSlide.objects.create(
             title="Admin Home Hero",
