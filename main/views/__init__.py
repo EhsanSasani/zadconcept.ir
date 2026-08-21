@@ -20,6 +20,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from ..occasion_presentation import _occasion_card
+from ..category_presentation import (
+    SECTION_CATEGORY_ROUTE_NAMES,
+    _category_card,
+    _section_category_url,
+)
 from ..catalog_selectors import (
     _active_categories_for_section,
     _active_occasion_tags,
@@ -321,11 +326,6 @@ SECTION_ALL_ROUTE_NAMES = {
     Category.Section.GIFTS: "gifts_all",
 }
 
-SECTION_CATEGORY_ROUTE_NAMES = {
-    Category.Section.FLOWERS: "flower_subcategory",
-    Category.Section.BAKERY: "bakery_subcategory",
-    Category.Section.GIFTS: "gift_subcategory",
-}
 
 def _section_all_url(section):
     route_name = SECTION_ALL_ROUTE_NAMES.get(section)
@@ -336,27 +336,8 @@ def _section_all_url(section):
     return reverse(section)
 
 
-def _section_category_url(category):
-    route_name = SECTION_CATEGORY_ROUTE_NAMES.get(category.section)
-
-    if route_name:
-        return reverse(route_name, args=[category.slug])
-
-    return reverse(category.section)
 
 
-def _category_card(category):
-    content = _category_content(category)
-    has_children = category.children.filter(is_active=True).exists()
-
-    return {
-        "slug": category.slug,
-        "label": category.name,
-        "url": _section_category_url(category),
-        "image": category.cover_image.url if category.cover_image else content["image"],
-        "intro": category.description or content["intro"],
-        "has_children": has_children,
-    }
 
 
 

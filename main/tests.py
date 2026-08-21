@@ -237,6 +237,43 @@ class MainViewsTests(TestCase):
                 status_code=301,
                 fetch_redirect_response=False,
             )
+
+
+    def test_category_presentation_preserves_routes_and_card_contract(self):
+        self.assertEqual(
+            views._section_category_url(self.flowers_category),
+            reverse(
+                "flower_subcategory",
+                args=[self.flowers_category.slug],
+            ),
+        )
+        self.assertEqual(
+            views._section_category_url(self.bakery_category),
+            reverse(
+                "bakery_subcategory",
+                args=[self.bakery_category.slug],
+            ),
+        )
+        self.assertEqual(
+            views._section_category_url(self.gifts_category),
+            reverse(
+                "gift_subcategory",
+                args=[self.gifts_category.slug],
+            ),
+        )
+
+        card = views._category_card(self.flowers_category)
+
+        self.assertEqual(card["slug"], self.flowers_category.slug)
+        self.assertEqual(card["label"], self.flowers_category.name)
+        self.assertEqual(
+            card["url"],
+            reverse(
+                "flower_subcategory",
+                args=[self.flowers_category.slug],
+            ),
+        )
+        self.assertFalse(card["has_children"])
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
