@@ -1536,6 +1536,23 @@ class MainViewsTests(TestCase):
         self.assertRedirects(response, reverse("contact"), fetch_redirect_response=False)
         self.assertEqual(LeadRequest.objects.count(), 1)
 
+    def test_custom_404_preserves_handler_template_status_and_context_contract(self):
+        from django.utils.module_loading import import_string
+        from config import urls as project_urls
+
+        self.assertEqual(project_urls.handler404, "main.views.custom_404")
+        self.assertIs(import_string(project_urls.handler404), views.custom_404)
+
+        response = self.client.get("/__phase18-missing-page__/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "404.html")
+        self.assertEqual(response.context["robots_content"], "noindex,nofollow")
+        self.assertEqual(response.context["page_type"], "error-404")
+        self.assertIs(response.context["is_home"], True)
+        self.assertIn("meta_title", response.context)
+        self.assertIn("meta_description", response.context)
+
     def test_csp_report_preserves_security_http_and_logging_contract(self):
         url = reverse("csp_report")
 
