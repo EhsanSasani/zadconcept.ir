@@ -457,6 +457,92 @@ class MainViewsTests(TestCase):
                 self.assertEqual(response.context["robots_content"], "index,follow")
                 self.assertEqual(len(page_graph_nodes), 1)
 
+    def test_policy_views_preserve_routing_context_and_normalization(self):
+        routes = (
+            ("privacy", "privacy"),
+            ("terms", "terms"),
+            ("delivery_policy", "delivery"),
+            ("refund_policy", "refund"),
+            ("payment_methods", "payment"),
+            ("service_area", "service-area"),
+        )
+
+        for route_name, policy_slug in routes:
+            with self.subTest(route_name=route_name):
+                expected = views.POLICY_PAGES[policy_slug]
+                response = self.client.get(reverse(route_name))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIs(response.resolver_match.func, views.policy_page)
+                self.assertTemplateUsed(response, "policy_page.html")
+                self.assertEqual(response.context["page_type"], "policy")
+                self.assertEqual(response.context["active_nav"], "")
+                self.assertIs(response.context["suppress_default_hero"], True)
+                self.assertEqual(
+                    response.context["meta_title"],
+                    expected["meta_title"],
+                )
+                self.assertEqual(
+                    response.context["meta_description"],
+                    expected["meta_description"],
+                )
+                self.assertEqual(
+                    response.context["breadcrumbs"],
+                    [
+                        {"name": "Home", "url": reverse("index")},
+                        {"name": expected["title"], "url": None},
+                    ],
+                )
+
+                normalized = response.context["policy"]
+                self.assertEqual(normalized["title"], expected["title"])
+
+                for section in normalized.get("sections", []):
+                    self.assertIsInstance(section["paragraphs"], list)
+                    self.assertIsInstance(section["items"], list)
+
+        normalized = views._normalized_policy(
+            {
+                "title": "Contract",
+                "sections": [
+                    {
+                        "title": "String values",
+                        "paragraphs": "One paragraph",
+                        "items": "One item",
+                    },
+                    {
+                        "title": "Missing values",
+                    },
+                    {
+                        "title": "List values",
+                        "paragraphs": ["A", "B"],
+                        "items": ["X", "Y"],
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(
+            normalized["sections"],
+            [
+                {
+                    "title": "String values",
+                    "paragraphs": ["One paragraph"],
+                    "items": ["One item"],
+                },
+                {
+                    "title": "Missing values",
+                    "paragraphs": [],
+                    "items": [],
+                },
+                {
+                    "title": "List values",
+                    "paragraphs": ["A", "B"],
+                    "items": ["X", "Y"],
+                },
+            ],
+        )
+
     def test_international_order_views_preserve_routing_templates_and_context(self):
         managed_content = PageContentBlock.objects.create(
             page="international-orders",
