@@ -24,7 +24,7 @@ main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
 Refactor code checkpoint described by this document:
-refactor/zad-v2 @ 1716393
+refactor/zad-v2 @ 4d6c499
 
 Always confirm the live branch HEAD with:
 git rev-parse --short HEAD
@@ -44,6 +44,7 @@ main/international_order_views.py
 main/event_views.py
 main/static_page_views.py
 main/policy_views.py
+main/seo_views.py
 
 main.views remains a compatibility facade.
 
@@ -75,10 +76,13 @@ Phase 12:
 Phase 13:
 1716393 refactor(views): extract policy views
 
+Phase 14:
+4d6c499 refactor(views): extract SEO utility views
+
 ## Current Baselines
 
 Django:
-188 / 188 PASS
+189 / 189 PASS
 
 Worker:
 9 / 9 PASS
@@ -173,7 +177,7 @@ Routine extraction should be done from repository evidence + tests + Git audits.
 
 ## Next Phase
 
-Phase 14 is NOT selected yet.
+Phase 15 is NOT selected yet.
 
 Before choosing it:
 - inspect current main/views.py
