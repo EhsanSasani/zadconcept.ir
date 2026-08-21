@@ -24,7 +24,7 @@ main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
 Refactor code checkpoint described by this document:
-refactor/zad-v2 @ 5f4b614
+refactor/zad-v2 @ 32b5c9d
 
 Always confirm the live branch HEAD with:
 git rev-parse --short HEAD
@@ -38,6 +38,7 @@ Never merge the old refactor branch into the current target.
 
 main/catalog_selectors.py
 main/page_presentation.py
+main/occasion_presentation.py
 main/page_context.py
 main/managed_heroes.py
 main/views/__init__.py
@@ -60,6 +61,7 @@ Important preserved bindings include:
 - WorkshopPageContent
 - event_node
 - _with_home
+- _occasion_card
 - international_orders
 - international_orders_en
 - events
@@ -67,7 +69,7 @@ Important preserved bindings include:
 
 Do not clean facade imports during unrelated refactor phases.
 
-## Completed View Splits
+## Completed Structural Phases
 
 Phase 10:
 d7c6a06 refactor(views): extract international order views
@@ -99,10 +101,13 @@ Phase 18:
 Phase 19:
 5f4b614 refactor(views): extract blog views
 
+Phase 20:
+32b5c9d refactor(presentation): extract occasion card
+
 ## Current Baselines
 
 Django:
-193 / 193 PASS
+194 / 194 PASS
 
 Worker:
 9 / 9 PASS
@@ -197,7 +202,7 @@ Routine extraction should be done from repository evidence + tests + Git audits.
 
 ## Next Phase
 
-Phase 20 is NOT selected yet.
+Phase 21 is NOT selected yet.
 
 Before choosing it:
 - inspect current main/views/__init__.py
