@@ -10,6 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from . import views
 from .models import (
     BakeryItem,
     Category,
@@ -116,6 +117,18 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("flowers"))
+
+    def test_general_catalog_section_selector_keeps_card_relations_eager_loaded(self):
+        with self.assertNumQueries(2):
+            products = list(
+                views._published_products_for_section(Category.Section.BAKERY)
+            )
+            self.assertEqual(products, [self.bakery])
+            product = products[0]
+            self.assertEqual(product.category, self.bakery_category)
+            self.assertEqual(list(product.tags.all()), [self.birthday_tag])
+            self.assertIn("category", product._state.fields_cache)
+            self.assertIn("tags", product._prefetched_objects_cache)
 
     def test_general_catalog_surfaces_preserve_exact_membership_and_order(self):
         featured = self.bakery

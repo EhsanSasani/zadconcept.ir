@@ -19,6 +19,10 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from .catalog_selectors import (
+    _published_products,
+    _published_products_for_section,
+)
 from .forms import LeadRequestForm
 from .telegram_notifications import send_lead_request_notification
 from .models import (
@@ -705,21 +709,6 @@ def _default_context(
 # =========================
 # Product / category helpers
 # =========================
-
-def _published_products():
-    """Return only products that belong to the public general catalog."""
-
-    return Product.objects.for_general_catalog().published()
-
-
-def _published_products_for_section(section):
-    return (
-        _published_products()
-        .filter(category__section=section)
-        .select_related("category")
-        .prefetch_related("tags")
-    )
-
 
 def _active_categories_for_section(section):
     queryset = Category.objects.for_general_catalog().filter(
