@@ -155,6 +155,35 @@ class MainViewsTests(TestCase):
 
 
 
+
+
+    def test_occasions_view_preserves_routing_and_context_contract(self):
+        from django.urls import resolve
+
+        url = reverse("occasions")
+        expected_tags = views._active_occasion_tags(limit=12)
+        expected_cards = [
+            views._occasion_card(tag)
+            for tag in expected_tags
+        ]
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "occasions.html")
+        self.assertIs(resolve(url).func, views.occasions)
+        self.assertEqual(
+            list(response.context["occasion_tags"]),
+            expected_tags,
+        )
+        self.assertEqual(
+            response.context["occasion_cards"],
+            expected_cards,
+        )
+
+        expected_hero = views._hero_from_key("occasions")
+        for key, value in expected_hero.items():
+            self.assertEqual(response.context[key], value)
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
