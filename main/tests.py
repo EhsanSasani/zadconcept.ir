@@ -130,6 +130,36 @@ class MainViewsTests(TestCase):
             self.assertIn("category", product._state.fields_cache)
             self.assertIn("tags", product._prefetched_objects_cache)
 
+    def test_active_occasion_selector_preserves_membership_order_limit_and_list_contract(self):
+        self.birthday_tag.name = "Beta Occasion"
+        self.birthday_tag.sort_order = 10
+        self.birthday_tag.save(update_fields=["name", "sort_order", "updated_at"])
+        self.condolence_tag.name = "Alpha Occasion"
+        self.condolence_tag.sort_order = 10
+        self.condolence_tag.save(update_fields=["name", "sort_order", "updated_at"])
+        later_occasion = Tag.objects.create(
+            name="Later Occasion",
+            slug="later-occasion",
+            is_occasion=True,
+            sort_order=20,
+        )
+        inactive_occasion = Tag.objects.create(
+            name="Inactive Occasion",
+            slug="inactive-occasion",
+            is_occasion=True,
+            is_active=False,
+            sort_order=0,
+        )
+        expected = [self.condolence_tag, self.birthday_tag, later_occasion]
+
+        occasions = views._active_occasion_tags()
+
+        self.assertIsInstance(occasions, list)
+        self.assertNotIn(inactive_occasion, occasions)
+        self.assertEqual(occasions, expected)
+        self.assertEqual(views._active_occasion_tags(limit=2), expected[:2])
+        self.assertEqual(views._active_occasion_tags(limit=0), expected)
+
     def test_general_catalog_surfaces_preserve_exact_membership_and_order(self):
         featured = self.bakery
         featured.featured = True

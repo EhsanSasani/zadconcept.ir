@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .catalog_selectors import (
+    _active_occasion_tags,
     _published_products,
     _published_products_for_section,
 )
@@ -958,18 +959,6 @@ def _occasion_card(tag, *, for_flowers=False):
             "Curated ideas for this occasion.",
         ),
     }
-
-
-def _active_occasion_tags(limit=None):
-    queryset = Tag.objects.for_general_catalog().filter(
-        is_occasion=True,
-        is_active=True,
-    ).order_by("sort_order", "name")
-
-    if limit:
-        queryset = queryset[:limit]
-
-    return list(queryset)
 
 
 def _occasion_links(limit=4):
