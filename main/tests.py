@@ -1227,6 +1227,99 @@ class MainViewsTests(TestCase):
                     fetch_redirect_response=False,
                 )
 
+    def test_static_content_views_preserve_routing_templates_and_context(self):
+        cases = (
+            (
+                "contact",
+                "contact.html",
+                "contact",
+                "",
+                "Contact",
+                "main/img/hero-contact.webp",
+            ),
+            (
+                "faq",
+                "faq.html",
+                "category",
+                "",
+                "FAQ",
+                "main/img/hero-faq.webp",
+            ),
+            (
+                "about",
+                "about.html",
+                "about",
+                "about",
+                "About",
+                "main/img/hero-about.webp",
+            ),
+        )
+
+        responses = {}
+
+        for (
+            route_name,
+            template_name,
+            page_type,
+            active_nav,
+            breadcrumb_name,
+            hero_image,
+        ) in cases:
+            with self.subTest(route_name=route_name):
+                url = reverse(route_name)
+                response = self.client.get(url)
+                responses[route_name] = response
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIs(
+                    response.resolver_match.func,
+                    getattr(views, route_name),
+                )
+                self.assertTemplateUsed(response, template_name)
+                self.assertEqual(response.context["page_type"], page_type)
+                self.assertEqual(response.context["active_nav"], active_nav)
+                self.assertEqual(
+                    response.context["breadcrumbs"],
+                    [
+                        {"name": "Home", "url": reverse("index")},
+                        {"name": breadcrumb_name, "url": None},
+                    ],
+                )
+                self.assertEqual(
+                    response.context["page_hero_image"],
+                    hero_image,
+                )
+
+        contact_response = responses["contact"]
+        self.assertEqual(
+            contact_response.context["lead_default_type"],
+            "flower",
+        )
+        self.assertEqual(
+            contact_response.context["lead_form"].fields["lead_type"].initial,
+            "flower",
+        )
+
+        faq_response = responses["faq"]
+        self.assertTrue(faq_response.context["faq_items"])
+        self.assertTrue(faq_response.context["faq_page_groups"])
+        faq_nodes = [
+            node
+            for node in faq_response.context["structured_data_graph"]
+            if node.get("@type") == "FAQPage"
+        ]
+        self.assertEqual(len(faq_nodes), 1)
+
+        about_response = responses["about"]
+        self.assertEqual(
+            about_response.context["about_hero_image"],
+            "main/img/about/zad-floral-wall-v1.webp",
+        )
+        self.assertEqual(
+            about_response.context["about_hero_mobile_image"],
+            "",
+        )
+
     def test_contact_and_faq_pages_load(self):
         self.assertEqual(self.client.get(reverse("contact")).status_code, 200)
         self.assertEqual(self.client.get(reverse("faq")).status_code, 200)
