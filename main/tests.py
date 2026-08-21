@@ -457,6 +457,96 @@ class MainViewsTests(TestCase):
                 self.assertEqual(response.context["robots_content"], "index,follow")
                 self.assertEqual(len(page_graph_nodes), 1)
 
+    def test_international_order_views_preserve_routing_templates_and_context(self):
+        managed_content = PageContentBlock.objects.create(
+            page="international-orders",
+            section_key="international-contract",
+            title="Managed international content",
+        )
+        expected_page_content = {
+            managed_content.section_key: {
+                "kicker": managed_content.kicker,
+                "title": managed_content.title,
+                "body": managed_content.body,
+                "cta_text": managed_content.cta_text,
+                "cta_url": managed_content.cta_url,
+            }
+        }
+        fa_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders')}"
+        en_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders_en')}"
+        alternate_links = [
+            {"language": "fa", "url": fa_url},
+            {"language": "en", "url": en_url},
+            {"language": "x-default", "url": fa_url},
+        ]
+        pages = (
+            {
+                "language": "Persian",
+                "route": "international_orders",
+                "view": views.international_orders,
+                "template": "international_orders.html",
+                "meta_title": "سفارش گل از خارج ایران برای مشهد | زاد",
+                "meta_description": "ثبت سفارش گل و هدیه از خارج ایران با پرداخت ارزی و تحویل محلی برای گیرنده در مشهد.",
+                "canonical_url": fa_url,
+                "html_lang": "fa",
+                "html_dir": "rtl",
+                "og_locale": "fa_IR",
+                "hide_global_chrome": False,
+                "faq_items": views.INTERNATIONAL_FAQ_FA,
+            },
+            {
+                "language": "English",
+                "route": "international_orders_en",
+                "view": views.international_orders_en,
+                "template": "international_orders_en.html",
+                "meta_title": "Send Flowers to Mashhad, Iran | ZAD",
+                "meta_description": "Order flowers, gifts, and bakery items from abroad for local delivery to your recipient in Mashhad, Iran.",
+                "canonical_url": en_url,
+                "html_lang": "en",
+                "html_dir": "ltr",
+                "og_locale": "en_US",
+                "hide_global_chrome": True,
+                "faq_items": views.INTERNATIONAL_FAQ_EN,
+            },
+        )
+
+        for page in pages:
+            with self.subTest(language=page["language"]):
+                response = self.client.get(reverse(page["route"]))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIs(response.resolver_match.func, page["view"])
+                self.assertEqual(response.templates[0].name, page["template"])
+                self.assertEqual(response.context["page_type"], "policy")
+                self.assertEqual(response.context["active_nav"], "")
+                self.assertEqual(response.context["meta_title"], page["meta_title"])
+                self.assertEqual(
+                    response.context["meta_description"],
+                    page["meta_description"],
+                )
+                self.assertEqual(
+                    response.context["canonical_url"],
+                    page["canonical_url"],
+                )
+                self.assertEqual(response.context["html_lang"], page["html_lang"])
+                self.assertEqual(response.context["html_dir"], page["html_dir"])
+                self.assertEqual(response.context["og_locale"], page["og_locale"])
+                self.assertEqual(
+                    response.context["hide_global_chrome"],
+                    page["hide_global_chrome"],
+                )
+                self.assertIs(response.context["suppress_default_hero"], True)
+                self.assertIs(response.context["has_managed_site_hero"], False)
+                self.assertEqual(response.context["faq_items"], page["faq_items"])
+                self.assertEqual(
+                    response.context["alternate_links"],
+                    alternate_links,
+                )
+                self.assertEqual(
+                    response.context["page_content"],
+                    expected_page_content,
+                )
+
     def test_default_page_presentation_fallbacks_remain_exact(self):
         bakery_response = self.client.get(reverse("bakery"))
         self.assertEqual(

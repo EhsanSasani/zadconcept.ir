@@ -26,6 +26,10 @@ from .catalog_selectors import (
     _published_products_for_section,
 )
 from .forms import LeadRequestForm
+from .international_order_views import (
+    international_orders,
+    international_orders_en,
+)
 from .telegram_notifications import send_lead_request_notification
 from .models import (
     BAKERY_WEDDING_CATEGORY_SLUGS,
@@ -2570,55 +2574,6 @@ def policy_page(request, policy_slug):
     )
     context["policy"] = _normalized_policy(policy)
     return render(request, "policy_page.html", context)
-
-
-def international_orders(request):
-    fa_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders')}"
-    en_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders_en')}"
-    context = _default_context(
-        request,
-        page_type="policy",
-        active_nav="",
-        meta_title="سفارش گل از خارج ایران برای مشهد | زاد",
-        meta_description="ثبت سفارش گل و هدیه از خارج ایران با پرداخت ارزی و تحویل محلی برای گیرنده در مشهد.",
-        faq_items=INTERNATIONAL_FAQ_FA,
-        include_faq_schema=True,
-        alternate_links=[
-            {"language": "fa", "url": fa_url},
-            {"language": "en", "url": en_url},
-            {"language": "x-default", "url": fa_url},
-        ],
-        content_page="international-orders",
-        suppress_default_hero=True,
-    )
-    return render(request, "international_orders.html", context)
-
-
-def international_orders_en(request):
-    fa_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders')}"
-    en_url = f"{settings.ZAD_SITE_URL}{reverse('international_orders_en')}"
-    context = _default_context(
-        request,
-        page_type="policy",
-        active_nav="",
-        meta_title="Send Flowers to Mashhad, Iran | ZAD",
-        meta_description="Order flowers, gifts, and bakery items from abroad for local delivery to your recipient in Mashhad, Iran.",
-        faq_items=INTERNATIONAL_FAQ_EN,
-        include_faq_schema=True,
-        language="en",
-        html_lang="en",
-        html_dir="ltr",
-        og_locale="en_US",
-        alternate_links=[
-            {"language": "fa", "url": fa_url},
-            {"language": "en", "url": en_url},
-            {"language": "x-default", "url": fa_url},
-        ],
-        hide_global_chrome=True,
-        suppress_default_hero=True,
-        content_page="international-orders",
-    )
-    return render(request, "international_orders_en.html", context)
 
 
 # =========================
