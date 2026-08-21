@@ -1,10 +1,10 @@
 from django.shortcuts import render
 
-from .forms import LeadRequestForm
-from .managed_heroes import _get_site_hero
-from .page_context import _default_context, _with_home
-from .page_presentation import _hero_from_key
-from .site_content import FAQ_PAGE_GROUPS, FAQ_PAGE_ITEMS
+from ..forms import LeadRequestForm
+from ..managed_heroes import _get_site_hero
+from ..page_context import _default_context, _with_home
+from ..page_presentation import _hero_from_key
+from ..site_content import FAQ_PAGE_GROUPS, FAQ_PAGE_ITEMS
 
 
 def contact(request):

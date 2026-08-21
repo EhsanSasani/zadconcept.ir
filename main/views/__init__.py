@@ -19,7 +19,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from .catalog_selectors import (
+from ..catalog_selectors import (
     _active_categories_for_section,
     _active_occasion_tags,
     _published_products,
@@ -34,7 +34,7 @@ from .static_page_views import (
     contact,
     faq,
 )
-from .forms import LeadRequestForm
+from ..forms import LeadRequestForm
 from .international_order_views import (
     international_orders,
     international_orders_en,
@@ -55,8 +55,8 @@ from .hero_style_views import (
     _safe_hero_size,
     hero_styles_css,
 )
-from .telegram_notifications import send_lead_request_notification
-from .models import (
+from ..telegram_notifications import send_lead_request_notification
+from ..models import (
     BAKERY_WEDDING_CATEGORY_SLUGS,
     Category,
     Event,
@@ -77,7 +77,7 @@ from .models import (
     WeddingPageContent,
     WorkshopPageContent,
 )
-from .managed_heroes import (
+from ..managed_heroes import (
     HERO_POSITION_VALUES,
     _get_active_home_hero_slides,
     _get_site_hero,
@@ -85,8 +85,8 @@ from .managed_heroes import (
     _hero_style_payload,
     _site_hero_payload,
 )
-from .page_context import _default_context, _with_home
-from .page_presentation import (
+from ..page_context import _default_context, _with_home
+from ..page_presentation import (
     CATEGORY_CONTENT_OVERRIDES,
     FLOWER_STUDIO_NAME,
     LEGACY_FLOWER_BRAND_PHRASES,
@@ -102,7 +102,7 @@ from .page_presentation import (
     _occasion_detail_hero,
     _public_brand_copy,
 )
-from .seo import (
+from ..seo import (
     article_node,
     base_graph,
     canonical_url,
@@ -114,7 +114,7 @@ from .seo import (
     social_image_dimensions,
     social_image_url,
 )
-from .site_content import (
+from ..site_content import (
     FAQ_PAGE_GROUPS,
     FAQ_PAGE_ITEMS,
     INTERNATIONAL_FAQ_EN,

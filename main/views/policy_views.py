@@ -1,8 +1,8 @@
 from django.http import Http404
 from django.shortcuts import render
 
-from .page_context import _default_context, _with_home
-from .site_content import POLICY_PAGES
+from ..page_context import _default_context, _with_home
+from ..site_content import POLICY_PAGES
 
 
 def _normalized_policy(policy):

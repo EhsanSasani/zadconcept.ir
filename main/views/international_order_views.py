@@ -2,8 +2,8 @@ from django.conf import settings
 from django.shortcuts import render
 from django.urls import reverse
 
-from .page_context import _default_context
-from .site_content import INTERNATIONAL_FAQ_EN, INTERNATIONAL_FAQ_FA
+from ..page_context import _default_context
+from ..site_content import INTERNATIONAL_FAQ_EN, INTERNATIONAL_FAQ_FA
 
 
 def international_orders(request):

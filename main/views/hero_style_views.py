@@ -5,7 +5,7 @@ import re
 from django.db import DatabaseError
 from django.http import HttpResponse
 
-from .models import HeroFont, HomeHeroSlide, SiteHero
+from ..models import HeroFont, HomeHeroSlide, SiteHero
 
 
 HERO_FONT_CSS_STACKS = {

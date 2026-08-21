@@ -2,12 +2,12 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
 
-from .forms import LeadRequestForm
-from .managed_heroes import _get_site_hero
-from .models import Event, PublishStatus, WorkshopPageContent
-from .page_context import _default_context, _with_home
-from .page_presentation import _hero_from_key
-from .seo import event_node
+from ..forms import LeadRequestForm
+from ..managed_heroes import _get_site_hero
+from ..models import Event, PublishStatus, WorkshopPageContent
+from ..page_context import _default_context, _with_home
+from ..page_presentation import _hero_from_key
+from ..seo import event_node
 
 
 def events(request):
