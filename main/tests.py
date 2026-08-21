@@ -508,6 +508,58 @@ class MainViewsTests(TestCase):
             "bottom-center",
         )
 
+    def test_managed_site_hero_preserves_active_scoped_and_fallback_selection(self):
+        target_page = SiteHero.TargetPage.SUBCATEGORY
+        generic_hero = SiteHero.objects.create(
+            title="Generic managed Hero",
+            image="heroes/pages/generic.jpg",
+            target_page=target_page,
+            target_slug="",
+        )
+        scoped_hero = SiteHero.objects.create(
+            title="Scoped managed Hero",
+            image="heroes/pages/scoped.jpg",
+            target_page=target_page,
+            target_slug="managed-scope",
+        )
+        inactive_scoped_hero = SiteHero.objects.create(
+            title="Inactive scoped Hero",
+            image="heroes/pages/inactive.jpg",
+            target_page=target_page,
+            target_slug="inactive-scope",
+            is_active=False,
+        )
+
+        with self.assertNumQueries(1):
+            scoped_result = views._get_site_hero(
+                target_page,
+                scoped_hero.target_slug,
+            )
+        with self.assertNumQueries(1):
+            generic_result = views._get_site_hero(target_page)
+        with self.assertNumQueries(2):
+            inactive_result = views._get_site_hero(
+                target_page,
+                inactive_scoped_hero.target_slug,
+            )
+        with self.assertNumQueries(2):
+            fallback_result = views._get_site_hero(target_page, "missing-scope")
+        with self.assertNumQueries(1):
+            no_fallback_result = views._get_site_hero(
+                target_page,
+                "missing-scope",
+                allow_fallback=False,
+            )
+
+        self.assertEqual(
+            [slide["title"] for slide in scoped_result["page_hero_slides"]],
+            [scoped_hero.title],
+        )
+        self.assertEqual(generic_result["page_hero_title"], generic_hero.title)
+        self.assertEqual(inactive_result["page_hero_title"], generic_hero.title)
+        self.assertEqual(fallback_result["page_hero_title"], generic_hero.title)
+        self.assertIsNone(no_fallback_result)
+
     def test_home_hero_uses_all_admin_managed_fields(self):
         HomeHeroSlide.objects.create(
             title="Admin Home Hero",
