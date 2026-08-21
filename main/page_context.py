@@ -15,6 +15,10 @@ from .seo import (
 )
 
 
+def _with_home(items):
+    return [{"name": "Home", "url": reverse("index")}, *items]
+
+
 def _default_context(
     request,
     *,

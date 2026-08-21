@@ -988,6 +988,100 @@ class MainViewsTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_event_views_preserve_routing_templates_context_and_errors(self):
+        list_response = self.client.get(reverse("events"))
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertIs(list_response.resolver_match.func, views.events)
+        self.assertTemplateUsed(list_response, "events.html")
+        self.assertEqual(list_response.context["page_type"], "workshops")
+        self.assertEqual(list_response.context["active_nav"], "events")
+        self.assertEqual(
+            list_response.context["breadcrumbs"],
+            [
+                {"name": "Home", "url": reverse("index")},
+                {"name": "ورکشاپ‌ها", "url": None},
+            ],
+        )
+        self.assertEqual(list_response.context["lead_default_type"], "event")
+        self.assertTrue(list_response.context["lead_form"].include_event_fields)
+        self.assertEqual(
+            list_response.context["lead_form"].fields["lead_type"].initial,
+            "event",
+        )
+        self.assertIn(self.published_event, list(list_response.context["events"]))
+        self.assertNotIn(self.draft_event, list(list_response.context["events"]))
+        self.assertIsInstance(
+            list_response.context["workshop_copy"],
+            WorkshopPageContent,
+        )
+        self.assertEqual(
+            list_response.context["workshops_hero_kicker"],
+            "ZAD WORKSHOPS",
+        )
+        self.assertEqual(
+            list_response.context["workshops_hero_title"],
+            "ورکشاپ‌های زاد",
+        )
+        self.assertEqual(
+            list_response.context["workshops_hero_image"],
+            "main/img/workshops-hero.webp",
+        )
+        self.assertEqual(
+            list_response.context["workshops_hero_mobile_image"],
+            "",
+        )
+
+        detail_url = reverse(
+            "event_detail",
+            args=[self.published_event.slug],
+        )
+        detail_response = self.client.get(detail_url)
+
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIs(detail_response.resolver_match.func, views.event_detail)
+        self.assertTemplateUsed(detail_response, "event_detail.html")
+        self.assertEqual(detail_response.context["event"], self.published_event)
+        self.assertEqual(detail_response.context["page_type"], "category")
+        self.assertEqual(detail_response.context["active_nav"], "events")
+        self.assertEqual(detail_response.context["og_type"], "article")
+        self.assertEqual(
+            detail_response.context["breadcrumbs"],
+            [
+                {"name": "Home", "url": reverse("index")},
+                {"name": "Events", "url": reverse("events")},
+                {"name": self.published_event.title, "url": None},
+            ],
+        )
+        self.assertEqual(detail_response.context["lead_default_type"], "event")
+        self.assertTrue(detail_response.context["lead_form"].include_event_fields)
+        self.assertEqual(
+            detail_response.context["lead_form"].fields["lead_type"].initial,
+            "event",
+        )
+
+        event_nodes = [
+            node
+            for node in detail_response.context["structured_data_graph"]
+            if node.get("@type") == "Event"
+        ]
+        self.assertEqual(len(event_nodes), 1)
+        self.assertEqual(event_nodes[0]["name"], self.published_event.title)
+        self.assertEqual(
+            event_nodes[0]["@id"],
+            f"{settings.ZAD_SITE_URL.rstrip('/')}{detail_url}#event",
+        )
+
+        draft_response = self.client.get(
+            reverse("event_detail", args=[self.draft_event.slug])
+        )
+        missing_response = self.client.get(
+            reverse("event_detail", args=["missing-event"])
+        )
+
+        self.assertEqual(draft_response.status_code, 404)
+        self.assertEqual(missing_response.status_code, 404)
+
     def test_events_page_shows_only_published(self):
         response = self.client.get(reverse("events"))
         self.assertEqual(response.status_code, 200)
