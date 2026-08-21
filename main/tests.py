@@ -1633,6 +1633,30 @@ class MainViewsTests(TestCase):
             post_response = self.client.post(url)
             self.assertEqual(post_response.status_code, 404)
 
+    def test_hero_style_view_preserves_http_and_sanitizer_contract(self):
+        response = self.client.get(reverse("hero_styles_css"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(response.resolver_match.func, views.hero_styles_css)
+        self.assertEqual(response["Content-Type"], "text/css; charset=utf-8")
+        self.assertEqual(response["Cache-Control"], "no-cache")
+        self.assertEqual(response["X-Content-Type-Options"], "nosniff")
+        self.assertIn("/* ZAD dynamic Hero styles */", response.content.decode())
+
+        etag = response["ETag"]
+        cached = self.client.get(
+            reverse("hero_styles_css"),
+            HTTP_IF_NONE_MATCH=etag,
+        )
+        self.assertEqual(cached.status_code, 304)
+        self.assertEqual(cached["ETag"], etag)
+
+        self.assertEqual(views._safe_hero_font_url(None), "")
+        self.assertEqual(views._safe_hero_size("120", 28, 120, 64), 120)
+        self.assertEqual(views._safe_hero_size("bad", 28, 120, 64), 64)
+        self.assertEqual(views._safe_hero_color("#abcdef"), "#ABCDEF")
+        self.assertEqual(views._safe_hero_color("red"), "#FFFFFF")
+
     def test_robots_and_sitemap_routes(self):
         self.assertEqual(self.client.get(reverse("robots_txt")).status_code, 200)
         self.assertEqual(self.client.get(reverse("sitemap")).status_code, 200)
