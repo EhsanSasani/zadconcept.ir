@@ -188,3 +188,108 @@ def _hero_from_key(key, *, title=None, text=None, image=None):
         ),
         "page_hero_image": image or hero.get("image", "main/img/hero-2.webp"),
     }
+
+
+OCCASION_CARD_CONTENT = {
+    "birthday": {
+        "title": "تولد",
+        "hero_title": "گل تولد",
+        "intro": "برای شادی‌های روشن.",
+        "hero_text": "برای لحظه‌ای که باید با گل، رنگ و یک یاد شیرین ماندگار شود.",
+        "image": "main/img/occasions/birthday.webp",
+    },
+    "romantic": {
+        "title": "عاشقانه",
+        "hero_title": "گل عاشقانه",
+        "intro": "برای لحظه‌های نزدیک.",
+        "hero_text": "برای گفتن دوستت دارم؛ آرام‌تر و زیباتر از هر کلمه.",
+        "image": "main/img/occasions/romantic.webp",
+    },
+    "congratulation": {
+        "title": "تبریک",
+        "hero_title": "گل تبریک",
+        "intro": "برای خبرهای خوب.",
+        "hero_text": "برای جشن گرفتن خبرهای خوب و شروع‌های روشن.",
+        "image": "main/img/occasions/special.webp",
+    },
+    "apology": {
+        "title": "معذرت‌خواهی",
+        "hero_title": "گل معذرت‌خواهی",
+        "intro": "برای دلجویی آرام.",
+        "hero_text": "برای وقتی که یک انتخاب صمیمی، آغاز دوباره‌ی گفت‌وگوست.",
+        "image": "main/img/occasions/special.webp",
+    },
+    "condolence": {
+        "title": "ترحیم",
+        "hero_title": "گل ترحیم",
+        "intro": "برای همراهی محترمانه.",
+        "hero_text": "برای ابراز همدلی؛ باوقار، آرام و محترمانه.",
+        "image": "main/img/occasions/condolence.webp",
+    },
+    "proposal": {
+        "title": "خواستگاری",
+        "hero_title": "گل خواستگاری",
+        "intro": "برای شروعی رسمی.",
+        "hero_text": "برای شروعی به‌یادماندنی، با جزئیاتی ظریف و باشکوه.",
+        "image": "main/img/occasions/special.webp",
+    },
+    "engagement": {
+        "title": "بله‌برون",
+        "hero_title": "گل بله‌برون",
+        "intro": "برای پیمان‌های شیرین.",
+        "hero_text": "برای جشنی صمیمی و شیرین در آغاز یک همراهی.",
+        "image": "main/img/occasions/special.webp",
+    },
+    "formal-visit": {
+        "title": "دیدار رسمی",
+        "hero_title": "گل برای دیدار رسمی",
+        "intro": "برای دیدارهایی محترمانه و سنجیده.",
+        "hero_text": "انتخاب‌هایی آراسته و متعادل برای دیدارهای رسمی و حرفه‌ای.",
+        "image": "main/img/occasions/special.webp",
+    },
+    "no-occasion": {
+        "title": "بی‌بهانه",
+        "hero_title": "گل بی‌بهانه",
+        "intro": "برای بی‌دلیل دوست داشتن.",
+        "hero_text": "برای همان روزهای معمولی که با یک یاد کوچک، خاص می‌شوند.",
+        "image": "main/img/occasions/special.webp",
+    },
+}
+OCCASION_EN_LABELS = {
+    "birthday": "Birthday",
+    "romantic": "Romantic",
+    "congratulation": "Congratulations",
+    "apology": "Apology",
+    "condolence": "Sympathy",
+    "proposal": "Proposal",
+    "engagement": "Engagement",
+    "formal-visit": "Formal Visit",
+    "no-occasion": "Just Because",
+}
+
+OCCASION_DETAIL_HERO_IMAGE = "main/img/occasion-detail-hero-v1.webp"
+OCCASION_DETAIL_HERO_MOBILE_IMAGE = "main/img/occasion-detail-hero-mobile-v1.webp"
+
+
+def _occasion_detail_hero(occasion, *, title=None):
+    content = OCCASION_CARD_CONTENT.get(occasion.slug, {})
+    english_label = OCCASION_EN_LABELS.get(
+        occasion.slug,
+        occasion.slug.replace("-", " ").title(),
+    )
+
+    return {
+        "page_hero_kicker": f"ZAD OCCASIONS · {english_label}",
+        "page_hero_title": title or content.get("title") or occasion.name,
+        "page_hero_text": (
+            occasion.description
+            or content.get("hero_text")
+            or content.get("intro")
+            or "انتخاب‌هایی هماهنگ برای این لحظه."
+        ),
+        "page_hero_image": OCCASION_DETAIL_HERO_IMAGE,
+        "page_hero_mobile_image": OCCASION_DETAIL_HERO_MOBILE_IMAGE,
+        "page_hero_style_class": "hero-style--occasion-detail",
+        "page_hero_content_position": "center-right",
+        "page_hero_mobile_content_position": "bottom-right",
+    }

@@ -162,6 +162,53 @@ class MainViewsTests(TestCase):
         self.assertEqual(views._active_occasion_tags(limit=2), expected[:2])
         self.assertEqual(views._active_occasion_tags(limit=0), expected)
 
+    def test_occasion_detail_hero_preserves_configured_and_unknown_fallbacks(self):
+        expected_birthday = {
+            "page_hero_kicker": "ZAD OCCASIONS · Birthday",
+            "page_hero_title": "تولد",
+            "page_hero_text": "برای لحظه‌ای که باید با گل، رنگ و یک یاد شیرین ماندگار شود.",
+            "page_hero_image": "main/img/occasion-detail-hero-v1.webp",
+            "page_hero_mobile_image": "main/img/occasion-detail-hero-mobile-v1.webp",
+            "page_hero_style_class": "hero-style--occasion-detail",
+            "page_hero_content_position": "center-right",
+            "page_hero_mobile_content_position": "bottom-right",
+        }
+        unknown_tag = Tag(
+            slug="team-thanks",
+            name="Team Thanks",
+            description="",
+        )
+
+        with self.assertNumQueries(0):
+            birthday_hero = views._occasion_detail_hero(self.birthday_tag)
+            explicit_title_hero = views._occasion_detail_hero(
+                self.birthday_tag,
+                title="Birthday Celebration",
+            )
+            unknown_hero = views._occasion_detail_hero(unknown_tag)
+
+        self.assertEqual(birthday_hero, expected_birthday)
+        self.assertEqual(
+            explicit_title_hero,
+            {
+                **expected_birthday,
+                "page_hero_title": "Birthday Celebration",
+            },
+        )
+        self.assertEqual(
+            unknown_hero,
+            {
+                "page_hero_kicker": "ZAD OCCASIONS · Team Thanks",
+                "page_hero_title": "Team Thanks",
+                "page_hero_text": "انتخاب‌هایی هماهنگ برای این لحظه.",
+                "page_hero_image": "main/img/occasion-detail-hero-v1.webp",
+                "page_hero_mobile_image": "main/img/occasion-detail-hero-mobile-v1.webp",
+                "page_hero_style_class": "hero-style--occasion-detail",
+                "page_hero_content_position": "center-right",
+                "page_hero_mobile_content_position": "bottom-right",
+            },
+        )
+
     def test_active_category_selector_preserves_membership_order_and_lazy_queryset_contract(self):
         self.flowers_category.name = "Beta Category"
         self.flowers_category.sort_order = 10
