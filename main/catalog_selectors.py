@@ -1,4 +1,4 @@
-from .models import Product, Tag
+from .models import Category, Product, Tag
 
 
 def _published_products():
@@ -26,3 +26,13 @@ def _active_occasion_tags(limit=None):
         queryset = queryset[:limit]
 
     return list(queryset)
+
+
+def _active_categories_for_section(section):
+    queryset = Category.objects.for_general_catalog().filter(
+        section=section,
+        is_active=True,
+        parent__isnull=True,
+    )
+
+    return queryset.order_by("sort_order", "name")

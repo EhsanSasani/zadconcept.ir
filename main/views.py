@@ -20,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .catalog_selectors import (
+    _active_categories_for_section,
     _active_occasion_tags,
     _published_products,
     _published_products_for_section,
@@ -710,16 +711,6 @@ def _default_context(
 # =========================
 # Product / category helpers
 # =========================
-
-def _active_categories_for_section(section):
-    queryset = Category.objects.for_general_catalog().filter(
-        section=section,
-        is_active=True,
-        parent__isnull=True,
-    )
-
-    return queryset.order_by("sort_order", "name")
-
 
 CATALOG_PAGE_SIZE = 12
 

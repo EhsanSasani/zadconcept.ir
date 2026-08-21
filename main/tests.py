@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import QuerySet
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -24,6 +25,7 @@ from .models import (
     PublishStatus,
     SiteHero,
     Tag,
+    WEDDING_ROOT_CATEGORY_SLUG,
     WorkshopPageContent,
 )
 from .admin import CategoryAdminForm, EventAdminForm, HeroAdminForm
@@ -159,6 +161,65 @@ class MainViewsTests(TestCase):
         self.assertEqual(occasions, expected)
         self.assertEqual(views._active_occasion_tags(limit=2), expected[:2])
         self.assertEqual(views._active_occasion_tags(limit=0), expected)
+
+    def test_active_category_selector_preserves_membership_order_and_lazy_queryset_contract(self):
+        self.flowers_category.name = "Beta Category"
+        self.flowers_category.sort_order = 10
+        self.flowers_category.save(
+            update_fields=["name", "sort_order", "updated_at"]
+        )
+        alpha_category = Category.objects.create(
+            name="Alpha Category",
+            slug="alpha-category",
+            section=Category.Section.FLOWERS,
+            sort_order=10,
+        )
+        later_category = Category.objects.create(
+            name="Later Category",
+            slug="later-category",
+            section=Category.Section.FLOWERS,
+            sort_order=20,
+        )
+        inactive_category = Category.objects.create(
+            name="Inactive Category",
+            slug="inactive-category",
+            section=Category.Section.FLOWERS,
+            is_active=False,
+            sort_order=0,
+        )
+        child_category = Category.objects.create(
+            name="Child Category",
+            slug="child-category",
+            section=Category.Section.FLOWERS,
+            parent=self.flowers_category,
+            sort_order=0,
+        )
+        protected_wedding_category, _ = Category.objects.update_or_create(
+            slug=WEDDING_ROOT_CATEGORY_SLUG,
+            section=Category.Section.FLOWERS,
+            defaults={
+                "name": "Protected Wedding Category",
+                "parent": None,
+                "is_active": True,
+                "sort_order": 0,
+            },
+        )
+
+        with self.assertNumQueries(0):
+            queryset = views._active_categories_for_section(
+                Category.Section.FLOWERS
+            )
+
+        self.assertIsInstance(queryset, QuerySet)
+        self.assertEqual(queryset.query.order_by, ("sort_order", "name"))
+
+        with self.assertNumQueries(1):
+            results = list(queryset)
+
+        self.assertEqual(
+            results,
+            [alpha_category, self.flowers_category, later_category],
+        )
 
     def test_general_catalog_surfaces_preserve_exact_membership_and_order(self):
         featured = self.bakery
