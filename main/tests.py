@@ -1536,6 +1536,103 @@ class MainViewsTests(TestCase):
         self.assertRedirects(response, reverse("contact"), fetch_redirect_response=False)
         self.assertEqual(LeadRequest.objects.count(), 1)
 
+    def test_seo_utility_views_preserve_routing_content_and_indexnow_contract(self):
+        robots_response = self.client.get(reverse("robots_txt"))
+
+        self.assertEqual(robots_response.status_code, 200)
+        self.assertIs(robots_response.resolver_match.func, views.robots_txt)
+        self.assertEqual(
+            robots_response["Content-Type"],
+            "text/plain; charset=utf-8",
+        )
+        self.assertEqual(
+            robots_response["Cache-Control"],
+            "public, max-age=3600",
+        )
+
+        expected_robots = [
+            "# Search and answer-engine crawlers",
+            "User-agent: Googlebot",
+            "User-agent: Bingbot",
+            "User-agent: OAI-SearchBot",
+            "User-agent: ChatGPT-User",
+            "User-agent: PerplexityBot",
+            "User-agent: Claude-SearchBot",
+            "Allow: /",
+            "Disallow: /admin/",
+            "Disallow: /accounts/",
+            "Disallow: /auth/",
+            "Disallow: /search/",
+            "Disallow: /lead-request/",
+            "Disallow: /csp-report/",
+            "",
+            "# Model-training crawlers are handled separately from search crawlers",
+            "User-agent: GPTBot",
+            "User-agent: ClaudeBot",
+            "User-agent: Google-Extended",
+            "User-agent: CCBot",
+            "Disallow: /",
+            "",
+            "User-agent: *",
+            "Allow: /",
+            "Disallow: /admin/",
+            "Disallow: /accounts/",
+            "Disallow: /auth/",
+            "Disallow: /search/",
+            "Disallow: /lead-request/",
+            "Disallow: /csp-report/",
+            f"Sitemap: {settings.ZAD_SITE_URL}{reverse('sitemap')}",
+        ]
+        self.assertEqual(
+            robots_response.content.decode("utf-8").splitlines(),
+            expected_robots,
+        )
+
+        self.assertEqual(
+            views.INDEXNOW_KEY_PATTERN.pattern,
+            r"^[A-Za-z0-9-]{8,128}$",
+        )
+
+        key = "zad-indexnow-12345678"
+
+        with self.settings(INDEXNOW_KEY=key):
+            url = reverse("indexnow_key", args=[key])
+            valid_response = self.client.get(url)
+
+            self.assertEqual(valid_response.status_code, 200)
+            self.assertIs(
+                valid_response.resolver_match.func,
+                views.indexnow_key,
+            )
+            self.assertEqual(
+                valid_response["Content-Type"],
+                "text/plain; charset=utf-8",
+            )
+            self.assertEqual(
+                valid_response["Cache-Control"],
+                "public, max-age=86400",
+            )
+            self.assertEqual(
+                valid_response["X-Robots-Tag"],
+                "noindex, nofollow",
+            )
+            self.assertEqual(valid_response.content.decode("utf-8"), key)
+
+            head_response = self.client.head(url)
+            self.assertEqual(head_response.status_code, 200)
+            self.assertEqual(
+                head_response["X-Robots-Tag"],
+                "noindex, nofollow",
+            )
+
+            wrong_response = self.client.get(
+                reverse("indexnow_key", args=["wrong-key-12345678"])
+            )
+            self.assertEqual(wrong_response.status_code, 404)
+
+            post_response = self.client.post(url)
+            self.assertEqual(post_response.status_code, 404)
+
     def test_robots_and_sitemap_routes(self):
         self.assertEqual(self.client.get(reverse("robots_txt")).status_code, 200)
         self.assertEqual(self.client.get(reverse("sitemap")).status_code, 200)
