@@ -24,7 +24,7 @@ main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
 Refactor code checkpoint described by this document:
-refactor/zad-v2 @ 015077b
+refactor/zad-v2 @ d4682f7
 
 Always confirm the live branch HEAD with:
 git rev-parse --short HEAD
@@ -40,12 +40,13 @@ main/catalog_selectors.py
 main/page_presentation.py
 main/page_context.py
 main/managed_heroes.py
-main/international_order_views.py
-main/event_views.py
-main/static_page_views.py
-main/policy_views.py
-main/seo_views.py
-main/hero_style_views.py
+main/views/__init__.py
+main/views/international_order_views.py
+main/views/event_views.py
+main/views/static_page_views.py
+main/views/policy_views.py
+main/views/seo_views.py
+main/views/hero_style_views.py
 
 main.views remains a compatibility facade.
 
@@ -82,6 +83,9 @@ Phase 14:
 
 Phase 15:
 015077b refactor(views): extract hero style view
+
+Phase 16:
+d4682f7 refactor(views): consolidate view modules into package
 
 ## Current Baselines
 
@@ -181,10 +185,10 @@ Routine extraction should be done from repository evidence + tests + Git audits.
 
 ## Next Phase
 
-Phase 16 is NOT selected yet.
+Phase 17 is NOT selected yet.
 
 Before choosing it:
-- inspect current main/views.py
+- inspect current main/views/__init__.py
 - map candidate dependencies
 - select the smallest coherent boundary
 - write the phase contract
