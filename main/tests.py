@@ -209,6 +209,57 @@ class MainViewsTests(TestCase):
             },
         )
 
+    def test_category_content_preserves_configured_and_generic_fallbacks(self):
+        described_category = Category(
+            name="Custom Flowers",
+            slug="custom-flowers",
+            description="Custom category description",
+        )
+        blank_category = Category(
+            name="Seasonal Flowers",
+            slug="seasonal-flowers",
+            description="",
+        )
+
+        with self.assertNumQueries(0):
+            configured = views._category_content(self.flowers_category)
+            described = views._category_content(described_category)
+            blank = views._category_content(blank_category)
+
+        self.assertEqual(
+            configured,
+            {
+                "label": "بوکت",
+                "meta_title": "بوکت گل خاص در مشهد | ZAD",
+                "meta_description": "بوکت‌های طراحی‌شده زاد برای انتخاب‌های خاص‌تر و لوکس‌تر.",
+                "intro": "چیدمانی طراحی‌شده‌تر برای وقتی که انتخاب باید خاص‌تر باشد.",
+                "image": "main/img/sub-bouquet.webp",
+                "hero_image": "main/img/hero-subcategory.webp",
+            },
+        )
+        self.assertEqual(
+            described,
+            {
+                "label": "Custom Flowers",
+                "meta_title": "Custom Flowers در مشهد | زاد",
+                "meta_description": "Custom category description",
+                "intro": "Custom category description",
+                "image": "main/img/sub-bouquet.webp",
+                "hero_image": "main/img/hero-subcategory.webp",
+            },
+        )
+        self.assertEqual(
+            blank,
+            {
+                "label": "Seasonal Flowers",
+                "meta_title": "Seasonal Flowers در مشهد | زاد",
+                "meta_description": "مشاهده و سفارش محصولات Seasonal Flowers زاد با هماهنگی ارسال در مشهد.",
+                "intro": "انتخابی از محصولات این دسته برای لحظه‌های شما.",
+                "image": "main/img/sub-bouquet.webp",
+                "hero_image": "main/img/hero-subcategory.webp",
+            },
+        )
+
     def test_active_category_selector_preserves_membership_order_and_lazy_queryset_contract(self):
         self.flowers_category.name = "Beta Category"
         self.flowers_category.sort_order = 10

@@ -49,6 +49,7 @@ from .models import (
     WorkshopPageContent,
 )
 from .page_presentation import (
+    CATEGORY_CONTENT_OVERRIDES,
     FLOWER_STUDIO_NAME,
     LEGACY_FLOWER_BRAND_PHRASES,
     OCCASION_CARD_CONTENT,
@@ -57,6 +58,7 @@ from .page_presentation import (
     OCCASION_EN_LABELS,
     PAGE_HERO_CONTENT,
     SECTION_CONTENT,
+    _category_content,
     _hero_defaults,
     _hero_from_key,
     _occasion_detail_hero,
@@ -99,106 +101,6 @@ WEDDING_BAKERY_LEGACY_SLUGS = frozenset(
 # =========================
 # Page content
 # =========================
-
-CATEGORY_CONTENT_OVERRIDES = {
-    "hand-bouquet": {
-        "label": "دسته گل",
-        "meta_title": "دسته گل لوکس در مشهد | ZAD",
-        "meta_description": "دسته‌گل‌های منتخب استودیو گل زاد برای هدیه، تولد، عاشقانه و لحظه‌های روزمره در مشهد.",
-        "intro": "انتخابی نرم و روشن برای هدیه‌های روزمره و لحظه‌های خاص.",
-        "image": "main/img/sub-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "box": {
-        "label": "باکس گل",
-        "meta_title": "باکس گل لوکس در مشهد | ZAD",
-        "meta_description": "باکس‌های گل استودیو گل زاد با چیدمان مینیمال، مناسب هدیه و سفارش سریع در مشهد.",
-        "intro": "هدیه‌ای مرتب، شیک و آماده برای ارسال.",
-        "image": "main/img/sub-box.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "bouquet": {
-        "label": "بوکت",
-        "meta_title": "بوکت گل خاص در مشهد | ZAD",
-        "meta_description": "بوکت‌های طراحی‌شده زاد برای انتخاب‌های خاص‌تر و لوکس‌تر.",
-        "intro": "چیدمانی طراحی‌شده‌تر برای وقتی که انتخاب باید خاص‌تر باشد.",
-        "image": "main/img/sub-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "stand": {
-        "label": "استند گل",
-        "meta_title": "استند گل در مشهد | ZAD",
-        "meta_description": "استندهای گل رسمی زاد برای مراسم، ترحیم، افتتاحیه و لحظه‌های تشریفاتی.",
-        "intro": "برای موقعیت‌های رسمی، محترمانه و پررنگ‌تر.",
-        "image": "main/img/sub-stand.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-        },
-
-    "wedding": {
-        "label": "عروسی",
-        "meta_title": "گل‌آرایی عروسی در مشهد | ZAD",
-        "meta_description": "مجموعه عروسی زاد شامل دسته‌گل عروس و گل‌آرایی ماشین عروس در مشهد.",
-        "intro": "انتخاب دسته‌گل عروس یا گل‌آرایی ماشین عروس برای روزی به‌یادماندنی.",
-        "image": "main/img/sub-bridal-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "wedding-car": {
-        "label": "ماشین عروس",
-        "meta_title": "گل‌آرایی ماشین عروس در مشهد | ZAD",
-        "meta_description": "مدل‌های گل‌آرایی ماشین عروس زاد با طراحی هماهنگ و اجرای اختصاصی در مشهد.",
-        "intro": "گل‌آرایی هماهنگ و اختصاصی برای ماشین عروس.",
-        "image": "main/img/sub-stand.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "bridal-bouquet": {
-        "label": "دسته‌گل عروس",
-        "meta_title": "دسته‌گل عروس در مشهد | ZAD",
-        "meta_description": "دسته‌گل عروس زاد با چیدمان لطیف، مینیمال و هماهنگ با مراسم.",
-        "intro": "دسته‌گلی لطیف و هماهنگ برای یکی از مهم‌ترین لحظه‌ها.",
-        "image": "main/img/sub-bridal-bouquet.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "jarl": {
-        "label": "جار گل",
-        "meta_title": "جار گل در مشهد | ZAD",
-        "meta_description": "جارهای گل استودیو گل زاد برای دکور، هدیه‌های خاص و انتخاب‌های متفاوت.",
-        "intro": "فرمی متفاوت و دکوراتیو برای انتخاب‌های خاص‌تر.",
-        "image": "main/img/sub-box.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "plants": {
-        "label": "گیاه",
-        "meta_title": "گیاه هدیه‌ای در مشهد | ZAD",
-        "meta_description": "گیاه‌های انتخاب‌شده زاد برای هدیه، خانه و لحظه‌های آرام‌تر.",
-        "intro": "انتخابی ماندگارتر برای خانه، میز کار و هدیه‌های آرام‌تر.",
-        "image": "main/img/sub-plant.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "basket": {
-        "label": "سبد گل",
-        "meta_title": "سبد گل در مشهد | ZAD",
-        "meta_description": "سبدهای گل استودیو گل زاد برای هدیه و مراسم.",
-        "intro": "یک دسته‌بندی قدیمی که فعلاً فقط برای سازگاری نگه داشته شده است.",
-        "image": "main/img/sub-plant.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "birthday-cakes": {
-        "label": "Birthday Cakes",
-        "meta_title": "Birthday Cakes | ZAD",
-        "meta_description": "ZAD birthday cakes for warm celebrations and soft moments.",
-        "intro": "Soft cakes for warm birthday moments.",
-        "image": "main/img/cat-bakery.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-    "cookies": {
-        "label": "Cookies",
-        "meta_title": "Cookies | ZAD",
-        "meta_description": "ZAD cookies for gifting, gatherings and sweet little details.",
-        "intro": "Small sweet bites for gentle celebrations.",
-        "image": "main/img/cat-bakery.webp",
-        "hero_image": "main/img/hero-subcategory.webp",
-    },
-}
 
 CATEGORY_SLUG_ALIASES = {
     "plant": "plants",
@@ -757,27 +659,6 @@ def _paginate_products(request, queryset):
         raise Http404("Catalog page does not exist")
 
     return page_obj
-
-
-def _category_content(category):
-    override = CATEGORY_CONTENT_OVERRIDES.get(category.slug, {})
-
-    return {
-        "label": override.get("label") or category.name,
-        "meta_title": override.get("meta_title") or f"{category.name} در مشهد | زاد",
-        "meta_description": (
-            override.get("meta_description")
-            or category.description
-            or f"مشاهده و سفارش محصولات {category.name} زاد با هماهنگی ارسال در مشهد."
-        ),
-        "intro": (
-            override.get("intro")
-            or category.description
-            or "انتخابی از محصولات این دسته برای لحظه‌های شما."
-        ),
-        "image": override.get("image") or "main/img/sub-bouquet.webp",
-        "hero_image": override.get("hero_image") or "main/img/hero-subcategory.webp",
-    }
 
 
 SECTION_ALL_ROUTE_NAMES = {
