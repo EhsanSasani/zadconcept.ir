@@ -115,6 +115,46 @@ class MainViewsTests(TestCase):
             status=PublishStatus.DRAFT,
         )
 
+    def test_occasion_card_preserves_routes_content_and_fallbacks(self):
+        content = views.OCCASION_CARD_CONTENT["birthday"]
+        card = views._occasion_card(self.birthday_tag)
+        flower_card = views._occasion_card(
+            self.birthday_tag,
+            for_flowers=True,
+        )
+
+        self.assertEqual(card["slug"], "birthday")
+        self.assertEqual(card["label"], content["title"])
+        self.assertEqual(card["label_en"], "Birthday")
+        self.assertEqual(
+            card["url"],
+            reverse("occasion_detail", args=["birthday"]),
+        )
+        self.assertEqual(card["image"], content["image"])
+        self.assertEqual(card["intro"], content["intro"])
+
+        self.assertEqual(
+            flower_card["url"],
+            reverse("flower_occasion", args=["birthday"]),
+        )
+
+        unknown = Tag(
+            slug="team-thanks",
+            name="Team Thanks",
+            description="Thanks intro",
+        )
+        fallback = views._occasion_card(unknown)
+
+        self.assertEqual(fallback["label"], "Team Thanks")
+        self.assertEqual(fallback["label_en"], "Team Thanks")
+        self.assertEqual(
+            fallback["image"],
+            "main/img/occasions/special.webp",
+        )
+        self.assertEqual(fallback["intro"], "Thanks intro")
+
+
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)

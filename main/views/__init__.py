@@ -19,6 +19,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from ..occasion_presentation import _occasion_card
 from ..catalog_selectors import (
     _active_categories_for_section,
     _active_occasion_tags,
@@ -354,32 +355,6 @@ def _category_card(category):
     }
 
 
-def _occasion_card(tag, *, for_flowers=False):
-    content = OCCASION_CARD_CONTENT.get(tag.slug, {})
-    url_name = "flower_occasion" if for_flowers else "occasion_detail"
-
-    return {
-        "slug": tag.slug,
-        "label": content.get("title") or tag.name,
-        "label_en": OCCASION_EN_LABELS.get(
-            tag.slug,
-            tag.slug.replace("-", " ").title(),
-        ),
-        "url": reverse(url_name, args=[tag.slug]),
-        "image": (
-            tag.cover_image.url
-            if tag.cover_image
-            else content.get(
-                "image",
-                "main/img/occasions/special.webp",
-            )
-        ),
-        "intro": tag.description
-        or content.get(
-            "intro",
-            "Curated ideas for this occasion.",
-        ),
-    }
 
 
 def _occasion_links(limit=4):
