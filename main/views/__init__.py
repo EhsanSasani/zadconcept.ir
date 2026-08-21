@@ -65,6 +65,7 @@ from .blog_views import blog, blog_detail
 from .home_views import index
 from .occasion_views import occasions
 from .local_seo_views import mashhad_hub
+from .product_redirect_views import flower_detail, flower_detail_redirect, product_detail
 from ..telegram_notifications import send_lead_request_notification
 from ..models import (
     BAKERY_WEDDING_CATEGORY_SLUGS,
@@ -1689,15 +1690,6 @@ def _item_detail_context(request, product):
     return context
 
 
-def product_detail(request, pk: int, slug: str):
-    product = get_object_or_404(
-        Product.objects.published()
-        .select_related("category", "category__parent")
-        .prefetch_related("tags", "gallery_images"),
-        pk=pk,
-    )
-
-    return redirect(product.get_absolute_url(), permanent=True)
 
 
 def _section_product_detail(request, section, category_slug, slug):
@@ -1741,27 +1733,8 @@ def gift_product_detail(request, category_slug, slug):
     return _section_product_detail(request, Category.Section.GIFTS, category_slug, slug)
 
 
-def flower_detail(request, pk: int, slug: str):
-    flower = get_object_or_404(
-        Product.objects.published()
-        .filter(category__section=Category.Section.FLOWERS)
-        .select_related("category")
-        .prefetch_related("tags", "gallery_images"),
-        pk=pk,
-    )
-
-    return redirect(flower.get_absolute_url(), permanent=True)
 
 
-def flower_detail_redirect(request, pk: int):
-    flower = get_object_or_404(
-        Product.objects.published().filter(
-            category__section=Category.Section.FLOWERS,
-        ),
-        pk=pk,
-    )
-
-    return redirect(flower.get_absolute_url(), permanent=True)
 
 
 # =========================

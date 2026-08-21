@@ -203,6 +203,40 @@ class MainViewsTests(TestCase):
             response.context["lead_default_type"],
             "flower",
         )
+
+
+    def test_legacy_product_redirect_views_preserve_contract(self):
+        from django.urls import resolve
+
+        cases = [
+            (
+                "product_detail",
+                {"pk": self.flower.pk, "slug": self.flower.slug},
+                views.product_detail,
+            ),
+            (
+                "flower_detail",
+                {"pk": self.flower.pk, "slug": self.flower.slug},
+                views.flower_detail,
+            ),
+            (
+                "flower_detail_redirect",
+                {"pk": self.flower.pk},
+                views.flower_detail_redirect,
+            ),
+        ]
+
+        for route_name, kwargs, expected_view in cases:
+            url = reverse(route_name, kwargs=kwargs)
+            response = self.client.get(url)
+
+            self.assertIs(resolve(url).func, expected_view)
+            self.assertRedirects(
+                response,
+                self.flower.get_absolute_url(),
+                status_code=301,
+                fetch_redirect_response=False,
+            )
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
