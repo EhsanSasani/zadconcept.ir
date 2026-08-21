@@ -55,6 +55,10 @@ from .hero_style_views import (
     _safe_hero_size,
     hero_styles_css,
 )
+from .security_views import (
+    csp_report,
+    security_logger,
+)
 from ..telegram_notifications import send_lead_request_notification
 from ..models import (
     BAKERY_WEDDING_CATEGORY_SLUGS,
@@ -123,7 +127,6 @@ from ..site_content import (
 )
 
 
-security_logger = logging.getLogger("main.security")
 
 WEDDING_FLOWER_LEGACY_SLUGS = frozenset(
     (
@@ -2395,25 +2398,6 @@ def submit_lead_request(request):
 
 
 
-@csrf_exempt
-@require_POST
-def csp_report(request):
-    if len(request.body) > 64 * 1024:
-        return HttpResponse(status=413)
-
-    try:
-        payload = json.loads(request.body or b"{}")
-    except (TypeError, ValueError, UnicodeDecodeError):
-        return HttpResponse(status=400)
-
-    report = payload.get("csp-report", payload) if isinstance(payload, dict) else {}
-    security_logger.warning(
-        "CSP violation document=%s directive=%s blocked=%s",
-        report.get("document-uri", ""),
-        report.get("violated-directive", report.get("effective-directive", "")),
-        report.get("blocked-uri", ""),
-    )
-    return HttpResponse(status=204)
 
 
 def custom_404(request, exception):

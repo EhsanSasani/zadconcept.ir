@@ -1536,6 +1536,41 @@ class MainViewsTests(TestCase):
         self.assertRedirects(response, reverse("contact"), fetch_redirect_response=False)
         self.assertEqual(LeadRequest.objects.count(), 1)
 
+    def test_csp_report_preserves_security_http_and_logging_contract(self):
+        url = reverse("csp_report")
+
+        self.assertEqual(views.security_logger.name, "main.security")
+        self.assertTrue(getattr(views.csp_report, "csrf_exempt", False))
+
+        with self.assertLogs("main.security", level="WARNING") as logs:
+            response = self.client.post(
+                url,
+                data='{"csp-report":{"document-uri":"https://example.com/","violated-directive":"script-src","blocked-uri":"https://bad.example/"}}',
+                content_type="application/csp-report",
+            )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertIs(response.resolver_match.func, views.csp_report)
+        self.assertIn("document=https://example.com/", logs.output[0])
+        self.assertIn("directive=script-src", logs.output[0])
+        self.assertIn("blocked=https://bad.example/", logs.output[0])
+
+        invalid = self.client.post(
+            url,
+            data="{",
+            content_type="application/csp-report",
+        )
+        self.assertEqual(invalid.status_code, 400)
+
+        oversized = self.client.post(
+            url,
+            data="x" * (64 * 1024 + 1),
+            content_type="text/plain",
+        )
+        self.assertEqual(oversized.status_code, 413)
+
+        self.assertEqual(self.client.get(url).status_code, 405)
+
     def test_seo_utility_views_preserve_routing_content_and_indexnow_contract(self):
         robots_response = self.client.get(reverse("robots_txt"))
 
