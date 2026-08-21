@@ -184,6 +184,25 @@ class MainViewsTests(TestCase):
         expected_hero = views._hero_from_key("occasions")
         for key, value in expected_hero.items():
             self.assertEqual(response.context[key], value)
+
+
+    def test_mashhad_hub_preserves_routing_and_context_contract(self):
+        from django.urls import resolve
+
+        url = reverse("mashhad_hub")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "mashhad_hub.html")
+        self.assertIs(resolve(url).func, views.mashhad_hub)
+        self.assertEqual(
+            list(response.context["curated_items"]),
+            [self.flower],
+        )
+        self.assertEqual(
+            response.context["lead_default_type"],
+            "flower",
+        )
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
