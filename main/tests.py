@@ -160,6 +160,41 @@ class MainViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("flowers"))
 
+
+    def test_home_view_preserves_routing_and_context_contract(self):
+        from django.urls import resolve
+
+        url = reverse("index")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "index.html")
+        self.assertIs(resolve(url).func, views.index)
+        self.assertTrue(response.context["is_homepage"])
+
+        self.assertEqual(
+            list(response.context["featured_today"]),
+            [self.flower, self.bakery, self.gift_product],
+        )
+        self.assertEqual(
+            [event.pk for event in response.context["home_events"]],
+            [self.published_event.pk],
+        )
+
+        tags = response.context["occasion_tags"]
+        cards = response.context["home_occasion_cards"]
+        self.assertEqual(
+            [card["slug"] for card in cards],
+            [tag.slug for tag in tags[:4]],
+        )
+
+        legacy = self.client.get(url + "?section=flowers")
+        self.assertRedirects(
+            legacy,
+            reverse("flowers"),
+            fetch_redirect_response=False,
+        )
+
     def test_general_catalog_section_selector_keeps_card_relations_eager_loaded(self):
         with self.assertNumQueries(2):
             products = list(
