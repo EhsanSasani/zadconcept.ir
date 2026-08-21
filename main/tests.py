@@ -1536,6 +1536,62 @@ class MainViewsTests(TestCase):
         self.assertRedirects(response, reverse("contact"), fetch_redirect_response=False)
         self.assertEqual(LeadRequest.objects.count(), 1)
 
+    def test_blog_views_preserve_publication_order_routing_and_detail_contract(self):
+        from .models import NewsPost
+
+        older = NewsPost.objects.create(
+            title="Older published post",
+            slug="older-published-post",
+            body="Older body",
+            status=PublishStatus.PUBLISHED,
+            published_at=timezone.now() - timedelta(days=2),
+        )
+        newer = NewsPost.objects.create(
+            title="Newer published post",
+            slug="newer-published-post",
+            body="Newer body",
+            status=PublishStatus.PUBLISHED,
+            published_at=timezone.now() - timedelta(days=1),
+        )
+        draft = NewsPost.objects.create(
+            title="Draft post",
+            slug="draft-post",
+            body="Draft body",
+            status=PublishStatus.DRAFT,
+        )
+
+        response = self.client.get(reverse("blog"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "blog_list.html")
+        self.assertIs(response.resolver_match.func, views.blog)
+        self.assertEqual(
+            [post.pk for post in response.context["posts"]],
+            [newer.pk, older.pk],
+        )
+        self.assertNotIn(
+            draft.pk,
+            [post.pk for post in response.context["posts"]],
+        )
+
+        detail = self.client.get(reverse("blog_detail", args=[newer.slug]))
+
+        self.assertEqual(detail.status_code, 200)
+        self.assertTemplateUsed(detail, "blog_detail.html")
+        self.assertIs(detail.resolver_match.func, views.blog_detail)
+        self.assertEqual(detail.context["post"], newer)
+        self.assertEqual(detail.context["page_type"], "category")
+        self.assertEqual(detail.context["recommended_items"], detail.context["related_products"])
+
+        self.assertEqual(
+            self.client.get(reverse("blog_detail", args=[draft.slug])).status_code,
+            404,
+        )
+        self.assertEqual(
+            self.client.get(reverse("blog_detail", args=["missing-post"])).status_code,
+            404,
+        )
+
     def test_custom_404_preserves_handler_template_status_and_context_contract(self):
         from django.utils.module_loading import import_string
         from config import urls as project_urls
