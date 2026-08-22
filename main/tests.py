@@ -396,6 +396,24 @@ class MainViewsTests(TestCase):
         self.assertTrue(r.context['is_same_day_page'])
         self.assertEqual(r.context['subcategory_label'],'ارسال امروز')
 
+    def test_wedding_view_family_preserves_contract(self):
+        from django.urls import resolve
+        root,_=Category.objects.update_or_create(slug=WEDDING_ROOT_CATEGORY_SLUG,section=Category.Section.FLOWERS,defaults={'name':'Wedding','parent':None,'is_active':True})
+        cat,_=Category.objects.update_or_create(slug='bridal-bouquet',section=Category.Section.FLOWERS,defaults={'name':'Bridal Bouquet','parent':root,'is_active':True})
+        product=Product.objects.create(name='Wedding Test',category=cat,publish_status=Product.PublishStatus.PUBLISHED,catalog_scope=Product.CatalogScope.WEDDING,wedding_type=Product.WeddingType.BRIDAL_BOUQUET)
+        url=reverse('weddings')
+        r=self.client.get(url)
+        self.assertEqual(r.status_code,200)
+        self.assertTemplateUsed(r,'weddings.html')
+        self.assertIs(resolve(url).func,views.weddings)
+        url=reverse('wedding_collection',args=['bridal-bouquets'])
+        r=self.client.get(url)
+        self.assertEqual(r.status_code,200)
+        self.assertTemplateUsed(r,'wedding_collection.html')
+        self.assertIs(resolve(url).func,views.wedding_collection)
+        self.assertEqual(list(r.context['products']),[product])
+        self.assertEqual(r.context['collection']['slug'],'bridal-bouquets')
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
