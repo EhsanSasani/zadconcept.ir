@@ -36,7 +36,7 @@
 - `main/templates/flowers_landing.html`
 - `main/templates/index.html`
 - `main/templates/subcategory.html`
-- `main/test_hotfix.py`
+- `main/tests/test_regressions.py`
 
 ## روش مطمئن نصب روی سرور
 
@@ -71,7 +71,7 @@ test -x "$ZAD_PY" && "$ZAD_PY" --version
 cd /var/www/zad/app
 "$ZAD_PY" manage.py check
 "$ZAD_PY" manage.py migrate --plan
-"$ZAD_PY" manage.py test main.test_hotfix --verbosity 2
+"$ZAD_PY" manage.py test main.tests.test_regressions --verbosity 2
 "$ZAD_PY" manage.py collectstatic --noinput
 ```
 
@@ -108,5 +108,5 @@ sudo systemctl restart zad.service
 sudo systemctl status zad.service --no-pager
 ```
 
-فایل `main/test_hotfix.py` در نسخهٔ قبلی وجود نداشته و باقی‌ماندنش روی عملکرد
+فایل `main/tests/test_regressions.py` در نسخهٔ قبلی وجود نداشته و باقی‌ماندنش روی عملکرد
 سایت اثری ندارد؛ در صورت Rollback کامل می‌توان آن را جداگانه حذف کرد.

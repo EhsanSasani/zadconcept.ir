@@ -16,8 +16,8 @@ from django.test import RequestFactory, TestCase, TransactionTestCase, override_
 from django.urls import reverse
 from django.utils import timezone
 
-from .admin import WeddingProductAdminForm
-from .models import (
+from ..admin import WeddingProductAdminForm
+from ..models import (
     BakeryItem,
     Category,
     Flower,
@@ -28,7 +28,7 @@ from .models import (
     WeddingPageContent,
     WeddingProduct,
 )
-from .sitemaps import CategorySitemap
+from ..sitemaps import CategorySitemap
 
 
 TINY_PNG = base64.b64decode(

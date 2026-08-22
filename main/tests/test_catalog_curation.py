@@ -5,15 +5,15 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
 
-from .management.commands.apply_catalog_hotfix_20260811 import (
+from ..management.commands.apply_catalog_hotfix_20260811 import (
     BRIDAL_PRIORITY_CODES,
     DELETE_CODES,
     FORMAL_VISIT_CODES,
     JUST_BECAUSE_CODES,
     PROPOSAL_COLLECTION_CODES,
 )
-from .management.commands.seed_catalog import Command as SeedCatalogCommand
-from .models import (
+from ..management.commands.seed_catalog import Command as SeedCatalogCommand
+from ..models import (
     Category,
     Product,
     PROPOSAL_COLLECTION_TAG_SLUG,

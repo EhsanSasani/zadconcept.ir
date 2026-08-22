@@ -4,8 +4,8 @@ from unittest.mock import patch
 from django.contrib import admin
 from django.test import TestCase
 
-from .admin import FlowerAdmin, ProductAdminForm, SameDayFlowerAdmin
-from .models import (
+from ..admin import FlowerAdmin, ProductAdminForm, SameDayFlowerAdmin
+from ..models import (
     PROPOSAL_COLLECTION_TAG_SLUG,
     Category,
     Product,
@@ -15,7 +15,7 @@ from .models import (
 )
 
 
-class SameDayAdminTagHotfixTests(TestCase):
+class SameDayAdminTagTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.category = Category.objects.create(

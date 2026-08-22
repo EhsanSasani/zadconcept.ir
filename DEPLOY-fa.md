@@ -8,7 +8,7 @@
 ```text
 main/admin.py
 main/image_pipeline.py
-main/test_images.py
+main/tests/test_images.py
 requirements-image-upload.txt
 QA-fa.md
 ```
@@ -51,7 +51,7 @@ backup_file="/home/cloud-admin/zad-image-pre-v3-$(date +%Y%m%d-%H%M%S).tar.gz"
 sudo tar -C "$app_root" -czf "$backup_file" \
   main/admin.py \
   main/image_pipeline.py \
-  main/test_images.py
+  main/tests/test_images.py
 
 sudo chown cloud-admin:cloud-admin "$backup_file"
 tar -tzf "$backup_file"
@@ -85,13 +85,13 @@ sudo install -o cloud-admin -g cloud-admin -m 0644 \
   "$app_root/main/image_pipeline.py"
 
 sudo install -o cloud-admin -g cloud-admin -m 0644 \
-  "$run_root/main/test_images.py" \
-  "$app_root/main/test_images.py"
+  "$run_root/main/tests/test_images.py" \
+  "$app_root/main/tests/test_images.py"
 
 stat -c '%U:%G %a %n' \
   "$app_root/main/admin.py" \
   "$app_root/main/image_pipeline.py" \
-  "$app_root/main/test_images.py"
+  "$app_root/main/tests/test_images.py"
 ```
 
 ### ۴. بررسی قبل از Restart
@@ -102,7 +102,7 @@ cd /var/www/zad/app
 /var/www/zad/venv/bin/python manage.py check
 /var/www/zad/venv/bin/python manage.py makemigrations --check --dry-run
 /var/www/zad/venv/bin/python manage.py test \
-  main.test_images.ResponsiveImageTests \
+  main.tests.test_images.ResponsiveImageTests \
   --verbosity 2
 
 sudo nginx -T 2>/dev/null | grep -n "client_max_body_size"
@@ -163,7 +163,7 @@ sudo tar -C "$app_root" -xzf "$backup_file"
 sudo chown cloud-admin:cloud-admin \
   "$app_root/main/admin.py" \
   "$app_root/main/image_pipeline.py" \
-  "$app_root/main/test_images.py"
+  "$app_root/main/tests/test_images.py"
 
 sudo systemctl restart zad.service
 sudo systemctl is-active zad.service

@@ -5,16 +5,16 @@ from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
-from .context_processors import full_address_text
-from .models import Category, PageContentBlock, Product, Tag
-from .sitemaps import OccasionSitemap
-from .views import _active_occasion_tags
+from ..context_processors import full_address_text
+from ..models import Category, PageContentBlock, Product, Tag
+from ..sitemaps import OccasionSitemap
+from ..views import _active_occasion_tags
 
 
-class AdminResponsiveHotfixTests(SimpleTestCase):
+class AdminResponsiveRegressionTests(SimpleTestCase):
     def test_mobile_sidebar_is_a_closed_drawer_until_sidebar_open(self):
         css_path = (
-            Path(__file__).resolve().parent
+            Path(__file__).resolve().parents[1]
             / "static"
             / "main"
             / "css"
@@ -29,7 +29,7 @@ class AdminResponsiveHotfixTests(SimpleTestCase):
         self.assertNotIn("sidebar-open:not(.sidebar-collapse)", css)
 
 
-class PublicCopyHotfixTests(TestCase):
+class PublicCopyRegressionTests(TestCase):
     def test_address_starts_with_mashhad_without_duplication(self):
         street = "بلوار وکیل‌آباد - نبش فارغ‌التحصیلان ۶ - کانسپت زاد"
 
@@ -56,7 +56,7 @@ class PublicCopyHotfixTests(TestCase):
         self.assertNotContains(response, "گل‌های زاد")
 
 
-class WeddingCatalogHotfixTests(TestCase):
+class WeddingCatalogRegressionTests(TestCase):
     def setUp(self):
         self.wedding, _ = Category.objects.update_or_create(
             section=Category.Section.FLOWERS,
@@ -178,7 +178,7 @@ class WeddingCatalogHotfixTests(TestCase):
         )
 
 
-class ProductAdminSearchHotfixTests(TestCase):
+class ProductAdminSearchRegressionTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_superuser(
             username="hotfix-admin",

@@ -51,10 +51,10 @@ main/models.py
 main/admin.py
 main/migrations/0024_telegram_bot_user.py
 main/telegram_notifications.py
-main/test_telegram_lead_notifications.py
-main/test_telegram_relay_hotfix.py
+main/tests/test_telegram_lead_notifications.py
+main/tests/test_telegram_relay.py
 main/telegram_product_lookup.py
-main/test_telegram_product_lookup.py
+main/tests/test_telegram_product_lookup.py
 main/urls.py
 ops/cloudflare/zad-telegram-relay-worker.js
 ops/cloudflare/zad-telegram-relay-worker.test.mjs
@@ -207,9 +207,9 @@ Local or production Django checks:
 ```bash
 python manage.py check
 python manage.py test \
-  main.test_telegram_lead_notifications \
-  main.test_telegram_relay_hotfix \
-  main.test_telegram_product_lookup \
+  main.tests.test_telegram_lead_notifications \
+  main.tests.test_telegram_relay \
+  main.tests.test_telegram_product_lookup \
   --verbosity 1
 node --test ops/cloudflare/zad-telegram-relay-worker.test.mjs
 git diff --check

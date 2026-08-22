@@ -5,8 +5,8 @@ from urllib.error import URLError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import LeadRequest
-from .telegram_notifications import (
+from ..models import LeadRequest
+from ..telegram_notifications import (
     format_lead_request_message,
     send_lead_request_notification,
 )

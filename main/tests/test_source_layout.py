@@ -4,8 +4,8 @@ from pathlib import Path
 from django.test import SimpleTestCase
 
 
-class FrontendStructureTests(SimpleTestCase):
-    app_root = Path(__file__).resolve().parent
+class SourceLayoutTests(SimpleTestCase):
+    app_root = Path(__file__).resolve().parents[1]
     project_root = app_root.parent
     template_root = app_root / "templates"
     static_root = app_root / "static"
@@ -134,6 +134,11 @@ class FrontendStructureTests(SimpleTestCase):
 
         self.assertEqual([], loose_css, f"Loose public CSS files: {loose_css}")
         self.assertEqual([], loose_js, f"Loose public JavaScript files: {loose_js}")
+
+    def test_test_modules_are_package_scoped(self):
+        loose_tests = sorted(path.name for path in self.app_root.glob("test*.py"))
+
+        self.assertEqual([], loose_tests, f"Loose test modules: {loose_tests}")
 
     def test_frontend_has_no_legacy_or_hotfix_buckets(self):
         public_roots = [

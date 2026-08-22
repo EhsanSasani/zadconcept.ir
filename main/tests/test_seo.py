@@ -11,8 +11,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .management.commands.audit_seo import SeoHTMLParser
-from .models import (
+from ..management.commands.audit_seo import SeoHTMLParser
+from ..models import (
     Category,
     Event,
     LeadRequest,

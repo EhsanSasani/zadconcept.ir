@@ -12,15 +12,15 @@ from django.test import RequestFactory, SimpleTestCase, TestCase, override_setti
 from django.urls import reverse
 from PIL import Image, ImageCms
 
-from .admin import AdminImageUploadField, CategoryAdminForm
-from .image_pipeline import (
+from ..admin import AdminImageUploadField, CategoryAdminForm
+from ..image_pipeline import (
     ALLOWED_INPUT_FORMATS,
     HEIF_SUPPORT_AVAILABLE,
     MAX_IMAGE_DIMENSION,
     normalize_admin_image,
 )
-from .management.commands.optimize_images import create_width_variant
-from .models import Category, Product, SameDayFlower, responsive_image_srcset
+from ..management.commands.optimize_images import create_width_variant
+from ..models import Category, Product, SameDayFlower, responsive_image_srcset
 
 
 def encoded_image(image_format, size=(800, 600), mode="RGB", color="white", **kwargs):

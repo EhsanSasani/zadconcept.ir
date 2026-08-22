@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from .models import TelegramBotUser
-from .telegram_notifications import (
+from ..models import TelegramBotUser
+from ..telegram_notifications import (
     TELEGRAM_RELAY_USER_AGENT,
     _send_via_relay,
     send_lead_request_notification,
 )
 
 
-class TelegramRelayHotfixTests(TestCase):
+class TelegramRelayTests(TestCase):
     @override_settings(
         TELEGRAM_LEAD_RELAY_URL="https://relay.example/",
         TELEGRAM_LEAD_RELAY_SECRET="shared-secret",

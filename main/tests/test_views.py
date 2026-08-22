@@ -11,8 +11,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from . import views
-from .models import (
+from .. import views
+from ..models import (
     BakeryItem,
     Category,
     Event,
@@ -28,7 +28,7 @@ from .models import (
     WEDDING_ROOT_CATEGORY_SLUG,
     WorkshopPageContent,
 )
-from .admin import CategoryAdminForm, EventAdminForm, HeroAdminForm
+from ..admin import CategoryAdminForm, EventAdminForm, HeroAdminForm
 
 
 VALID_PNG = base64.b64decode(
@@ -1879,7 +1879,7 @@ class MainViewsTests(TestCase):
         self.assertEqual(LeadRequest.objects.count(), 1)
 
     def test_blog_views_preserve_publication_order_routing_and_detail_contract(self):
-        from .models import NewsPost
+        from ..models import NewsPost
 
         older = NewsPost.objects.create(
             title="Older published post",

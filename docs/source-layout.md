@@ -27,6 +27,11 @@ be found without searching a flat global bucket.
 Public orchestration remains in `main/views/`, grouped by domain. `main.views`
 is the compatibility facade used by the unchanged URL configuration.
 
+## Tests
+
+`main/tests/` owns the Django test suite. Test modules use responsibility-based
+names and must not be added directly to the `main/` package root.
+
 ## Placement rule
 
 When adding a routed page:
@@ -43,6 +48,6 @@ Do not create new root-level public CSS or JavaScript files. Do not add
 
 ## Verification
 
-`main.test_frontend_structure` protects literal static references, relative CSS
+`main.tests.test_source_layout` protects literal static references, relative CSS
 assets, CSS block balance, domain-scoped placement, canonical responsive load
-order, and orphaned first-party CSS/JavaScript.
+order, orphaned first-party CSS/JavaScript, and package-scoped test placement.

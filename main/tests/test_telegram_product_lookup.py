@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import Category, Product, TelegramBotUser
+from ..models import Category, Product, TelegramBotUser
 
 
 @override_settings(TELEGRAM_LEAD_RELAY_SECRET="test-relay-secret")
