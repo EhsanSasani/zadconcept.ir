@@ -1,0 +1,79 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-local-landing{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+{% if has_managed_site_hero %}
+  <h2 class="sr-only">{{ landing_title }}</h2>
+{% else %}
+  <h1 class="sr-only">{{ landing_title }}</h1>
+{% endif %}
+{% include "main/components/breadcrumbs.html" %}
+
+<section class="container section-block page-intro">
+  <p class="intro-text">{{ landing_subtitle }}</p>
+
+  <div class="cta-row">
+    <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="hero">تماس</a>
+    <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="hero">تلگرام</a>
+  </div>
+</section>
+
+<section class="container section-block">
+  <div class="section-head">
+    <h2>ارسال و محدوده پوشش</h2>
+  </div>
+
+  <div class="meta-row">
+    <span>هماهنگی ارسال همان‌روز در محدوده‌های قابل پوشش مشهد</span>
+    <span>{{ site_opening_hours_text }}</span>
+    <span>{{ site_response_time_text }}</span>
+  </div>
+</section>
+
+{% if curated_items %}
+<section class="container section-block featured-products-section">
+  <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
+    <div>
+      <h2>پیشنهادهای زاد</h2>
+    </div>
+    <a href="{% url 'flowers' %}" class="section-link">مشاهده همه</a>
+  </div>
+
+  {% include "main/components/product_rail.html" with products=curated_items %}
+</section>
+{% endif %}
+
+<section class="container section-block">
+  <div class="section-head">
+    <h2>چرا زاد؟</h2>
+  </div>
+
+  <div class="list-grid">
+    {% for item in why_zad %}
+      <article class="list-card"><p>{{ item }}</p></article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section-block">
+  <div class="section-head">
+    <h2>مناسبت‌ها</h2>
+  </div>
+
+  <div class="inline-links">
+    {% for occasion in occasion_links %}
+      <a href="{{ occasion.url }}">{{ occasion.label }}</a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
+{% endblock %}

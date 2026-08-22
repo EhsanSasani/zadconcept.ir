@@ -1,0 +1,46 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-occasion-detail page-catalog-occasion{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+{% include "main/components/breadcrumbs.html" %}
+
+<section class="container section-block catalog-products-section">
+  {% if filter_links %}
+    {% include "main/components/catalog_filter.html" with filter_items=filter_links only %}
+  {% endif %}
+
+  {% include "main/components/product_grid.html" with products=products %}
+</section>
+
+{% comment %}
+{% if suggested_sections %}
+  {% for block in suggested_sections %}
+    <section class="container section-block featured-products-section catalog-suggestion-section">
+      <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
+        <div>
+          <h2 class="section-title-en">{{ block.title }}</h2>
+        </div>
+        {% if block.more_url %}
+          <a href="{{ block.more_url }}" class="section-link">View All</a>
+        {% endif %}
+      </div>
+
+      {% include "main/components/product_rail.html" with products=block.products %}
+    </section>
+  {% endfor %}
+{% endif %}
+{% endcomment %}
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'main/js/components/filter-links.js' %}"></script>
+  <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
+{% endblock %}

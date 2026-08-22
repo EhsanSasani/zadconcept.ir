@@ -1,0 +1,18 @@
+/* blog detail */
+.blog-detail__cover-wrap {
+  margin-bottom: 20px;
+}
+.blog-detail__cover {
+  width: 100%;
+}
+
+.blog-detail__excerpt {
+  margin-bottom: 18px;
+  font-size: 1rem;
+  line-height: 2;
+}
+
+.blog-detail__body p {
+  margin-bottom: 16px;
+  line-height: 2.05;
+}

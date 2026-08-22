@@ -25,7 +25,7 @@ def international_orders(request):
         content_page="international-orders",
         suppress_default_hero=True,
     )
-    return render(request, "international_orders.html", context)
+    return render(request, "main/pages/international/orders_fa.html", context)
 
 
 def international_orders_en(request):
@@ -52,4 +52,4 @@ def international_orders_en(request):
         suppress_default_hero=True,
         content_page="international-orders",
     )
-    return render(request, "international_orders_en.html", context)
+    return render(request, "main/pages/international/orders_en.html", context)

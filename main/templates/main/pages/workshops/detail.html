@@ -1,0 +1,53 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-event-detail{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/workshops/detail.css' %}?v=1">{% endblock %}
+
+{% block content %}
+{% include "main/components/breadcrumbs.html" %}
+
+<section class="container section-block event-detail event-detail--premium">
+  <div class="event-detail__grid">
+    <article class="event-detail__main">
+      <p class="section-kicker">{{ page_content.intro.kicker|default:"zad Workshop" }}</p>
+      <h1 class="section-title-en">{{ event.title }}</h1>
+
+      {% if event.description %}
+        <div class="event-detail__body">
+          <p>{{ event.description }}</p>
+        </div>
+      {% endif %}
+    </article>
+
+    <aside class="event-detail__side">
+      <div class="event-detail__info-card">
+        <p class="event-detail__label">Date & Time</p>
+
+        <div class="event-detail__row">
+          <span>Starts</span>
+          <strong>{{ event.start_at|date:"Y/m/d H:i" }}</strong>
+        </div>
+
+        <div class="event-detail__row">
+          <span>Ends</span>
+          <strong>{{ event.end_at|date:"Y/m/d H:i" }}</strong>
+        </div>
+
+        {% if event.location %}
+          <div class="event-detail__row">
+            <span>Location</span>
+            <strong>{{ event.location }}</strong>
+          </div>
+        {% endif %}
+
+        <a href="#event-reserve" class="btn btn-call event-detail__reserve">Reserve</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section id="event-reserve" class="container section-block contact-help">
+  {% include "main/components/lead_form.html" with lead_form=lead_form lead_default_type=lead_default_type lead_title=page_content.reserve.title|default:"Reserve this workshop" lead_subtitle=page_content.reserve.body|default:"برای رزرو، هماهنگی یا دریافت جزئیات بیشتر، درخواست خود را برای زاد ارسال کنید." cta_position="inline" %}
+</section>
+{% endblock %}

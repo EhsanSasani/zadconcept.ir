@@ -1,0 +1,83 @@
+{% load static seo_tags %}
+<!DOCTYPE html>
+<html lang="{{ html_lang|default:'fa' }}" dir="{{ html_dir|default:'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{{ meta_title|default:"zad" }}</title>
+  <meta name="description" content="{{ meta_description|default:'zad concept store for flowers, bakery, gifts, and event coordination in Mashhad.' }}">
+  <meta name="robots" content="{{ robots_content|default:'index,follow' }}">
+  {% if canonical_url %}<link rel="canonical" href="{{ canonical_url }}">{% endif %}
+  {% for alternate in alternate_links %}<link rel="alternate" hreflang="{{ alternate.language }}" href="{{ alternate.url }}">{% endfor %}
+  <link rel="icon" href="{% static 'main/img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="shortcut icon" href="{% url 'favicon' %}">
+  {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
+  {% if bing_site_verification %}<meta name="msvalidate.01" content="{{ bing_site_verification }}">{% endif %}
+
+  <meta property="og:type" content="{{ og_type|default:'website' }}">
+  <meta property="og:locale" content="{{ og_locale|default:'fa_IR' }}">
+  <meta property="og:site_name" content="ZAD Flower &amp; Concept Store">
+  <meta property="og:title" content="{{ meta_title|default:'zad' }}">
+  <meta property="og:description" content="{{ meta_description|default:'zad concept store for flowers, bakery, gifts, and event coordination in Mashhad.' }}">
+  {% if canonical_url %}<meta property="og:url" content="{{ canonical_url }}">{% endif %}
+  <meta property="og:image" content="{{ social_image_url|default:site_default_social_image }}">
+  <meta property="og:image:width" content="{{ social_image_width }}">
+  <meta property="og:image:height" content="{{ social_image_height }}">
+  <meta property="og:image:alt" content="{{ meta_title|default:'ZAD Flower & Concept Store' }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta_title|default:'zad' }}">
+  <meta name="twitter:description" content="{{ meta_description|default:'zad concept store in Mashhad.' }}">
+  <meta name="twitter:image" content="{{ social_image_url|default:site_default_social_image }}">
+
+  {% if google_tag_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tag_id }}"></script>
+    <script nonce="{{ csp_nonce }}">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ google_tag_id }}');
+    </script>
+  {% endif %}
+
+  <link rel="stylesheet" href="{% static 'main/css/foundation/base.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/layout/structure.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/layout/hero.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/components/core.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/components/product-card.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/components/product-rail.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/layout/page-spacing.css' %}?v=1">
+  {% block page_css %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'main/css/layout/footer.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/components/interaction.css' %}?v=1">
+  {% if enable_product_modal %}<link rel="stylesheet" href="{% static 'main/css/components/product-dialog.css' %}?v=4">{% endif %}
+  <link rel="stylesheet" href="{% static 'main/vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'main/css/layout/hero-config.css' %}?v=3">
+  <link rel="stylesheet" href="{% url 'hero_styles_css' %}">
+  <link rel="stylesheet" href="{% static 'main/css/foundation/accessibility.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/foundation/responsive.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/layout/navigation.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'main/css/layout/hero-policy.css' %}?v=1">
+
+  {% if structured_data_graph %}<script type="application/ld+json" nonce="{{ csp_nonce }}">{{ structured_data_graph|json_ld }}</script>{% endif %}
+</head>
+<body class="{% block body_class %}{% endblock %}" data-page-type="{{ page_type|default:'default' }}"{% if item_id %} data-item-id="{{ item_id }}" data-item-name="{{ product.seo_name }}" data-item-category="{{ product.category.slug }}"{% endif %}>
+  {% if not hide_global_chrome %}{% include "main/layout/site_header.html" %}{% endif %}
+  {% include "main/layout/page_hero.html" %}
+  {% include "main/layout/flash_messages.html" %}
+
+  <main class="site-main">{% block content %}{% endblock %}</main>
+
+  {% if not hide_global_chrome %}{% include "main/layout/site_footer.html" %}{% endif %}
+
+  <script src="{% static 'main/js/core/analytics.js' %}"></script>
+  {% if google_tag_id %}<script src="{% static 'main/js/core/web-vitals.js' %}"></script>{% endif %}
+  <script src="{% static 'main/js/layout/navigation.js' %}"></script>
+  {% if page_hero_slides|length > 1 %}<script src="{% static 'main/js/components/hero-carousel.js' %}?v=2"></script>{% endif %}
+  {% block extra_js %}{% endblock %}
+  {% if enable_product_modal %}
+    {% include "main/components/product_dialog.html" %}
+    <script src="{% static 'main/js/components/product-dialog.js' %}?v=4"></script>
+  {% endif %}
+</body>
+</html>

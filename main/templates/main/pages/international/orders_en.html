@@ -1,0 +1,106 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-policy page-info page-policy--en{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">{% endblock %}
+
+{% block content %}
+<header class="policy-en-header">
+  <a href="{{ site_url }}" class="policy-en-header__brand" aria-label="ZAD home">
+    <strong>ZAD</strong>
+    <span>Flower &amp; Concept Store</span>
+  </a>
+  <a href="{% url 'international_orders' %}" hreflang="fa" class="info-language-link">نسخه فارسی</a>
+</header>
+
+<article class="info-page policy-page" aria-labelledby="international-title">
+  <header class="info-hero">
+    <div class="container info-hero__inner">
+      <div class="info-hero__topline">
+        <div>
+          <a href="{{ site_url }}" class="info-hero__home">Home</a>
+          <span aria-hidden="true">/</span>
+          <span>International orders</span>
+        </div>
+      </div>
+
+      <p class="info-hero__kicker">INTERNATIONAL ORDER · LOCAL DELIVERY</p>
+      <div class="info-hero__copy">
+        <h1 id="international-title">Send flowers and gifts to Mashhad from abroad</h1>
+        <p>Coordinate your order from anywhere. ZAD prepares the flowers, gifts, or bakery items locally and delivers them to your recipient in Mashhad, Iran.</p>
+      </div>
+
+      <div class="info-hero__meta">
+        <span>Order from anywhere</span>
+        <span>Prepared and delivered locally in Mashhad</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container info-layout">
+    <aside class="info-index" aria-label="On this page">
+      <p class="info-index__title">On this page</p>
+      <ol>
+        <li><a href="#international-steps">How ordering works</a></li>
+        <li><a href="#international-details">Important details</a></li>
+        <li><a href="#international-faq">Frequently asked questions</a></li>
+      </ol>
+      <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-index__contact">Start on Telegram</a>
+    </aside>
+
+    <div class="info-content">
+      <section class="info-paper info-order-flow" id="international-steps" aria-labelledby="international-steps-title">
+        <div class="info-paper__heading">
+          <span>HOW IT WORKS</span>
+          <h2 id="international-steps-title">Three simple steps</h2>
+        </div>
+        <div class="policy-page__steps" aria-label="How ordering works">
+          <section><span>1</span><h3>Share the order details</h3><p>Send the occasion, budget, preferred date, delivery window, and recipient address through Telegram.</p></section>
+          <section><span>2</span><h3>Confirm availability and payment</h3><p>The team confirms available options, the final amount, and the payment method available for your country.</p></section>
+          <section><span>3</span><h3>Local preparation and delivery</h3><p>After confirmation, ZAD prepares the order in Mashhad and delivers it within the agreed local time window.</p></section>
+        </div>
+      </section>
+
+      <section class="info-paper info-section info-section--standalone" aria-labelledby="international-details">
+        <div class="info-section__heading">
+          <span aria-hidden="true">01</span>
+          <h2 id="international-details">Important details</h2>
+        </div>
+        <ul>
+          <li>Same-day delivery depends on stock, preparation capacity, request time, and the recipient address.</li>
+          <li>Foreign-currency payment options, including PayPal when available, are confirmed before the order is finalized.</li>
+          <li>A final photo before dispatch can be coordinated on request.</li>
+          <li>This is an international ordering service with local fulfilment in Mashhad; products are not shipped across borders.</li>
+        </ul>
+      </section>
+
+      <section class="info-paper policy-page__faq" aria-labelledby="international-faq">
+        <div class="info-paper__heading">
+          <span>FAQ</span>
+          <h2 id="international-faq">Frequently asked questions</h2>
+        </div>
+        {% for item in faq_items %}
+          <details{% if forloop.first %} open{% endif %}>
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer }}</p>
+          </details>
+        {% endfor %}
+      </section>
+
+      <aside class="info-contact policy-page__contact">
+        <div>
+          <span class="info-contact__kicker">INTERNATIONAL ORDERS</span>
+          <h2>Start your order</h2>
+          <p>Share your budget, preferred date, and delivery details so the ZAD team can confirm availability and payment.</p>
+        </div>
+        <div class="info-contact__actions">
+          <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-button info-button--light">Message ZAD on Telegram</a>
+          <a href="{% url 'contact' %}" class="info-button info-button--outline">Contact details</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</article>
+
+<footer class="policy-en-footer">© 2026 ZAD Flower &amp; Concept Store · Mashhad, Iran</footer>
+{% endblock %}

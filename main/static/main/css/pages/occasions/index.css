@@ -1,0 +1,313 @@
+/* =========================
+   Occasions page - final
+   ========================= */
+
+.page-occasions .page-hero {
+  position: relative;
+  min-height: 62vh;
+  overflow: hidden;
+}
+
+.page-occasions .page-hero__overlay {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.18)),
+    radial-gradient(circle at center, rgba(255,255,255,0.16), transparent 48%);
+}
+
+.page-occasions .page-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(247,242,235,0) 0%,
+      rgba(247,242,235,.55) 55%,
+      #f7f2eb 100%
+    );
+}
+
+.page-occasions .catalog-primary-section {
+  margin-top: 18px;
+  padding-top: 0;
+}
+
+.occasions-shell {
+  padding: 42px 0 76px;
+}
+
+.occasions-container {
+  position: relative;
+  width: min(1240px, 92%);
+  margin-inline: auto;
+}
+
+.occasions-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 36px;
+}
+
+.occasion-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: #16110d;
+
+  box-shadow:
+    0 12px 28px rgba(28,20,14,0.08),
+    0 24px 60px rgba(28,20,14,0.06);
+
+  transition:
+    transform .45s ease,
+    box-shadow .45s ease;
+}
+
+.occasion-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(199,155,107,.45);
+  box-shadow:
+    0 20px 45px rgba(30,20,12,.12),
+    0 40px 90px rgba(30,20,12,.10);
+}
+
+.occasion-card__media,
+.occasion-card__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.occasion-card__media img {
+  object-fit: cover;
+  transition:
+    transform 0.8s ease,
+    filter 0.5s ease;
+}
+
+.occasion-card:hover .occasion-card__media img {
+  transform: scale(1.05);
+  filter: brightness(0.94);
+}
+
+
+.occasion-card__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,0.76) 0%,
+      rgba(0,0,0,0.34) 42%,
+      rgba(0,0,0,0.04) 100%
+    );
+}
+
+.occasion-card:hover .occasion-card__shade {
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,0,0,0.84) 0%,
+      rgba(0,0,0,0.38) 42%,
+      rgba(0,0,0,0.04) 100%
+    );
+}
+
+.occasion-card__content {
+  position: absolute;
+  right: 26px;
+  bottom: 26px;
+  left: 26px;
+  z-index: 2;
+  color: #fff;
+  text-align: right;
+}
+
+.occasion-card__en {
+  display: block;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,0.72);
+  font-family: var(--font-ui-en);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  opacity: 0.65;
+  text-transform: uppercase;
+}
+
+
+.occasion-card__content h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.85rem, 2.35vw, 2.55rem);
+  font-weight: 650;
+  line-height: 1.12;
+}
+
+.occasion-card__content p {
+  max-width: 28ch;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.76rem;
+  line-height: 1.85;
+}
+
+.occasions-empty {
+  padding: 42px 24px;
+  background: #fff;
+  color: var(--muted);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 980px) {
+  .occasions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .occasion-card {
+    min-height: 330px;
+  }
+}
+
+@media (max-width: 620px) {
+  .page-occasions .page-hero {
+    min-height: 48vh;
+  }
+
+  .page-occasions .catalog-primary-section {
+    margin-top: 12px;
+  }
+
+  .occasions-shell {
+    padding: 12px 0 52px;
+  }
+
+  .occasions-container {
+    width: 90%;
+  }
+
+  .occasions-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .occasion-card {
+    min-height: auto;
+  }
+
+  .occasion-card__content {
+    right: 18px;
+    bottom: 18px;
+    left: 18px;
+  }
+
+  .occasion-card__en {
+    color: rgba(255,255,255,0.68);
+  }
+
+  .occasion-card__content h2 {
+    font-size: clamp(1.6rem, 2vw, 2.15rem);
+    line-height: 1.18;
+  }
+
+  .occasion-card__content p {
+    margin-top: 9px;
+    color: rgba(255,255,255,0.76);
+    font-size: 0.74rem;
+    line-height: 1.8;
+  }
+
+}
+
+
+.page-occasions {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(199,155,107,0.05),
+      transparent 32%
+    ),
+    #f4efe8;
+}
+
+.page-occasions .occasions-shell {
+  background: transparent;
+}
+
+.occasions-container::before {
+  content: "";
+
+  position: absolute;
+  inset: -120px -80px auto -80px;
+  height: 320px;
+
+  pointer-events: none;
+  z-index: 0;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(199,155,107,.08),
+      transparent 70%
+    );
+}
+
+.occasions-brand-mark {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.occasions-brand-mark i {
+  margin-bottom: 10px;
+  color: rgba(255, 250, 242, 0.86);
+  font-size: 1.35rem;
+  line-height: 1;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.occasions-brand-mark span {
+  color: rgba(255, 250, 242, 0.96);
+  font-family: var(--font-brand-en);
+  font-size: clamp(2rem, 3.2vw, 3.5rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: 0.18em;
+  text-shadow: 0 12px 34px rgba(0, 0, 0, 0.48);
+}
+
+.occasions-brand-mark small {
+  margin-top: 9px;
+  color: rgba(255, 250, 242, 0.78);
+  font-family: var(--font-ui-en);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.38em;
+  line-height: 1;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
+}

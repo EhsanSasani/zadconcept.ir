@@ -10,4 +10,4 @@ def custom_404(request, exception):
         "page_type": "error-404",
         "is_home": True,
     }
-    return render(request, "404.html", context, status=404)
+    return render(request, "main/errors/404.html", context, status=404)

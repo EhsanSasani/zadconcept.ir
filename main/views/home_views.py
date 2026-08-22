@@ -100,4 +100,4 @@ def index(request):
         }
     )
 
-    return render(request, "index.html", context)
+    return render(request, "main/pages/home/index.html", context)

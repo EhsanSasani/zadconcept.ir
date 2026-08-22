@@ -1,0 +1,78 @@
+body:not(.page-home) .site-main {
+  padding-top: 0;
+}
+body:not(.page-home) .breadcrumbs {
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+body:not(.page-home) .section-block:first-of-type {
+  padding-top: 12px;
+}
+
+.page-category .catalog-intro,
+.page-subcategory .catalog-intro,
+.page-occasions .catalog-intro,
+.page-occasion-detail .catalog-products-section,
+.page-about .about-intro,
+.page-events .page-intro,
+.page-event-detail .event-detail,
+.page-item .item-detail,
+.page-contact .contact-help,
+.page-local .section-block:first-of-type {
+  margin-top: 0;
+  padding-top: 10px;
+}
+
+.page-category .section-head,
+.page-subcategory .section-head,
+.page-occasions .section-head,
+.page-occasion-detail .catalog-detail-head {
+  margin-bottom: 10px;
+}
+
+.page-category .catalog-intro__text,
+.page-subcategory .catalog-intro__text,
+.page-occasions .catalog-intro__text,
+.page-occasion-detail .catalog-detail-head .intro-text {
+  margin-top: 10px;
+  margin-bottom: 0;
+  max-width: 560px;
+  line-height: 1.9;
+}
+
+.page-about .about-hero__media picture {
+  display: contents;
+}
+
+.page-contact .contact-form-section {
+  margin-top: 44px;
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  body:not(.page-home) .breadcrumbs {
+    margin-top: 12px;
+    margin-bottom: 10px;
+  }
+
+  body:not(.page-home) .section-block:first-of-type {
+    padding-top: 8px;
+  }
+
+  .page-category .catalog-intro,
+  .page-subcategory .catalog-intro,
+  .page-occasions .catalog-intro,
+  .page-occasion-detail .catalog-products-section {
+    padding-top: 6px;
+  }
+
+  .page-category .catalog-intro__text,
+  .page-subcategory .catalog-intro__text,
+  .page-occasions .catalog-intro__text,
+  .page-occasion-detail .catalog-detail-head .intro-text {
+    max-width: 92%;
+    font-size: 0.92rem;
+    line-height: 1.85;
+  }
+}

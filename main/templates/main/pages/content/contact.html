@@ -1,0 +1,209 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-contact{% endblock %}
+
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/contact.css' %}?v=1">{% endblock %}
+
+{% block content %}
+{% include "main/components/breadcrumbs.html" %}
+
+<section class="container section-block contact-landing" aria-labelledby="contact-title">
+  <div class="contact-landing__content">
+    <p class="section-kicker">{{ page_content.intro.kicker|default:"تماس با زاد" }}</p>
+    <h1 id="contact-title">{{ page_content.intro.title|default:"برای سفارش گل، هدیه و هماهنگی ارسال با زاد در ارتباط باشید." }}</h1>
+    <p>{% if page_content.intro.body %}{{ page_content.intro.body }}{% else %}
+      اگر برای سفارش گل در مشهد، انتخاب هدیه، بررسی موجودی روز، ارسال همان‌روز یا هماهنگی مراسم نیاز به راهنمایی دارید،
+      تیم زاد از طریق تماس تلفنی، تلگرام و بله پاسخ‌گوست. برای سفارش‌های فوری، تماس مستقیم سریع‌ترین مسیر است.
+    {% endif %}</p>
+
+    <div class="contact-landing__actions" aria-label="راه‌های سریع تماس با زاد">
+      <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="contact-hero">
+        <i class="bi bi-telephone"></i>
+        تماس مستقیم
+      </a>
+      <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="contact-hero">
+        <i class="bi bi-telegram"></i>
+        پیام در تلگرام
+      </a>
+      <a href="{{ site_bale_url }}" target="_blank" rel="noopener" class="btn btn-bale" data-cta-position="contact-hero-bale">
+        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+        پیام در بله
+      </a>
+    </div>
+  </div>
+
+  <aside class="contact-info-panel" aria-label="اطلاعات تماس زاد">
+    <a href="{{ site_call_href }}">
+      <i class="bi bi-telephone"></i>
+      <span>شماره تماس</span>
+      <strong>{{ site_phone_display }}</strong>
+    </a>
+    <a href="{{ site_telegram_url }}" target="_blank" rel="noopener">
+      <i class="bi bi-telegram"></i>
+      <span>تلگرام</span>
+      <strong>ارسال پیام به زاد</strong>
+    </a>
+    <a href="{{ site_bale_url }}" target="_blank" rel="noopener" data-cta-position="contact-info-bale">
+      <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+      <span>بله</span>
+      <strong>{{ site_bale_display }}</strong>
+    </a>
+    <div>
+      <i class="bi bi-clock"></i>
+      <span>ساعت پاسخ‌گویی</span>
+      <strong>{{ site_opening_hours_text }}</strong>
+    </div>
+    <div>
+      <i class="bi bi-geo-alt"></i>
+      <span>آدرس</span>
+      <strong>{{ site_address_text }}</strong>
+    </div>
+  </aside>
+</section>
+
+<section class="container section-block contact-paths" aria-label="مسیرهای ارتباط با زاد">
+  <article>
+    <i class="bi bi-lightning-charge"></i>
+    <h2>سفارش فوری</h2>
+    <p>برای ارسال همان‌روز یا سفارش‌های زمان‌دار، تماس بگیرید تا موجودی و ظرفیت آماده‌سازی سریع بررسی شود.</p>
+  </article>
+  <article>
+    <i class="bi bi-chat-heart"></i>
+    <h2>راهنمایی انتخاب</h2>
+    <p>اگر بین چند سبک، رنگ یا بودجه مردد هستید، در تلگرام یا بله توضیح بدهید تا گزینه مناسب پیشنهاد شود.</p>
+  </article>
+  <article>
+    <i class="bi bi-calendar-event"></i>
+    <h2>مراسم و سفارش خاص</h2>
+    <p>برای رویداد، گل‌آرایی، هدیه سازمانی یا سفارش ترکیبی، جزئیات را از فرم همین صفحه ارسال کنید.</p>
+  </article>
+</section>
+
+<section class="container section-block contact-help contact-form-section" aria-labelledby="contact-form-title">
+  <div class="contact-form-copy">
+    <p class="section-kicker">{{ page_content.form.kicker|default:"فرم درخواست" }}</p>
+    <h2 id="contact-form-title">{{ page_content.form.title|default:"جزئیات کوتاه سفارش را بفرستید." }}</h2>
+    <p>{% if page_content.form.body %}{{ page_content.form.body }}{% else %}
+      اگر تماس برایتان ممکن نیست، این فرم کمک می‌کند تیم زاد با اطلاعات اولیه مثل نوع سفارش، بازه تحویل و توضیح کوتاه،
+      سریع‌تر با شما هماهنگ کند.
+    {% endif %}</p>
+
+    <ul class="contact-form-tips" aria-label="اطلاعات موردنیاز برای هماهنگی">
+      <li>نوع سفارش، مناسبت و حدود بودجه را کوتاه بنویسید.</li>
+      <li>برای سفارش فوری، بازه زمانی تحویل را دقیق‌تر انتخاب کنید.</li>
+      <li>اگر سفارش مراسم است، محل و تاریخ رویداد را هم اضافه کنید.</li>
+    </ul>
+  </div>
+
+  <section class="lead-box contact-lead-box" id="lead-form">
+    <div class="lead-head">
+      <h2>درخواست هماهنگی</h2>
+      <p>اطلاعات را وارد کنید؛ تیم زاد در زمان پاسخ‌گویی با شما تماس می‌گیرد.</p>
+    </div>
+
+    <form method="post" action="{% url 'lead_request' %}" class="lead-form contact-lead-form" data-track-lead-form data-cta-position="contact-form" data-default-lead-type="{{ lead_default_type|default:'flower' }}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <input type="hidden" name="source_page" value="{{ request.path }}">
+
+      {% if lead_form.non_field_errors %}
+        <div class="form-errors">
+          {{ lead_form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <label>
+        <span>نام و نام خانوادگی</span>
+        {{ lead_form.full_name }}
+        {{ lead_form.full_name.errors }}
+      </label>
+
+      <label>
+        <span>شماره موبایل</span>
+        {{ lead_form.mobile }}
+        {{ lead_form.mobile.errors }}
+      </label>
+
+      <label>
+        <span>نوع درخواست</span>
+        {{ lead_form.lead_type }}
+        {{ lead_form.lead_type.errors }}
+      </label>
+
+      <label>
+        <span>بازه زمانی تحویل</span>
+        {{ lead_form.delivery_window }}
+        {{ lead_form.delivery_window.errors }}
+      </label>
+
+      <label class="field-optional date-only">
+        <span>تاریخ پیشنهادی</span>
+        {{ lead_form.preferred_date }}
+        {{ lead_form.preferred_date.errors }}
+      </label>
+
+      <label class="field-optional event-only">
+        <span>محل رویداد</span>
+        {{ lead_form.event_location }}
+        {{ lead_form.event_location.errors }}
+      </label>
+
+      <label>
+        <span>توضیح کوتاه</span>
+        {{ lead_form.note }}
+        {{ lead_form.note.errors }}
+      </label>
+
+      <button type="submit" class="btn btn-call">
+        <i class="bi bi-send"></i>
+        ارسال درخواست
+      </button>
+    </form>
+  </section>
+</section>
+
+<section class="container section-block contact-guidance" aria-labelledby="contact-guidance-title">
+  <div>
+    <p class="section-kicker">قبل از تماس</p>
+    <h2 id="contact-guidance-title">برای پاسخ دقیق‌تر، این چند مورد را آماده داشته باشید.</h2>
+  </div>
+
+  <div class="contact-guidance__grid">
+    <article>
+      <span>01</span>
+      <h3>مناسبت و حال‌وهوا</h3>
+      <p>مثلاً تولد، تبریک، عاشقانه، ترحیم، افتتاحیه یا هدیه روزمره.</p>
+    </article>
+    <article>
+      <span>02</span>
+      <h3>زمان و محدوده ارسال</h3>
+      <p>تاریخ، بازه ساعت و محدوده آدرس در مشهد به هماهنگی سریع‌تر کمک می‌کند.</p>
+    </article>
+    <article>
+      <span>03</span>
+      <h3>بودجه و سبک دلخواه</h3>
+      <p>اگر رنگ، سبک مینیمال یا ترکیب خاصی مدنظر دارید، همان ابتدا بگویید.</p>
+    </article>
+  </div>
+</section>
+
+<section class="container section-block contact-help-link contact-final-cta" aria-labelledby="contact-faq-title">
+  <p class="section-kicker">راهنمای بیشتر</p>
+  <h2 id="contact-faq-title">قبل از ثبت سفارش، سوالات پرتکرار را هم ببینید.</h2>
+  <p>
+    درباره ارسال همان‌روز، بازدید حضوری، سفارش ترکیبی و هماهنگی مراسم، در صفحه سوالات متداول پاسخ‌های کوتاه و کاربردی آماده شده است.
+  </p>
+
+  <div class="cta-row">
+    <a href="{% url 'faq' %}" class="btn btn-light">
+      <i class="bi bi-question-circle"></i>
+      مشاهده سوالات متداول
+    </a>
+    <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="contact-bottom">
+      <i class="bi bi-telephone"></i>
+      تماس برای سفارش
+    </a>
+  </div>
+</section>
+{% endblock %}

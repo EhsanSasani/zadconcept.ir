@@ -1,0 +1,54 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-blog-detail{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/blog/detail.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+{% include "main/components/breadcrumbs.html" %}
+
+<article class="container section-block blog-detail">
+  {% if post.cover_image %}
+    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="cover-image" width="1600" height="900" decoding="async">
+  {% endif %}
+
+  <div class="blog-detail__body">
+    {{ post.body|linebreaks }}
+  </div>
+</article>
+
+{% comment %}
+{% if related_links %}
+<section class="container section-block">
+  <div class="section-head">
+    <h2>Related Paths</h2>
+  </div>
+
+  <div class="inline-links">
+    {% for item in related_links %}
+      <a href="{{ item.url }}">{{ item.label }}</a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if related_products %}
+<section class="container section-block featured-products-section">
+  <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
+    <div>
+      <h2 class="section-title-en">Related Pieces</h2>
+    </div>
+  </div>
+
+  {% include "main/components/product_rail.html" with products=related_products %}
+</section>
+{% endif %}
+{% endcomment %}
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
+{% endblock %}

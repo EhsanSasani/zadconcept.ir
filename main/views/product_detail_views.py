@@ -203,7 +203,7 @@ def _section_product_detail(request, section, category_slug, slug):
     ):
         return redirect(product.get_absolute_url(), permanent=True)
 
-    return render(request, "item_detail.html", _item_detail_context(request, product))
+    return render(request, "main/pages/products/detail.html", _item_detail_context(request, product))
 
 def flower_product_detail(request, category_slug, slug):
     return _section_product_detail(request, Category.Section.FLOWERS, category_slug, slug)

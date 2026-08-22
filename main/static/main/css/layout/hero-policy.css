@@ -1,0 +1,169 @@
+/* Final shared hero contract. Page artwork stays undimmed. */
+.hero-slide__overlay,
+.page-hero__overlay,
+.flowers-hero__overlay,
+.workshops-hero__overlay,
+.about-hero__overlay,
+.weddings-hero__veil {
+  display: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+.global-hero img,
+.page-hero img,
+.flowers-hero img,
+.workshops-hero img,
+.about-hero img,
+.weddings-hero img,
+.ws-hero img,
+.event-hero img,
+.local-hero img,
+.occasions-hero img,
+.category-hero img,
+.subcategory-hero img {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+:root {
+  --zad-primary-hero-mobile: clamp(440px, calc(65svh + 20px), 620px);
+  --zad-home-notice-desktop: 40px;
+  --zad-home-navbar-desktop: 68px;
+  --zad-home-trust-desktop: 176px;
+}
+
+@media (min-width: 761px) {
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 5 !important;
+  }
+
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+  }
+
+  .page-home .home-trust-strip {
+    box-sizing: border-box !important;
+    height: var(--zad-home-trust-desktop) !important;
+    min-height: var(--zad-home-trust-desktop) !important;
+    margin: 0 !important;
+    padding: 34px 0 30px !important;
+  }
+
+  .page-home .home-hero,
+  .page-home .hero-slides {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: calc(100svh - var(--zad-home-notice-desktop) - var(--zad-home-navbar-desktop) - var(--zad-home-trust-desktop)) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    aspect-ratio: auto !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture,
+  .page-home .hero-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .page-home .hero-slide img {
+    display: block !important;
+    object-fit: cover !important;
+    object-position: center 74% !important;
+  }
+
+  .page-home .hero-slide--1 img {
+    object-position: center 78% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-home .home-hero,
+  .page-home .hero-slides,
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .page-about .about-hero,
+  .weddings-hero {
+    height: var(--zad-primary-hero-mobile) !important;
+    min-height: var(--zad-primary-hero-mobile) !important;
+    max-height: var(--zad-primary-hero-mobile) !important;
+  }
+
+  .page-home .hero-slide,
+  .page-home .hero-slide picture,
+  .page-hero__slides,
+  .page-hero__slide,
+  .page-hero__slide picture,
+  .flowers-hero__media,
+  .flowers-hero__media picture,
+  .workshops-hero__slides,
+  .workshops-hero__slide,
+  .workshops-hero__slide picture,
+  .page-about .about-hero__media,
+  .page-about .about-hero__media picture,
+  .weddings-hero__media,
+  .weddings-hero__media picture {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .page-home .hero-slide img,
+  .page-hero__slide img,
+  .flowers-hero__media img,
+  .workshops-hero__image,
+  .page-about .about-hero__media img,
+  .weddings-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+  }
+
+  .page-home .hero-slide img {
+    object-position: left 70% !important;
+  }
+}

@@ -1,0 +1,167 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-item{% endblock %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=3">
+{% endblock %}
+
+{% block content %}
+{% include "main/components/breadcrumbs.html" %}
+
+<section class="container section-block item-detail item-detail--premium">
+  <div class="item-detail__grid">
+    <article class="item-detail__media">
+      <div class="item-detail__image-frame">
+        <a href="{{ subcategory_url|default:category_url|default:'/' }}" class="item-detail__close" aria-label="بازگشت">×</a>
+
+        {% if product.cover_image %}
+          <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}"{% endif %} width="1100" height="1300" sizes="(max-width: 760px) 100vw, 55vw" fetchpriority="high" decoding="async">
+        {% else %}
+          <div class="item-detail__placeholder">تصویر هنوز اضافه نشده</div>
+        {% endif %}
+
+        {% if product.stock_status == "out_of_stock" %}
+          <span class="item-detail__floating-badge item-detail__floating-badge--out">ناموجود</span>
+        {% elif product.stock_status == "preorder" %}
+          <span class="item-detail__floating-badge">پیش‌سفارش</span>
+        {% else %}
+          <span class="item-detail__floating-badge">موجود</span>
+        {% endif %}
+      </div>
+
+      {% with gallery=product.gallery_images.all %}
+        {% if gallery %}
+          <div class="item-detail__thumbs" aria-label="Product gallery">
+            {% if product.cover_image %}
+              <span class="item-detail__thumb is-active">
+                <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
+              </span>
+            {% endif %}
+
+            {% for image in gallery|slice:":5" %}
+              <span class="item-detail__thumb">
+                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.seo_name }}"{% if image.image_srcset %} srcset="{{ image.image_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
+              </span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </article>
+
+    <aside class="item-detail__info">
+      <p class="item-detail__eyebrow">zad {{ section_label|default:"Collection" }}</p>
+
+      <h1>{{  product.display_name  }}</h1>
+
+      <div class="item-detail__chips">
+        {% if product.category %}
+          <span>{{ product.category.name }}</span>
+        {% endif %}
+
+        {% if product.stock_status == "out_of_stock" %}
+          <span class="is-warning">ناموجود</span>
+        {% elif product.stock_status == "preorder" %}
+          <span>پیش‌سفارش</span>
+        {% else %}
+          <span>موجود</span>
+        {% endif %}
+      </div>
+
+      <div class="item-detail__summary">
+        {% if product.description %}
+          <p>{{ product.description }}</p>
+        {% else %}
+          <p>برای هماهنگی موجودی روز، رنگ‌بندی، زمان ارسال و جزئیات سفارش با زاد تماس بگیرید.</p>
+        {% endif %}
+      </div>
+
+      <div class="item-detail__purchase-box">
+  <div>
+    <span class="item-detail__price-label">Price</span>
+
+    {% if product.has_price %}
+      <p class="item-detail__price">{{ product.display_price }}</p>
+    {% else %}
+      <p class="item-detail__price item-detail__price--inquiry">استعلام قیمت</p>
+    {% endif %}
+  </div>
+
+  <p class="item-detail__microcopy">
+    {{ product.order_contact_text }}
+  </p>
+</div>
+
+      <div class="cta-row item-detail__cta">
+        {% if product.stock_status == "out_of_stock" %}
+          <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="product-detail">Call</a>
+        {% else %}
+          <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="product-detail">{{ item_call_text|default:"Call" }}</a>
+        {% endif %}
+
+        <a href="{{ item_telegram_href|default:site_telegram_url }}" target="_blank" rel="noopener" class="btn btn-telegram" data-cta-position="product-detail">
+          {{ item_telegram_text|default:"Telegram" }}
+        </a>
+
+        <a href="{{ site_bale_url }}" target="_blank" rel="noopener" class="btn btn-bale" data-cta-position="product-detail-bale" aria-label="سفارش {{ product.display_name }} در بله">
+          <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+          <span>بله</span>
+        </a>
+      </div>
+
+      
+
+      {% with tags=product_tags %}
+        {% if tags %}
+          <div class="item-detail__tags" aria-label="Product tags">
+            {% for tag in tags %}
+              <span>{{ tag.name }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="inline-links item-detail__links">
+        {% if category_url %}
+          <a href="{{ category_url }}">{{ section_label|default:"Collection" }}</a>
+        {% endif %}
+
+        {% if subcategory_url %}
+          <a href="{{ subcategory_url }}">{{ subcategory_label }}</a>
+        {% endif %}
+
+        <a href="{{ mashhad_order_url }}">Mashhad</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="container section-block item-detail-extra">
+  <article class="item-detail-panel item-detail-panel--before-order">
+    <p class="item-detail-panel__kicker">{{ page_content.before_order.kicker|default:"Before Order" }}</p>
+    <h2>{{ page_content.before_order.title|default:"قبل از ثبت سفارش" }}</h2>
+    <p>{{ page_content.before_order.body|default:"رنگ گل‌ها، جزئیات چیدمان، بسته‌بندی و بعضی آیتم‌ها ممکن است براساس موجودی تازه همان روز کمی تغییر کند. پیش از ثبت نهایی سفارش، تیم زاد موجودی، زمان ارسال و جزئیات سفارش را با شما هماهنگ می‌کند." }}</p>
+  </article>
+</section>
+
+{% if similar_items %}
+<section class="container section-block featured-products-section item-detail-related">
+  <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
+    <div>
+      <h2 class="section-title-en">{{ page_content.related.title|default:"Related" }}</h2>
+    </div>
+    {% if category_url %}
+      <a href="{{ category_url }}" class="section-link">View All</a>
+    {% endif %}
+  </div>
+
+  {% include "main/components/product_rail.html" with products=similar_items %}
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
+{% endblock %}

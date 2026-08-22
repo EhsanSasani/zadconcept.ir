@@ -473,8 +473,8 @@ class SeoContractTests(TestCase):
         catalog = self.client.get(reverse("bakery"))
 
         self.assertEqual(catalog.content.decode().count("<main"), 1)
-        self.assertNotContains(about, "product-modal.css")
-        self.assertContains(catalog, "product-modal.css")
+        self.assertNotContains(about, "product-dialog.css")
+        self.assertContains(catalog, "product-dialog.css")
         self.assertContains(catalog, 'aria-label="بستن پنجره محصول"')
         self.assertContains(catalog, 'aria-labelledby="zad-product-modal-title"')
 

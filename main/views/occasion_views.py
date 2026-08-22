@@ -46,7 +46,7 @@ def occasions(request):
         }
     )
 
-    return render(request, "occasions.html", context)
+    return render(request, "main/pages/occasions/index.html", context)
 
 
 def flower_occasion(request, slug):
@@ -165,7 +165,7 @@ def flower_occasion(request, slug):
         }
     )
 
-    return render(request, "occasion_detail.html", context)
+    return render(request, "main/pages/occasions/detail.html", context)
 
 def occasion_detail(request, slug):
     if slug in WEDDING_LEGACY_TAG_SLUGS:
@@ -299,4 +299,4 @@ def occasion_detail(request, slug):
         }
     )
 
-    return render(request, "occasion_detail.html", context)
+    return render(request, "main/pages/occasions/detail.html", context)

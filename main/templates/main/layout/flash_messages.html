@@ -1,0 +1,7 @@
+{% if messages %}
+  <div class="container alerts">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}"{% if 'lead-success' in message.tags %} data-lead-success{% endif %}>{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}

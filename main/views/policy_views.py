@@ -46,4 +46,4 @@ def policy_page(request, policy_slug):
         suppress_default_hero=True,
     )
     context["policy"] = _normalized_policy(policy)
-    return render(request, "policy_page.html", context)
+    return render(request, "main/pages/content/policy.html", context)

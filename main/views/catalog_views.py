@@ -159,7 +159,7 @@ def _section_all_products(request, section):
         }
     )
 
-    return render(request, "subcategory.html", context)
+    return render(request, "main/pages/catalog/subcategory.html", context)
 
 def flowers_all(request):
     return _section_all_products(request, Category.Section.FLOWERS)
@@ -266,7 +266,7 @@ def _section_subcategory(request, section, subcategory_slug):
         }
     )
 
-    return render(request, "subcategory.html", context)
+    return render(request, "main/pages/catalog/subcategory.html", context)
 
 def flower_subcategory(request, subcategory_slug):
     if subcategory_slug in WEDDING_FLOWER_LEGACY_SLUGS:
@@ -490,10 +490,9 @@ def _collection_landing_page(
         if directory_only:
             raise Http404("The flowers landing page is a category directory")
         html = render_to_string(
-            "partials/product_card.html",
+            "main/components/product_card.html",
             {
                 "products": products,
-                "card_variant": "landing",
                 "fallback_image": landing["fallback_image"],
                 "empty_text": landing["empty_text"],
             },
@@ -582,7 +581,7 @@ def _collection_landing_page(
         }
     )
 
-    return render(request, "flowers_landing.html", context)
+    return render(request, "main/pages/catalog/landing.html", context)
 
 def flowers(request):
     return _collection_landing_page(
@@ -661,4 +660,4 @@ def flowers_same_day(request):
     )
     context["structured_data_graph"].append(service_node(context["canonical_url"]))
 
-    return render(request, "subcategory.html", context)
+    return render(request, "main/pages/catalog/subcategory.html", context)

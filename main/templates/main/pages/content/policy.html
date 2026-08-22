@@ -1,0 +1,73 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-policy page-info{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">{% endblock %}
+
+{% block content %}
+<article class="info-page policy-page" aria-labelledby="policy-title">
+  <header class="info-hero">
+    <div class="container info-hero__inner">
+      <div class="info-hero__topline">
+        <div>
+          <a href="{% url 'index' %}" class="info-hero__home">خانه</a>
+          <span aria-hidden="true">/</span>
+          <span>{{ policy.title }}</span>
+        </div>
+      </div>
+
+      <p class="info-hero__kicker" dir="ltr">ZAD · INFORMATION</p>
+      <div class="info-hero__copy">
+        <h1 id="policy-title">{{ policy.title }}</h1>
+        <p>{{ policy.intro }}</p>
+      </div>
+
+      <div class="info-hero__meta">
+        <span>اطلاعات رسمی زاد</span>
+        <time datetime="2026-07-14">آخرین به‌روزرسانی: {{ policy.updated }}</time>
+      </div>
+    </div>
+  </header>
+
+  <div class="container info-layout">
+    <aside class="info-index" aria-label="فهرست این صفحه">
+      <p class="info-index__title">در این صفحه</p>
+      <ol>
+        {% for section in policy.sections %}
+          <li><a href="#policy-section-{{ forloop.counter }}">{{ section.title }}</a></li>
+        {% endfor %}
+      </ol>
+      <a href="{% url 'contact' %}" class="info-index__contact">سؤالی دارید؟ با زاد تماس بگیرید</a>
+    </aside>
+
+    <div class="info-content">
+      <div class="info-paper policy-page__sections">
+        {% for section in policy.sections %}
+          <section class="info-section" aria-labelledby="policy-section-{{ forloop.counter }}">
+            <div class="info-section__heading">
+              <span aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+              <h2 id="policy-section-{{ forloop.counter }}">{{ section.title }}</h2>
+            </div>
+            {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+            {% if section.items %}
+              <ul>{% for item in section.items %}<li>{{ item }}</li>{% endfor %}</ul>
+            {% endif %}
+          </section>
+        {% endfor %}
+      </div>
+
+      <aside class="info-contact policy-page__contact" aria-label="راه ارتباطی">
+        <div>
+          <span class="info-contact__kicker">پشتیبانی زاد</span>
+          <h2>نیاز به توضیح بیشتر دارید؟</h2>
+          <p>برای سؤال درباره سفارش یا این سیاست، از کانال‌های رسمی زاد استفاده کنید.</p>
+        </div>
+        <div class="info-contact__actions">
+          <a href="{% url 'contact' %}" class="info-button info-button--light">تماس با زاد</a>
+          <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-button info-button--outline">تلگرام</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</article>
+{% endblock %}

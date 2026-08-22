@@ -131,7 +131,7 @@ def _category_page(request, section):
         }
     )
 
-    return render(request, "category.html", context)
+    return render(request, "main/pages/catalog/section.html", context)
 
 FLOWER_TYPE_SLUGS = [
     "hand-bouquet",

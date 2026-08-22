@@ -33,7 +33,7 @@ def contact(request):
         }
     )
 
-    return render(request, "contact.html", context)
+    return render(request, "main/pages/content/contact.html", context)
 
 
 def faq(request):
@@ -60,7 +60,7 @@ def faq(request):
     context.update(hero_data)
     context["faq_page_groups"] = FAQ_PAGE_GROUPS
 
-    return render(request, "faq.html", context)
+    return render(request, "main/pages/content/faq.html", context)
 
 
 def about(request):
@@ -110,4 +110,4 @@ def about(request):
         }
     )
 
-    return render(request, "about.html", context)
+    return render(request, "main/pages/content/about.html", context)

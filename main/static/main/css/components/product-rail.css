@@ -1,0 +1,107 @@
+/* Horizontally scrollable product rail shared by catalog and home pages. */
+.featured-products {
+  position: relative;
+  width: 100%;
+}
+
+.featured-products__viewport {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.featured-products__viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.featured-products__track {
+  display: flex;
+  gap: 18px;
+  padding: 4px 2px 12px;
+}
+
+.featured-products .flowers-product-card {
+  flex: 0 0 260px;
+  min-width: 260px;
+  max-width: 260px;
+}
+
+.featured-products__nav {
+  position: absolute;
+  top: 42%;
+  z-index: 20;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(120, 90, 65, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.84);
+  color: rgba(64, 47, 37, 0.72);
+  box-shadow: 0 10px 28px rgba(70, 50, 35, 0.12);
+  backdrop-filter: blur(8px);
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.featured-products__nav--prev {
+  left: -10px;
+}
+
+.featured-products__nav--next {
+  right: -10px;
+}
+
+.featured-products__nav:disabled {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .featured-products__viewport {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .featured-products-section__head,
+  .featured-products-section__head--center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .featured-products-section__head--center .section-title-en,
+  .featured-products-section__head--center .section-link {
+    margin-inline: auto;
+  }
+
+  .featured-products__track {
+    gap: 14px;
+  }
+
+  .featured-products .flowers-product-card {
+    flex-basis: calc((100% - 14px) / 2);
+    min-width: calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
+    scroll-snap-align: start;
+  }
+
+  .featured-products__nav {
+    top: 40%;
+    width: 30px;
+    height: 30px;
+    font-size: 1.25rem;
+  }
+
+  .featured-products__nav--prev {
+    left: -7px;
+  }
+
+  .featured-products__nav--next {
+    right: -7px;
+  }
+}

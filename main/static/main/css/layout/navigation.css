@@ -1,0 +1,338 @@
+/* =========================================================
+   ZAD global chrome
+   Single source of truth for notice bar + glass navigation.
+   Sticky in normal flow at every viewport size.
+   ========================================================= */
+
+:root {
+  --zad-header-height: 68px;
+  --zad-mobile-header-height: 52px;
+  --zad-mobile-notice-height: 52px;
+  --zad-hero-overlap: 8px;
+}
+
+/* ---------- Notice bar ---------- */
+.top-notice-bar {
+  position: relative;
+  z-index: 1200;
+  width: 100%;
+  background: #263f46;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.top-notice-bar__link {
+  display: block;
+  width: min(var(--container), 94%);
+  margin-inline: auto;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-fa);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.8;
+  text-align: center;
+  text-decoration: none;
+}
+
+.top-notice-bar__paypal {
+  color: #e8c98b;
+  font-weight: 800;
+}
+
+/* ---------- Header glass ---------- */
+.site-header,
+.site-header.is-scrolled,
+.site-header:not(.is-scrolled) {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  width: 100%;
+  min-height: var(--zad-header-height);
+  background: linear-gradient(135deg, rgba(255, 252, 248, 0.84), rgba(242, 232, 220, 0.72));
+  border: 0;
+  border-bottom: 1px solid rgba(189, 155, 119, 0.3);
+  box-shadow: 0 8px 26px rgba(58, 42, 30, 0.09), inset 0 1px 0 rgba(255,255,255,.78);
+  backdrop-filter: saturate(140%) blur(20px);
+  -webkit-backdrop-filter: saturate(140%) blur(20px);
+  transform: translateZ(0);
+}
+
+.site-header-spacer { display: none; }
+
+.nav-wrap {
+  min-height: var(--zad-header-height);
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+
+/* ---------- Brand ---------- */
+.brand,
+.brand--logo {
+  color: var(--brand-text);
+  white-space: nowrap;
+}
+
+.brand--logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.brand--logo img {
+  display: block;
+  width: auto;
+  height: 52px;
+  object-fit: contain;
+}
+
+.brand--text,
+.brand--nav {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand--text { gap: 2px; min-width: 92px; }
+.brand__name { color: rgba(45,42,39,.86); font-size: 1.15rem; font-weight: 650; line-height: 1; letter-spacing: .22em; }
+.brand__sub { color: rgba(118,91,69,.8); font-size: .62rem; line-height: 1; letter-spacing: .16em; text-transform: lowercase; }
+
+/* ---------- Navigation ---------- */
+.main-nav {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  min-width: 0;
+  font-family: var(--font-fa);
+  direction: rtl;
+}
+
+.main-nav__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.main-nav__center a,
+.main-nav__about,
+.nav-dropdown__trigger {
+  position: relative;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: rgba(45,42,39,.78);
+  background: rgba(255,255,255,.18);
+  font-family: inherit;
+  font-size: .92rem;
+  font-weight: 750;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  text-shadow: none;
+  transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.main-nav__center a:hover,
+.main-nav__about:hover,
+.nav-dropdown__trigger:hover,
+.nav-dropdown.is-open .nav-dropdown__trigger {
+  color: #2d2925;
+  background: rgba(255,255,255,.52);
+  transform: translateY(-1px);
+}
+
+.main-nav__center a.is-active,
+.main-nav__about.is-active {
+  color: #fff;
+  background: rgba(190,143,92,.9);
+  box-shadow: 0 5px 16px rgba(141,98,58,.16);
+}
+
+.main-nav__about {
+  justify-self: end;
+  border: 1px solid rgba(174,130,83,.25);
+  background: rgba(255,255,255,.32);
+}
+
+/* ---------- Dropdown ---------- */
+.nav-dropdown { position: relative; display: inline-flex; align-items: center; }
+.nav-dropdown::after { content: ""; position: absolute; top: 100%; right: 0; width: 100%; height: 14px; }
+.nav-dropdown__trigger::after { content: "⌄"; margin-right: 6px; font-size: .72rem; opacity: .72; transform: translateY(-1px); }
+
+.nav-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 50%;
+  z-index: 1300;
+  width: 190px;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(47,37,31,.1);
+  border-radius: 18px;
+  background: rgba(255,250,244,.96);
+  box-shadow: 0 18px 48px rgba(24,18,14,.22), inset 0 1px 0 rgba(255,255,255,.75);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(50%) translateY(8px);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+.nav-dropdown.is-open .nav-dropdown__menu,
+.nav-dropdown:hover .nav-dropdown__menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(50%) translateY(0);
+}
+
+.nav-dropdown__menu a {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 14px;
+  border-radius: 13px;
+  color: #2f251f !important;
+  background: transparent !important;
+  font-size: .86rem;
+  font-weight: 800;
+  text-decoration: none;
+  text-shadow: none !important;
+  transform: none !important;
+}
+.nav-dropdown__menu a:hover { background: rgba(185,138,87,.12) !important; padding-inline-start: 18px; }
+.nav-dropdown__menu a::before { content: ""; width: 5px; height: 5px; margin-left: 9px; border-radius: 50%; background: rgba(185,138,87,.58); }
+
+/* ---------- One controlled hero overlap ---------- */
+.global-hero,
+.page-hero,
+.flowers-hero,
+.workshops-hero,
+.about-hero,
+.weddings-hero,
+.ws-hero,
+.event-hero,
+.local-hero,
+.occasions-hero,
+.category-hero,
+.subcategory-hero {
+  margin-top: calc(var(--zad-hero-overlap) * -1) !important;
+}
+
+.site-main { padding-top: 0 !important; margin-top: 0 !important; }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 760px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  .top-notice-bar { min-height: var(--zad-mobile-notice-height); }
+  .top-notice-bar__link {
+    width: 94%;
+    padding: 6px 0;
+    font-size: .68rem;
+    line-height: 1.6;
+    white-space: normal;
+  }
+
+  .site-header,
+  .site-header.is-scrolled,
+  .site-header:not(.is-scrolled) {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    width: 100%;
+    min-height: var(--zad-mobile-header-height);
+    z-index: 1200;
+    transform: none;
+  }
+
+  .site-header-spacer {
+    display: none;
+    height: 0;
+  }
+
+  body.page-home .site-header {
+    margin-bottom: calc(var(--zad-mobile-header-height) * -1);
+  }
+
+  .nav-wrap {
+    width: min(100% - 12px, 100%);
+    min-height: var(--zad-mobile-header-height) !important;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 4px 0 !important;
+  }
+
+  .brand,
+  .brand--logo,
+  .brand--text,
+  .brand--nav { display: none !important; }
+
+  .main-nav { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; min-height: 44px; }
+  .main-nav__center {
+    justify-content: flex-start;
+    gap: 4px;
+    min-height: 44px;
+    padding: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .main-nav__center::-webkit-scrollbar { display: none; }
+
+  .main-nav__center a,
+  .main-nav__about,
+  .nav-dropdown__trigger {
+    flex: 0 0 auto;
+    min-height: 44px !important;
+    padding: 8px 10px !important;
+    margin: 0 !important;
+    font-size: .76rem !important;
+    background: rgba(255,255,255,.3);
+  }
+
+  .main-nav__about { justify-self: end; }
+  .nav-dropdown__menu { width: 166px; top: calc(100% + 8px); }
+  .nav-dropdown:hover .nav-dropdown__menu { opacity: 0; visibility: hidden; transform: translate(50%,8px); }
+  .nav-dropdown.is-open .nav-dropdown__menu { opacity: 1; visibility: visible; transform: translate(50%,0); }
+
+  .global-hero,
+  .page-hero,
+  .flowers-hero,
+  .workshops-hero,
+  .about-hero,
+  .weddings-hero,
+  .ws-hero,
+  .event-hero,
+  .local-hero,
+  .occasions-hero,
+  .category-hero,
+  .subcategory-hero {
+    margin-top: calc(var(--zad-hero-overlap) * -1) !important;
+  }
+}

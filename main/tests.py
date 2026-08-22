@@ -170,7 +170,7 @@ class MainViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "occasions.html")
+        self.assertTemplateUsed(response, "main/pages/occasions/index.html")
         self.assertIs(resolve(url).func, views.occasions)
         self.assertEqual(
             list(response.context["occasion_tags"]),
@@ -193,7 +193,7 @@ class MainViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "mashhad_hub.html")
+        self.assertTemplateUsed(response, "main/pages/local/hub.html")
         self.assertIs(resolve(url).func, views.mashhad_hub)
         self.assertEqual(
             list(response.context["curated_items"]),
@@ -301,7 +301,7 @@ class MainViewsTests(TestCase):
             response = self.client.get(url)
 
             self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(response, "local_landing.html")
+            self.assertTemplateUsed(response, "main/pages/local/landing.html")
             self.assertIs(resolve(url).func, expected_view)
             self.assertEqual(
                 list(response.context["curated_items"]),
@@ -322,7 +322,7 @@ class MainViewsTests(TestCase):
             url=reverse(name,kwargs=dict(category_slug=cat.slug,slug=obj.slug))
             r=self.client.get(url)
             self.assertEqual(r.status_code,200)
-            self.assertTemplateUsed(r,'item_detail.html')
+            self.assertTemplateUsed(r,'main/pages/products/detail.html')
             self.assertIs(resolve(url).func,view)
             self.assertEqual(r.context['product'],obj)
 
@@ -333,7 +333,7 @@ class MainViewsTests(TestCase):
             url=reverse(name)
             r=self.client.get(url)
             self.assertEqual(r.status_code,200)
-            self.assertTemplateUsed(r,'subcategory.html')
+            self.assertTemplateUsed(r,'main/pages/catalog/subcategory.html')
             self.assertIs(resolve(url).func,view)
             self.assertEqual(list(r.context['items']),[obj])
 
@@ -344,7 +344,7 @@ class MainViewsTests(TestCase):
             url=reverse(name,kwargs=dict(subcategory_slug=cat.slug))
             r=self.client.get(url)
             self.assertEqual(r.status_code,200)
-            self.assertTemplateUsed(r,'subcategory.html')
+            self.assertTemplateUsed(r,'main/pages/catalog/subcategory.html')
             self.assertIs(resolve(url).func,view)
             self.assertEqual(list(r.context['items']),[obj])
             self.assertEqual(r.context['subcategory_slug'],cat.slug)
@@ -356,7 +356,7 @@ class MainViewsTests(TestCase):
             url=reverse(name,args=[self.birthday_tag.slug])
             r=self.client.get(url)
             self.assertEqual(r.status_code,200)
-            self.assertTemplateUsed(r,'occasion_detail.html')
+            self.assertTemplateUsed(r,'main/pages/occasions/detail.html')
             self.assertIs(resolve(url).func,view)
             self.assertEqual(r.context['occasion'],self.birthday_tag)
             self.assertEqual(r.context['is_flower_occasion'],is_flower)
@@ -372,7 +372,7 @@ class MainViewsTests(TestCase):
             url=reverse(name)
             r=self.client.get(url)
             self.assertEqual(r.status_code,200)
-            self.assertTemplateUsed(r,'flowers_landing.html')
+            self.assertTemplateUsed(r,'main/pages/catalog/landing.html')
             self.assertIs(resolve(url).func,view)
             self.assertEqual(r.context['directory_only'],directory)
             self.assertEqual(list(r.context['catalog_products']),items)
@@ -390,7 +390,7 @@ class MainViewsTests(TestCase):
         url=reverse('flowers_same_day')
         r=self.client.get(url)
         self.assertEqual(r.status_code,200)
-        self.assertTemplateUsed(r,'subcategory.html')
+        self.assertTemplateUsed(r,'main/pages/catalog/subcategory.html')
         self.assertIs(resolve(url).func,views.flowers_same_day)
         self.assertEqual(list(r.context['items']),[self.flower])
         self.assertTrue(r.context['is_same_day_page'])
@@ -404,12 +404,12 @@ class MainViewsTests(TestCase):
         url=reverse('weddings')
         r=self.client.get(url)
         self.assertEqual(r.status_code,200)
-        self.assertTemplateUsed(r,'weddings.html')
+        self.assertTemplateUsed(r,'main/pages/weddings/index.html')
         self.assertIs(resolve(url).func,views.weddings)
         url=reverse('wedding_collection',args=['bridal-bouquets'])
         r=self.client.get(url)
         self.assertEqual(r.status_code,200)
-        self.assertTemplateUsed(r,'wedding_collection.html')
+        self.assertTemplateUsed(r,'main/pages/weddings/collection.html')
         self.assertIs(resolve(url).func,views.wedding_collection)
         self.assertEqual(list(r.context['products']),[product])
         self.assertEqual(r.context['collection']['slug'],'bridal-bouquets')
@@ -435,7 +435,7 @@ class MainViewsTests(TestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "index.html")
+        self.assertTemplateUsed(response, "main/pages/home/index.html")
         self.assertIs(resolve(url).func, views.index)
         self.assertTrue(response.context["is_homepage"])
 
@@ -739,35 +739,35 @@ class MainViewsTests(TestCase):
         pages = (
             (
                 reverse("index"),
-                "index.html",
+                "main/pages/home/index.html",
                 "home",
                 "home",
                 True,
             ),
             (
                 reverse("bakery"),
-                "flowers_landing.html",
+                "main/pages/catalog/landing.html",
                 "flowers_landing",
                 "bakery",
                 True,
             ),
             (
                 self.flower.get_absolute_url(),
-                "item_detail.html",
+                "main/pages/products/detail.html",
                 "item",
                 "flowers",
                 True,
             ),
             (
                 reverse("occasion_detail", args=[self.birthday_tag.slug]),
-                "occasion_detail.html",
+                "main/pages/occasions/detail.html",
                 "occasion-detail",
                 "occasions",
                 True,
             ),
             (
                 reverse("contact"),
-                "contact.html",
+                "main/pages/content/contact.html",
                 "contact",
                 "",
                 False,
@@ -816,7 +816,7 @@ class MainViewsTests(TestCase):
 
                 self.assertEqual(response.status_code, 200)
                 self.assertIs(response.resolver_match.func, views.policy_page)
-                self.assertTemplateUsed(response, "policy_page.html")
+                self.assertTemplateUsed(response, "main/pages/content/policy.html")
                 self.assertEqual(response.context["page_type"], "policy")
                 self.assertEqual(response.context["active_nav"], "")
                 self.assertIs(response.context["suppress_default_hero"], True)
@@ -912,7 +912,7 @@ class MainViewsTests(TestCase):
                 "language": "Persian",
                 "route": "international_orders",
                 "view": views.international_orders,
-                "template": "international_orders.html",
+                "template": "main/pages/international/orders_fa.html",
                 "meta_title": "سفارش گل از خارج ایران برای مشهد | زاد",
                 "meta_description": "ثبت سفارش گل و هدیه از خارج ایران با پرداخت ارزی و تحویل محلی برای گیرنده در مشهد.",
                 "canonical_url": fa_url,
@@ -926,7 +926,7 @@ class MainViewsTests(TestCase):
                 "language": "English",
                 "route": "international_orders_en",
                 "view": views.international_orders_en,
-                "template": "international_orders_en.html",
+                "template": "main/pages/international/orders_en.html",
                 "meta_title": "Send Flowers to Mashhad, Iran | ZAD",
                 "meta_description": "Order flowers, gifts, and bakery items from abroad for local delivery to your recipient in Mashhad, Iran.",
                 "canonical_url": en_url,
@@ -1248,8 +1248,8 @@ class MainViewsTests(TestCase):
         ):
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
-                self.assertTemplateUsed(response, "flowers_landing.html")
-                self.assertTemplateUsed(response, "partials/catalog_filter.html")
+                self.assertTemplateUsed(response, "main/pages/catalog/landing.html")
+                self.assertTemplateUsed(response, "main/components/catalog_filter.html")
                 self.assertContains(response, 'class="flowers-hero ')
                 self.assertContains(response, 'data-filter-count="2"')
                 self.assertContains(response, '>همه<')
@@ -1317,7 +1317,7 @@ class MainViewsTests(TestCase):
             [item["label"] for item in response.context["filter_links"]],
             ["همه", "Daily Bakery", "Bouquet", "Gift Box"],
         )
-        self.assertTemplateUsed(response, "partials/catalog_filter.html")
+        self.assertTemplateUsed(response, "main/components/catalog_filter.html")
         self.assertContains(response, 'data-filter-count="4"')
         self.assertContains(response, 'aria-label="فیلتر نوع محصول"')
         self.assertNotContains(response, "catalog-filter-chip")
@@ -1396,7 +1396,7 @@ class MainViewsTests(TestCase):
         legacy_response = self.client.get(reverse("occasion_detail", args=["wedding"]))
 
         self.assertFalse(wedding_tag in Tag.objects.for_general_catalog())
-        self.assertTemplateUsed(wedding_response, "weddings.html")
+        self.assertTemplateUsed(wedding_response, "main/pages/weddings/index.html")
         self.assertEqual(wedding_response.context["active_nav"], "weddings")
         self.assertNotContains(wedding_response, wedding_product.name)
         self.assertRedirects(
@@ -1421,7 +1421,7 @@ class MainViewsTests(TestCase):
 
         self.assertEqual(list_response.status_code, 200)
         self.assertIs(list_response.resolver_match.func, views.events)
-        self.assertTemplateUsed(list_response, "events.html")
+        self.assertTemplateUsed(list_response, "main/pages/workshops/index.html")
         self.assertEqual(list_response.context["page_type"], "workshops")
         self.assertEqual(list_response.context["active_nav"], "events")
         self.assertEqual(
@@ -1468,7 +1468,7 @@ class MainViewsTests(TestCase):
 
         self.assertEqual(detail_response.status_code, 200)
         self.assertIs(detail_response.resolver_match.func, views.event_detail)
-        self.assertTemplateUsed(detail_response, "event_detail.html")
+        self.assertTemplateUsed(detail_response, "main/pages/workshops/detail.html")
         self.assertEqual(detail_response.context["event"], self.published_event)
         self.assertEqual(detail_response.context["page_type"], "category")
         self.assertEqual(detail_response.context["active_nav"], "events")
@@ -1659,7 +1659,7 @@ class MainViewsTests(TestCase):
         cases = (
             (
                 "contact",
-                "contact.html",
+                "main/pages/content/contact.html",
                 "contact",
                 "",
                 "Contact",
@@ -1667,7 +1667,7 @@ class MainViewsTests(TestCase):
             ),
             (
                 "faq",
-                "faq.html",
+                "main/pages/content/faq.html",
                 "category",
                 "",
                 "FAQ",
@@ -1675,7 +1675,7 @@ class MainViewsTests(TestCase):
             ),
             (
                 "about",
-                "about.html",
+                "main/pages/content/about.html",
                 "about",
                 "about",
                 "About",
@@ -1757,7 +1757,7 @@ class MainViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'class="about-page"')
-        self.assertContains(response, "main/css/about.css")
+        self.assertContains(response, "main/css/pages/content/about.css")
         self.assertNotContains(response, '<section class="page-hero">')
 
         for image_name in (
@@ -1905,7 +1905,7 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("blog"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "blog_list.html")
+        self.assertTemplateUsed(response, "main/pages/blog/index.html")
         self.assertIs(response.resolver_match.func, views.blog)
         self.assertEqual(
             [post.pk for post in response.context["posts"]],
@@ -1919,7 +1919,7 @@ class MainViewsTests(TestCase):
         detail = self.client.get(reverse("blog_detail", args=[newer.slug]))
 
         self.assertEqual(detail.status_code, 200)
-        self.assertTemplateUsed(detail, "blog_detail.html")
+        self.assertTemplateUsed(detail, "main/pages/blog/detail.html")
         self.assertIs(detail.resolver_match.func, views.blog_detail)
         self.assertEqual(detail.context["post"], newer)
         self.assertEqual(detail.context["page_type"], "category")
@@ -1944,7 +1944,7 @@ class MainViewsTests(TestCase):
         response = self.client.get("/__phase18-missing-page__/")
 
         self.assertEqual(response.status_code, 404)
-        self.assertTemplateUsed(response, "404.html")
+        self.assertTemplateUsed(response, "main/errors/404.html")
         self.assertEqual(response.context["robots_content"], "noindex,nofollow")
         self.assertEqual(response.context["page_type"], "error-404")
         self.assertIs(response.context["is_home"], True)

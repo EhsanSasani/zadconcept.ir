@@ -222,7 +222,7 @@ def weddings(request):
             "wedding_collections": collections,
         }
     )
-    return render(request, "weddings.html", context)
+    return render(request, "main/pages/weddings/index.html", context)
 
 def wedding_collection(request, collection_slug):
     config = WEDDING_COLLECTIONS.get(collection_slug)
@@ -309,4 +309,4 @@ def wedding_collection(request, collection_slug):
             "selected_category": selected_category,
         }
     )
-    return render(request, "wedding_collection.html", context)
+    return render(request, "main/pages/weddings/collection.html", context)

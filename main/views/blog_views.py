@@ -38,7 +38,7 @@ def blog(request):
 
     context["posts"] = posts
 
-    return render(request, "blog_list.html", context)
+    return render(request, "main/pages/blog/index.html", context)
 
 
 def blog_detail(request, slug):
@@ -117,5 +117,4 @@ def blog_detail(request, slug):
     )
     context["structured_data_graph"].append(article_node(post))
 
-    return render(request, "blog_detail.html", context)
-
+    return render(request, "main/pages/blog/detail.html", context)

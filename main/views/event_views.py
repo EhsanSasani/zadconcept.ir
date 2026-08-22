@@ -74,7 +74,7 @@ def events(request):
         }
     )
 
-    return render(request, "events.html", context)
+    return render(request, "main/pages/workshops/index.html", context)
 
 
 def event_detail(request, slug: str):
@@ -130,4 +130,4 @@ def event_detail(request, slug: str):
 
     context["structured_data_graph"].append(event_node(event))
 
-    return render(request, "event_detail.html", context)
+    return render(request, "main/pages/workshops/detail.html", context)

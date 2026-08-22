@@ -51,7 +51,7 @@ def mashhad_hub(request):
         }
     )
 
-    return render(request, "mashhad_hub.html", context)
+    return render(request, "main/pages/local/hub.html", context)
 
 def _occasion_links(limit=4):
     return [
@@ -154,7 +154,7 @@ def _local_landing(request, landing_type):
         }
     )
 
-    return render(request, "local_landing.html", context)
+    return render(request, "main/pages/local/landing.html", context)
 
 def mashhad_flower_order(request):
     return _local_landing(request, "order")
