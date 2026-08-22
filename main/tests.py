@@ -414,6 +414,14 @@ class MainViewsTests(TestCase):
         self.assertEqual(list(r.context['products']),[product])
         self.assertEqual(r.context['collection']['slug'],'bridal-bouquets')
 
+    def test_legacy_section_view_family_preserves_contract(self):
+        from django.test import RequestFactory
+        request=RequestFactory().get('/legacy-section/')
+        response=views._category_page(request,Category.Section.BAKERY)
+        self.assertEqual(response.status_code,200)
+        ordered=views._sort_by_slug_order([self.condolence_tag,self.birthday_tag],['birthday','condolence'])
+        self.assertEqual(ordered,[self.birthday_tag,self.condolence_tag])
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
