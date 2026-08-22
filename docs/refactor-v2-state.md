@@ -24,7 +24,7 @@ main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
 Refactor code checkpoint described by this document:
-refactor/zad-v2 @ 793e953
+refactor/zad-v2 @ e5e8715
 
 Always confirm the live branch HEAD with:
 git rev-parse --short HEAD
@@ -58,9 +58,16 @@ main/views/product_redirect_views.py
 main/views/product_detail_views.py
 main/views/catalog_views.py
 main/views/wedding_views.py
+main/views/section_views.py
 main/category_presentation.py
 
 main.views remains a compatibility facade.
+
+Intentional implementation residue in main.views:
+- _lead_rate_limited
+- submit_lead_request
+
+These remain in the facade intentionally because lead notification/test patch bindings are compatibility-sensitive. Do not extract them merely to make the facade empty.
 
 Important preserved bindings include:
 - _public_brand_copy
@@ -153,10 +160,13 @@ Phase 32:
 Phase 33:
 793e953 refactor(views): extract wedding view family
 
+Phase 34:
+e5e8715 refactor(views): extract legacy section view family
+
 ## Current Baselines
 
 Django:
-208 / 208 PASS
+209 / 209 PASS
 
 Worker:
 9 / 9 PASS
@@ -251,14 +261,10 @@ Routine extraction should be done from repository evidence + tests + Git audits.
 
 ## Next Phase
 
-Phase 34 is NOT selected yet.
+Phase 35 completed final structural validation.
 
-Before choosing it:
-- inspect current main/views/__init__.py
-- map candidate dependencies
-- select the smallest coherent boundary
-- write the phase contract
-- characterize BEFORE behavior
+No further structural extraction is selected.
+The refactor is closed with main.views retained as a compatibility facade and the lead flow intentionally left in place.
 
 ## Governing Principle
 
