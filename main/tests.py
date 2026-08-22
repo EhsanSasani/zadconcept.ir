@@ -326,6 +326,17 @@ class MainViewsTests(TestCase):
             self.assertIs(resolve(url).func,view)
             self.assertEqual(r.context['product'],obj)
 
+    def test_catalog_all_views_preserve_contract(self):
+        from django.urls import resolve
+        cases=[('flowers_all',self.flower,views.flowers_all),('bakery_all',self.bakery,views.bakery_all),('gifts_all',self.gift_product,views.gifts_all)]
+        for name,obj,view in cases:
+            url=reverse(name)
+            r=self.client.get(url)
+            self.assertEqual(r.status_code,200)
+            self.assertTemplateUsed(r,'subcategory.html')
+            self.assertIs(resolve(url).func,view)
+            self.assertEqual(list(r.context['items']),[obj])
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
