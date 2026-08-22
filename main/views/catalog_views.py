@@ -1,3 +1,8 @@
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Case, IntegerField, Value, When
+from django.http import Http404, JsonResponse
+from django.template.loader import render_to_string
+
 from ..category_presentation import _category_card
 from ..catalog_selectors import _published_products
 from ..models import BAKERY_WEDDING_CATEGORY_SLUGS, FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS, WEDDING_LEGACY_TAG_SLUGS
@@ -280,3 +285,312 @@ def bakery_subcategory(request, subcategory_slug):
 
 def gift_subcategory(request, subcategory_slug):
     return _section_subcategory(request, Category.Section.GIFTS, subcategory_slug)
+
+
+COLLECTION_LANDING_CONTENT = {
+    Category.Section.FLOWERS: {
+        "hero_eyebrow": "FLOWER COLLECTION",
+        "hero_title": "استودیو گل زاد",
+        "hero_text": "گل‌هایی برای تمام لحظه‌های خاص زندگی شما",
+        "hero_image": "main/img/flowers-hero.webp",
+        "fallback_image": "main/img/cat-flowers.webp",
+        "empty_text": "هنوز محصولی برای نمایش ثبت نشده است.",
+        "why_items": [
+            {
+                "icon": "bi bi-flower1",
+                "title": "گل‌های تازه",
+                "text": "انتخاب روزانه و چیدمان با دقت",
+            },
+            {
+                "icon": "bi bi-gift",
+                "title": "بسته‌بندی شیک",
+                "text": "هماهنگ با حس و مناسبت سفارش",
+            },
+            {
+                "icon": "bi bi-truck",
+                "title": "ارسال در مشهد",
+                "text": "هماهنگی سریع برای تحویل مطمئن",
+            },
+        ],
+        "cta_kicker": "CUSTOM ORDER",
+        "cta_title": "دسته‌گل اختصاصی، دقیقاً مطابق سلیقه شما",
+        "cta_text": "برای انتخاب رنگ، سبک چیدمان، بودجه و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
+        "cta_image": "main/img/footer-floral.webp",
+        "cta_alt": "سفارش اختصاصی گل",
+    },
+    Category.Section.BAKERY: {
+        "hero_eyebrow": "ZAD SWEET BAR",
+        "hero_title": "سوییت بار زاد",
+        "hero_text": "طعم‌های شیرین برای لحظه‌های گرم و به‌یادماندنی",
+        "hero_image": "main/img/hero-bakery.webp",
+        "fallback_image": "main/img/cat-bakery.webp",
+        "empty_text": "هنوز محصولی در سوییت بار ثبت نشده است.",
+        "why_items": [
+            {
+                "icon": "bi bi-stars",
+                "title": "تازه و خوش‌طعم",
+                "text": "آماده‌سازی با مواد اولیه باکیفیت",
+            },
+            {
+                "icon": "bi bi-gift",
+                "title": "بسته‌بندی شیک",
+                "text": "مناسب هدیه و پذیرایی‌های خاص",
+            },
+            {
+                "icon": "bi bi-truck",
+                "title": "ارسال در مشهد",
+                "text": "هماهنگی سریع برای تحویل مطمئن",
+            },
+        ],
+        "cta_kicker": "CUSTOM ORDER",
+        "cta_title": "سفارش شیرینی اختصاصی، دقیقاً برای مناسبت شما",
+        "cta_text": "برای انتخاب طعم، تعداد، نوع بسته‌بندی و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
+        "cta_image": "main/img/hero-bakery.webp",
+        "cta_alt": "سفارش اختصاصی سوییت بار",
+    },
+    Category.Section.GIFTS: {
+        "hero_eyebrow": "ZAD CONCEPT STORE",
+        "hero_title": "کانسپت استور زاد",
+        "hero_text": "هدیه‌هایی خاص برای آدم‌ها و لحظه‌های خاص زندگی شما",
+        "hero_image": "main/img/hero-gifts-v2.webp",
+        "fallback_image": "main/img/cat-gifts.webp",
+        "empty_text": "هنوز محصولی در کانسپت استور ثبت نشده است.",
+        "why_items": [
+            {
+                "icon": "bi bi-stars",
+                "title": "انتخاب‌های خاص",
+                "text": "محصولاتی مینیمال و انتخاب‌شده با دقت",
+            },
+            {
+                "icon": "bi bi-gift",
+                "title": "بسته‌بندی هدیه",
+                "text": "هماهنگ با حس و مناسبت سفارش",
+            },
+            {
+                "icon": "bi bi-truck",
+                "title": "ارسال در مشهد",
+                "text": "هماهنگی سریع برای تحویل مطمئن",
+            },
+        ],
+        "cta_kicker": "CUSTOM GIFT",
+        "cta_title": "هدیه‌ای خاص، دقیقاً مطابق سلیقه شما",
+        "cta_text": "برای انتخاب هدیه، بسته‌بندی، بودجه و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
+        "cta_image": "main/img/gifts-custom-v1.webp",
+        "cta_alt": "سفارش هدیه اختصاصی",
+    },
+}
+
+CATALOG_PAGE_SIZE = 12
+
+FLOWER_FILTER_ORDER = [
+    "hand-bouquet",
+    "box",
+    "bouquet",
+    "jarl",
+    "stand",
+    "plants",
+]
+
+def _catalog_ordered_products(queryset, section):
+    if section == Category.Section.FLOWERS:
+        order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
+        cases = [
+            When(category__slug=slug, then=Value(index))
+            for slug, index in order.items()
+        ]
+        queryset = queryset.annotate(
+            category_rank=Case(
+                *cases,
+                default=Value(len(order)),
+                output_field=IntegerField(),
+            )
+        )
+        return queryset.order_by(
+            "category_rank",
+            "-featured",
+            "sort_order",
+            "-created_at",
+            "id",
+        )
+
+    return queryset.order_by("-featured", "sort_order", "-created_at", "id")
+
+def _paginate_products(request, queryset):
+    paginator = Paginator(queryset, CATALOG_PAGE_SIZE)
+    page_number = request.GET.get("page") or 1
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        raise Http404("Catalog page does not exist")
+
+    return page_obj
+
+def _collection_landing_page(
+    request,
+    section,
+    *,
+    excluded_category_slugs=(),
+    directory_only=False,
+):
+    config = SECTION_CONTENT[section]
+    landing = COLLECTION_LANDING_CONTENT[section]
+    page = request.GET.get("page")
+
+    if (
+        directory_only
+        and set(request.GET) == {"page"}
+        and page
+        and page.isdigit()
+        and int(page) >= 1
+    ):
+        return redirect(reverse(section), permanent=True)
+    products_qs = _published_products_for_section(section)
+    categories_qs = Category.objects.for_general_catalog().filter(
+        section=section,
+        is_active=True,
+    )
+    if directory_only:
+        categories_qs = categories_qs.filter(parent__isnull=True)
+
+    if excluded_category_slugs:
+        products_qs = products_qs.exclude(category__slug__in=excluded_category_slugs)
+        categories_qs = categories_qs.exclude(slug__in=excluded_category_slugs)
+
+    selected_category_slug = request.GET.get("category") or ""
+    selected_category = None
+
+    if selected_category_slug and directory_only:
+        selected_category = get_object_or_404(
+            categories_qs,
+            slug=selected_category_slug,
+        )
+        return redirect(selected_category.get_absolute_url(), permanent=True)
+
+    if selected_category_slug:
+        selected_category = get_object_or_404(
+            categories_qs,
+            slug=selected_category_slug,
+        )
+        products_qs = products_qs.filter(category=selected_category)
+
+    if directory_only:
+        page_obj = None
+        products = []
+    else:
+        products_qs = _catalog_ordered_products(products_qs, section)
+        page_obj = _paginate_products(request, products_qs)
+        products = list(page_obj.object_list)
+
+    if request.GET.get("partial") == "products":
+        if directory_only:
+            raise Http404("The flowers landing page is a category directory")
+        html = render_to_string(
+            "partials/product_card.html",
+            {
+                "products": products,
+                "card_variant": "landing",
+                "fallback_image": landing["fallback_image"],
+                "empty_text": landing["empty_text"],
+            },
+            request=request,
+        )
+
+        response = JsonResponse(
+            {
+                "html": html,
+                "has_next": page_obj.has_next(),
+                "next_page": page_obj.next_page_number() if page_obj.has_next() else None,
+            }
+        )
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    categories = list(categories_qs.distinct().order_by("sort_order", "name"))
+    if section == Category.Section.FLOWERS:
+        order = {slug: index for index, slug in enumerate(FLOWER_FILTER_ORDER)}
+        categories.sort(key=lambda category: order.get(category.slug, len(order)))
+
+    catalog_filter_items = _filter_links_for_categories(
+        reverse(section),
+        categories,
+        selected_slug=selected_category.slug if selected_category else None,
+    )
+    landing_category_cards = [_category_card(category) for category in categories]
+
+    context = _default_context(
+        request,
+        page_type="flowers_landing",
+        active_nav=config["nav"],
+        meta_title=config["meta_title"],
+        meta_description=config["meta_description"],
+        breadcrumbs=None,
+        enable_product_modal=not directory_only,
+        content_page=section,
+    )
+    page_hero = _get_site_hero(section)
+    context.update(page_hero or _hero_from_key(section))
+    context.update(
+        {
+            "section": section,
+            "catalog_products": products,
+            "catalog_page_obj": page_obj,
+            "catalog_filter_items": catalog_filter_items,
+            "landing_category_cards": landing_category_cards,
+            "directory_only": directory_only,
+            "selected_category_slug": selected_category.slug if selected_category else "",
+            "catalog_page_size": CATALOG_PAGE_SIZE,
+            "catalog_load_url": reverse(section),
+            "landing_hero_eyebrow": (
+                page_hero["page_hero_kicker"]
+                if page_hero
+                else landing["hero_eyebrow"]
+            ),
+            "landing_hero_title": (
+                page_hero["page_hero_title"]
+                if page_hero
+                else landing["hero_title"]
+            ),
+            "landing_hero_text": (
+                page_hero["page_hero_text"]
+                if page_hero
+                else landing["hero_text"]
+            ),
+            "landing_hero_image": (
+                page_hero["page_hero_image"]
+                if page_hero
+                else landing["hero_image"]
+            ),
+            "landing_hero_mobile_image": (
+                page_hero["page_hero_mobile_image"] if page_hero else ""
+            ),
+            "landing_fallback_image": landing["fallback_image"],
+            "landing_empty_text": landing["empty_text"],
+            "landing_why_items": landing["why_items"],
+            "landing_cta_kicker": landing["cta_kicker"],
+            "landing_cta_title": landing["cta_title"],
+            "landing_cta_text": landing["cta_text"],
+            "landing_cta_image": landing["cta_image"],
+            "landing_cta_alt": landing["cta_alt"],
+            "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
+            "lead_default_type": config["lead_type"],
+        }
+    )
+
+    return render(request, "flowers_landing.html", context)
+
+def flowers(request):
+    return _collection_landing_page(
+        request,
+        Category.Section.FLOWERS,
+        directory_only=True,
+    )
+
+def bakery(request):
+    return _collection_landing_page(request, Category.Section.BAKERY)
+
+def gifts(request):
+    return _collection_landing_page(request, Category.Section.GIFTS)

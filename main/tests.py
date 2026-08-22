@@ -365,6 +365,24 @@ class MainViewsTests(TestCase):
         r=self.client.get(reverse('occasion_detail',args=[self.birthday_tag.slug]))
         self.assertEqual({x.pk for x in r.context['products']},{self.flower.pk,self.bakery.pk,self.gift_product.pk})
 
+    def test_catalog_landing_views_preserve_contract(self):
+        from django.urls import resolve
+        cases=[('flowers',views.flowers,True,[]),('bakery',views.bakery,False,[self.bakery]),('gifts',views.gifts,False,[self.gift_product])]
+        for name,view,directory,items in cases:
+            url=reverse(name)
+            r=self.client.get(url)
+            self.assertEqual(r.status_code,200)
+            self.assertTemplateUsed(r,'flowers_landing.html')
+            self.assertIs(resolve(url).func,view)
+            self.assertEqual(r.context['directory_only'],directory)
+            self.assertEqual(list(r.context['catalog_products']),items)
+
+    def test_catalog_landing_partial_response_preserves_contract(self):
+        r=self.client.get(reverse('bakery')+'?partial=products')
+        self.assertEqual(r.status_code,200)
+        self.assertEqual(r['X-Robots-Tag'],'noindex, nofollow')
+        self.assertEqual(r['Cache-Control'],'no-store')
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
