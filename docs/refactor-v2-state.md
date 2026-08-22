@@ -24,7 +24,7 @@ main @ 3f8c6b1
 tag: refactor-v2-baseline-2026-08-20
 
 Refactor code checkpoint described by this document:
-refactor/zad-v2 @ e781722
+refactor/zad-v2 @ 793e953
 
 Always confirm the live branch HEAD with:
 git rev-parse --short HEAD
@@ -57,6 +57,7 @@ main/views/local_seo_views.py
 main/views/product_redirect_views.py
 main/views/product_detail_views.py
 main/views/catalog_views.py
+main/views/wedding_views.py
 main/category_presentation.py
 
 main.views remains a compatibility facade.
@@ -143,10 +144,19 @@ a301253 refactor(views): extract catalog subcategory family
 Phase 30:
 e781722 refactor(views): extract occasion detail family
 
+Phase 31:
+d2b83cb refactor(views): extract catalog landing family
+
+Phase 32:
+59c1ca3 refactor(views): extract same-day catalog view
+
+Phase 33:
+793e953 refactor(views): extract wedding view family
+
 ## Current Baselines
 
 Django:
-204 / 204 PASS
+208 / 208 PASS
 
 Worker:
 9 / 9 PASS
@@ -241,7 +251,7 @@ Routine extraction should be done from repository evidence + tests + Git audits.
 
 ## Next Phase
 
-Phase 31 is NOT selected yet.
+Phase 34 is NOT selected yet.
 
 Before choosing it:
 - inspect current main/views/__init__.py
