@@ -349,6 +349,22 @@ class MainViewsTests(TestCase):
             self.assertEqual(list(r.context['items']),[obj])
             self.assertEqual(r.context['subcategory_slug'],cat.slug)
 
+    def test_occasion_detail_view_family_preserves_contract(self):
+        from django.urls import resolve
+        cases=[('flower_occasion',views.flower_occasion,True),('occasion_detail',views.occasion_detail,False)]
+        for name,view,is_flower in cases:
+            url=reverse(name,args=[self.birthday_tag.slug])
+            r=self.client.get(url)
+            self.assertEqual(r.status_code,200)
+            self.assertTemplateUsed(r,'occasion_detail.html')
+            self.assertIs(resolve(url).func,view)
+            self.assertEqual(r.context['occasion'],self.birthday_tag)
+            self.assertEqual(r.context['is_flower_occasion'],is_flower)
+        r=self.client.get(reverse('flower_occasion',args=[self.birthday_tag.slug]))
+        self.assertEqual(list(r.context['products']),[self.flower])
+        r=self.client.get(reverse('occasion_detail',args=[self.birthday_tag.slug]))
+        self.assertEqual({x.pk for x in r.context['products']},{self.flower.pk,self.bakery.pk,self.gift_product.pk})
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
