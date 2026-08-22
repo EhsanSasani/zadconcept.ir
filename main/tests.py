@@ -383,6 +383,19 @@ class MainViewsTests(TestCase):
         self.assertEqual(r['X-Robots-Tag'],'noindex, nofollow')
         self.assertEqual(r['Cache-Control'],'no-store')
 
+    def test_flowers_same_day_view_preserves_contract(self):
+        from django.urls import resolve
+        tag=Tag.objects.get(slug='same-day')
+        self.flower.tags.add(tag)
+        url=reverse('flowers_same_day')
+        r=self.client.get(url)
+        self.assertEqual(r.status_code,200)
+        self.assertTemplateUsed(r,'subcategory.html')
+        self.assertIs(resolve(url).func,views.flowers_same_day)
+        self.assertEqual(list(r.context['items']),[self.flower])
+        self.assertTrue(r.context['is_same_day_page'])
+        self.assertEqual(r.context['subcategory_label'],'ارسال امروز')
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)

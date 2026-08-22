@@ -1,3 +1,5 @@
+from ..models import Product
+from ..seo import service_node
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Case, IntegerField, Value, When
 from django.http import Http404, JsonResponse
@@ -594,3 +596,69 @@ def bakery(request):
 
 def gifts(request):
     return _collection_landing_page(request, Category.Section.GIFTS)
+
+
+SAME_DAY_TAG_SLUGS = [
+    "same-day",
+]
+
+def flowers_same_day(request):
+    products = (
+        Product.objects.for_general_catalog()
+        .published()
+        .filter(
+            category__section=Category.Section.FLOWERS,
+            tags__slug__in=SAME_DAY_TAG_SLUGS,
+        )
+        .select_related("category")
+        .prefetch_related("tags")
+        .distinct()
+        .order_by("sort_order", "-updated_at")
+    )
+
+    breadcrumbs = _with_home(
+        [
+            {"name": "گل‌ها", "url": reverse("flowers")},
+            {"name": "ارسال امروز", "url": None},
+        ]
+    )
+    context = _default_context(
+        request,
+        page_type="catalog",
+        active_nav="flowers",
+        meta_title="ارسال گل امروز در مشهد | زاد",
+        meta_description=(
+            "سفارش گل‌های آماده برای ارسال همان‌روز در مشهد؛ "
+            "بررسی موجودی و هماهنگی سریع با زاد."
+        ),
+        breadcrumbs=breadcrumbs,
+        enable_product_modal=True,
+        content_page="subcategory",
+        schema_type="CollectionPage",
+    )
+    hero_data = {
+        "page_hero_title": "ارسال امروز",
+        "page_hero_text": "گل‌های آماده برای ارسال سریع در شهر مشهد.",
+        "page_hero_image": "main/img/hero-about.webp",
+    }
+    db_hero = _get_site_hero("subcategory", "same-day")
+    if db_hero:
+        hero_data = db_hero
+
+    context.update(hero_data)
+    context.update(
+        {
+        "collection_title": "گل‌هایی برای همین امروز",
+        "collection_kicker": "SAME DAY SELECTION",
+        "collection_intro": (
+            "منتخب‌هایی که آماده‌اند تا با هماهنگی سریع، "
+            "همین امروز در مشهد به دست شما برسند."
+        ),
+        "subcategory_label": "ارسال امروز",
+        "items": products,
+        "is_same_day_page": True,
+        }
+    )
+    context["structured_data_graph"].append(service_node(context["canonical_url"]))
+
+    return render(request, "subcategory.html", context)

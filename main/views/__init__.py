@@ -77,7 +77,7 @@ from .local_seo_views import (
     mashhad_hub,
 )
 from .product_redirect_views import flower_detail, flower_detail_redirect, product_detail
-from .catalog_views import CATALOG_PAGE_SIZE, CATEGORY_SLUG_ALIASES, COLLECTION_LANDING_CONTENT, FLOWER_FILTER_ORDER, SECTION_ALL_ROUTE_NAMES, WEDDING_BAKERY_LEGACY_SLUGS, WEDDING_FLOWER_LEGACY_SLUGS, _catalog_ordered_products, _collection_landing_page, _filter_links_for_categories, _paginate_products, _section_all_products, _section_all_url, _section_subcategory, bakery, bakery_all, bakery_subcategory, flower_subcategory, flowers, flowers_all, gift_subcategory, gifts, gifts_all
+from .catalog_views import CATALOG_PAGE_SIZE, CATEGORY_SLUG_ALIASES, COLLECTION_LANDING_CONTENT, FLOWER_FILTER_ORDER, SAME_DAY_TAG_SLUGS, SECTION_ALL_ROUTE_NAMES, WEDDING_BAKERY_LEGACY_SLUGS, WEDDING_FLOWER_LEGACY_SLUGS, _catalog_ordered_products, _collection_landing_page, _filter_links_for_categories, _paginate_products, _section_all_products, _section_all_url, _section_subcategory, bakery, bakery_all, bakery_subcategory, flower_subcategory, flowers, flowers_all, flowers_same_day, gift_subcategory, gifts, gifts_all
 from .product_detail_views import _item_detail_context, _item_telegram_href, _section_product_detail, _telegram_href, bakery_product_detail, flower_product_detail, gift_product_detail
 from ..telegram_notifications import send_lead_request_notification
 from ..models import (
@@ -661,9 +661,6 @@ FLOWER_OCCASION_SLUGS = [
     "no-occasion",
 ]
 
-SAME_DAY_TAG_SLUGS = [
-    "same-day",
-]
 
 
 FLOWER_TYPE_FALLBACK_IMAGES = {
@@ -754,66 +751,6 @@ def _same_day_flower_products(limit=12):
 
 
 
-def flowers_same_day(request):
-    products = (
-        Product.objects.for_general_catalog()
-        .published()
-        .filter(
-            category__section=Category.Section.FLOWERS,
-            tags__slug__in=SAME_DAY_TAG_SLUGS,
-        )
-        .select_related("category")
-        .prefetch_related("tags")
-        .distinct()
-        .order_by("sort_order", "-updated_at")
-    )
-
-    breadcrumbs = _with_home(
-        [
-            {"name": "گل‌ها", "url": reverse("flowers")},
-            {"name": "ارسال امروز", "url": None},
-        ]
-    )
-    context = _default_context(
-        request,
-        page_type="catalog",
-        active_nav="flowers",
-        meta_title="ارسال گل امروز در مشهد | زاد",
-        meta_description=(
-            "سفارش گل‌های آماده برای ارسال همان‌روز در مشهد؛ "
-            "بررسی موجودی و هماهنگی سریع با زاد."
-        ),
-        breadcrumbs=breadcrumbs,
-        enable_product_modal=True,
-        content_page="subcategory",
-        schema_type="CollectionPage",
-    )
-    hero_data = {
-        "page_hero_title": "ارسال امروز",
-        "page_hero_text": "گل‌های آماده برای ارسال سریع در شهر مشهد.",
-        "page_hero_image": "main/img/hero-about.webp",
-    }
-    db_hero = _get_site_hero("subcategory", "same-day")
-    if db_hero:
-        hero_data = db_hero
-
-    context.update(hero_data)
-    context.update(
-        {
-        "collection_title": "گل‌هایی برای همین امروز",
-        "collection_kicker": "SAME DAY SELECTION",
-        "collection_intro": (
-            "منتخب‌هایی که آماده‌اند تا با هماهنگی سریع، "
-            "همین امروز در مشهد به دست شما برسند."
-        ),
-        "subcategory_label": "ارسال امروز",
-        "items": products,
-        "is_same_day_page": True,
-        }
-    )
-    context["structured_data_graph"].append(service_node(context["canonical_url"]))
-
-    return render(request, "subcategory.html", context)
 
 
 
