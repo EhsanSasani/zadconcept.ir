@@ -274,6 +274,47 @@ class MainViewsTests(TestCase):
             ),
         )
         self.assertFalse(card["has_children"])
+
+
+    def test_local_landing_views_preserve_routing_and_context_contract(self):
+        from django.urls import resolve
+
+        cases = [
+            ("mashhad_flower_order", views.mashhad_flower_order),
+            ("mashhad_flower_delivery", views.mashhad_flower_delivery),
+        ]
+
+        expected_items = list(
+            views._published_products_for_section(
+                Category.Section.FLOWERS
+            ).order_by(
+                "-featured",
+                "sort_order",
+                "-created_at",
+            )[:8]
+        )
+
+        expected_links = views._occasion_links(limit=4)
+
+        for route_name, expected_view in cases:
+            url = reverse(route_name)
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, "local_landing.html")
+            self.assertIs(resolve(url).func, expected_view)
+            self.assertEqual(
+                list(response.context["curated_items"]),
+                expected_items,
+            )
+            self.assertEqual(
+                response.context["occasion_links"],
+                expected_links,
+            )
+            self.assertEqual(
+                response.context["lead_default_type"],
+                "flower",
+            )
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
