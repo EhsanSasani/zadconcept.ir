@@ -315,6 +315,17 @@ class MainViewsTests(TestCase):
                 response.context["lead_default_type"],
                 "flower",
             )
+    def test_product_detail_view_family_preserves_contract(self):
+        from django.urls import resolve
+        cases=[('flower_product_detail',self.flower,self.flowers_category,views.flower_product_detail),('bakery_product_detail',self.bakery,self.bakery_category,views.bakery_product_detail),('gift_product_detail',self.gift_product,self.gifts_category,views.gift_product_detail)]
+        for name,obj,cat,view in cases:
+            url=reverse(name,kwargs=dict(category_slug=cat.slug,slug=obj.slug))
+            r=self.client.get(url)
+            self.assertEqual(r.status_code,200)
+            self.assertTemplateUsed(r,'item_detail.html')
+            self.assertIs(resolve(url).func,view)
+            self.assertEqual(r.context['product'],obj)
+
     def test_index_page_loads(self):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
