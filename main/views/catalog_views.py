@@ -1,3 +1,8 @@
+from ..category_presentation import _category_card
+from ..catalog_selectors import _published_products
+from ..models import BAKERY_WEDDING_CATEGORY_SLUGS, FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS, WEDDING_LEGACY_TAG_SLUGS
+from ..page_presentation import _category_content
+
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -157,3 +162,121 @@ def bakery_all(request):
 
 def gifts_all(request):
     return _section_all_products(request, Category.Section.GIFTS)
+
+CATEGORY_SLUG_ALIASES = {
+    "plant": "plants",
+    "wreath": "stand",
+    "wedding-decoration": "wedding",
+}
+
+WEDDING_FLOWER_LEGACY_SLUGS = frozenset(
+    (
+        *FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+        *WEDDING_LEGACY_TAG_SLUGS,
+    )
+)
+
+WEDDING_BAKERY_LEGACY_SLUGS = frozenset(
+    (*BAKERY_WEDDING_CATEGORY_SLUGS, *WEDDING_LEGACY_TAG_SLUGS)
+)
+
+def _section_subcategory(request, section, subcategory_slug):
+    category = get_object_or_404(
+        Category.objects.for_general_catalog(),
+        section=section,
+        slug=subcategory_slug,
+        is_active=True,
+    )
+
+    config = SECTION_CONTENT[section]
+    content = _category_content(category)
+    child_categories = list(
+        category.children.filter(is_active=True).order_by("sort_order", "name")
+    )
+
+    visible_category_ids = [category.pk, *[child.pk for child in child_categories]]
+    items = list(
+        _published_products()
+        .filter(category_id__in=visible_category_ids)
+        .select_related("category")
+        .prefetch_related("tags")
+        .order_by("-featured", "sort_order", "-created_at")[:48]
+    )
+
+    breadcrumb_items = [{"name": config["title"], "url": reverse(section)}]
+    if category.parent_id:
+        breadcrumb_items.append(
+            {"name": category.parent.name, "url": category.parent.get_absolute_url()}
+        )
+    breadcrumb_items.append({"name": category.name, "url": None})
+    breadcrumbs = _with_home(breadcrumb_items)
+    is_flower_category_page = section == Category.Section.FLOWERS
+    db_hero = _get_site_hero("subcategory", category.slug)
+
+    context = _default_context(
+        request,
+        page_type="subcategory",
+        active_nav=config["nav"],
+        meta_title=content["meta_title"],
+        meta_description=content["meta_description"],
+        breadcrumbs=breadcrumbs,
+        enable_product_modal=True,
+        content_page="subcategory",
+        suppress_default_hero=is_flower_category_page and not db_hero,
+    )
+
+    hero_data = _hero_from_key(
+        "subcategory",
+        title=content["label"],
+        text=content["intro"],
+        image=category.cover_image.url if category.cover_image else content["hero_image"],
+    )
+
+    if db_hero:
+        hero_data = db_hero
+
+    context.update(hero_data)
+    context.update(
+        {
+            "subcategory_slug": category.slug,
+            "subcategory_label": category.name,
+            "collection_title": category.name,
+            "collection_intro": content["intro"],
+            "is_flower_category_page": is_flower_category_page,
+            "show_category_split_hero": is_flower_category_page and not db_hero,
+            "category_hero_image": (
+                category.cover_image.url if category.cover_image else content["image"]
+            ),
+            "category_parent_label": (
+                category.parent.name if category.parent_id else ""
+            ),
+            "items": items,
+            "child_categories": [
+                _category_card(child) for child in child_categories
+            ],
+            "lead_form": LeadRequestForm(initial_lead_type=config["lead_type"]),
+            "lead_default_type": config["lead_type"],
+        }
+    )
+
+    return render(request, "subcategory.html", context)
+
+def flower_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_FLOWER_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
+    canonical_slug = CATEGORY_SLUG_ALIASES.get(subcategory_slug, subcategory_slug)
+
+    if canonical_slug != subcategory_slug:
+        return redirect("flower_subcategory", subcategory_slug=canonical_slug)
+
+    return _section_subcategory(request, Category.Section.FLOWERS, canonical_slug)
+
+def bakery_subcategory(request, subcategory_slug):
+    if subcategory_slug in WEDDING_BAKERY_LEGACY_SLUGS:
+        return redirect("weddings", permanent=True)
+
+    return _section_subcategory(request, Category.Section.BAKERY, subcategory_slug)
+
+def gift_subcategory(request, subcategory_slug):
+    return _section_subcategory(request, Category.Section.GIFTS, subcategory_slug)
