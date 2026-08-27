@@ -281,7 +281,7 @@
             و تحویل را با زاد تجربه کنید.
           {% endif %}</p>
 
-          <a class="home-abroad__btn" href="{{ page_content.international.cta_url|default:'/contact/#lead-form' }}">
+          <a class="home-abroad__btn" href="{% url 'international_orders' %}">
             <i class="bi bi-arrow-left"></i>
             {{ page_content.international.cta_text|default:"PLACE YOUR ORDER" }}
           </a>

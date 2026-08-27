@@ -48,7 +48,6 @@ def international_orders_en(request):
             {"language": "en", "url": en_url},
             {"language": "x-default", "url": fa_url},
         ],
-        hide_global_chrome=True,
         suppress_default_hero=True,
         content_page="international-orders",
     )

@@ -6,7 +6,7 @@
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=9">
-  <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -94,7 +94,7 @@
     {% endif %}
   </div>
 </section>
-{% elif items or not child_categories %}
+{% elif items or not child_categories or selected_product_tag %}
 <section class="container section-block catalog-products-section">
   {% if child_categories %}
     <div class="section-head section-head--center catalog-detail-head">
@@ -127,7 +127,11 @@
     {% include "main/components/catalog_filter.html" with filter_items=filter_links only %}
   {% endif %}
 
-  {% include "main/components/product_grid.html" with products=items %}
+  {% if unique_filter_links %}
+    {% include "main/components/catalog_filter.html" with filter_items=unique_filter_links filter_variant="switch" filter_label="فیلتر محصولات یونیک" only %}
+  {% endif %}
+
+  {% include "main/components/product_grid.html" with products=items empty_text=product_empty_text %}
 </section>
 {% endif %}
 

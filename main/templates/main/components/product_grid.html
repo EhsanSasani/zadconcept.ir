@@ -2,6 +2,6 @@
   {% if products %}
     {% include "main/components/product_card.html" with products=products fallback_image="main/img/cat-flowers.webp" %}
   {% else %}
-    <div class="empty-box">فعلاً محصولی برای نمایش وجود ندارد.</div>
+    <div class="empty-box">{{ empty_text|default:"فعلاً محصولی برای نمایش وجود ندارد." }}</div>
   {% endif %}
 </div>

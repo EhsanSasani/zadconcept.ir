@@ -77,7 +77,7 @@ from .local_seo_views import (
     mashhad_hub,
 )
 from .product_redirect_views import flower_detail, flower_detail_redirect, product_detail
-from .catalog_views import CATALOG_PAGE_SIZE, CATEGORY_SLUG_ALIASES, COLLECTION_LANDING_CONTENT, FLOWER_FILTER_ORDER, SAME_DAY_TAG_SLUGS, SECTION_ALL_ROUTE_NAMES, WEDDING_BAKERY_LEGACY_SLUGS, WEDDING_FLOWER_LEGACY_SLUGS, _catalog_ordered_products, _collection_landing_page, _filter_links_for_categories, _paginate_products, _section_all_products, _section_all_url, _section_subcategory, bakery, bakery_all, bakery_subcategory, flower_subcategory, flowers, flowers_all, flowers_same_day, gift_subcategory, gifts, gifts_all
+from .catalog_views import CATALOG_PAGE_SIZE, CATEGORY_SLUG_ALIASES, COLLECTION_LANDING_CONTENT, FLOWER_FILTER_ORDER, SECTION_ALL_ROUTE_NAMES, WEDDING_BAKERY_LEGACY_SLUGS, WEDDING_FLOWER_LEGACY_SLUGS, _catalog_ordered_products, _collection_landing_page, _filter_links_for_categories, _paginate_products, _section_all_products, _section_all_url, _section_subcategory, bakery, bakery_all, bakery_subcategory, flower_subcategory, flowers, flowers_all, flowers_same_day, gift_subcategory, gifts, gifts_all
 from .wedding_views import WEDDING_COLLECTIONS, _managed_wedding_collection_content, _proposal_collection_filter_data, _published_wedding_products, _wedding_content_and_gallery, wedding_collection, weddings
 from .section_views import FLOWER_OCCASION_SLUGS, FLOWER_TYPE_FALLBACK_IMAGES, FLOWER_TYPE_SLUGS, OCCASION_FALLBACK_IMAGES, _category_page, _featured_selection, _flower_occasion_cards, _flower_same_day_products, _flower_type_cards, _same_day_flower_products, _sort_by_slug_order
 from .product_detail_views import _item_detail_context, _item_telegram_href, _section_product_detail, _telegram_href, bakery_product_detail, flower_product_detail, gift_product_detail
@@ -95,7 +95,6 @@ from ..models import (
     Product,
     PROPOSAL_COLLECTION_TAG_SLUG,
     PublishStatus,
-    SAME_DAY_TAG_SLUG,
     SiteHero,
     Tag,
     WEDDING_LEGACY_TAG_SLUGS,

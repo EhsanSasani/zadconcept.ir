@@ -7,7 +7,6 @@ from main.models import (
     BRIDAL_BOUQUET_CATEGORY_SLUG,
     PROPOSAL_BOUQUET_CATEGORY_SLUG,
     PROPOSAL_SWEETS_CATEGORY_SLUG,
-    SAME_DAY_TAG_SLUG,
     WEDDING_CAR_CATEGORY_SLUG,
     WEDDING_LEGACY_TAG_SLUGS,
     WEDDING_ROOT_CATEGORY_SLUG,
@@ -127,8 +126,11 @@ class Command(BaseCommand):
         # Start from the unfiltered concrete manager. Using
         # ``for_general_catalog()`` here would hide the exact protected-category
         # corruption this command is responsible for detecting.
-        general_products = Product.objects.filter(
-            catalog_scope=Product.CatalogScope.GENERAL
+        non_wedding_products = Product.objects.filter(
+            catalog_scope__in=(
+                Product.CatalogScope.GENERAL,
+                Product.CatalogScope.SAME_DAY,
+            )
         )
 
         wedding_general_taxonomy = self.product_list(
@@ -137,14 +139,11 @@ class Command(BaseCommand):
         wedding_with_tags = self.product_list(
             wedding_products.filter(tags__isnull=False).distinct()
         )
-        wedding_same_day = self.product_list(
-            wedding_products.filter(tags__slug=SAME_DAY_TAG_SLUG).distinct()
+        non_wedding_protected_category = self.product_list(
+            non_wedding_products.filter(category_id__in=protected_category_ids)
         )
-        general_protected_category = self.product_list(
-            general_products.filter(category_id__in=protected_category_ids)
-        )
-        general_protected_tag = self.product_list(
-            general_products.filter(
+        non_wedding_protected_tag = self.product_list(
+            non_wedding_products.filter(
                 tags__slug__in=WEDDING_LEGACY_TAG_SLUGS
             ).distinct()
         )
@@ -161,7 +160,10 @@ class Command(BaseCommand):
         scope_state_mismatch = self.product_list(
             Product.objects.filter(
                 Q(
-                    catalog_scope=Product.CatalogScope.GENERAL,
+                    catalog_scope__in=(
+                        Product.CatalogScope.GENERAL,
+                        Product.CatalogScope.SAME_DAY,
+                    ),
                 )
                 & (
                     ~Q(wedding_type="")
@@ -181,6 +183,7 @@ class Command(BaseCommand):
                 | ~Q(
                     catalog_scope__in=(
                         Product.CatalogScope.GENERAL,
+                        Product.CatalogScope.SAME_DAY,
                         Product.CatalogScope.WEDDING,
                     )
                 )
@@ -194,9 +197,8 @@ class Command(BaseCommand):
             ("NEEDS_REVIEW", review_products),
             ("WEDDING_GENERAL_TAXONOMY", wedding_general_taxonomy),
             ("WEDDING_WITH_TAGS", wedding_with_tags),
-            ("WEDDING_SAME_DAY", wedding_same_day),
-            ("GENERAL_PROTECTED_CATEGORY", general_protected_category),
-            ("GENERAL_PROTECTED_TAG", general_protected_tag),
+            ("NON_WEDDING_PROTECTED_CATEGORY", non_wedding_protected_category),
+            ("NON_WEDDING_PROTECTED_TAG", non_wedding_protected_tag),
             ("TYPED_MAPPING_MISMATCH", typed_mapping_mismatch),
             ("SCOPE_STATE_MISMATCH", scope_state_mismatch),
         )

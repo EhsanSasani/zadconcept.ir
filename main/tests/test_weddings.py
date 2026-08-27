@@ -122,14 +122,6 @@ class WeddingCatalogIsolationTests(TestCase):
             slug="wtest-general-bakery",
             section=Category.Section.BAKERY,
         )
-        cls.same_day, _ = Tag.objects.update_or_create(
-            slug="same-day",
-            defaults={
-                "name": "ارسال روز",
-                "is_active": True,
-                "is_occasion": False,
-            },
-        )
         cls.birthday, _ = Tag.objects.update_or_create(
             slug="birthday",
             defaults={
@@ -149,8 +141,8 @@ class WeddingCatalogIsolationTests(TestCase):
             name="WTEST GENERAL SAME DAY",
             category=cls.general_flower_category,
             publish_status=Product.PublishStatus.PUBLISHED,
+            catalog_scope=Product.CatalogScope.SAME_DAY,
         )
-        cls.general_same_day.tags.add(cls.same_day)
         cls.general_bakery = Product.objects.create(
             name="WTEST GENERAL BAKERY",
             category=cls.general_bakery_category,
@@ -216,9 +208,9 @@ class WeddingCatalogIsolationTests(TestCase):
 
         self.assertContains(directory, self.general_flower_category.name)
         self.assertContains(all_flowers, self.general_flower.name)
-        self.assertContains(all_flowers, self.general_same_day.name)
+        self.assertNotContains(all_flowers, self.general_same_day.name)
         self.assertContains(category, self.general_flower.name)
-        self.assertContains(category, self.general_same_day.name)
+        self.assertNotContains(category, self.general_same_day.name)
         self.assertContains(same_day, self.general_same_day.name)
         self.assertNotContains(same_day, self.general_flower.name)
 
@@ -337,9 +329,9 @@ class WeddingCatalogIsolationTests(TestCase):
                 self.assertNotContains(response, product.name, msg_prefix=path)
             self.assertNotContains(response, self.review_product.name, msg_prefix=path)
 
-    def test_raw_same_day_or_general_tag_tampering_fails_closed(self):
+    def test_raw_general_tag_tampering_fails_closed(self):
         through = Product.tags.through
-        through.objects.create(product_id=self.bridal.pk, tag_id=self.same_day.pk)
+        through.objects.create(product_id=self.bridal.pk, tag_id=self.birthday.pk)
         through.objects.create(product_id=self.car.pk, tag_id=self.birthday.pk)
 
         valid_ids = set(Product.objects.valid_weddings().values_list("pk", flat=True))
@@ -467,12 +459,12 @@ class WeddingInvariantTests(TestCase):
             slug="winvariant-bakery",
             section=Category.Section.BAKERY,
         )
-        cls.same_day, _ = Tag.objects.update_or_create(
-            slug="same-day",
+        cls.public_tag, _ = Tag.objects.update_or_create(
+            slug="winvariant-public-tag",
             defaults={
-                "name": "ارسال روز",
+                "name": "WInvariant public tag",
                 "is_active": True,
-                "is_occasion": False,
+                "is_occasion": True,
             },
         )
 
@@ -519,7 +511,7 @@ class WeddingInvariantTests(TestCase):
                         category,
                     )
 
-    def test_new_untyped_wedding_and_same_day_wedding_are_rejected(self):
+    def test_new_untyped_wedding_and_invalid_same_day_states_are_rejected(self):
         with self.assertRaises(ValidationError):
             Product.objects.create(
                 name="WInvariant Untyped",
@@ -528,13 +520,20 @@ class WeddingInvariantTests(TestCase):
                 wedding_needs_review=True,
             )
 
+        with self.assertRaises(ValidationError):
+            Product.objects.create(
+                name="WInvariant Same Day Wedding Category",
+                category=self.taxonomy[Product.WeddingType.WEDDING_CAR],
+                catalog_scope=Product.CatalogScope.SAME_DAY,
+            )
+
         wedding = create_wedding_product(
-            "WInvariant No Same Day",
+            "WInvariant No Public Tags",
             Product.WeddingType.WEDDING_CAR,
             self.taxonomy[Product.WeddingType.WEDDING_CAR],
         )
         with self.assertRaises(ValidationError):
-            wedding.tags.add(self.same_day)
+            wedding.tags.add(self.public_tag)
 
     def test_database_constraint_rejects_impossible_scope_state(self):
         product = Product.objects.create(
@@ -787,7 +786,10 @@ class WeddingAuditCommandTests(TestCase):
 
         with self.assertRaises(CommandError):
             call_command("audit_weddings", strict=True, stdout=stdout)
-        self.assertIn("[GENERAL_PROTECTED_CATEGORY] count=1", stdout.getvalue())
+        self.assertIn(
+            "[NON_WEDDING_PROTECTED_CATEGORY] count=1",
+            stdout.getvalue(),
+        )
         self.assertIn(product.product_code, stdout.getvalue())
 
     def test_strict_passes_when_all_checks_are_clean(self):

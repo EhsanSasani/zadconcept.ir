@@ -1,5 +1,5 @@
 {% if filter_items %}
-<nav class="catalog-filter" aria-label="{{ filter_label|default:'فیلتر نوع محصول' }}">
+<nav class="catalog-filter{% if filter_variant %} catalog-filter--{{ filter_variant }}{% endif %}" aria-label="{{ filter_label|default:'فیلتر نوع محصول' }}">
   <ul
     class="catalog-filter__grid"
     data-filter-count="{{ filter_items|length }}"

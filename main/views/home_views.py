@@ -1,15 +1,16 @@
-from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from ..catalog_selectors import _active_occasion_tags, _published_products
+from ..catalog_selectors import (
+    _active_occasion_tags,
+    _published_products,
+    _published_same_day_products,
+)
 from ..managed_heroes import _get_active_home_hero_slides
 from ..models import (
     Category,
     Event,
-    Product,
     PublishStatus,
-    SAME_DAY_TAG_SLUG,
 )
 from ..occasion_presentation import _occasion_card
 from ..page_context import _default_context
@@ -68,18 +69,9 @@ def index(request):
         ).order_by("start_at")[:3]
     )
     home_same_day_products = (
-        Product.objects.for_general_catalog()
-        .published()
-        .filter(
-            Q(tags__slug=SAME_DAY_TAG_SLUG)
-            | Q(tags__slug="same-day")
-            | Q(tags__name="ارسال روز")
-            | Q(tags__name="ارسال فوری"),
-            category__section=Category.Section.FLOWERS,
-        )
+        _published_same_day_products()
         .select_related("category")
         .prefetch_related("tags")
-        .distinct()
         .order_by("sort_order", "-created_at")
     )
     context.update(

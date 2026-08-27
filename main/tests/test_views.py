@@ -385,8 +385,8 @@ class MainViewsTests(TestCase):
 
     def test_flowers_same_day_view_preserves_contract(self):
         from django.urls import resolve
-        tag=Tag.objects.get(slug='same-day')
-        self.flower.tags.add(tag)
+        self.flower.catalog_scope=Product.CatalogScope.SAME_DAY
+        self.flower.save(update_fields=['catalog_scope','updated_at'])
         url=reverse('flowers_same_day')
         r=self.client.get(url)
         self.assertEqual(r.status_code,200)
@@ -426,6 +426,10 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("flowers"))
+        self.assertContains(
+            response,
+            f'href="{reverse("international_orders")}"',
+        )
 
 
     def test_home_view_preserves_routing_and_context_contract(self):
@@ -933,7 +937,7 @@ class MainViewsTests(TestCase):
                 "html_lang": "en",
                 "html_dir": "ltr",
                 "og_locale": "en_US",
-                "hide_global_chrome": True,
+                "hide_global_chrome": False,
                 "faq_items": views.INTERNATIONAL_FAQ_EN,
             },
         )

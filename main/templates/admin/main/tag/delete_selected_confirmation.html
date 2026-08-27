@@ -1,0 +1,9 @@
+{% extends "admin/delete_selected_confirmation.html" %}
+
+{% block content %}
+  <div class="alert alert-warning" role="status">
+    <strong>محصولی حذف یا جابه‌جا نمی‌شود.</strong>
+    فقط برچسب‌های انتخاب‌شده و ارتباط آن‌ها با محصولات پاک خواهند شد.
+  </div>
+  {{ block.super }}
+{% endblock %}

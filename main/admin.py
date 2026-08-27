@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.utils import unquote
 from django.db.models import Count
 from django.utils import timezone
 from django.utils.html import format_html
@@ -8,8 +9,9 @@ from django.utils.text import slugify
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .models import (
+    PROTECTED_SYSTEM_TAG_SLUGS,
     PROPOSAL_COLLECTION_TAG_SLUG,
-    SAME_DAY_TAG_SLUG,
+    UNIQUE_TAG_SLUG,
     BakeryItem,
     Category,
     Event,
@@ -32,6 +34,7 @@ from .models import (
     WeddingPageContent,
     WeddingProduct,
     WorkshopPageContent,
+    ensure_unique_tag,
 )
 
 admin.site.site_header = "پنل مدیریت زاد"
@@ -136,6 +139,43 @@ def to_english_digits(value):
     )
 
 
+class AdminTomanPriceInput(forms.TextInput):
+    """Show toman prices in readable three-digit groups inside Django admin."""
+
+    def __init__(self, attrs=None):
+        attrs = dict(attrs or {})
+        attrs.setdefault("inputmode", "numeric")
+        attrs.setdefault("autocomplete", "off")
+        attrs.setdefault("dir", "ltr")
+        attrs.setdefault("placeholder", "1/250/000")
+        attrs.setdefault("data-toman-price-input", "true")
+        super().__init__(attrs)
+
+    @staticmethod
+    def _normalized_value(value):
+        return (
+            to_english_digits(value)
+            .replace("/", "")
+            .replace(",", "")
+            .replace("٬", "")
+            .replace(" ", "")
+        )
+
+    def format_value(self, value):
+        normalized_value = self._normalized_value(value)
+        if not normalized_value:
+            return ""
+
+        try:
+            return f"{int(normalized_value):,}".replace(",", "/")
+        except (TypeError, ValueError):
+            return value
+
+    def value_from_datadict(self, data, files, name):
+        raw_value = super().value_from_datadict(data, files, name)
+        return self._normalized_value(raw_value)
+
+
 def format_toman(value):
     if value in (None, ""):
         return "استعلام قیمت"
@@ -220,6 +260,8 @@ class ProductActionsMixin(ActiveActionsMixin):
     actions = ActiveActionsMixin.actions + (
         "mark_featured",
         "remove_featured",
+        "add_to_unique",
+        "remove_from_unique",
         "publish_selected_products",
         "draft_selected_products",
         "mark_in_stock",
@@ -227,15 +269,43 @@ class ProductActionsMixin(ActiveActionsMixin):
         "make_inquiry_pricing",
     )
 
-    @admin.action(permissions=["change"], description="ویژه‌کردن موارد انتخاب‌شده")
+    @admin.action(permissions=["change"], description="منتخب‌کردن محصولات انتخاب‌شده")
     def mark_featured(self, request, queryset):
         updated = queryset.update(featured=True)
-        self.message_user(request, f"{updated} مورد ویژه شد.")
+        self.message_user(request, f"{updated} محصول منتخب شد.")
 
-    @admin.action(permissions=["change"], description="حذف از موارد ویژه")
+    @admin.action(permissions=["change"], description="حذف از محصولات منتخب")
     def remove_featured(self, request, queryset):
         updated = queryset.update(featured=False)
-        self.message_user(request, f"{updated} مورد از ویژه‌ها حذف شد.")
+        self.message_user(request, f"{updated} محصول از منتخب‌ها حذف شد.")
+
+    @admin.action(
+        permissions=["change"],
+        description="افزودن محصولات انتخاب‌شده به یونیک",
+    )
+    def add_to_unique(self, request, queryset):
+        unique_tag = ensure_unique_tag()
+
+        selected_ids = list(queryset.values_list("pk", flat=True))
+        existing_count = unique_tag.products.filter(pk__in=selected_ids).count()
+        unique_tag.products.add(*selected_ids)
+        added_count = len(selected_ids) - existing_count
+        self.message_user(request, f"{added_count} محصول به یونیک اضافه شد.")
+
+    @admin.action(
+        permissions=["change"],
+        description="حذف محصولات انتخاب‌شده از یونیک",
+    )
+    def remove_from_unique(self, request, queryset):
+        unique_tag = Tag.objects.filter(slug=UNIQUE_TAG_SLUG).first()
+        if unique_tag is None:
+            self.message_user(request, "هیچ برچسب یونیکی برای حذف وجود ندارد.")
+            return
+
+        selected_ids = list(queryset.values_list("pk", flat=True))
+        removed_count = unique_tag.products.filter(pk__in=selected_ids).count()
+        unique_tag.products.remove(*selected_ids)
+        self.message_user(request, f"{removed_count} محصول از یونیک حذف شد.")
 
     @admin.action(permissions=["change"], description="انتشار موارد انتخاب‌شده")
     def publish_selected_products(self, request, queryset):
@@ -371,19 +441,30 @@ class TagAdminForm(forms.ModelForm):
 
 
 class ProductAdminForm(forms.ModelForm):
+    is_unique = forms.BooleanField(
+        label="محصول یونیک است؟",
+        required=False,
+        initial=False,
+        help_text=(
+            "با فعال‌کردن این گزینه، محصول داخل فیلتر «یونیک» همان دسته نمایش "
+            "داده می‌شود. این گزینه با «منتخب» و اولویت نمایش تفاوت دارد."
+        ),
+    )
+
     class Meta:
         fields = "__all__"
         field_classes = {"cover_image": AdminImageUploadField}
         widgets = {
-                "cover_image": PersianImageInput,
-                "tags": forms.CheckboxSelectMultiple,
-                "description": forms.Textarea(
-                    attrs={
-                        "rows": 4,
-                        "placeholder": "توضیح کوتاه و احساسی بنویس؛ اگر خالی بماند مشکلی نیست.",
-                    }
-                ),
-            }
+            "cover_image": PersianImageInput,
+            "price": AdminTomanPriceInput,
+            "tags": forms.CheckboxSelectMultiple,
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": "توضیح کوتاه و احساسی بنویس؛ اگر خالی بماند مشکلی نیست.",
+                }
+            ),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -412,11 +493,20 @@ class ProductAdminForm(forms.ModelForm):
             self.fields["tags"].queryset = (
                 Tag.objects.for_general_catalog()
                 .filter(is_active=True)
+                .exclude(slug=UNIQUE_TAG_SLUG)
                 .order_by("sort_order", "name")
             )
 
+        if "is_unique" in self.fields:
+            self.initial["is_unique"] = bool(self.instance.pk) and self.instance.tags.filter(
+                slug=UNIQUE_TAG_SLUG
+            ).exists()
+
         if "price" in self.fields:
-            self.fields["price"].help_text = "فقط عدد وارد کن؛ مثلاً 2500000."
+            self.fields["price"].help_text = (
+                "عدد را با جداکننده «/» وارد کن؛ مثلاً 1/250/000. "
+                "مقدار بدون جداکننده ذخیره می‌شود."
+            )
 
         if "price_usd" in self.fields:
             self.fields["price_usd"].help_text = "اختیاری است؛ اگر قیمت دلاری نداری خالی بگذار."
@@ -432,13 +522,18 @@ class ProductAdminForm(forms.ModelForm):
             )
 
         if "featured" in self.fields:
-            self.fields["featured"].help_text = "محصول ویژه در بخش‌های انتخاب‌شده و ترتیب نمایش بالاتر اولویت می‌گیرد؛ محصولات غیر ویژه را مخفی نمی‌کند."
+            self.fields["featured"].label = "منتخب؛ با اولویت بالاتر نمایش داده شود؟"
+            self.fields["featured"].help_text = (
+                "محصول منتخب قبل از محصولات عادی نمایش داده می‌شود، اما محصولات "
+                "عادی را مخفی نمی‌کند. برای فیلتر یونیک از گزینه «محصول یونیک "
+                "است؟» استفاده کن."
+            )
 
         if "tags" in self.fields:
             self.fields["tags"].help_text = (
                 "برچسب می‌تواند داخلی باشد یا اگر گزینه مناسبت روشن است، "
-                "در بخش مناسبت‌های سایت نمایش داده شود. برچسب ارسال روز "
-                "برای فیلتر ارسال فوری است؛ عروسی از بخش مستقل مدیریت می‌شود."
+                "در بخش مناسبت‌های سایت نمایش داده شود. ارسال روز و عروسی "
+                "هرکدام از بخش مستقل خودشان مدیریت می‌شوند."
             )
 
     def clean(self):
@@ -475,11 +570,20 @@ class ProductAdminForm(forms.ModelForm):
 
         super()._save_m2m()
 
+        if "is_unique" in self.cleaned_data:
+            if self.cleaned_data["is_unique"]:
+                self.instance.tags.add(ensure_unique_tag())
+            elif not self.cleaned_data["is_unique"]:
+                self.instance.tags.remove(
+                    *Tag.objects.filter(slug=UNIQUE_TAG_SLUG)
+                )
+
         if protected_tag_ids:
             self.instance.tags.add(*protected_tag_ids)
 
 
 class WeddingProductAdminForm(ProductAdminForm):
+    is_unique = None
     wedding_type = forms.ChoiceField(
         label="نوع محصول عروسی",
         choices=Product.WeddingType.choices,
@@ -1048,14 +1152,20 @@ class CategoryAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin
             return 0
 
         if hasattr(obj, "products_total"):
-            return obj.products_total
+            return obj.products_total + getattr(obj, "child_products_total", 0)
 
-        return obj.products.count()
+        return obj.products.count() + Product.objects.filter(
+            category__parent=obj
+        ).count()
 
 
 @admin.register(Tag)
 class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     form = TagAdminForm
+    delete_confirmation_template = "admin/main/tag/delete_confirmation.html"
+    delete_selected_confirmation_template = (
+        "admin/main/tag/delete_selected_confirmation.html"
+    )
 
     list_display = (
         "image_preview",
@@ -1096,7 +1206,7 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
         (
             "۱. برچسب",
             {
-                "description": "برچسب یعنی مناسبت یا کاربرد محصول؛ مثل تولد، عاشقانه، تبریک، ترحیم یا ارسال روز.",
+                "description": "برچسب یعنی مناسبت یا کاربرد محصول؛ مثل تولد، عاشقانه، تبریک، ترحیم یا یونیک.",
                 "fields": (
                     "cover_image",
                     "image_preview",
@@ -1142,12 +1252,37 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
         return queryset.annotate(products_total=Count("products"))
 
     def has_delete_permission(self, request, obj=None):
-        if obj is not None and obj.is_wedding_legacy:
+        if obj is not None and (
+            obj.is_wedding_legacy or obj.slug in PROTECTED_SYSTEM_TAG_SLUGS
+        ):
             return False
         return super().has_delete_permission(request, obj=obj)
 
     def delete_queryset(self, request, queryset):
-        super().delete_queryset(request, queryset.for_general_catalog())
+        super().delete_queryset(
+            request,
+            queryset.for_general_catalog().exclude(
+                slug__in=PROTECTED_SYSTEM_TAG_SLUGS
+            ),
+        )
+
+    def get_deleted_objects(self, objs, request):
+        deleted_objects, model_count, perms_needed, protected = (
+            super().get_deleted_objects(objs, request)
+        )
+        if any(tag.slug in PROTECTED_SYSTEM_TAG_SLUGS for tag in objs):
+            perms_needed.add("برچسب سیستمی یونیک")
+        return deleted_objects, model_count, perms_needed, protected
+
+    def delete_view(self, request, object_id, extra_context=None):
+        tag = self.get_object(request, unquote(object_id))
+        context = dict(extra_context or {})
+        context["tag_product_count"] = tag.products.count() if tag else 0
+        return super().delete_view(
+            request,
+            object_id,
+            extra_context=context,
+        )
 
     @admin.display(description="تعداد محصول")
     def product_count(self, obj):
@@ -1155,11 +1290,9 @@ class TagAdmin(ActiveActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
             return 0
 
         if hasattr(obj, "products_total"):
-            return obj.products_total + getattr(obj, "child_products_total", 0)
+            return obj.products_total
 
-        return obj.products.count() + Product.objects.filter(
-            category__parent=obj
-        ).count()
+        return obj.products.count()
 
 
 class SectionCategoryFilter(admin.SimpleListFilter):
@@ -1195,6 +1328,36 @@ class SectionCategoryFilter(admin.SimpleListFilter):
         return queryset
 
 
+class SelectedProductFilter(admin.SimpleListFilter):
+    title = "منتخب"
+    parameter_name = "selected"
+
+    def lookups(self, request, model_admin):
+        return (("yes", "منتخب"), ("no", "عادی"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(featured=True)
+        if self.value() == "no":
+            return queryset.filter(featured=False)
+        return queryset
+
+
+class UniqueProductFilter(admin.SimpleListFilter):
+    title = "یونیک"
+    parameter_name = "unique"
+
+    def lookups(self, request, model_admin):
+        return (("yes", "یونیک"), ("no", "غیر یونیک"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(tags__slug=UNIQUE_TAG_SLUG).distinct()
+        if self.value() == "no":
+            return queryset.exclude(tags__slug=UNIQUE_TAG_SLUG).distinct()
+        return queryset
+
+
 class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     form = ProductAdminForm
     section_filter = None
@@ -1207,13 +1370,15 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
         "price_toman",
         "category_display",
         "stock_badge",
-        "featured",
+        "unique_display",
+        "selected_display",
     )
 
     list_filter = (
         SectionCategoryFilter,
         "stock_status",
-        "featured",
+        UniqueProductFilter,
+        SelectedProductFilter,
         "is_active",
     )
 
@@ -1247,6 +1412,10 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
     save_on_top = True
     actions_on_top = True
     actions_on_bottom = False
+    allow_bulk_delete = True
+
+    class Media:
+        js = ("main/js/admin/product-price-input.js",)
 
     fieldsets = (
         (
@@ -1290,6 +1459,7 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
             {
                 "fields": (
                     "category",
+                    "is_unique",
                     "tags",
                 ),
             },
@@ -1322,6 +1492,19 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
         form_class.section_filter = self.section_filter
         return form_class
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not self.allow_bulk_delete:
+            actions.pop("delete_selected", None)
+        elif "delete_selected" in actions:
+            action, name, _description = actions["delete_selected"]
+            actions["delete_selected"] = (
+                action,
+                name,
+                "حذف کامل محصولات انتخاب‌شده",
+            )
+        return actions
+
     def get_queryset(self, request):
         queryset = (
             super()
@@ -1332,6 +1515,8 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
         if self.catalog_scope_filter == Product.CatalogScope.WEDDING:
             queryset = queryset.for_weddings()
+        elif self.catalog_scope_filter == Product.CatalogScope.SAME_DAY:
+            queryset = queryset.for_same_day()
         else:
             queryset = queryset.for_general_catalog()
 
@@ -1396,6 +1581,14 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
 
         return label_map.get(obj.stock_status, "-")
 
+    @admin.display(boolean=True, description="یونیک")
+    def unique_display(self, obj):
+        return any(tag.slug == UNIQUE_TAG_SLUG for tag in obj.tags.all())
+
+    @admin.display(boolean=True, description="منتخب", ordering="featured")
+    def selected_display(self, obj):
+        return obj.featured
+
     def get_changeform_initial_data(self, request):
         initial = {
             "pricing_type": Product.PricingType.INQUIRY,
@@ -1447,8 +1640,11 @@ class BaseProductAdmin(ProductActionsMixin, AdminImagePreviewMixin, admin.ModelA
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        if self.catalog_scope_filter == Product.CatalogScope.GENERAL:
-            obj.catalog_scope = Product.CatalogScope.GENERAL
+        if self.catalog_scope_filter in {
+            Product.CatalogScope.GENERAL,
+            Product.CatalogScope.SAME_DAY,
+        }:
+            obj.catalog_scope = self.catalog_scope_filter
             obj.wedding_type = ""
             obj.wedding_needs_review = False
             obj.wedding_sort_order = 0
@@ -1516,10 +1712,11 @@ class FlowerAdmin(BaseProductAdmin):
                 "description": (
                     "نوع گل مثل دسته گل، باکس، بوکت، استند، جار یا گیاه است. "
                     "محصولات عروسی را از بخش مستقل عروسی مدیریت کن. برچسب‌ها "
-                    "برای تولد، عاشقانه، ترحیم یا ارسال روز هستند."
+                    "برای تولد، عاشقانه، ترحیم یا سایر کاربردها هستند."
                 ),
                 "fields": (
                     "category",
+                    "is_unique",
                     "tags",
                 ),
             },
@@ -1549,9 +1746,10 @@ class FlowerAdmin(BaseProductAdmin):
 
 @admin.register(SameDayFlower)
 class SameDayFlowerAdmin(FlowerAdmin):
-    """Edit only today's flowers; adding here preselects the same-day tag."""
+    """Dedicated admin for products visible only in the same-day catalog."""
 
     section_filter = Category.Section.FLOWERS
+    catalog_scope_filter = Product.CatalogScope.SAME_DAY
     list_per_page = 50
     list_display = (
         "image_preview",
@@ -1573,7 +1771,6 @@ class SameDayFlowerAdmin(FlowerAdmin):
         "is_active",
     )
     actions = (
-        "remove_from_same_day",
         "mark_in_stock",
         "mark_out_of_stock",
         "publish_selected_products",
@@ -1581,82 +1778,10 @@ class SameDayFlowerAdmin(FlowerAdmin):
     )
     fieldsets = FlowerAdmin.fieldsets
 
-    @staticmethod
-    def _ensure_same_day_tag():
-        tag = Tag.objects.filter(slug=SAME_DAY_TAG_SLUG).first()
-        if tag is None:
-            tag = Tag.objects.filter(name="ارسال روز").first()
-        if tag is None:
-            return Tag.objects.create(
-                name="ارسال روز",
-                slug=SAME_DAY_TAG_SLUG,
-                is_active=True,
-                is_occasion=False,
-                sort_order=100,
-            )
-
-        update_fields = []
-        if tag.slug != SAME_DAY_TAG_SLUG:
-            tag.slug = SAME_DAY_TAG_SLUG
-            update_fields.append("slug")
-        if not tag.is_active:
-            tag.is_active = True
-            update_fields.append("is_active")
-        if tag.is_occasion:
-            tag.is_occasion = False
-            update_fields.append("is_occasion")
-        if update_fields:
-            update_fields.append("updated_at")
-            tag.save(update_fields=update_fields)
-        return tag
-
-    def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .filter(tags__slug=SAME_DAY_TAG_SLUG)
-            .distinct()
-        )
-
-    def get_changeform_initial_data(self, request):
-        initial = super().get_changeform_initial_data(request)
-        initial["tags"] = [self._ensure_same_day_tag().pk]
-        return initial
-
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        product = form.instance
-        if (
-            product.catalog_scope != Product.CatalogScope.GENERAL
-            or product.category.is_wedding_category
-        ):
-            raise forms.ValidationError(
-                "محصول عروسی را نمی‌توان از بخش ارسال روز ذخیره کرد."
-            )
-        # Adding through this proxy must create a same-day product. On change,
-        # however, the submitted checkbox selection is authoritative: removing
-        # the tag intentionally removes the product from this proxy list.
-        if not change:
-            product.tags.add(self._ensure_same_day_tag())
-
     @admin.display(description="برچسب‌ها")
     def tags_summary(self, obj):
-        names = [tag.name for tag in obj.tags.all() if tag.slug != SAME_DAY_TAG_SLUG]
+        names = [tag.name for tag in obj.tags.all()]
         return "، ".join(names[:4]) or "—"
-
-    @admin.action(
-        permissions=["change"],
-        description="حذف محصولات انتخاب‌شده از ارسال روز",
-    )
-    def remove_from_same_day(self, request, queryset):
-        tag = Tag.objects.filter(slug=SAME_DAY_TAG_SLUG).first()
-        products = list(queryset)
-        if tag:
-            tag.products.remove(*products)
-        self.message_user(
-            request,
-            f"{len(products)} محصول از بخش ارسال روز حذف شد.",
-        )
 
 
 @admin.register(WeddingProduct)
@@ -1856,6 +1981,7 @@ class BakeryItemAdmin(BaseProductAdmin):
                 "description": "زیر‌دسته مثل کیک تولد یا کوکی است. برچسب مثل تولد، تبریک، یونیک یا بدون مناسبت است.",
                 "fields": (
                     "category",
+                    "is_unique",
                     "tags",
                 ),
             },
@@ -1926,6 +2052,7 @@ class GiftItemAdmin(BaseProductAdmin):
                 "description": "زیر‌دسته مثل شمع، سفال یا سایر است. برچسب مثل تولد، تبریک، یونیک یا بدون مناسبت است.",
                 "fields": (
                     "category",
+                    "is_unique",
                     "tags",
                 ),
             },
@@ -3031,4 +3158,3 @@ class PageContentBlockAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
-

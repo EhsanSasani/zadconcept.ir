@@ -489,8 +489,6 @@ class AdminImageFormIntegrationTests(TestCase):
         self.assertEqual(form.cleaned_data["cover_image"].content_type, "image/webp")
 
     def test_same_day_admin_http_post_saves_heif_as_webp(self):
-        model_admin = admin.site._registry[SameDayFlower]
-        same_day_tag = model_admin._ensure_same_day_tag()
         add_url = reverse("admin:main_samedayflower_add")
         get_response = self.client.get(add_url)
         self.assertEqual(get_response.status_code, 200)
@@ -501,7 +499,7 @@ class AdminImageFormIntegrationTests(TestCase):
             {
                 "name": "HTTP HEIF product",
                 "slug": "http-heif-product",
-                "tags": [same_day_tag.pk],
+                "tags": [],
                 "cover_image": uploaded_image(
                     "iphone-camera.HEIF",
                     encoded_image("HEIF", quality=95),
@@ -534,6 +532,10 @@ class AdminImageFormIntegrationTests(TestCase):
                 )
 
             product = Product.objects.get(slug="http-heif-product")
+            self.assertEqual(
+                product.catalog_scope,
+                Product.CatalogScope.SAME_DAY,
+            )
             self.assertTrue(product.cover_image.name.endswith(".webp"))
             self.assertTrue(Path(product.cover_image.path).exists())
             with Image.open(product.cover_image.path) as image:

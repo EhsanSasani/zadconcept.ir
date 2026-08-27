@@ -75,7 +75,10 @@ FLOWER_OCCASION_TAG_SLUGS = (
     "no-occasion",
 )
 
-SAME_DAY_TAG_SLUG = "same-day"
+LEGACY_SAME_DAY_TAG_SLUG = "same-day"
+LEGACY_SAME_DAY_TAG_NAMES = ("ارسال روز", "ارسال فوری")
+UNIQUE_TAG_SLUG = "unique"
+PROTECTED_SYSTEM_TAG_SLUGS = (UNIQUE_TAG_SLUG,)
 PROPOSAL_COLLECTION_TAG_SLUG = "proposal-bouquet-selection"
 
 PRODUCT_SEO_CATEGORY_LABELS = {
@@ -341,7 +344,11 @@ class CategoryQuerySet(models.QuerySet):
 
 class TagQuerySet(models.QuerySet):
     def for_general_catalog(self):
-        return self.exclude(slug__in=WEDDING_LEGACY_TAG_SLUGS)
+        return self.exclude(
+            Q(slug__in=WEDDING_LEGACY_TAG_SLUGS)
+            | Q(slug=LEGACY_SAME_DAY_TAG_SLUG)
+            | Q(name__in=LEGACY_SAME_DAY_TAG_NAMES)
+        )
 
     def protected_wedding_legacy(self):
         return self.filter(slug__in=WEDDING_LEGACY_TAG_SLUGS)
@@ -537,10 +544,6 @@ class Tag(TimeStampedModel):
         return self.slug in FLOWER_OCCASION_TAG_SLUGS
 
     @property
-    def is_same_day(self):
-        return self.slug == SAME_DAY_TAG_SLUG
-
-    @property
     def is_wedding_legacy(self):
         return self.slug in WEDDING_LEGACY_TAG_SLUGS
 
@@ -556,6 +559,23 @@ class Tag(TimeStampedModel):
         if self.is_wedding_legacy:
             return reverse("weddings")
         return reverse("occasion_detail", args=[self.slug])
+
+
+def ensure_unique_tag():
+    """Return the system-owned Unique tag, creating it on first use."""
+
+    tag, _created = Tag.objects.get_or_create(
+        slug=UNIQUE_TAG_SLUG,
+        defaults={
+            "name": "یونیک",
+            "is_active": True,
+            "is_occasion": False,
+        },
+    )
+    if not tag.is_active:
+        tag.is_active = True
+        tag.save(update_fields=["is_active", "updated_at"])
+    return tag
 
 
 def valid_wedding_product_q():
@@ -624,6 +644,15 @@ class ProductQuerySet(models.QuerySet):
     def for_weddings(self):
         return self.filter(catalog_scope="wedding")
 
+    def for_same_day(self):
+        return self.filter(
+            catalog_scope="same_day",
+            category__section=Category.Section.FLOWERS,
+        ).exclude(
+            Q(category__slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS)
+            | Q(category__parent__slug=WEDDING_ROOT_CATEGORY_SLUG)
+        )
+
     def published(self):
         return self.filter(
             is_active=True,
@@ -637,7 +666,7 @@ class ProductQuerySet(models.QuerySet):
     def publicly_indexable(self):
         return self.published().filter(
             (
-                Q(catalog_scope="general")
+                Q(catalog_scope__in=("general", "same_day"))
                 & ~Q(
                     category__section="flowers",
                     category__slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
@@ -658,6 +687,7 @@ class ProductQuerySet(models.QuerySet):
 class Product(TimeStampedModel):
     class CatalogScope(models.TextChoices):
         GENERAL = "general", "کاتالوگ عمومی"
+        SAME_DAY = "same_day", "ارسال روز"
         WEDDING = "wedding", "عروسی"
 
     class WeddingType(models.TextChoices):
@@ -811,7 +841,7 @@ class Product(TimeStampedModel):
         verbose_name="برچسب‌ها",
         related_name="products",
         blank=True,
-        help_text="مناسبت یا کاربرد محصول؛ مثل تولد، ترحیم، ارسال روز، عاشقانه، یونیک و ...",
+        help_text="مناسبت یا کاربرد محصول؛ مثل تولد، ترحیم، عاشقانه، یونیک و ...",
     )
 
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
@@ -849,7 +879,7 @@ class Product(TimeStampedModel):
             models.CheckConstraint(
                 condition=(
                     Q(
-                        catalog_scope="general",
+                        catalog_scope__in=("general", "same_day"),
                         wedding_type="",
                         wedding_needs_review=False,
                     )
@@ -1037,10 +1067,7 @@ class Product(TimeStampedModel):
 
     @property
     def is_same_day(self):
-        if not self.pk:
-            return False
-
-        return self.tags.filter(slug=SAME_DAY_TAG_SLUG).exists()
+        return self.catalog_scope == self.CatalogScope.SAME_DAY
 
     def _final_product_code(self):
         if not self.pk:
@@ -1070,14 +1097,25 @@ class Product(TimeStampedModel):
         if self.pricing_type == self.PricingType.FIXED and self.price is None:
             field_errors["price"] = "برای قیمت ثابت، وارد کردن قیمت الزامی است."
 
-        if self.catalog_scope == self.CatalogScope.GENERAL:
+        if self.catalog_scope in {
+            self.CatalogScope.GENERAL,
+            self.CatalogScope.SAME_DAY,
+        }:
             if self.wedding_type or self.wedding_needs_review:
                 invariant_errors.append(
-                    "محصول عمومی نمی‌تواند نوع یا وضعیت بررسی عروسی داشته باشد."
+                    "محصول غیرعروسی نمی‌تواند نوع یا وضعیت بررسی عروسی داشته باشد."
                 )
             if self.category_id and self.category.is_wedding_category:
                 field_errors["category"] = (
                     "دسته‌های سیستمی عروسی فقط از بخش مستقل عروسی قابل استفاده‌اند."
+                )
+            if (
+                self.catalog_scope == self.CatalogScope.SAME_DAY
+                and self.category_id
+                and self.category.section != Category.Section.FLOWERS
+            ):
+                field_errors["category"] = (
+                    "محصول ارسال روز باید در یکی از دسته‌های گل قرار بگیرد."
                 )
         elif self.catalog_scope == self.CatalogScope.WEDDING:
             if self.wedding_needs_review:
@@ -1109,7 +1147,7 @@ class Product(TimeStampedModel):
 
             if self.pk and self.tags.exists():
                 invariant_errors.append(
-                    "محصول عروسی نمی‌تواند برچسب عمومی یا برچسب ارسال روز داشته باشد."
+                    "محصول عروسی نمی‌تواند برچسب عمومی داشته باشد."
                 )
         else:
             invariant_errors.append("محدودهٔ کاتالوگ محصول معتبر نیست.")
@@ -1209,14 +1247,9 @@ class GiftItemManager(models.Manager.from_queryset(ProductQuerySet)):
         )
 
 
-class SameDayFlowerManager(FlowerManager):
+class SameDayFlowerManager(models.Manager.from_queryset(ProductQuerySet)):
     def get_queryset(self):
-        return (
-            super()
-            .get_queryset()
-            .filter(tags__slug=SAME_DAY_TAG_SLUG)
-            .distinct()
-        )
+        return super().get_queryset().for_same_day()
 
 
 class WeddingProductManager(models.Manager.from_queryset(ProductQuerySet)):

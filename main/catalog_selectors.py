@@ -7,6 +7,12 @@ def _published_products():
     return Product.objects.for_general_catalog().published()
 
 
+def _published_same_day_products():
+    """Return the isolated public selection managed by Same-Day admin."""
+
+    return Product.objects.for_same_day().published()
+
+
 def _published_products_for_section(section):
     return (
         _published_products()

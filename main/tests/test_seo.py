@@ -62,10 +62,6 @@ class SeoContractTests(TestCase):
             section=Category.Section.FLOWERS,
             is_active=False,
         )
-        self.same_day, _ = Tag.objects.update_or_create(
-            slug="same-day",
-            defaults={"name": "ارسال روز", "is_active": True, "is_occasion": False},
-        )
         self.birthday, _ = Tag.objects.update_or_create(
             slug="birthday",
             defaults={"name": "تولد", "is_active": True, "is_occasion": True},
@@ -75,8 +71,9 @@ class SeoContractTests(TestCase):
             category=self.category,
             publish_status=Product.PublishStatus.PUBLISHED,
             pricing_type=Product.PricingType.INQUIRY,
+            catalog_scope=Product.CatalogScope.SAME_DAY,
         )
-        self.unnamed.tags.add(self.same_day, self.birthday)
+        self.unnamed.tags.add(self.birthday)
         self.fixed = Product.objects.create(
             name="رز قرمز",
             description="دسته گل رز قرمز برای هدیه.",
