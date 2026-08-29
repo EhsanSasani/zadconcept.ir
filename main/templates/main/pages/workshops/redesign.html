@@ -1,0 +1,256 @@
+{% extends "main/layout/base.html" %}
+{% load static %}
+
+{% block body_class %}page-events page-workshops page-workshops-redesign{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/workshops/redesign.css' %}?v=1">{% endblock %}
+
+{% block content %}
+<article class="wsr-page">
+  <section class="wsr-hero" aria-labelledby="workshops-title">
+    <picture class="wsr-hero__media">
+      {% if workshops_hero_mobile_image %}
+        {% if workshops_hero_mobile_image|slice:":7" == "/media/" %}
+          <source media="(max-width: 760px)" srcset="{{ workshops_hero_mobile_image }}">
+        {% else %}
+          <source media="(max-width: 760px)" srcset="{% static workshops_hero_mobile_image %}">
+        {% endif %}
+      {% endif %}
+
+      {% if workshops_hero_image|slice:":7" == "/media/" %}
+        <img src="{{ workshops_hero_image }}" alt="ورکشاپ‌های زاد در مشهد" width="1920" height="1080" fetchpriority="high" decoding="async">
+      {% else %}
+        <img src="{% static workshops_hero_image %}" alt="ورکشاپ‌های زاد در مشهد" width="1920" height="1080" fetchpriority="high" decoding="async">
+      {% endif %}
+    </picture>
+
+    <div class="wsr-hero__overlay" aria-hidden="true"></div>
+
+    <div class="wsr-container wsr-hero__inner">
+      <div class="wsr-hero__content">
+        <h1 id="workshops-title">{{ workshops_hero_title }}</h1>
+        <p>{{ workshops_hero_text }}</p>
+
+        <a href="#upcoming-workshops" class="wsr-primary-button">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          برنامه‌های پیش رو
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wsr-worlds" aria-labelledby="workshop-worlds-title">
+    <div class="wsr-container">
+      <div class="wsr-section-heading">
+        <h2 id="workshop-worlds-title">سه دنیای ورکشاپ زاد</h2>
+        <span aria-hidden="true"></span>
+      </div>
+
+      <div class="wsr-worlds__grid">
+        <article class="wsr-world-card">
+          <div class="wsr-world-card__icon">
+            <i class="bi bi-book" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h3>آموزشی</h3>
+            <p>یک مهارت مشخص، با مسیر روشن</p>
+          </div>
+        </article>
+
+        <article class="wsr-world-card">
+          <div class="wsr-world-card__icon">
+            <i class="bi bi-flower1" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h3>تجربه‌محور</h3>
+            <p>بساز، لمس کن، تجربه کن و لذت ببر</p>
+          </div>
+        </article>
+
+        <article class="wsr-world-card">
+          <div class="wsr-world-card__icon">
+            <i class="bi bi-people" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h3>دورهمی</h3>
+            <p>برای باهم بودن و ساختن یک خاطره زیبا</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="upcoming-workshops" class="wsr-upcoming" aria-labelledby="upcoming-workshops-title">
+    <div class="wsr-container">
+      <div class="wsr-section-heading">
+        <h2 id="upcoming-workshops-title">{{ workshop_copy.upcoming_title|default:"ورکشاپ‌های پیش رو" }}</h2>
+        <span aria-hidden="true"></span>
+      </div>
+
+      {% if events %}
+        <div class="wsr-events wsr-events--count-{{ events|length }}">
+          {% for event in events %}
+            <article class="wsr-event-card">
+              <a href="{{ event.get_absolute_url }}" class="wsr-event-card__media" aria-label="{{ event.title }}">
+                {% if event.cover_image %}
+                  <img src="{{ event.cover_image.url }}" alt="{{ event.title }}" width="1200" height="800" loading="lazy" decoding="async">
+                {% else %}
+                  <img src="{% static 'main/img/workshop-event-01.webp' %}" alt="{{ event.title }}" width="1200" height="800" loading="lazy" decoding="async">
+                {% endif %}
+                <span class="wsr-event-card__badge">{{ event.get_workshop_type_display }}</span>
+              </a>
+
+              <div class="wsr-event-card__body">
+                <h3><a href="{{ event.get_absolute_url }}">{{ event.title }}</a></h3>
+
+                <div class="wsr-event-card__facts">
+                  <span>
+                    <i class="bi bi-calendar3" aria-hidden="true"></i>
+                    {{ event.start_at|date:"Y/m/d" }}
+                  </span>
+                  <span>
+                    <i class="bi bi-clock" aria-hidden="true"></i>
+                    {{ event.start_at|date:"H:i" }}
+                  </span>
+                  {% if event.location %}
+                    <span>
+                      <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                      {{ event.location }}
+                    </span>
+                  {% endif %}
+                </div>
+
+                <a href="{{ event.get_absolute_url }}" class="wsr-event-card__button">
+                  مشاهده و ثبت‌نام
+                  <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                </a>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="wsr-empty">
+          <i class="bi bi-calendar-heart" aria-hidden="true"></i>
+          <div>
+            <h3>{{ workshop_copy.upcoming_empty_title|default:"برنامه بعدی به‌زودی اعلام می‌شود" }}</h3>
+            <p>{{ workshop_copy.upcoming_empty_text|default:"برای هماهنگی یک ورکشاپ یا اطلاع از برنامه‌های بعدی، درخواست‌تان را ثبت کنید." }}</p>
+          </div>
+          <a href="#workshop-request">ثبت درخواست</a>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="wsr-gallery" aria-labelledby="workshop-gallery-title">
+    <div class="wsr-container">
+      <div class="wsr-section-heading wsr-section-heading--gallery">
+        <h2 id="workshop-gallery-title">لحظه‌هایی از ورکشاپ‌های زاد</h2>
+        <p>هر ورکشاپ یک تجربه متفاوت، با آدم‌ها و روایت خودش.</p>
+        <span aria-hidden="true"></span>
+      </div>
+
+      <div class="wsr-gallery__grid" aria-label="گالری ورکشاپ‌های برگزارشده">
+        {% for item in gallery_items %}
+          <figure class="wsr-gallery__item wsr-gallery__item--{{ forloop.counter }}">
+            <img src="{{ item.url }}" alt="{{ item.alt }}" width="900" height="700" loading="lazy" decoding="async">
+            {% if item.event %}
+              <figcaption>{{ item.event.title }}</figcaption>
+            {% endif %}
+          </figure>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section id="workshop-request" class="wsr-request" aria-labelledby="workshop-request-title">
+    <div class="wsr-container">
+      <div class="wsr-request__panel">
+        <div class="wsr-request__flower" aria-hidden="true"></div>
+
+        <div class="wsr-request__heading">
+          <h2 id="workshop-request-title">می‌خواهید ورکشاپ خودتان را با زاد برگزار کنید؟</h2>
+          <p>نوع ورکشاپ مورد نظر خود را انتخاب کنید و فرم را تکمیل نمایید. ما با شما تماس می‌گیریم.</p>
+        </div>
+
+        <form method="post" action="{% url 'lead_request' %}" class="wsr-request__form" id="workshop-request-form" data-track-lead-form data-cta-position="workshops-footer">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}#workshop-request">
+          <input type="hidden" name="source_page" value="{{ request.path }}#workshop-request">
+          <input type="hidden" name="lead_type" value="event">
+          <input type="hidden" name="delivery_window" value="today">
+          <input type="hidden" name="event_location" value="نیازمند هماهنگی تلفنی">
+          <input type="hidden" name="note" id="workshop-note-hidden" value="نوع ورکشاپ: تجربه‌محور">
+
+          <fieldset class="wsr-request__types">
+            <legend class="sr-only">نوع ورکشاپ</legend>
+
+            <label class="wsr-type-choice">
+              <input type="radio" name="workshop_kind_ui" value="آموزشی">
+              <span>
+                <i class="bi bi-book" aria-hidden="true"></i>
+                آموزشی
+              </span>
+            </label>
+
+            <label class="wsr-type-choice">
+              <input type="radio" name="workshop_kind_ui" value="تجربه‌محور" checked>
+              <span>
+                <i class="bi bi-flower1" aria-hidden="true"></i>
+                تجربه‌محور
+              </span>
+            </label>
+
+            <label class="wsr-type-choice">
+              <input type="radio" name="workshop_kind_ui" value="دورهمی">
+              <span>
+                <i class="bi bi-people" aria-hidden="true"></i>
+                دورهمی
+              </span>
+            </label>
+          </fieldset>
+
+          <div class="wsr-request__fields">
+            <label class="wsr-field">
+              <span class="sr-only">نام و نام خانوادگی</span>
+              <i class="bi bi-person" aria-hidden="true"></i>
+              <input type="text" name="full_name" autocomplete="name" placeholder="نام و نام خانوادگی" maxlength="120" required>
+            </label>
+
+            <label class="wsr-field">
+              <span class="sr-only">شماره تماس</span>
+              <i class="bi bi-telephone" aria-hidden="true"></i>
+              <input type="tel" name="mobile" autocomplete="tel" inputmode="numeric" placeholder="شماره تماس" maxlength="20" pattern="[۰-۹0-9+\- ]{10,20}" required>
+            </label>
+
+            <label class="wsr-field">
+              <span class="sr-only">تاریخ پیشنهادی</span>
+              <i class="bi bi-calendar3" aria-hidden="true"></i>
+              <input type="date" name="preferred_date" aria-label="تاریخ پیشنهادی">
+            </label>
+
+            <label class="wsr-field">
+              <span class="sr-only">تعداد نفرات تقریبی</span>
+              <i class="bi bi-people" aria-hidden="true"></i>
+              <input type="number" name="participant_count_ui" min="1" max="200" inputmode="numeric" placeholder="تعداد نفرات تقریبی">
+            </label>
+
+            <label class="wsr-field wsr-field--note">
+              <span class="sr-only">توضیحات</span>
+              <i class="bi bi-paperclip" aria-hidden="true"></i>
+              <textarea name="note_ui" rows="2" placeholder="توضیحات"></textarea>
+            </label>
+
+            <button type="submit" class="wsr-request__submit">
+              ارسال درخواست
+              <i class="bi bi-send-fill" aria-hidden="true"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'main/js/pages/workshops/redesign.js' %}?v=1"></script>
+{% endblock %}
