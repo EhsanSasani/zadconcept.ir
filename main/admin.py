@@ -33,6 +33,7 @@ from .models import (
     WeddingGalleryImage,
     WeddingPageContent,
     WeddingProduct,
+    WorkshopGalleryImage,
     WorkshopPageContent,
     ensure_unique_tag,
 )
@@ -836,6 +837,33 @@ class EventAdminForm(forms.ModelForm):
 
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
+
+
+class WorkshopGalleryImageAdminForm(forms.ModelForm):
+    class Meta:
+        model = WorkshopGalleryImage
+        fields = "__all__"
+        field_classes = {"image": AdminImageUploadField}
+
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
+
+
+class WorkshopGalleryImageInline(AdminImagePreviewMixin, admin.TabularInline):
+    model = WorkshopGalleryImage
+    form = WorkshopGalleryImageAdminForm
+    extra = 1
+    fields = (
+        "image_preview",
+        "image",
+        "alt_text",
+        "is_active",
+        "sort_order",
+    )
+    readonly_fields = ("image_preview",)
+    ordering = ("sort_order", "id")
+    verbose_name = "تصویر گالری"
+    verbose_name_plural = "گالری همین ورکشاپ"
 
 
 class HeroAdminForm(forms.ModelForm):
@@ -2259,13 +2287,92 @@ class NewsPostAdmin(
     )
 
 
+@admin.register(WorkshopGalleryImage)
+class WorkshopGalleryImageAdmin(
+    ActiveActionsMixin,
+    AdminImagePreviewMixin,
+    admin.ModelAdmin,
+):
+    form = WorkshopGalleryImageAdminForm
+    list_display = (
+        "image_preview",
+        "alt_text",
+        "event",
+        "is_active",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = (
+        "is_active",
+        "event__workshop_type",
+    )
+    search_fields = (
+        "alt_text",
+        "event__title",
+    )
+    list_editable = (
+        "is_active",
+        "sort_order",
+    )
+    readonly_fields = (
+        "image_preview",
+        "created_at",
+        "updated_at",
+    )
+    ordering = (
+        "sort_order",
+        "id",
+    )
+    save_on_top = True
+    list_per_page = 30
+
+    fieldsets = (
+        (
+            "تصویر",
+            {
+                "fields": (
+                    "image",
+                    "image_preview",
+                    "alt_text",
+                ),
+            },
+        ),
+        (
+            "نمایش در گالری",
+            {
+                "description": (
+                    "اتصال به ورکشاپ اختیاری است. عدد کمتر یعنی تصویر زودتر "
+                    "در گالری شش‌تایی صفحه ورکشاپ نمایش داده می‌شود."
+                ),
+                "fields": (
+                    "event",
+                    "is_active",
+                    "sort_order",
+                ),
+            },
+        ),
+        (
+            "زمان‌ها",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
 @admin.register(Event)
 class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
     form = EventAdminForm
+    inlines = (WorkshopGalleryImageInline,)
 
     list_display = (
         "image_preview",
         "title",
+        "workshop_type",
         "status",
         "schedule_status",
         "start_at",
@@ -2274,6 +2381,7 @@ class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
         "published_at",
     )
     list_filter = (
+        "workshop_type",
         "status",
         "start_at",
         "end_at",
@@ -2315,6 +2423,7 @@ class EventAdmin(PublishActionsMixin, AdminImagePreviewMixin, admin.ModelAdmin):
             {
                 "fields": (
                     "title",
+                    "workshop_type",
                     "description",
                 ),
             },

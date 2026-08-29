@@ -1,20 +1,75 @@
 from django.shortcuts import get_object_or_404, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 
 from ..forms import LeadRequestForm
 from ..managed_heroes import _get_site_hero
-from ..models import Event, PublishStatus, WorkshopPageContent
+from ..models import (
+    Event,
+    PublishStatus,
+    WorkshopGalleryImage,
+    WorkshopPageContent,
+)
 from ..page_context import _default_context, _with_home
 from ..page_presentation import _hero_from_key
 from ..seo import event_node
 
 
+WORKSHOP_GALLERY_FALLBACKS = (
+    ("main/img/workshops-story.webp", "لحظه‌ای از ورکشاپ‌های زاد"),
+    ("main/img/workshop-event-01.webp", "گل‌آرایی در ورکشاپ زاد"),
+    ("main/img/workshop-type-public.webp", "تجربه ساختن در ورکشاپ زاد"),
+    ("main/img/workshop-event-02.webp", "جزئیات یک ورکشاپ زاد"),
+    ("main/img/workshop-type-private.webp", "شرکت‌کنندگان ورکشاپ زاد"),
+    ("main/img/workshop-type-corporate.webp", "دورهمی ورکشاپ زاد"),
+)
+
+
+def _workshop_gallery_items():
+    gallery_items = []
+
+    for gallery_image in (
+        WorkshopGalleryImage.objects.filter(is_active=True)
+        .select_related("event")
+        .order_by("sort_order", "id")[:6]
+    ):
+        try:
+            image_url = gallery_image.image.url
+        except (OSError, ValueError):
+            continue
+
+        gallery_items.append(
+            {
+                "url": image_url,
+                "alt": (
+                    gallery_image.alt_text
+                    or (gallery_image.event.title if gallery_image.event else "")
+                    or "لحظه‌ای از ورکشاپ‌های زاد"
+                ),
+                "event": gallery_image.event,
+            }
+        )
+
+    for image_path, alt_text in WORKSHOP_GALLERY_FALLBACKS[len(gallery_items):]:
+        gallery_items.append(
+            {
+                "url": static(image_path),
+                "alt": alt_text,
+                "event": None,
+            }
+        )
+
+    return gallery_items[:6]
+
+
 def events(request):
-    published_events = Event.objects.filter(
-        status=PublishStatus.PUBLISHED,
-        end_at__gte=timezone.now(),
-    ).order_by("start_at", "-created_at")
+    published_events = list(
+        Event.objects.filter(
+            status=PublishStatus.PUBLISHED,
+            end_at__gte=timezone.now(),
+        ).order_by("start_at", "-created_at")[:3]
+    )
 
     breadcrumbs = _with_home([{"name": "ورکشاپ‌ها", "url": None}])
 
@@ -22,40 +77,22 @@ def events(request):
         request,
         page_type="workshops",
         active_nav="events",
-        meta_title="ورکشاپ‌های خلاق و تجربه‌محور زاد در مشهد",
+        meta_title="ورکشاپ‌های زاد در مشهد | آموزشی، تجربه‌محور و دورهمی",
         meta_description=(
-            "اطلاعات و ثبت درخواست ورکشاپ‌های عمومی، خصوصی و سازمانی زاد "
-            "در مشهد؛ تجربه‌ای عملی برای ساختن، انتخاب‌کردن و خلق اثری شخصی."
+            "ورکشاپ‌های آموزشی، تجربه‌محور و دورهمی زاد در مشهد؛ "
+            "مشاهده برنامه‌های پیش رو، گالری ورکشاپ‌های برگزارشده و ثبت درخواست برگزاری."
         ),
         breadcrumbs=breadcrumbs,
+        suppress_default_hero=True,
     )
 
     page_hero = _get_site_hero("events")
     workshop_copy = WorkshopPageContent.current() or WorkshopPageContent()
 
-    if page_hero:
-        context.update(page_hero)
-
     context.update(
         {
-            "workshops_hero_kicker": (
-                page_hero["page_hero_kicker"]
-                if page_hero
-                else "ZAD WORKSHOPS"
-            ),
-            "workshops_hero_title": (
-                page_hero["page_hero_title"]
-                if page_hero
-                else "ورکشاپ‌های زاد"
-            ),
-            "workshops_hero_text": (
-                page_hero["page_hero_text"]
-                if page_hero
-                else (
-                    "فضایی برای کار با دست‌ها، انتخاب و ترکیب متریال "
-                    "و ساختن اثری شخصی در کنار دیگران."
-                )
-            ),
+            "workshops_hero_title": "ورکشاپ‌های زاد",
+            "workshops_hero_text": "یاد بگیر، تجربه کن، کنار هم باش.",
             "workshops_hero_image": (
                 page_hero["page_hero_image"]
                 if page_hero
@@ -65,6 +102,7 @@ def events(request):
                 page_hero["page_hero_mobile_image"] if page_hero else ""
             ),
             "events": published_events,
+            "gallery_items": _workshop_gallery_items(),
             "workshop_copy": workshop_copy,
             "lead_form": LeadRequestForm(
                 initial_lead_type="event",
@@ -74,7 +112,7 @@ def events(request):
         }
     )
 
-    return render(request, "main/pages/workshops/index.html", context)
+    return render(request, "main/pages/workshops/redesign.html", context)
 
 
 def event_detail(request, slug: str):

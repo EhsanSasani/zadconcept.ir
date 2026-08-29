@@ -235,6 +235,17 @@ def event_cover_upload_to(instance, filename):
     return f"events/covers/event-{slug}.{_upload_extension(filename)}"
 
 
+def workshop_gallery_upload_to(instance, filename):
+    event = getattr(instance, "event", None)
+    slug = _upload_slug(getattr(event, "slug", ""), "general")
+    order = instance.sort_order or instance.pk or "new"
+    token = uuid.uuid4().hex[:8]
+    return (
+        f"events/gallery/{slug}/workshop-gallery-{order}-{token}."
+        f"{_upload_extension(filename)}"
+    )
+
+
 def home_hero_upload_to(instance, filename):
     order = instance.sort_order or instance.pk or "new"
     return f"heroes/home/home-hero-{order}.{_upload_extension(filename)}"
@@ -1758,9 +1769,21 @@ class NewsPost(TimeStampedModel):
 
 
 class Event(TimeStampedModel):
+    class WorkshopType(models.TextChoices):
+        EDUCATIONAL = "educational", "آموزشی"
+        EXPERIENCE = "experience", "تجربه‌محور"
+        GATHERING = "gathering", "دورهمی"
+
     title = models.CharField("عنوان", max_length=180)
     slug = models.SlugField("اسلاگ", max_length=200, unique=True, blank=True, allow_unicode=True)
     description = models.TextField("توضیحات")
+    workshop_type = models.CharField(
+        "نوع ورکشاپ",
+        max_length=20,
+        choices=WorkshopType.choices,
+        default=WorkshopType.EXPERIENCE,
+        db_index=True,
+    )
     start_at = models.DateTimeField("شروع")
     end_at = models.DateTimeField("پایان")
     location = models.CharField("مکان", max_length=200)
@@ -1806,6 +1829,39 @@ class Event(TimeStampedModel):
             raise ValidationError(
                 {"end_at": "زمان پایان باید بعد از زمان شروع باشد."}
             )
+
+
+class WorkshopGalleryImage(TimeStampedModel):
+    event = models.ForeignKey(
+        Event,
+        verbose_name="ورکشاپ",
+        on_delete=models.SET_NULL,
+        related_name="gallery_images",
+        null=True,
+        blank=True,
+    )
+    image = models.ImageField("تصویر", upload_to=workshop_gallery_upload_to)
+    alt_text = models.CharField("متن جایگزین", max_length=180, blank=True)
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+    is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "تصویر گالری ورکشاپ"
+        verbose_name_plural = "گالری ورکشاپ‌ها"
+        indexes = [
+            models.Index(
+                fields=["is_active", "sort_order"],
+                name="workshop_gallery_active_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        if self.alt_text:
+            return self.alt_text
+        if self.event_id:
+            return f"{self.event.title} - تصویر گالری"
+        return f"تصویر گالری ورکشاپ #{self.pk or 'جدید'}"
 
 
 class TelegramBotUser(TimeStampedModel):
