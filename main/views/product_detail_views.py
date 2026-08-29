@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from ..category_presentation import SECTION_CATEGORY_ROUTE_NAMES, _section_category_url
-from ..catalog_selectors import _published_products
+from ..catalog_selectors import _published_products, _published_same_day_products
 from ..managed_heroes import _get_site_hero
 from ..models import Category, Product
 from ..page_context import _default_context
@@ -58,6 +58,23 @@ def _item_detail_context(request, product):
                 )[: 6 - len(similar_items)]
             )
             similar_items.extend(extra_items)
+    elif product.is_same_day:
+        active_nav = Category.Section.FLOWERS
+        section_label = "ارسال روز"
+        category_url = reverse("flowers_same_day")
+        breadcrumbs.extend(
+            [
+                {"name": "گل‌ها", "url": reverse("flowers")},
+                {"name": "ارسال امروز", "url": category_url},
+            ]
+        )
+        similar_items = list(
+            _published_same_day_products()
+            .exclude(pk=product.pk)
+            .select_related("category")
+            .prefetch_related("tags")
+            .order_by("-featured", "sort_order", "-created_at")[:6]
+        )
     else:
         active_nav = section if section in SECTION_CONTENT else ""
         section_label = (

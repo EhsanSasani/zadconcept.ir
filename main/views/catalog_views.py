@@ -1,4 +1,3 @@
-from ..models import Product
 from ..seo import service_node
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Case, IntegerField, Value, When
@@ -6,8 +5,13 @@ from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 
 from ..category_presentation import _category_card
-from ..catalog_selectors import _published_products
-from ..models import BAKERY_WEDDING_CATEGORY_SLUGS, FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS, WEDDING_LEGACY_TAG_SLUGS
+from ..catalog_selectors import _published_products, _published_same_day_products
+from ..models import (
+    BAKERY_WEDDING_CATEGORY_SLUGS,
+    FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
+    UNIQUE_TAG_SLUG,
+    WEDDING_LEGACY_TAG_SLUGS,
+)
 from ..page_presentation import _category_content
 
 from django.shortcuts import get_object_or_404, redirect, render
@@ -77,6 +81,27 @@ def _filter_links_for_categories(
         )
 
     return links
+
+
+def _unique_filter_links(base_url, *, selected_tag=""):
+    return [
+        {
+            "label": "همه",
+            "slug": "all",
+            "section": "",
+            "filter_value": "all",
+            "url": base_url,
+            "is_active": not selected_tag,
+        },
+        {
+            "label": "یونیک",
+            "slug": UNIQUE_TAG_SLUG,
+            "section": "",
+            "filter_value": UNIQUE_TAG_SLUG,
+            "url": f"{base_url}?tag={UNIQUE_TAG_SLUG}",
+            "is_active": selected_tag == UNIQUE_TAG_SLUG,
+        },
+    ]
 
 def _section_all_products(request, section):
     config = SECTION_CONTENT[section]
@@ -202,12 +227,27 @@ def _section_subcategory(request, section, subcategory_slug):
     )
 
     visible_category_ids = [category.pk, *[child.pk for child in child_categories]]
-    items = list(
+    selected_tag = (request.GET.get("tag") or "").strip()
+    if selected_tag not in {"", UNIQUE_TAG_SLUG}:
+        raise Http404("Unknown catalog tag filter")
+
+    products_qs = (
         _published_products()
         .filter(category_id__in=visible_category_ids)
         .select_related("category")
         .prefetch_related("tags")
-        .order_by("-featured", "sort_order", "-created_at")[:48]
+    )
+    unique_products_qs = products_qs.filter(
+        tags__slug=UNIQUE_TAG_SLUG,
+        tags__is_active=True,
+    ).distinct()
+    has_unique_products = unique_products_qs.exists()
+
+    if selected_tag == UNIQUE_TAG_SLUG:
+        products_qs = unique_products_qs
+
+    items = list(
+        products_qs.order_by("-featured", "sort_order", "-created_at")[:48]
     )
 
     breadcrumb_items = [{"name": config["title"], "url": reverse(section)}]
@@ -243,6 +283,7 @@ def _section_subcategory(request, section, subcategory_slug):
         hero_data = db_hero
 
     context.update(hero_data)
+    category_url = category.get_absolute_url()
     context.update(
         {
             "subcategory_slug": category.slug,
@@ -258,6 +299,17 @@ def _section_subcategory(request, section, subcategory_slug):
                 category.parent.name if category.parent_id else ""
             ),
             "items": items,
+            "selected_product_tag": selected_tag,
+            "unique_filter_links": (
+                _unique_filter_links(category_url, selected_tag=selected_tag)
+                if has_unique_products or selected_tag == UNIQUE_TAG_SLUG
+                else []
+            ),
+            "product_empty_text": (
+                "فعلاً محصول یونیکی در این دسته وجود ندارد."
+                if selected_tag == UNIQUE_TAG_SLUG
+                else "فعلاً محصولی برای نمایش وجود ندارد."
+            ),
             "child_categories": [
                 _category_card(child) for child in child_categories
             ],
@@ -597,21 +649,11 @@ def gifts(request):
     return _collection_landing_page(request, Category.Section.GIFTS)
 
 
-SAME_DAY_TAG_SLUGS = [
-    "same-day",
-]
-
 def flowers_same_day(request):
     products = (
-        Product.objects.for_general_catalog()
-        .published()
-        .filter(
-            category__section=Category.Section.FLOWERS,
-            tags__slug__in=SAME_DAY_TAG_SLUGS,
-        )
+        _published_same_day_products()
         .select_related("category")
         .prefetch_related("tags")
-        .distinct()
         .order_by("sort_order", "-updated_at")
     )
 

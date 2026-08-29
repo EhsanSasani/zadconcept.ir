@@ -3,13 +3,18 @@ from django.urls import reverse
 
 from ..occasion_presentation import _occasion_card
 from ..category_presentation import _category_card
-from ..catalog_selectors import _active_categories_for_section, _active_occasion_tags, _published_products_for_section
+from ..catalog_selectors import (
+    _active_categories_for_section,
+    _active_occasion_tags,
+    _published_products_for_section,
+    _published_same_day_products,
+)
 from ..forms import LeadRequestForm
 from ..managed_heroes import _get_site_hero
-from ..models import Category, FLOWER_CATEGORY_SLUGS, SAME_DAY_TAG_SLUG, Tag
+from ..models import Category, FLOWER_CATEGORY_SLUGS, Tag
 from ..page_context import _default_context, _with_home
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
-from .catalog_views import SAME_DAY_TAG_SLUGS, _section_all_url
+from .catalog_views import _section_all_url
 
 
 def _featured_selection(queryset, limit=10):
@@ -51,9 +56,7 @@ def _flower_type_cards():
 
 def _flower_same_day_products(limit=12):
     return list(
-        _published_products_for_section(Category.Section.FLOWERS)
-        .filter(tags__slug=SAME_DAY_TAG_SLUG)
-        .distinct()
+        _published_same_day_products()
         .order_by("-featured", "sort_order", "-created_at")[:limit]
     )
 
@@ -210,9 +213,7 @@ def _flower_occasion_cards():
 
 def _same_day_flower_products(limit=12):
     queryset = (
-        _published_products_for_section(Category.Section.FLOWERS)
-        .filter(tags__slug__in=SAME_DAY_TAG_SLUGS)
-        .distinct()
+        _published_same_day_products()
         .order_by("sort_order", "-created_at")
     )
     # The admin selection is authoritative. If the seller removes every item,

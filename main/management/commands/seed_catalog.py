@@ -183,14 +183,6 @@ class Command(BaseCommand):
             "sort_order": 90,
             "legacy_slugs": ["no-occasion"],
         },
-        {
-            "name": "ارسال روز",
-            "slug": "same-day",
-            "sort_order": 100,
-            "is_occasion": False,
-            "legacy_slugs": ["same-day"],
-            "legacy_names": ["ارسال فوری"],
-        },
     ]
 
     PROTECTED_WEDDING_TAGS = [

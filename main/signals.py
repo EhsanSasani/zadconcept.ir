@@ -20,12 +20,17 @@ def validate_and_touch_product_tags(
             products = Product.objects.filter(pk__in=pk_set)
             if products.filter(catalog_scope=Product.CatalogScope.WEDDING).exists():
                 raise ValidationError(
-                    "محصول عروسی نمی‌تواند برچسب عمومی یا ارسال روز داشته باشد."
+                    "محصول عروسی نمی‌تواند برچسب عمومی داشته باشد."
                 )
             if (
                 isinstance(instance, Tag)
                 and instance.slug in WEDDING_LEGACY_TAG_SLUGS
-                and products.filter(catalog_scope=Product.CatalogScope.GENERAL).exists()
+                and products.filter(
+                    catalog_scope__in=(
+                        Product.CatalogScope.GENERAL,
+                        Product.CatalogScope.SAME_DAY,
+                    )
+                ).exists()
             ):
                 raise ValidationError(
                     "برچسب‌های قدیمی عروسی برای محصولات عمومی محافظت شده‌اند."
@@ -33,7 +38,7 @@ def validate_and_touch_product_tags(
         else:
             if instance.catalog_scope == Product.CatalogScope.WEDDING:
                 raise ValidationError(
-                    "محصول عروسی نمی‌تواند برچسب عمومی یا ارسال روز داشته باشد."
+                    "محصول عروسی نمی‌تواند برچسب عمومی داشته باشد."
                 )
             if Tag.objects.filter(
                 pk__in=pk_set,

@@ -10,7 +10,6 @@ TAG_CODE_MAP = {
     "b": "engagement",
     "u": "unique",
     "t": "condolence",
-    "d": "same-day",
     "l": "romantic",
     "h": "birthday",
     "k": "proposal",
@@ -187,9 +186,9 @@ class Command(BaseCommand):
                         save=True,
                     )
 
-                # Wedding products deliberately receive no public, protected,
-                # or same-day tags. General products only receive active tags
-                # exposed by TagQuerySet.for_general_catalog().
+                # Wedding products deliberately receive no public or protected
+                # tags. Same-day products are created only from their dedicated
+                # admin. General imports receive active public tags only.
                 if tags:
                     product.tags.set(tags)
 

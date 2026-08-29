@@ -1,106 +1,255 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-policy page-info page-policy--en{% endblock %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">{% endblock %}
+{% block body_class %}page-international-orders page-international-orders--en{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/international/orders.css' %}?v=1">{% endblock %}
 
 {% block content %}
-<header class="policy-en-header">
-  <a href="{{ site_url }}" class="policy-en-header__brand" aria-label="ZAD home">
-    <strong>ZAD</strong>
-    <span>Flower &amp; Concept Store</span>
-  </a>
-  <a href="{% url 'international_orders' %}" hreflang="fa" class="info-language-link">نسخه فارسی</a>
-</header>
+<article class="io-page" aria-labelledby="international-title">
+  <section class="io-hero">
+    <div class="io-hero__media" aria-hidden="true">
+      <img src="{% static 'main/img/home-abroad.webp' %}" alt="" width="1536" height="1024" fetchpriority="high">
+    </div>
 
-<article class="info-page policy-page" aria-labelledby="international-title">
-  <header class="info-hero">
-    <div class="container info-hero__inner">
-      <div class="info-hero__topline">
-        <div>
-          <a href="{{ site_url }}" class="info-hero__home">Home</a>
-          <span aria-hidden="true">/</span>
-          <span>International orders</span>
+    <div class="io-container io-hero__inner">
+      <div class="io-language" aria-label="Change language">
+        <span aria-current="page">EN</span>
+        <a href="{% url 'international_orders' %}" hreflang="fa" lang="fa" dir="rtl">FA</a>
+      </div>
+
+      <div class="io-hero__copy">
+        <p class="io-eyebrow">ZAD · INTERNATIONAL ORDERS</p>
+        <h1 id="international-title">
+          Send flowers to Mashhad,
+          <span>from anywhere</span>
+        </h1>
+        <p class="io-hero__lead">
+          We make it simple to send beautiful flowers, gifts, and bakery items to someone you love in Mashhad.
+        </p>
+
+        <div class="io-hero__actions">
+          <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="io-button io-button--primary">
+            <i class="bi bi-send-fill" aria-hidden="true"></i>
+            Start your order
+          </a>
+          <a href="#international-steps" class="io-button io-button--ghost">
+            <i class="bi bi-play-circle" aria-hidden="true"></i>
+            How it works
+          </a>
         </div>
-      </div>
-
-      <p class="info-hero__kicker">INTERNATIONAL ORDER · LOCAL DELIVERY</p>
-      <div class="info-hero__copy">
-        <h1 id="international-title">Send flowers and gifts to Mashhad from abroad</h1>
-        <p>Coordinate your order from anywhere. ZAD prepares the flowers, gifts, or bakery items locally and delivers them to your recipient in Mashhad, Iran.</p>
-      </div>
-
-      <div class="info-hero__meta">
-        <span>Order from anywhere</span>
-        <span>Prepared and delivered locally in Mashhad</span>
       </div>
     </div>
-  </header>
+  </section>
 
-  <div class="container info-layout">
-    <aside class="info-index" aria-label="On this page">
-      <p class="info-index__title">On this page</p>
-      <ol>
-        <li><a href="#international-steps">How ordering works</a></li>
-        <li><a href="#international-details">Important details</a></li>
-        <li><a href="#international-faq">Frequently asked questions</a></li>
-      </ol>
-      <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-index__contact">Start on Telegram</a>
-    </aside>
-
-    <div class="info-content">
-      <section class="info-paper info-order-flow" id="international-steps" aria-labelledby="international-steps-title">
-        <div class="info-paper__heading">
-          <span>HOW IT WORKS</span>
-          <h2 id="international-steps-title">Three simple steps</h2>
-        </div>
-        <div class="policy-page__steps" aria-label="How ordering works">
-          <section><span>1</span><h3>Share the order details</h3><p>Send the occasion, budget, preferred date, delivery window, and recipient address through Telegram.</p></section>
-          <section><span>2</span><h3>Confirm availability and payment</h3><p>The team confirms available options, the final amount, and the payment method available for your country.</p></section>
-          <section><span>3</span><h3>Local preparation and delivery</h3><p>After confirmation, ZAD prepares the order in Mashhad and delivers it within the agreed local time window.</p></section>
-        </div>
-      </section>
-
-      <section class="info-paper info-section info-section--standalone" aria-labelledby="international-details">
-        <div class="info-section__heading">
-          <span aria-hidden="true">01</span>
-          <h2 id="international-details">Important details</h2>
-        </div>
-        <ul>
-          <li>Same-day delivery depends on stock, preparation capacity, request time, and the recipient address.</li>
-          <li>Foreign-currency payment options, including PayPal when available, are confirmed before the order is finalized.</li>
-          <li>A final photo before dispatch can be coordinated on request.</li>
-          <li>This is an international ordering service with local fulfilment in Mashhad; products are not shipped across borders.</li>
-        </ul>
-      </section>
-
-      <section class="info-paper policy-page__faq" aria-labelledby="international-faq">
-        <div class="info-paper__heading">
-          <span>FAQ</span>
-          <h2 id="international-faq">Frequently asked questions</h2>
-        </div>
-        {% for item in faq_items %}
-          <details{% if forloop.first %} open{% endif %}>
-            <summary>{{ item.question }}</summary>
-            <p>{{ item.answer }}</p>
-          </details>
-        {% endfor %}
-      </section>
-
-      <aside class="info-contact policy-page__contact">
-        <div>
-          <span class="info-contact__kicker">INTERNATIONAL ORDERS</span>
-          <h2>Start your order</h2>
-          <p>Share your budget, preferred date, and delivery details so the ZAD team can confirm availability and payment.</p>
-        </div>
-        <div class="info-contact__actions">
-          <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="info-button info-button--light">Message ZAD on Telegram</a>
-          <a href="{% url 'contact' %}" class="info-button info-button--outline">Contact details</a>
-        </div>
-      </aside>
+  <section class="io-trust" aria-label="International ordering benefits">
+    <div class="io-container io-trust__panel">
+      <div class="io-trust__item">
+        <i class="bi bi-globe2" aria-hidden="true"></i>
+        <span>Order from<br>anywhere</span>
+      </div>
+      <div class="io-trust__item">
+        <i class="bi bi-geo-alt" aria-hidden="true"></i>
+        <span>Local delivery<br>in Mashhad</span>
+      </div>
+      <div class="io-trust__item">
+        <i class="bi bi-credit-card" aria-hidden="true"></i>
+        <span>International payment<br>coordination</span>
+      </div>
+      <div class="io-trust__item">
+        <i class="bi bi-camera" aria-hidden="true"></i>
+        <span>Final photo<br>before delivery</span>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="io-categories" aria-labelledby="international-products-title">
+    <div class="io-container">
+      <h2 class="io-section-title" id="international-products-title">
+        What can you <span>send?</span>
+      </h2>
+
+      <div class="io-category-grid">
+        <a class="io-category-card" href="{% url 'flowers' %}">
+          <div class="io-category-card__image">
+            <img src="{% static 'main/img/cat-flowers.webp' %}" alt="ZAD flowers" width="1440" height="810" loading="lazy" decoding="async">
+          </div>
+          <span class="io-category-card__icon"><i class="bi bi-flower1" aria-hidden="true"></i></span>
+          <div class="io-category-card__body">
+            <h3>Flowers</h3>
+            <p>Fresh and elegant floral arrangements</p>
+            <span class="io-category-card__arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <a class="io-category-card" href="{% url 'gifts' %}">
+          <div class="io-category-card__image">
+            <img src="{% static 'main/img/cat-gifts.webp' %}" alt="ZAD gifts" width="1916" height="821" loading="lazy" decoding="async">
+          </div>
+          <span class="io-category-card__icon"><i class="bi bi-gift" aria-hidden="true"></i></span>
+          <div class="io-category-card__body">
+            <h3>Gifts</h3>
+            <p>Thoughtful gifts for every occasion</p>
+            <span class="io-category-card__arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <a class="io-category-card" href="{% url 'bakery' %}">
+          <div class="io-category-card__image">
+            <img src="{% static 'main/img/cat-bakery.webp' %}" alt="ZAD bakery" width="1916" height="821" loading="lazy" decoding="async">
+          </div>
+          <span class="io-category-card__icon"><i class="bi bi-cake2" aria-hidden="true"></i></span>
+          <div class="io-category-card__body">
+            <h3>Bakery</h3>
+            <p>Cakes, pastries and sweet treats</p>
+            <span class="io-category-card__arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+
+        <a class="io-category-card" href="{{ site_telegram_url }}" target="_blank" rel="noopener">
+          <div class="io-category-card__image">
+            <img src="{% static 'main/img/gifts-custom-v1.webp' %}" alt="Custom ZAD arrangement" width="1448" height="1086" loading="lazy" decoding="async">
+          </div>
+          <span class="io-category-card__icon"><i class="bi bi-stars" aria-hidden="true"></i></span>
+          <div class="io-category-card__body">
+            <h3>Custom arrangements</h3>
+            <p>Personalized just the way you want</p>
+            <span class="io-category-card__arrow" aria-hidden="true">→</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="io-how" id="international-steps" aria-labelledby="international-steps-title">
+    <div class="io-container">
+      <h2 class="io-section-title" id="international-steps-title">How it works</h2>
+
+      <div class="io-steps">
+        <article class="io-step">
+          <span class="io-step__number">1</span>
+          <div class="io-step__icon"><i class="bi bi-flower1" aria-hidden="true"></i></div>
+          <h3>Choose</h3>
+          <p>Pick your flowers, gifts, or custom arrangement.</p>
+        </article>
+
+        <article class="io-step">
+          <span class="io-step__number">2</span>
+          <div class="io-step__icon"><i class="bi bi-credit-card" aria-hidden="true"></i></div>
+          <h3>Confirm &amp; Pay</h3>
+          <p>We confirm availability, the final amount, and your payment option.</p>
+        </article>
+
+        <article class="io-step">
+          <span class="io-step__number">3</span>
+          <div class="io-step__icon"><i class="bi bi-truck" aria-hidden="true"></i></div>
+          <h3>We Deliver</h3>
+          <p>We prepare your order with care and deliver it locally in Mashhad.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="io-local" aria-labelledby="international-local-title">
+    <div class="io-local__grid">
+      <div class="io-local__image">
+        <img src="{% static 'main/img/hero-mashhad.webp' %}" alt="Mashhad, Iran" width="1672" height="941" loading="lazy" decoding="async">
+      </div>
+
+      <div class="io-local__copy">
+        <h2 id="international-local-title">
+          You order abroad.
+          <span>We handle everything locally.</span>
+        </h2>
+        <p>
+          We do not ship products across borders. ZAD prepares your order in Mashhad with fresh flowers and local products, then delivers it to your loved one with care.
+        </p>
+
+        <div class="io-local__points">
+          <div><i class="bi bi-flower1" aria-hidden="true"></i><span>Fresh from local markets</span></div>
+          <div><i class="bi bi-shop-window" aria-hidden="true"></i><span>Prepared by ZAD in Mashhad</span></div>
+          <div><i class="bi bi-shield-check" aria-hidden="true"></i><span>Delivered by our trusted team</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="io-payment" id="international-details" aria-labelledby="international-details-title">
+    <div class="io-container">
+      <h2 class="io-section-title" id="international-details-title">Payment &amp; Delivery</h2>
+
+      <div class="io-payment-grid">
+        <article class="io-payment-card">
+          <i class="bi bi-globe2" aria-hidden="true"></i>
+          <div>
+            <h3>International payment coordination</h3>
+            <p>We confirm the available payment method, including PayPal when available, before your order is finalized.</p>
+          </div>
+        </article>
+
+        <article class="io-payment-card">
+          <i class="bi bi-clock" aria-hidden="true"></i>
+          <div>
+            <h3>Same-day delivery when available</h3>
+            <p>Same-day delivery depends on stock, preparation capacity, request time, and the recipient address.</p>
+          </div>
+        </article>
+
+        <article class="io-payment-card">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          <div>
+            <h3>Delivery scheduling</h3>
+            <p>Choose the date and delivery window that works best for your recipient.</p>
+          </div>
+        </article>
+
+        <article class="io-payment-card">
+          <i class="bi bi-camera" aria-hidden="true"></i>
+          <div>
+            <h3>Final photo on request</h3>
+            <p>We can coordinate a photo of your finished order before dispatch.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="io-faq" id="international-faq" aria-labelledby="international-faq-title">
+    <div class="io-container">
+      <div class="io-faq__shell">
+        <div class="io-faq__heading">
+          <div>
+            <span>FAQ</span>
+            <h2 id="international-faq-title">Frequently Asked Questions</h2>
+          </div>
+          <p>Find answers to common questions about international orders.</p>
+        </div>
+
+        <div class="io-faq__list">
+          {% for item in faq_items %}
+            <details>
+              <summary>
+                <span>{{ item.question }}</span>
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              </summary>
+              <p>{{ item.answer }}</p>
+            </details>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="io-final-cta">
+    <div class="io-container io-final-cta__panel">
+      <div class="io-final-cta__copy">
+        <h2>Someone special is in Mashhad?</h2>
+        <p>We’ll help you send something beautiful.</p>
+      </div>
+      <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="io-final-cta__button">
+        <i class="bi bi-send-fill" aria-hidden="true"></i>
+        Start on Telegram
+      </a>
+    </div>
+  </section>
 </article>
-
-<footer class="policy-en-footer">© 2026 ZAD Flower &amp; Concept Store · Mashhad, Iran</footer>
 {% endblock %}

@@ -112,6 +112,66 @@
   content: "";
 }
 
+/* Compact two-state switch used for the reciprocal All / Unique filter. */
+.catalog-filter--switch {
+  margin-bottom: 24px;
+}
+
+.catalog-filter--switch .catalog-filter__grid {
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
+  flex-wrap: nowrap;
+  gap: 4px;
+  border: 1px solid rgba(157, 111, 63, 0.24);
+  border-radius: 16px;
+  background: rgba(255, 250, 244, 0.72);
+  box-shadow: 0 8px 20px rgba(70, 50, 35, 0.025);
+}
+
+.catalog-filter--switch .catalog-filter__item {
+  flex: 0 0 auto;
+}
+
+.catalog-filter--switch .catalog-filter-card {
+  min-width: 108px;
+  min-height: 44px;
+  padding: 9px 20px;
+  border-color: transparent;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+  gap: 0;
+}
+
+.catalog-filter--switch .catalog-filter-card__icon {
+  display: none;
+}
+
+.catalog-filter--switch .catalog-filter-card__label {
+  font-size: 0.82rem;
+}
+
+.catalog-filter--switch .catalog-filter-card:hover {
+  border-color: transparent;
+  background: rgba(255, 250, 244, 0.94);
+  transform: none;
+}
+
+.catalog-filter--switch .catalog-filter-card:active {
+  transform: scale(0.98);
+}
+
+.catalog-filter--switch .catalog-filter-card.is-active {
+  border-color: rgba(183, 127, 73, 0.2);
+  background: #f1e3d3;
+  box-shadow: 0 5px 14px rgba(112, 76, 45, 0.08);
+}
+
+.catalog-filter--switch .catalog-filter-card.is-active::after {
+  display: none;
+}
+
 .page-flowers-landing .catalog-filter {
   margin-bottom: 26px;
   padding-top: 24px;
