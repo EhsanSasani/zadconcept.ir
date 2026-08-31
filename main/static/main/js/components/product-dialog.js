@@ -171,3 +171,145 @@
     }
   });
 })();
+
+(() => {
+  const modal = document.querySelector("[data-product-modal]");
+  if (!modal) return;
+
+  const modalImage = modal.querySelector("[data-modal-image]");
+  if (!modalImage) return;
+
+  const viewer = document.createElement("div");
+  viewer.className = "zad-product-image-viewer";
+  viewer.hidden = true;
+  viewer.setAttribute("role", "dialog");
+  viewer.setAttribute("aria-modal", "true");
+  viewer.setAttribute("aria-hidden", "true");
+  viewer.setAttribute("aria-label", "نمایش تمام صفحه تصویر محصول");
+
+  const viewerImage = document.createElement("img");
+  viewerImage.className = "zad-product-image-viewer__image";
+  viewerImage.alt = "";
+  viewerImage.decoding = "async";
+  viewerImage.draggable = false;
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.className = "zad-product-image-viewer__close";
+  closeButton.setAttribute("aria-label", "بستن تصویر تمام صفحه");
+
+  viewer.append(viewerImage, closeButton);
+  document.body.appendChild(viewer);
+
+  modalImage.setAttribute("role", "button");
+  modalImage.setAttribute("tabindex", "0");
+  modalImage.setAttribute("aria-haspopup", "dialog");
+  modalImage.setAttribute("aria-expanded", "false");
+
+  let closeTimer = null;
+
+  function viewerIsOpen() {
+    return !viewer.hidden && viewer.classList.contains("is-open");
+  }
+
+  function openViewer() {
+    const src = modalImage.getAttribute("src");
+    if (!src) return;
+
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+      closeTimer = null;
+    }
+
+    viewerImage.src = src;
+    viewerImage.alt = modalImage.alt || "";
+    viewer.hidden = false;
+    viewer.setAttribute("aria-hidden", "false");
+    modalImage.setAttribute("aria-expanded", "true");
+
+    window.requestAnimationFrame(function () {
+      viewer.classList.add("is-open");
+      closeButton.focus({ preventScroll: true });
+    });
+  }
+
+  function closeViewer(options) {
+    if (viewer.hidden) return;
+
+    const settings = options || {};
+    viewer.classList.remove("is-open");
+    viewer.setAttribute("aria-hidden", "true");
+    modalImage.setAttribute("aria-expanded", "false");
+
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+    }
+
+    const finish = function () {
+      viewer.hidden = true;
+      viewerImage.removeAttribute("src");
+      viewerImage.alt = "";
+      closeTimer = null;
+
+      if (settings.restoreFocus !== false && !modal.hidden) {
+        modalImage.focus({ preventScroll: true });
+      }
+    };
+
+    if (settings.immediate) {
+      finish();
+      return;
+    }
+
+    closeTimer = window.setTimeout(finish, 220);
+  }
+
+  modalImage.addEventListener("click", openViewer);
+  modalImage.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openViewer();
+    }
+  });
+
+  closeButton.addEventListener("click", function () {
+    closeViewer();
+  });
+
+  viewer.addEventListener("click", function (event) {
+    if (event.target === viewer) {
+      closeViewer();
+    }
+  });
+
+  document.addEventListener(
+    "keydown",
+    function (event) {
+      if (!viewerIsOpen()) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeViewer();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeButton.focus({ preventScroll: true });
+      }
+    },
+    true
+  );
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      if (!viewer.hidden && event.target.closest("[data-product-modal-close]")) {
+        closeViewer({ restoreFocus: false, immediate: true });
+      }
+    },
+    true
+  );
+})();

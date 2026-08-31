@@ -6,6 +6,7 @@
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/pages/products/lightbox.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -164,4 +165,5 @@
 
 {% block extra_js %}
   <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
+  <script src="{% static 'main/js/pages/products/lightbox.js' %}?v=1"></script>
 {% endblock %}
