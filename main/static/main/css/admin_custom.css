@@ -865,3 +865,109 @@ label,
         justify-content: center;
     }
 }
+/* Story manager ---------------------------------------------------------- */
+
+.zad-admin-story-cover {
+  width: 62px;
+  height: 62px;
+  border: 2px solid #c99a62;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.16);
+}
+
+.zad-admin-story-poster,
+.zad-admin-story-video {
+  display: block;
+  width: min(72px, 100%);
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  background: #151515;
+  object-fit: cover;
+}
+
+.change-form .zad-admin-story-poster,
+.change-form .zad-admin-story-video {
+  width: min(180px, 100%);
+  border-radius: 12px;
+}
+
+.zad-story-cover-empty,
+.zad-story-video-empty {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.zad-story-status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.zad-story-status.is-queued {
+  border-color: rgba(234, 179, 8, 0.36);
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.zad-story-status.is-processing {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
+.zad-story-status.is-ready {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.zad-story-status.is-failed {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.zad-story-processing-error {
+  display: block;
+  max-width: 560px;
+  color: #fca5a5;
+  line-height: 1.9;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-queued {
+  color: #854d0e;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-processing {
+  color: #075985;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-ready {
+  color: #166534;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-failed,
+html[data-bs-theme="light"] .zad-story-processing-error {
+  color: #991b1b;
+}
+
+@media (max-width: 767px) {
+  .zad-admin-story-poster,
+  .zad-admin-story-video {
+    width: 132px;
+  }
+}

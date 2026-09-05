@@ -1,9 +1,17 @@
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import Product, ProductImage, Tag, WEDDING_LEGACY_TAG_SLUGS
+from .models import (
+    Product,
+    ProductImage,
+    Story,
+    StoryClip,
+    Tag,
+    WEDDING_LEGACY_TAG_SLUGS,
+)
 
 
 @receiver(m2m_changed, sender=Product.tags.through)
@@ -63,3 +71,24 @@ def validate_and_touch_product_tags(
 def touch_product_when_gallery_changes(sender, instance, **kwargs):
     if instance.product_id:
         Product.objects.filter(pk=instance.product_id).update(updated_at=timezone.now())
+
+
+@receiver(post_delete, sender=StoryClip)
+def delete_story_clip_media(sender, instance, **kwargs):
+    stored_files = []
+    for field_name in ("source_video", "optimized_video", "poster_image"):
+        field_file = getattr(instance, field_name, None)
+        if field_file and field_file.name:
+            stored_files.append((field_file.storage, field_file.name))
+
+    if not stored_files:
+        return
+
+    def delete_files_after_commit():
+        for storage, stored_name in stored_files:
+            try:
+                storage.delete(stored_name)
+            except OSError:
+                pass
+
+    transaction.on_commit(delete_files_after_commit)

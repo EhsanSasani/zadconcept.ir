@@ -4,415 +4,149 @@
 {% block body_class %}page-home{% endblock %}
 
 {% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=38">
 {% endblock %}
 
 {% block content %}
-<h1 class="sr-only">زاد؛ سفارش آنلاین گل، هدیه و تجربه‌های خاص در مشهد</h1>
-
-<section class="global-hero home-hero">
+<section class="global-hero home-hero" aria-label="استودیو گل زاد">
   <div class="hero-slides" id="heroSlides">
     {% for slide in home_hero_slides %}
-      <div class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }} {% if forloop.first %}is-active{% endif %}">
-
+      <article class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }} {% if forloop.first %}is-active{% endif %}" aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
         <picture>
-          {% if slide.mobile_image_url %}
-            <source media="(max-width:760px)" srcset="{{ slide.mobile_image_url }}">
-          {% endif %}
-
-          <img src="{{ slide.image_url }}" alt="{{ slide.title|default:'ZAD' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
+          {% if slide.mobile_image_url %}<source media="(max-width:760px)" srcset="{{ slide.mobile_image_url }}">{% endif %}
+          <img src="{{ slide.image_url }}" alt="{{ slide.title|default:'ZAD Flower Studio' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
         </picture>
-
-        <div class="hero-slide__overlay"></div>
         {% if slide.show_content %}
+          <div class="home-hero__veil" aria-hidden="true"></div>
+
+
           <div class="hero-slide__content hero-slide__content--cms container" data-hero-content>
-            {% if slide.kicker %}
-              <span class="hero-slide__kicker" data-hero-kicker>{{ slide.kicker }}</span>
-            {% endif %}
-            {% if slide.title %}<h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>{% endif %}
-            {% if slide.description %}
-              <p class="hero-slide__description" data-hero-text>{{ slide.description }}</p>
-            {% endif %}
+            {% if slide.kicker %}<span class="hero-slide__kicker" data-hero-kicker>{{ slide.kicker }}</span>{% endif %}
+            {% if slide.title %}{% if forloop.first %}<h1 class="hero-slide__title" data-hero-title>{{ slide.title }}</h1>{% else %}<h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>{% endif %}{% endif %}
+            {% if slide.description %}<p class="hero-slide__description" data-hero-text>{{ slide.description }}</p>{% endif %}
             {% if slide.primary_button_text and slide.primary_button_url or slide.secondary_button_text and slide.secondary_button_url %}
               <div class="hero-slide__actions">
-                {% if slide.primary_button_text and slide.primary_button_url %}
-                  <a href="{{ slide.primary_button_url }}" class="btn btn-call">{{ slide.primary_button_text }}</a>
-                {% endif %}
-                {% if slide.secondary_button_text and slide.secondary_button_url %}
-                  <a href="{{ slide.secondary_button_url }}" class="btn btn-telegram">{{ slide.secondary_button_text }}</a>
-                {% endif %}
+                {% if slide.primary_button_text and slide.primary_button_url %}<a href="{{ slide.primary_button_url }}" class="home-button home-button--gold">{{ slide.primary_button_text }} <i class="bi bi-arrow-left" aria-hidden="true"></i></a>{% endif %}
+                {% if slide.secondary_button_text and slide.secondary_button_url %}<a href="{{ slide.secondary_button_url }}" class="home-button home-button--ghost">{{ slide.secondary_button_text }}</a>{% endif %}
               </div>
             {% endif %}
           </div>
         {% endif %}
-      </div>
-
+      </article>
     {% empty %}
-      <div class="hero-slide hero-slide--1 hero-configurable hero-position--bottom-right hero-mobile-position--bottom-center is-active">
-        <picture>
-          <source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.webp' %}">
-          <img src="{% static 'main/img/hero-1.webp' %}" alt="ZAD Concept Store" width="1920" height="1080" fetchpriority="high" decoding="async">
-        </picture>
-
-        <div class="hero-slide__overlay"></div>
-        <div class="hero-slide__content hero-slide__content--left-bottom container"></div>
-      </div>
+      <article class="hero-slide hero-slide--1 is-active" aria-hidden="false">
+        <picture><source media="(max-width:760px)" srcset="{% static 'main/img/hero-mobile-1.webp' %}"><img src="{% static 'main/img/hero-1.webp' %}" alt="استودیو گل زاد" width="1920" height="1080" fetchpriority="high" decoding="async"></picture>
+      </article>
     {% endfor %}
   </div>
 
   {% if home_hero_slides|length > 1 %}
-    <button class="hero-slider__nav hero-slider__nav--prev" id="heroPrev" type="button" aria-label="Previous slide">‹</button>
-    <button class="hero-slider__nav hero-slider__nav--next" id="heroNext" type="button" aria-label="Next slide">›</button>
-
-    <div class="hero-slider__dots" id="heroDots">
-      {% for slide in home_hero_slides %}
-        <button type="button" class="{% if forloop.first %}is-active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
-      {% endfor %}
-    </div>
+    <button class="hero-slider__nav hero-slider__nav--prev" id="heroPrev" type="button" aria-label="اسلاید قبلی"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    <button class="hero-slider__nav hero-slider__nav--next" id="heroNext" type="button" aria-label="اسلاید بعدی"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+    <div class="hero-slider__dots" id="heroDots" aria-label="انتخاب اسلاید">{% for slide in home_hero_slides %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" aria-label="اسلاید {{ forloop.counter }}"></button>{% endfor %}</div>
   {% endif %}
 </section>
 
-<section class="home-trust-strip">
-  <div class="container">
-    <div class="home-trust-strip__inner">
+{% include "main/components/story_rail.html" %}
 
-      <div class="home-trust-item">
-        <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/flower.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
-        </div>
-        <h3>گل‌های تازه</h3>
-        <p>انتخابی از بهترین گل‌ها</p>
-      </div>
+<section class="home-section home-explore" aria-labelledby="home-explore-title" data-reveal>
+  <div class="home-container">
+    <header class="home-section__head">
+      <div><span>DISCOVER</span><h2 id="home-explore-title">دنیای زاد را کشف کنید</h2></div>
+      <p>گل، شیرینی، هدیه و طراحی برای روزهایی که قرار است به یاد بمانند.</p>
+    </header>
 
-      <div class="home-trust-divider"></div>
-
-      <div class="home-trust-item">
-        <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/gift.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
-        </div>
-        <h3>بسته‌بندی شیک</h3>
-        <p>طراحی شده با عشق و دقت</p>
-      </div>
-
-      <div class="home-trust-divider"></div>
-
-      <div class="home-trust-item">
-        <div class="home-trust-item__icon">
-          <img src="{% static 'main/img/icons/delivery.svg' %}" alt="" width="96" height="96" decoding="async" loading="lazy">
-        </div>
-        <h3>ارسال در همان روز</h3>
-        <p>سریع و مطمئن</p>
-      </div>
-
+    <div class="home-explore__grid" data-reveal-group>
+      <a href="{% url 'flowers' %}" class="home-explore-card"><img src="{% static 'main/img/cat-flowers.webp' %}" alt="استودیو گل زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>استودیو گل</strong><small>Flower Studio</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+      <a href="{% url 'weddings' %}" class="home-explore-card"><img src="{% static 'main/img/sub-bridal-bouquet.webp' %}" alt="عروسی زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>عروسی</strong><small>Wedding</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+      <a href="{% url 'bakery' %}" class="home-explore-card"><img src="{% static 'main/img/cat-bakery.webp' %}" alt="سوییت‌بار زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>سوییت‌بار</strong><small>Sweet Bar</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+      <a href="{% url 'gifts' %}" class="home-explore-card"><img src="{% static 'main/img/cat-gifts.webp' %}" alt="کانسپت استور زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>کانسپت استور</strong><small>Concept Store</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
     </div>
   </div>
 </section>
 
-<section class="section-block home-intro home-intro--trust home-categories-section">
-  <div class="container container--wide-home">
-    <div class="home-categories home-categories--fixed">
+<section class="home-section home-sameday" aria-labelledby="home-sameday-title" data-reveal>
+  <div class="home-container">
+    <header class="home-section__head home-section__head--row">
+      <div><span>SAME DAY · MASHHAD</span><h2 id="home-sameday-title">گل‌های آماده ارسال امروز</h2><p>گل‌های منتخب امروز برای سفارش و تحویل در شهر مشهد.</p></div>
+      <a href="{% url 'flowers_same_day' %}" class="home-text-link">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+    </header>
 
-      <a href="{% url 'flowers' %}" class="home-category-card home-category-card--primary home-category-card--flowers" aria-label="مشاهده مجموعه استودیو گل زاد">
-        <img src="{% static 'main/img/cat-flowers.webp' %}" alt="استودیو گل زاد" decoding="async" width="900" height="1125" loading="lazy">
-        <div class="home-category-card__overlay"></div>
-
-        <div class="home-category-card__content">
-          <i class="bi bi-flower1 home-category-card__icon" aria-hidden="true"></i>
-          <h2>{{ page_content.flowers.title|default:"استودیو گل زاد" }}</h2>
-          <span>Premium Bouquets</span>
-          <div class="home-category-card__line"></div>
-          <p>{{ page_content.flowers.body|default:"برای لحظه‌هایی که ماندگار می‌شوند" }}</p>
-          <em>مشاهده مجموعه گل‌ها <i class="bi bi-chevron-left" aria-hidden="true"></i></em>
-        </div>
-      </a>
-
-      <a href="{% url 'events' %}" class="home-category-card home-category-card--primary home-category-card--workshops" aria-label="مشاهده ورکشاپ‌های زاد">
-        <img src="{% static 'main/img/cat-events.webp' %}" alt="ورکشاپ‌های زاد" decoding="async" width="900" height="1125" loading="lazy">
-        <div class="home-category-card__overlay"></div>
-
-        <div class="home-category-card__content">
-          <i class="bi bi-stars home-category-card__icon" aria-hidden="true"></i>
-          <h2>{{ page_content.workshops.title|default:"ورکشاپ‌های زاد" }}</h2>
-          <span>Creative Workshops</span>
-          <div class="home-category-card__line"></div>
-          <p>{{ page_content.workshops.body|default:"تجربه‌ای عملی برای ساختن با دست‌ها و سلیقه خودتان" }}</p>
-          <em>مشاهده ورکشاپ‌ها <i class="bi bi-chevron-left" aria-hidden="true"></i></em>
-        </div>
-      </a>
-
-    </div>
-  </div>
-</section>
-
-<section class="home-sameday-section section-block">
-  <div class="container">
-    <div class="home-sameday-head">
-      <i class="bi bi-truck"></i>
-      <span>{{ page_content.same_day.kicker|default:"Same Day Delivery" }}</span>
-      <h2>{{ page_content.same_day.title|default:"ارسال فوری برای امروز" }}</h2>
-      <p>{{ page_content.same_day.body|default:"سفارش‌های ثبت‌شده در شهر مشهد، در همان روز با عشق به دست شما می‌رسند." }}</p>
-      <div class="home-sameday-head__line"></div>
-    </div>
-
-    <div class="home-sameday-row" data-sameday-slider>
+    <div class="home-sameday__rail" data-sameday-slider data-reveal-group aria-label="محصولات ارسال روز">
       {% for product in home_same_day_products %}
-        <article
-          class="home-sameday-card"
-          data-catalog-card
-          data-product-type="{{ product.category.slug|default:'collection' }}"
-          data-product-code="{{ product.product_code }}"
-          data-product-name="{{ product.name|default:'' }}"
-          data-product-price="{{ product.display_price }}"
-          data-product-contact="{{ product.order_contact_text }}"
-          data-product-stock="{{ product.stock_status_label }}"
-          data-product-description="{{ product.description|default:'' }}"
-        >
-          <a class="home-sameday-card__main" href="{{ product.get_absolute_url }}" data-zad-modal-card>
-          <div class="home-sameday-card__media">
-            {% if product.cover_image %}
-              <img
-                  src="{{ product.cover_image.url }}"
-                  alt="{{ product.seo_name }}"
-                  {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %}
-                  sizes="(max-width: 640px) 82vw, 280px"
-                  width="520"
-                  height="650"
-                  loading="lazy"
-                  decoding="async"
-                  data-product-image
-                >
-            {% else %}
-              <img
-                  src="{% static 'main/img/sub-bouquet.webp' %}"
-                  alt="{{ product.seo_name }}"
-                  width="520"
-                  height="650"
-                  loading="lazy"
-                  decoding="async"
-                  data-product-image
-                >
-            {% endif %}
-
-            {% if product.stock_status == "out_of_stock" %}
-              <span class="home-sameday-card__badge home-sameday-card__badge--stock">ناموجود</span>
-            {% elif product.stock_status == "preorder" %}
-              <span class="home-sameday-card__badge home-sameday-card__badge--stock">پیش‌سفارش</span>
-            {% endif %}
-          </div>
-
-          <div class="home-sameday-card__body">
-            <strong>{{ product.display_name }}</strong>
-            <span class="home-sameday-card__price">{{ product.display_price }}</span>
-            <em>مشاهده محصول ←</em>
-          </div>
+        <article class="home-product-card" data-catalog-card data-product-type="{{ product.category.slug|default:'collection' }}" data-product-code="{{ product.product_code }}" data-product-name="{{ product.name|default:'' }}" data-product-price="{{ product.display_price }}" data-product-contact="{{ product.order_contact_text }}" data-product-stock="{{ product.stock_status_label }}" data-product-description="{{ product.description|default:'' }}">
+          <a href="{{ product.get_absolute_url }}" class="home-product-card__main" data-zad-modal-card>
+            <div class="home-product-card__media">
+              {% if product.cover_image %}<img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}" {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %} sizes="(max-width:760px) 58vw, 280px" width="520" height="650" loading="lazy" decoding="async" data-product-image>{% else %}<img src="{% static 'main/img/sub-bouquet.webp' %}" alt="{{ product.seo_name }}" width="520" height="650" loading="lazy" decoding="async" data-product-image>{% endif %}
+              {% if product.stock_status == 'out_of_stock' %}<span class="home-product-card__badge">ناموجود</span>{% elif product.stock_status == 'preorder' %}<span class="home-product-card__badge">پیش‌سفارش</span>{% endif %}
+            </div>
+            <div class="home-product-card__body"><strong>{{ product.display_name }}</strong><span>{{ product.display_price }}</span></div>
           </a>
         </article>
       {% empty %}
-        <a class="home-sameday-card" href="{% url 'flowers' %}">
-          <div class="home-sameday-card__media">
-            <img src="{% static 'main/img/sub-bouquet.webp' %}" alt="ارسال فوری" width="520" height="650" loading="lazy" decoding="async">
-          </div>
-
-          <div class="home-sameday-card__body">
-            <strong>آماده ارسال امروز</strong>
-            <span class="home-sameday-card__price">استعلام قیمت</span>
-            <em>مشاهده محصول ←</em>
-          </div>
-        </a>
+        <a class="home-product-card home-product-card--empty" href="{% url 'flowers' %}"><img src="{% static 'main/img/sub-bouquet.webp' %}" alt="گل‌های زاد" width="520" height="650" loading="lazy" decoding="async"><span>مشاهده مجموعه گل‌ها</span></a>
       {% endfor %}
     </div>
-
-    <div class="home-sameday-benefits">
-      <div>
-        <i class="bi bi-geo-alt"></i>
-        <strong>ارسال در شهر مشهد</strong>
-        <span>تحویل در همان روز</span>
-      </div>
-
-      <div>
-        <i class="bi bi-clock"></i>
-        <strong>سفارش تا ساعت ۱۸</strong>
-        <span>تحویل در همان روز</span>
-      </div>
-
-      <div>
-        <i class="bi bi-flower1"></i>
-        <strong>گل‌های تازه و باکیفیت</strong>
-        <span>انتخاب روزانه از بهترین‌ها</span>
-      </div>
-
-      <div>
-        <i class="bi bi-shield-check"></i>
-        <strong>ضمانت کیفیت</strong>
-        <span>رضایت شما اولویت ماست</span>
-      </div>
-    </div>
-
-    <div class="home-sameday-more">
-      <a href="{% url 'flowers_same_day' %}">
-        مشاهده همه محصولات ارسال امروز
-        <span>←</span>
-      </a>
-      <small>تعداد محدود در هر روز</small>
-    </div>
   </div>
 </section>
 
-<section class="home-abroad-premium-section">
-  <div class="container">
-    <div class="home-abroad">
-
-      <div class="home-abroad__media">
-        <img src="{% static 'main/img/home-abroad.webp' %}" alt="International flower delivery" width="1600" height="1067" decoding="async" loading="lazy">
-      </div>
-
-      <div class="home-abroad__content">
-        <span class="home-abroad__kicker">{{ page_content.international.kicker|default:"INTERNATIONAL ORDERS" }}</span>
-
-          <h2>{% if page_content.international.title %}{{ page_content.international.title }}{% else %}
-            From Anywhere,
-            To Your Loved Ones.<br>
-          {% endif %}</h2>
-
-          <div class="home-abroad__divider"></div>
-
-          <p>{% if page_content.international.body %}{{ page_content.international.body }}{% else %}
-            برای عزیزانتان ، از هر جای دنیا سفارش ثبت کنید
-            و تحویل را با زاد تجربه کنید.
-          {% endif %}</p>
-
-          <a class="home-abroad__btn" href="{% url 'international_orders' %}">
-            <i class="bi bi-arrow-left"></i>
-            {{ page_content.international.cta_text|default:"PLACE YOUR ORDER" }}
-          </a>
-        <div class="home-abroad__features">
-            <div>
-              <span class="home-abroad__icon"><i class="bi bi-globe2"></i></span>
-              <strong>Global Ordering</strong>
-            </div>
-
-            <div>
-              <span class="home-abroad__icon"><i class="bi bi-shield-check"></i></span>
-              <strong>Secure Payment</strong>
-            </div>
-
-            <div>
-              <span class="home-abroad__icon"><i class="bi bi-flower1"></i></span>
-              <strong>Hand Delivered</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section class="home-occasions-section section-block">
-  <div class="container">
-
-    <div class="home-occasions-head">
-      <span>{{ page_content.occasions.kicker|default:"ZAD OCCASIONS" }}</span>
-      <h2>{{ page_content.occasions.title|default:"برای لحظه‌های خاص" }}</h2>
-      <p>{{ page_content.occasions.body|default:"هر احساس، گلی مخصوص به خود می‌خواهد" }}</p>
-      <div class="home-occasions-head__line"></div>
-    </div>
-
-    <div class="home-occasions-row" data-touch-slider aria-label="مناسبت‌های زاد">
+<section class="home-section home-occasions" aria-labelledby="home-occasions-title" data-reveal>
+  <div class="home-container">
+    <header class="home-section__head home-section__head--row">
+      <div><span>FOR THE MOMENT</span><h2 id="home-occasions-title">برای هر مناسبت</h2><p>برای هر احساس و هر موقعیت، انتخابی متناسب با همان لحظه.</p></div>
+      <a href="{% url 'occasions' %}" class="home-text-link">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+    </header>
+    <div class="home-occasions__rail" data-reveal-group aria-label="مناسبت‌ها">
       {% for item in home_occasion_cards %}
-        <a class="home-occasion-card" href="{{ item.url }}">
-          <div class="home-occasion-card__media">
-            {% if item.image|slice:":7" == "/media/" %}
-              <img src="{{ item.image }}" alt="{{ item.label }}" loading="lazy" decoding="async" width="1200" height="1500">
-            {% else %}
-              <img src="{% static item.image %}" alt="{{ item.label }}" loading="lazy" decoding="async" width="1200" height="1500">
-            {% endif %}
-          </div>
-          <div class="home-occasion-card__body">
-            <div>
-              <strong>{{ item.label }}</strong>
-              <span>{{ item.label_en }}</span>
-            </div>
-            <i aria-hidden="true">←</i>
-          </div>
-        </a>
+        <a class="home-occasion-card" href="{{ item.url }}">{% if item.image|slice:':7' == '/media/' %}<img src="{{ item.image }}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">{% else %}<img src="{% static item.image %}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">{% endif %}<span class="home-occasion-card__label"><strong>{{ item.label }}</strong><small>{{ item.label_en }}</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
       {% empty %}
-        <a class="home-occasion-card" href="{% url 'occasions' %}">
-          <div class="home-occasion-card__media">
-            <img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" loading="lazy" decoding="async" width="900" height="1125">
-          </div>
-          <div class="home-occasion-card__body">
-            <div><strong>لحظه‌های خاص</strong><span>Occasions</span></div>
-            <i aria-hidden="true">←</i>
-          </div>
-        </a>
+        <a class="home-occasion-card" href="{% url 'occasions' %}"><img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" width="720" height="900" loading="lazy" decoding="async"><span class="home-occasion-card__label"><strong>لحظه‌های خاص</strong><small>Occasions</small></span><i class="bi bi-arrow-left"></i></a>
       {% endfor %}
     </div>
-
-    <div class="home-occasions-more">
-      <a href="{% url 'occasions' %}">
-        مشاهده همه
-        <span>←</span>
-      </a>
-    </div>
-
   </div>
 </section>
 
-<section class="home-experience-section section-block">
-  <div class="container">
-    <div class="home-experience">
-
-      <div class="home-experience__media">
-        <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌ها و رویدادهای زاد" width="1600" height="1067" decoding="async" loading="lazy">
+<section class="home-section home-wedding" aria-labelledby="home-wedding-title" data-reveal>
+  <div class="home-container">
+    <article class="home-wedding__card">
+      <img src="{% static 'main/img/sub-bridal-bouquet.webp' %}" alt="عروسی زاد" width="900" height="1125" loading="lazy" decoding="async">
+      <div class="home-wedding__veil" aria-hidden="true"></div>
+      <div class="home-wedding__content">
+        <span>WEDDING BY ZAD</span>
+        <h2 id="home-wedding-title">برای روز خاص شما</h2>
+        <strong class="home-wedding__editorial">Your Special Day, Our Passion</strong>
+        <p>طراحی گل و جزئیات روزی که قرار است به یاد بماند.</p>
+        <a href="{% url 'weddings' %}" class="home-button home-button--light">مشاهده مجموعه عروسی <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
       </div>
-
-      <div class="home-experience__content">
-        <span class="home-experience__kicker">{{ page_content.experience.kicker|default:"تجربه‌های زاد" }}</span>
-
-        <h2>{% if page_content.experience.title %}{{ page_content.experience.title }}{% else %}
-          چند ساعت برای ساختن<br>
-          با دست‌های خودتان
-        {% endif %}</h2>
-
-        <div class="home-experience__divider"></div>
-
-        <p>{% if page_content.experience.body %}{{ page_content.experience.body }}{% else %}
-          در ورکشاپ‌های زاد، متریال را از نزدیک لمس می‌کنید، انتخاب می‌کنید و با سلیقه خودتان به آن شکل می‌دهید.
-          فضایی صمیمی برای حضور در لحظه، تجربه یک کار عملی و کشف علاقه‌ای تازه.
-        {% endif %}</p>
-
-        <a class="home-experience__btn" href="{{ page_content.experience.cta_url|default:'/workshops/' }}">
-          <span>←</span>
-          {{ page_content.experience.cta_text|default:"مشاهده برنامه‌ها" }}
-        </a>
-
-        <div class="home-experience__features">
-          <div>
-            <span class="home-experience__icon">◎</span>
-            <strong>کار عملی با متریال</strong>
-          </div>
-
-          <div>
-            <span class="home-experience__icon">♢</span>
-            <strong>انتخاب و ساختن با سلیقه شخصی</strong>
-          </div>
-
-          <div>
-            <span class="home-experience__icon">✿</span>
-            <strong>تجربه‌ای گروهی در فضایی صمیمی</strong>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </article>
   </div>
 </section>
 
+<section class="home-section home-service-cards" aria-label="خدمات ویژه زاد" data-reveal>
+  <div class="home-container home-service-cards__grid" data-reveal-group>
+    <a href="{% url 'international_orders' %}" class="home-service-card">
+      <img src="{% static 'main/img/home-abroad.webp' %}" alt="سفارش از خارج ایران" width="1600" height="1067" loading="lazy" decoding="async"><div class="home-service-card__veil" aria-hidden="true"></div>
+      <div><span>GLOBAL ORDERS</span><h2>سفارش از خارج ایران</h2><p>از هر جای دنیا برای عزیزانتان در ایران سفارش ثبت کنید.</p><em>ثبت سفارش <i class="bi bi-arrow-left" aria-hidden="true"></i></em></div>
+    </a>
+    <a href="{% url 'events' %}" class="home-service-card">
+      <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌های زاد" width="1600" height="1067" loading="lazy" decoding="async"><div class="home-service-card__veil" aria-hidden="true"></div>
+      <div><span>LEARN · CREATE</span><h2>ورکشاپ‌های زاد</h2><p>تجربه، یادگیری و ساختن در فضای زاد.</p><em>مشاهده ورکشاپ‌ها <i class="bi bi-arrow-left" aria-hidden="true"></i></em></div>
+    </a>
+  </div>
+</section>
+
+<section class="home-brand-note" aria-label="درباره زاد" data-reveal>
+  <div class="home-container home-brand-note__inner">
+    <div><span>ABOUT ZAD</span><strong>برای لحظه‌هایی که ارزش ماندن دارند.</strong></div>
+    <p>گل، هدیه و تجربه‌هایی که برای یک لحظه مشخص طراحی می‌شوند؛ از انتخاب روزانه تا مراسم و سفارش از راه دور.</p>
+    <a href="{% url 'about' %}">داستان زاد <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+  </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=5"></script>
-  <script src="{% static 'main/js/pages/home/same-day-slider.js' %}?v=3"></script>
-  <script src="{% static 'main/js/pages/home/occasion-slider.js' %}?v=2"></script>
+<script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=10"></script>
+  <script src="{% static 'main/js/pages/home/home-motion.js' %}?v=1"></script>
+  {% if home_stories %}<script src="{% static 'main/js/components/story-viewer.js' %}?v=2"></script>{% endif %}
 {% endblock %}

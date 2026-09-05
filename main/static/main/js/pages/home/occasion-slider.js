@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!slider) return;
 
   const isMobile = () => window.matchMedia("(max-width: 760px)").matches;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   let index = 0;
   let timer = null;
@@ -26,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const start = () => {
     stop();
+    if (prefersReducedMotion.matches || document.hidden) return;
     timer = setInterval(goNext, 3200);
   };
 
@@ -38,6 +40,12 @@ document.addEventListener("DOMContentLoaded", () => {
   slider.addEventListener("mouseleave", start);
   slider.addEventListener("touchstart", stop, { passive: true });
   slider.addEventListener("touchend", start, { passive: true });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else start();
+  });
+  prefersReducedMotion.addEventListener?.("change", start);
 
   start();
 

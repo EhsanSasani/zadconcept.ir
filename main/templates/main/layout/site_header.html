@@ -1,39 +1,160 @@
-<div class="top-notice-bar">
-  <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" class="top-notice-bar__link">
-    برای سفارش محصولات زاد از خارج از ایران و پرداخت از طریق
-    <strong class="top-notice-bar__paypal">PayPal</strong>
-    با شماره
-    <bdi dir="ltr">+989154203569</bdi>
-    در تلگرام با ما در تماس باشید.
-  </a>
+{% load static %}
+<div class="zad-utility" aria-label="خدمات سریع زاد">
+  <div class="zad-utility__inner">
+    <a href="{% url 'flowers_same_day' %}"><i class="bi bi-truck" aria-hidden="true"></i><span>ارسال روز در مشهد</span></a>
+    <span class="zad-utility__divider" aria-hidden="true"></span>
+    <a href="{% url 'international_orders' %}"><i class="bi bi-globe2" aria-hidden="true"></i><span>سفارش از خارج ایران</span></a>
+    <span class="zad-utility__divider zad-utility__divider--optional" aria-hidden="true"></span>
+    <a class="zad-utility__optional" href="{% url 'occasions' %}"><i class="bi bi-flower1" aria-hidden="true"></i><span>برای هر مناسبت</span></a>
+  </div>
 </div>
 
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand brand--text" href="{% url 'index' %}" aria-label="zad Home">
-      <span class="brand__name">ZAD</span>
-      <span class="brand__sub">flowerstore</span>
+<header class="site-header" data-site-header>
+  <div class="container zad-header__inner">
+    <button
+      class="zad-menu-button"
+      type="button"
+      data-site-menu-open
+      aria-controls="zad-site-menu"
+      aria-expanded="false"
+      aria-label="باز کردن منوی زاد"
+    >
+      <span class="zad-menu-icon" aria-hidden="true"><span></span><span></span></span>
+    </button>
+
+    <a class="zad-header__brand" href="{% url 'index' %}" aria-label="صفحه اصلی زاد">
+      <span class="zad-header__brand-name">ZAD</span>
+      <small>FLOWER STUDIO</small>
     </a>
 
-    <nav class="main-nav" aria-label="ناوبری اصلی">
-      <div class="main-nav__center">
-        <a href="{% url 'index' %}" class="{% if active_nav == 'home' %}is-active{% endif %}">خانه</a>
-
-        <div class="nav-dropdown" data-nav-dropdown>
-          <button type="button" class="nav-dropdown__trigger" data-nav-dropdown-trigger aria-haspopup="true" aria-controls="zad-products-menu">محصولات</button>
-          <div class="nav-dropdown__menu" id="zad-products-menu" data-nav-dropdown-menu>
-            <a href="{% url 'flowers' %}">گل</a>
-            <a href="{% url 'bakery' %}">سوییت بار</a>
-            <a href="{% url 'gifts' %}">کانسپت استور</a>
-          </div>
-        </div>
-
-        <a href="{% url 'weddings' %}" class="{% if active_nav == 'weddings' %}is-active{% endif %}">عروسی</a>
-        <a href="{% url 'events' %}" class="{% if active_nav == 'events' %}is-active{% endif %}">ورکشاپ ها</a>
-      </div>
-
-      <a href="{% url 'about' %}" class="main-nav__about {% if active_nav == 'about' %}is-active{% endif %}">درباره زاد</a>
+    <nav class="zad-desktop-nav" aria-label="ناوبری اصلی">
+      <a href="{% url 'flowers' %}" class="{% if active_nav == 'flowers' %}is-active{% endif %}">استودیو گل</a>
+      <a href="{% url 'weddings' %}" class="{% if active_nav == 'weddings' %}is-active{% endif %}">عروسی</a>
+      <a href="{% url 'bakery' %}" class="{% if active_nav == 'bakery' %}is-active{% endif %}">سوییت‌بار</a>
+      <a href="{% url 'gifts' %}" class="{% if active_nav == 'gifts' %}is-active{% endif %}">کانسپت استور</a>
+      <a href="{% url 'occasions' %}" class="{% if active_nav == 'occasions' %}is-active{% endif %}">مناسبت‌ها</a>
+      <a href="{% url 'events' %}" class="{% if active_nav == 'events' %}is-active{% endif %}">ورکشاپ‌ها</a>
+      <a href="{% url 'about' %}" class="{% if active_nav == 'about' %}is-active{% endif %}">درباره زاد</a>
     </nav>
+
+    <div class="zad-header__actions">
+      <button
+        class="zad-header-search"
+        type="button"
+        data-site-search-open
+        aria-controls="zad-quick-search"
+        aria-expanded="false"
+        aria-label="جستجوی سریع در زاد"
+      >
+        <i class="bi bi-search" aria-hidden="true"></i>
+      </button>
+
+      <button
+        class="zad-menu-button zad-menu-button--desktop"
+        type="button"
+        data-site-menu-open
+        aria-controls="zad-site-menu"
+        aria-expanded="false"
+        aria-label="باز کردن منوی زاد"
+      >
+        <span class="zad-menu-button__label">منو</span>
+        <span class="zad-menu-icon" aria-hidden="true"><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="zad-quick-search" id="zad-quick-search" data-site-search aria-hidden="true" hidden>
+    <div class="zad-quick-search__panel" role="dialog" aria-modal="false" aria-labelledby="zad-search-title">
+      <div class="zad-quick-search__top">
+        <label class="zad-quick-search__field">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input type="search" inputmode="search" autocomplete="off" data-site-search-input placeholder="جستجو در زاد..." aria-label="جستجو در بخش‌های زاد">
+        </label>
+        <button type="button" class="zad-quick-search__close" data-site-search-close aria-label="بستن جستجو">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </div>
+      <strong id="zad-search-title">دسترسی سریع</strong>
+      <div class="zad-quick-search__links" data-site-search-list>
+        <a href="{% url 'flowers' %}" data-search-text="استودیو گل گل flower studio flowers"><i class="bi bi-flower1"></i><span>استودیو گل</span></a>
+        <a href="{% url 'flowers_same_day' %}" data-search-text="ارسال روز امروز same day"><i class="bi bi-truck"></i><span>ارسال روز</span></a>
+        <a href="{% url 'weddings' %}" data-search-text="عروسی wedding"><i class="bi bi-gem"></i><span>عروسی</span></a>
+        <a href="{% url 'bakery' %}" data-search-text="سوییت بار شیرینی sweet bar bakery"><i class="bi bi-cake2"></i><span>سوییت‌بار</span></a>
+        <a href="{% url 'gifts' %}" data-search-text="کانسپت استور هدیه gift concept store"><i class="bi bi-gift"></i><span>کانسپت استور</span></a>
+        <a href="{% url 'occasions' %}" data-search-text="مناسبت ها occasions"><i class="bi bi-balloon-heart"></i><span>مناسبت‌ها</span></a>
+        <a href="{% url 'events' %}" data-search-text="ورکشاپ ها workshops"><i class="bi bi-stars"></i><span>ورکشاپ‌ها</span></a>
+        <a href="{% url 'international_orders' %}" data-search-text="سفارش خارج ایران international orders"><i class="bi bi-globe2"></i><span>سفارش از خارج ایران</span></a>
+      </div>
+      <p class="zad-quick-search__empty" data-site-search-empty hidden>نتیجه‌ای پیدا نشد.</p>
+    </div>
   </div>
 </header>
-<div class="site-header-spacer" aria-hidden="true"></div>
+
+<div class="zad-site-menu" id="zad-site-menu" data-site-menu aria-hidden="true" hidden>
+  <button type="button" class="zad-site-menu__backdrop" data-site-menu-close tabindex="-1" aria-label="بستن منو"></button>
+
+  <section class="zad-site-menu__panel" role="dialog" aria-modal="true" aria-labelledby="zad-site-menu-title" tabindex="-1">
+    <header class="zad-site-menu__compact-head">
+      <div>
+        <span id="zad-site-menu-title">منوی زاد</span>
+        <small>EXPLORE ZAD</small>
+      </div>
+      <button type="button" class="zad-site-menu__close" data-site-menu-close aria-label="بستن منو">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <nav class="zad-site-menu__primary" aria-label="بخش‌های اصلی زاد">
+      <a href="{% url 'index' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-house"></i></span>
+        <span class="zad-site-menu__label"><strong>خانه</strong><small>Home</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'flowers' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-flower1"></i></span>
+        <span class="zad-site-menu__label"><strong>استودیو گل</strong><small>Flower Studio</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'flowers_same_day' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-truck"></i></span>
+        <span class="zad-site-menu__label"><strong>ارسال روز</strong><small>Same Day</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'weddings' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-gem"></i></span>
+        <span class="zad-site-menu__label"><strong>عروسی</strong><small>Wedding</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'bakery' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-cake2"></i></span>
+        <span class="zad-site-menu__label"><strong>سوییت‌بار</strong><small>Sweet Bar</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'gifts' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-gift"></i></span>
+        <span class="zad-site-menu__label"><strong>کانسپت استور</strong><small>Concept Store</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+      <a href="{% url 'occasions' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-balloon-heart"></i></span>
+        <span class="zad-site-menu__label"><strong>مناسبت‌ها</strong><small>Occasions</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
+    </nav>
+
+    <nav class="zad-site-menu__secondary" aria-label="دسترسی‌های بیشتر">
+      <a href="{% url 'events' %}"><span>ورکشاپ‌ها</span><small>Workshops</small></a>
+      <a href="{% url 'international_orders' %}"><span>سفارش از خارج ایران</span><small>International Orders</small></a>
+      <a href="{% url 'about' %}"><span>درباره زاد</span><small>About ZAD</small></a>
+    </nav>
+
+    <footer class="zad-site-menu__footer">
+      <div class="zad-site-menu__socials">
+        <a href="{{ site_instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+        <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" aria-label="Telegram"><i class="bi bi-telegram"></i></a>
+        <a href="{{ site_call_href }}" aria-label="تماس"><i class="bi bi-telephone"></i></a>
+      </div>
+      <span>Flower &amp; Concept Store · Mashhad</span>
+    </footer>
+  </section>
+</div>

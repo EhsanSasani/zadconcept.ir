@@ -15,6 +15,7 @@ from ..models import (
 from ..occasion_presentation import _occasion_card
 from ..page_context import _default_context
 from ..page_presentation import SECTION_CONTENT
+from ..story_presentation import get_home_story_presentations
 
 
 def index(request):
@@ -79,7 +80,7 @@ def index(request):
             "featured_today": featured_today,
             "occasion_tags": occasion_tags,
             "home_occasion_cards": [
-                _occasion_card(tag) for tag in occasion_tags[:4]
+                _occasion_card(tag) for tag in occasion_tags[:6]
             ],
             "sections": SECTION_CONTENT,
             "hero_call_text": "Call Now",
@@ -89,6 +90,7 @@ def index(request):
             "home_hero_slides": _get_active_home_hero_slides(),
             "home_events": home_events,
             "home_same_day_products": home_same_day_products,
+            "home_stories": get_home_story_presentations(),
         }
     )
 

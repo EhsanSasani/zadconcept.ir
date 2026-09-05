@@ -30,6 +30,7 @@ The experience is intentionally closer to a curated lookbook than a conventional
 - **Journal** &mdash; editorial notes and brand stories
 - **Lead coordination** &mdash; contact, Telegram, phone, and structured request forms ([Telegram integration](docs/telegram-integration.md))
 - **Content management** &mdash; products, categories, tags, heroes, page copy, events, and inquiries through Django Admin
+- **Homepage stories** &mdash; admin-managed short videos with an Instagram-style viewer and an FFmpeg optimization queue ([operations guide](docs/story-system.md))
 
 ## Version 1.1.0
 
@@ -60,6 +61,7 @@ Recommendation surfaces are intentionally paused in this release while a more de
 | UI | Django Templates, HTML, CSS, vanilla JavaScript |
 | Admin | Django Admin + Jazzmin |
 | Images | Pillow, WebP optimization |
+| Story video | FFmpeg, H.264/AAC MP4, WebP poster |
 | Application server | Gunicorn |
 | Reverse proxy | Nginx |
 | Delivery | CDN-backed production domain |
@@ -115,6 +117,9 @@ cp .env.example .env
 python manage.py migrate
 python manage.py runserver
 ```
+
+FFmpeg and FFprobe are also required to process uploaded story videos. On
+Debian/Ubuntu, install both through the `ffmpeg` system package.
 
 On Windows, copy `.env.example` to `.env` manually or run:
 

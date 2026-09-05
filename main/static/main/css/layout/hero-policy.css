@@ -33,7 +33,8 @@
   --zad-primary-hero-mobile: clamp(440px, calc(65svh + 20px), 620px);
   --zad-home-notice-desktop: 40px;
   --zad-home-navbar-desktop: 68px;
-  --zad-home-trust-desktop: 176px;
+  --zad-home-trust-desktop: 0px;
+  --zad-home-hero-desktop: clamp(540px, 68svh, 760px);
 }
 
 @media (min-width: 761px) {
@@ -91,7 +92,7 @@
   .page-home .hero-slides {
     box-sizing: border-box !important;
     width: 100% !important;
-    height: calc(100svh - var(--zad-home-notice-desktop) - var(--zad-home-navbar-desktop) - var(--zad-home-trust-desktop)) !important;
+    height: var(--zad-home-hero-desktop) !important;
     min-height: 0 !important;
     max-height: none !important;
     margin-top: 0 !important;
@@ -167,3 +168,158 @@
     object-position: left 70% !important;
   }
 }
+
+/* ZAD MOBILE HERO CLEAN COMPACT START */
+@media (max-width: 760px) {
+  /* Back to the normal full-width hero: no carousel peeks / track translation. */
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides {
+    width: 100% !important;
+    height: clamp(170px, 43vw, 220px) !important;
+    min-height: 170px !important;
+    max-height: 220px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    aspect-ratio: auto !important;
+    background: #eee6dc;
+  }
+
+  body.page-home .site-main .home-hero .hero-slides {
+    position: relative !important;
+    display: block !important;
+    direction: initial !important;
+    transform: none !important;
+    gap: 0 !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    aspect-ratio: auto !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide.is-active {
+    position: relative !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide picture,
+  body.page-home .site-main .home-hero .hero-slide img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide img {
+    object-fit: cover !important;
+    object-position: center 58% !important;
+    transform: none !important;
+  }
+
+  /* No hard-coded hero copy. Admin content still works when explicitly enabled. */
+  .page-home .hero-slider__nav {
+    display: none !important;
+  }
+
+  .page-home .hero-slider__dots {
+    bottom: 7px !important;
+    gap: 5px !important;
+  }
+
+  .page-home .hero-slider__dots button {
+    width: 15px !important;
+    height: 2px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides {
+    height: clamp(160px, 44vw, 185px) !important;
+    min-height: 160px !important;
+    max-height: 185px !important;
+  }
+}
+/* ZAD MOBILE HERO CLEAN COMPACT END */
+
+/* ZAD HOME MOBILE HERO 16-9 HOTFIX START
+   Canonical phone-portrait hero geometry.
+   440px viewport -> 247.5px hero
+   390px viewport -> 219.375px hero
+   Recommended mobile admin artwork: 1600x900 (16:9).
+*/
+@media (max-width: 760px) and (orientation: portrait) {
+  body.page-home .site-main .home-hero {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9 !important;
+    overflow: hidden !important;
+    margin-top: 0 !important;
+  }
+
+  body.page-home .site-main .home-hero > .hero-slides {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide,
+  body.page-home .site-main .home-hero .hero-slide.is-active {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide picture {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+}
+/* ZAD HOME MOBILE HERO 16-9 HOTFIX END */

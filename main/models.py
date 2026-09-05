@@ -13,6 +13,7 @@ from django.core.validators import (
 from django.db import models, transaction
 from django.db.models import F, Q
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.text import Truncator, slugify
 
@@ -244,6 +245,33 @@ def workshop_gallery_upload_to(instance, filename):
         f"events/gallery/{slug}/workshop-gallery-{order}-{token}."
         f"{_upload_extension(filename)}"
     )
+
+
+def story_cover_upload_to(instance, filename):
+    slug = _upload_slug(instance.slug or instance.title, f"story-{instance.pk or 'new'}")
+    return f"stories/covers/story-{slug}.{_upload_extension(filename)}"
+
+
+def story_clip_source_upload_to(instance, filename):
+    story = getattr(instance, "story", None)
+    story_slug = _upload_slug(getattr(story, "slug", ""), "story")
+    token = uuid.uuid4().hex[:12]
+    extension = _upload_extension(filename)
+    return f"stories/source/{story_slug}/story-source-{token}.{extension}"
+
+
+def story_clip_video_upload_to(instance, filename):
+    story = getattr(instance, "story", None)
+    story_slug = _upload_slug(getattr(story, "slug", ""), "story")
+    token = uuid.uuid4().hex[:12]
+    return f"stories/videos/{story_slug}/story-video-{token}.mp4"
+
+
+def story_clip_poster_upload_to(instance, filename):
+    story = getattr(instance, "story", None)
+    story_slug = _upload_slug(getattr(story, "slug", ""), "story")
+    token = uuid.uuid4().hex[:12]
+    return f"stories/posters/{story_slug}/story-poster-{token}.webp"
 
 
 def home_hero_upload_to(instance, filename):
@@ -1731,6 +1759,293 @@ class WeddingTaxonomyMigrationSnapshot(models.Model):
 class PublishStatus(models.TextChoices):
     DRAFT = "draft", "پیش‌نویس"
     PUBLISHED = "published", "منتشرشده"
+
+
+class StoryQuerySet(models.QuerySet):
+    def visible(self, at=None):
+        at = at or timezone.now()
+        return (
+            self.filter(is_active=True)
+            .filter(Q(starts_at__isnull=True) | Q(starts_at__lte=at))
+            .filter(Q(ends_at__isnull=True) | Q(ends_at__gt=at))
+            .order_by("sort_order", "id")
+        )
+
+
+class Story(TimeStampedModel):
+    title = models.CharField(
+        "عنوان استوری",
+        max_length=80,
+        help_text="عنوان کوتاهی که زیر حلقه استوری نمایش داده می‌شود.",
+    )
+    slug = models.SlugField(
+        "اسلاگ",
+        max_length=100,
+        unique=True,
+        blank=True,
+        allow_unicode=True,
+    )
+    cover_image = models.ImageField(
+        "کاور اختصاصی",
+        upload_to=story_cover_upload_to,
+        blank=True,
+        null=True,
+        help_text=(
+            "اختیاری است؛ اگر خالی بماند، پوستر اولین ویدئوی آماده استفاده می‌شود."
+        ),
+    )
+    is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
+    starts_at = models.DateTimeField(
+        "شروع نمایش",
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ اگر خالی باشد، نمایش از همین حالا مجاز است.",
+    )
+    ends_at = models.DateTimeField(
+        "پایان نمایش",
+        blank=True,
+        null=True,
+        help_text="اختیاری؛ بعد از این زمان استوری خودکار از سایت برداشته می‌شود.",
+    )
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    objects = StoryQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "استوری"
+        verbose_name_plural = "استوری‌ها"
+        indexes = [
+            models.Index(
+                fields=["is_active", "sort_order"],
+                name="story_visible_order_idx",
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(starts_at__isnull=True)
+                    | Q(ends_at__isnull=True)
+                    | Q(ends_at__gt=F("starts_at"))
+                ),
+                name="story_end_after_start",
+            ),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        super().clean()
+        if self.starts_at and self.ends_at and self.ends_at <= self.starts_at:
+            raise ValidationError(
+                {"ends_at": "زمان پایان باید بعد از زمان شروع نمایش باشد."}
+            )
+
+    def save(self, *args, **kwargs):
+        normalized_slug = slugify(self.slug or "", allow_unicode=True)
+        self.slug = normalized_slug or make_unique_slug(self, self.title)
+        super().save(*args, **kwargs)
+
+
+class StoryClip(TimeStampedModel):
+    class ProcessingStatus(models.TextChoices):
+        QUEUED = "queued", "در صف بهینه‌سازی"
+        PROCESSING = "processing", "در حال بهینه‌سازی"
+        READY = "ready", "آماده انتشار"
+        FAILED = "failed", "خطا در پردازش"
+
+    story = models.ForeignKey(
+        Story,
+        verbose_name="استوری",
+        on_delete=models.CASCADE,
+        related_name="clips",
+    )
+    title = models.CharField(
+        "عنوان داخل استوری",
+        max_length=100,
+        blank=True,
+    )
+    caption = models.CharField(
+        "توضیح کوتاه",
+        max_length=240,
+        blank=True,
+    )
+    source_video = models.FileField(
+        "ویدئوی اصلی",
+        upload_to=story_clip_source_upload_to,
+        blank=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=("mp4", "mov", "m4v", "webm")
+            )
+        ],
+        help_text="فایل اصلی فقط برای بهینه‌سازی استفاده می‌شود و در سایت پخش نمی‌شود.",
+    )
+    optimized_video = models.FileField(
+        "ویدئوی بهینه‌شده",
+        upload_to=story_clip_video_upload_to,
+        blank=True,
+        editable=False,
+    )
+    poster_image = models.ImageField(
+        "پوستر خودکار",
+        upload_to=story_clip_poster_upload_to,
+        blank=True,
+        editable=False,
+    )
+    cta_text = models.CharField(
+        "متن دکمه",
+        max_length=50,
+        blank=True,
+        help_text="مثلاً «مشاهده محصول». اگر خالی باشد دکمه نشان داده نمی‌شود.",
+    )
+    cta_url = models.CharField(
+        "لینک دکمه",
+        max_length=500,
+        blank=True,
+        help_text="مسیر داخلی مثل /flowers/ یا یک لینک کامل https:// وارد کنید.",
+    )
+    is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
+    sort_order = models.PositiveIntegerField("ترتیب کلیپ", default=0)
+    processing_status = models.CharField(
+        "وضعیت پردازش",
+        max_length=16,
+        choices=ProcessingStatus.choices,
+        default=ProcessingStatus.QUEUED,
+        db_index=True,
+        editable=False,
+    )
+    processing_error = models.TextField("خطای پردازش", blank=True, editable=False)
+    processing_attempts = models.PositiveSmallIntegerField(
+        "تعداد تلاش پردازش",
+        default=0,
+        editable=False,
+    )
+    duration_ms = models.PositiveIntegerField(
+        "مدت ویدئو (میلی‌ثانیه)",
+        default=0,
+        editable=False,
+    )
+    video_width = models.PositiveIntegerField(
+        "عرض خروجی",
+        default=0,
+        editable=False,
+    )
+    video_height = models.PositiveIntegerField(
+        "ارتفاع خروجی",
+        default=0,
+        editable=False,
+    )
+    optimized_size_bytes = models.PositiveBigIntegerField(
+        "حجم خروجی",
+        default=0,
+        editable=False,
+    )
+    processed_at = models.DateTimeField(
+        "زمان پایان پردازش",
+        blank=True,
+        null=True,
+        editable=False,
+    )
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+        verbose_name = "کلیپ استوری"
+        verbose_name_plural = "کلیپ‌های استوری"
+        indexes = [
+            models.Index(
+                fields=["processing_status", "created_at"],
+                name="storyclip_queue_idx",
+            ),
+            models.Index(
+                fields=["story", "is_active", "sort_order"],
+                name="storyclip_public_idx",
+            ),
+        ]
+
+    def __str__(self):
+        label = self.title or f"کلیپ {self.sort_order + 1}"
+        return f"{self.story.title}: {label}"
+
+    @property
+    def duration_seconds(self):
+        return self.duration_ms / 1000 if self.duration_ms else 0
+
+    @property
+    def is_ready(self):
+        return bool(
+            self.processing_status == self.ProcessingStatus.READY
+            and self.optimized_video
+            and self.poster_image
+        )
+
+    def clean(self):
+        super().clean()
+        self.cta_text = (self.cta_text or "").strip()
+        self.cta_url = (self.cta_url or "").strip()
+        if self.cta_text and not self.cta_url:
+            raise ValidationError({"cta_url": "برای نمایش دکمه، لینک آن را هم وارد کنید."})
+        if self.cta_url and not self.cta_text:
+            raise ValidationError({"cta_text": "برای این لینک، متن دکمه را هم وارد کنید."})
+        if self.cta_url:
+            parsed = urlsplit(self.cta_url)
+            is_internal = self.cta_url.startswith("/") and not self.cta_url.startswith("//")
+            is_web = parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+            if not (is_internal or is_web):
+                raise ValidationError(
+                    {"cta_url": "لینک باید مسیر داخلی یا نشانی کامل http/https باشد."}
+                )
+
+    def save(self, *args, **kwargs):
+        current_source = self.source_video.name if self.source_video else ""
+        previous_source = ""
+        if self.pk:
+            previous_source = (
+                type(self).objects.filter(pk=self.pk)
+                .values_list("source_video", flat=True)
+                .first()
+                or ""
+            )
+        source_changed = bool(current_source) and previous_source != current_source
+
+        if source_changed:
+            self.processing_status = self.ProcessingStatus.QUEUED
+            self.processing_error = ""
+            self.duration_ms = 0
+            self.video_width = 0
+            self.video_height = 0
+            self.optimized_size_bytes = 0
+            self.processed_at = None
+
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = set(update_fields) | {
+                    "source_video",
+                    "processing_status",
+                    "processing_error",
+                    "duration_ms",
+                    "video_width",
+                    "video_height",
+                    "optimized_size_bytes",
+                    "processed_at",
+                    "updated_at",
+                }
+
+        super().save(*args, **kwargs)
+
+        if previous_source and previous_source != current_source:
+            source_storage = self.source_video.storage
+
+            def delete_replaced_source():
+                try:
+                    source_storage.delete(previous_source)
+                except OSError:
+                    # Database state is authoritative; an orphaned upload can
+                    # be cleaned operationally without failing the admin save.
+                    pass
+
+            transaction.on_commit(delete_replaced_source)
 
 
 class NewsPost(TimeStampedModel):

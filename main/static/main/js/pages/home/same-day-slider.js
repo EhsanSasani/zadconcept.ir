@@ -8,8 +8,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (originalCards.length < 2) return;
 
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
   originalCards.forEach(function (card) {
-    slider.appendChild(card.cloneNode(true));
+    const clone = card.cloneNode(true);
+    clone.setAttribute("aria-hidden", "true");
+    clone.querySelectorAll("a, button, input, select, textarea").forEach(function (item) {
+      item.tabIndex = -1;
+    });
+    slider.appendChild(clone);
   });
 
   let timer = null;
@@ -54,6 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function start() {
     stop();
+    if (prefersReducedMotion.matches || document.hidden) return;
     timer = window.setInterval(moveNext, 2800);
   }
 
@@ -76,6 +84,12 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     { passive: true }
   );
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stop();
+    else start();
+  });
+  prefersReducedMotion.addEventListener?.("change", start);
 
   start();
 });

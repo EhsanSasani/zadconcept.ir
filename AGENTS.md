@@ -41,6 +41,11 @@ tests for the affected module.
   the migration plan before production deployment.
 - Telegram users and capabilities are authorized in Django. The Worker
   validates transport secrets but must not become the permission source.
+- Story videos are never served from the original admin upload. The dedicated
+  worker must validate, transcode, probe, and mark a clip ready before it can
+  appear publicly. Keep worker concurrency at one on the current VPS.
+- Story playback is progressive MP4, mobile-first, keyboard accessible, and
+  respectful of reduced motion. Do not make critical controls gesture-only.
 
 ## Change discipline
 

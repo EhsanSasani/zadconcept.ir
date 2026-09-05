@@ -1,1677 +1,1226 @@
-/* =========================
-   Home
-   Premium clean version
-   ========================= */
-
-/* =========================
-   Trust strip
-   ========================= */
-
-.home-trust-strip {
-  margin-top: 0;
-  padding: 34px 0 30px;
-  background: #fbf7f1;
-  border-bottom: 1px solid rgba(45, 42, 39, 0.06);
+/* ZAD Home v2 — mobile-first editorial storefront */
+:root {
+  --home-ivory: #fbf7f0;
+  --home-cream: #f4ece2;
+  --home-ink: #352c26;
+  --home-muted: #786a60;
+  --home-gold: #b9824b;
+  --home-line: rgba(90, 65, 46, .11);
+  --home-radius: 14px;
+  --home-section-space: clamp(54px, 6.2vw, 86px);
 }
-
-.home-trust-strip__inner {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  align-items: center;
-  gap: 34px;
-  max-width: 980px;
-  margin-inline: auto;
-}
-
-.home-trust-item {
-  text-align: center;
-  color: var(--text);
-}
-
-.home-trust-item__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.home-trust-item__icon img {
+body.page-home { background: var(--home-ivory); color: var(--home-ink); }
+.page-home .site-main { overflow: clip; }
+.home-container { width: min(100% - 48px, 1280px); margin-inline: auto; }
+.home-section { padding: var(--home-section-space) 0 0; }
+.home-section__head { margin-bottom: 22px; }
+.home-section__head--row { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.home-section__head > div > span,
+.home-wedding__content > span,
+.home-service-card > div > span {
   display: block;
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-}
-
-.home-trust-item h3 {
-  margin: 0;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1.8;
-}
-
-.home-trust-item p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.9;
-}
-
-.home-trust-divider {
-  width: 1px;
-  height: 76px;
-  background: rgba(199, 155, 107, 0.28);
-}
-
-/* =========================
-   Main category pillars
-   ========================= */
-
-.home-categories-section {
-  margin-top: 0;
-  padding: 42px 0;
-  background: #f7f2eb;
-}
-
-.page-home .container--wide-home {
-  width: min(92vw, 1680px);
-  max-width: 1680px;
-  margin-inline: auto;
-}
-
-.page-home .home-categories {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-  width: 100%;
-}
-
-.page-home .home-category-card {
-  position: relative;
-  display: block;
-  width: 100%;
-  min-height: 520px;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border: 1px solid rgba(120, 82, 52, 0.10);
-  border-radius: 18px;
-  background: #e7d8c5;
-  box-shadow: 0 28px 80px rgba(58, 38, 22, 0.13);
-  color: inherit;
-  text-decoration: none;
-  isolation: isolate;
-}
-
-.page-home .home-category-card img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 520px;
-  object-fit: cover;
-  filter: saturate(0.94) brightness(0.96);
-  transition: transform 0.78s ease, filter 0.78s ease;
-}
-
-.page-home .home-category-card--flowers img {
-  object-position: center;
-}
-
-.page-home .home-category-card--workshops img {
-  object-position: center;
-}
-
-.page-home .home-category-card:hover img {
-  transform: scale(1.026);
-  filter: saturate(1.02) brightness(1);
-}
-
-.page-home .home-category-card__overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 48%, rgba(255, 244, 229, 0.38), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.18), rgba(248, 235, 216, 0.58) 48%, rgba(35, 22, 14, 0.08));
-}
-
-.page-home .home-category-card--workshops .home-category-card__overlay {
-  background:
-    radial-gradient(circle at 72% 48%, rgba(255, 244, 229, 0.50), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.10), rgba(248, 235, 216, 0.34) 46%, rgba(248, 235, 216, 0.62));
-}
-
-.page-home .home-category-card__content {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: min(52%, 520px);
-  margin-inline: auto;
-  padding: clamp(24px, 3vw, 54px);
-  text-align: center;
-  pointer-events: none;
-}
-
-.page-home .home-category-card--flowers .home-category-card__content {
-  left: 5%;
-  right: auto;
-}
-
-.page-home .home-category-card--workshops .home-category-card__content {
-  right: 5%;
-  left: auto;
-}
-
-.page-home .home-category-card__icon {
-  margin-bottom: 16px;
-  color: rgba(137, 91, 58, 0.58);
-  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
-  line-height: 1;
-}
-
-.page-home .home-category-card__content h2 {
-  margin: 0;
-  color: #3b2c23;
-  font-family: var(--font-fa);
-  font-size: clamp(2.05rem, 3.1vw, 4rem);
-  font-weight: 500;
-  line-height: 1.28;
-  letter-spacing: -0.035em;
-  text-shadow: 0 10px 34px rgba(255, 248, 238, 0.45);
-}
-
-.page-home .home-category-card__content span {
-  display: block;
-  margin-top: 8px;
-  color: rgba(151, 92, 79, 0.82);
+  margin-bottom: 6px;
+  color: #a47347;
   font-family: var(--font-ui-en);
-  font-size: clamp(0.68rem, 0.9vw, 0.92rem);
-  font-weight: 700;
-  letter-spacing: 0.34em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-.page-home .home-category-card__line {
-  width: 54px;
-  height: 1px;
-  margin: 20px auto 18px;
-  background: rgba(137, 91, 58, 0.52);
-}
-
-.page-home .home-category-card__content p {
-  margin: 0;
-  color: rgba(54, 41, 33, 0.88);
-  font-size: clamp(0.88rem, 1vw, 1.04rem);
+  font-size: .59rem;
   font-weight: 600;
-  line-height: 2;
+  letter-spacing: .17em;
 }
+.home-section__head h2,
+.home-wedding__content h2,
+.home-service-card h2 {
+  color: var(--home-ink);
+  font-family: var(--font-brand-en);
+  font-size: clamp(2rem, 3.3vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1;
+}
+.home-section__head p { max-width: 540px; margin-top: 8px; color: var(--home-muted); font-size: .78rem; line-height: 1.85; }
+.home-text-link { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; color: #8d6139; font-family: var(--font-ui-en); font-size: .68rem; white-space: nowrap; }
 
-.page-home .home-category-card__content em {
+.home-button {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 176px;
-  min-height: 42px;
-  margin-top: 30px;
-  padding: 0 22px;
-  border: 1px solid rgba(137, 91, 58, 0.42);
+  gap: 10px;
+  padding: 0 20px;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 247, 237, 0.24);
-  color: #5b4030;
-  font-size: 0.86rem;
-  font-style: normal;
-  font-weight: 700;
-  line-height: 1;
-  backdrop-filter: blur(8px);
-  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
-}
-
-.page-home .home-category-card:hover .home-category-card__content em {
-  transform: translateY(-2px);
-  border-color: rgba(137, 91, 58, 0.62);
-  background: rgba(255, 247, 237, 0.42);
-}
-
-.page-home .home-category-card__content em i {
-  font-size: 0.78rem;
-}
-
-/* =========================
-   Workshops
-   ========================= */
-
-.home-workshops {
-  background: #fbf7f1;
-  padding-bottom: 48px;
-  margin-bottom: 0;
-}
-
-.home-workshops + .zad-footer {
-  margin-top: 0;
-}
-
-/* =========================
-   Same Day Delivery - premium gallery
-   ========================= */
-
-.home-sameday-section {
-  padding: 48px 0 52px;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(199, 155, 107, 0.10), transparent 32%),
-    linear-gradient(180deg, #fbf7f1 0%, #f7efe6 100%);
-}
-
-.home-sameday-section .container {
-  width: min(1240px, 92%);
-}
-
-.home-sameday-head {
-  max-width: 760px;
-  margin: 0 auto 28px;
-  text-align: center;
-}
-
-.home-sameday-head > i {
-  display: inline-flex;
-  margin-bottom: 8px;
-  color: #b68452;
-  font-size: 24px;
-}
-
-.home-sameday-head span {
-  display: block;
-  margin-bottom: 4px;
-  color: #b68452;
   font-family: var(--font-ui-en);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
+  font-size: .68rem;
+  font-weight: 600;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
 }
+.home-button:hover { transform: translateY(-2px); }
+.home-button--gold { background: #c08a52; color: #fff; box-shadow: 0 8px 24px rgba(126,78,38,.13); }
+.home-button--ghost { border-color: rgba(255,255,255,.5); color: #fff; background: rgba(255,255,255,.08); }
+.home-button--light { color: #6d492b; background: rgba(255,250,244,.92); }
 
-.home-sameday-head h2 {
-  margin: 0;
-  color: #3a3029;
-  font-size: clamp(1.8rem, 3vw, 3.2rem);
-  font-weight: 500;
-  line-height: 1.35;
+/* Hero */
+body.page-home .site-main .home-hero,
+body.page-home .site-main .home-hero .hero-slides {
+  width: 100% !important;
+  height: clamp(540px, 68svh, 760px) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin-top: 0 !important;
 }
-
-.home-sameday-head p {
-  max-width: 680px;
-  margin: 8px auto 0;
-  color: rgba(45, 42, 39, 0.70);
-  font-size: 0.9rem;
-  line-height: 1.8;
+body.page-home .site-main .home-hero .hero-slide,
+body.page-home .site-main .home-hero .hero-slide picture,
+body.page-home .site-main .home-hero .hero-slide img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
 }
-
-.home-sameday-head__line {
-  position: relative;
-  width: 120px;
-  height: 16px;
-  margin: 10px auto 0;
+body.page-home .site-main .home-hero .hero-slide img { object-fit: cover !important; object-position: center 58% !important; }
+.home-hero__veil { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(34,24,17,.42) 0%, rgba(34,24,17,.15) 46%, rgba(34,24,17,.02) 74%), linear-gradient(0deg, rgba(33,23,16,.15), transparent 42%); }
+.page-home .hero-slide__content--cms {
+  right: 0 !important;
+  bottom: clamp(64px, 9vh, 104px) !important;
+  left: 0 !important;
+  z-index: 2;
+  width: min(100% - 48px, 1280px);
+  margin-inline: auto;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  color: #fff;
+  text-align: left !important;
+  direction: ltr;
 }
+.page-home .hero-slide__kicker { margin: 0 0 10px; color: rgba(255,255,255,.78); font-family: var(--font-ui-en); font-size: .62rem; letter-spacing: .18em; }
+.page-home .hero-slide__title { max-width: 620px; color: #fff; font-family: var(--font-brand-en); font-size: clamp(3.4rem, 6vw, 6rem); font-weight: 500; line-height: .9; text-shadow: 0 8px 30px rgba(0,0,0,.12); }
+.page-home .hero-slide__description { max-width: 460px; margin-top: 16px; color: rgba(255,255,255,.88); font-size: .86rem; line-height: 1.9; direction: rtl; text-align: right; }
+.page-home .hero-slide__actions { margin-top: 22px; }
+.page-home .hero-slider__nav { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.46); background: rgba(30,23,18,.13); font-size: .78rem; backdrop-filter: blur(8px); }
+.page-home .hero-slider__nav--prev { right: 24px; left: auto; }
+.page-home .hero-slider__nav--next { left: 24px; right: auto; }
+.page-home .hero-slider__dots { bottom: 18px; gap: 7px; }
+.page-home .hero-slider__dots button { width: 22px; height: 2px; border-radius: 0; background: rgba(255,255,255,.42); }
+.page-home .hero-slider__dots button.is-active { background: #fff; }
 
-.home-sameday-head__line::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(157, 111, 63, 0.5), transparent);
-}
+/* Stories: compact mobile-first rail */
+.page-home .zad-stories { border: 0; border-bottom: 1px solid var(--home-line); background: var(--home-ivory); }
+.page-home .zad-stories__container { width: min(100% - 36px, 1180px); padding: 18px 0 15px; }
+.page-home .zad-stories__heading { display: none; }
+.page-home .zad-stories__track { gap: clamp(14px, 2.4vw, 30px); padding: 2px 1px 4px; }
+.page-home .zad-stories__item { flex-basis: 78px; }
+.page-home .zad-story-trigger { min-height: 98px; }
+.page-home .zad-story-trigger__ring { width: 70px; height: 70px; padding: 2px; box-shadow: 0 0 0 2px var(--home-ivory), 0 0 0 3px rgba(185,125,69,.2); }
+.page-home .zad-story-trigger__play { width: 20px; height: 20px; border-color: var(--home-ivory); font-size: .6rem; }
+.page-home .zad-story-trigger__title { min-height: 25px; margin-top: 7px; font-size: .64rem; line-height: 1.5; -webkit-line-clamp: 1; }
 
-.home-sameday-head__line::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  border: 1px solid #b68452;
-  background: #fbf7f1;
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.home-sameday-row {
+/* Explore */
+.home-explore { padding-top: clamp(42px, 5vw, 66px); }
+.home-explore__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.home-explore-card {
+  min-width: 0;
+  overflow: hidden;
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc((100% - 48px) / 4);
-  gap: 16px;
+  grid-template-columns: minmax(0,1fr) 34px;
+  align-items: center;
+  border: 1px solid var(--home-line);
+  border-radius: var(--home-radius);
+  background: #fffaf4;
+}
+.home-explore-card img { grid-column: 1 / -1; width: 100%; aspect-ratio: 1.55 / 1; object-fit: cover; transition: transform 420ms ease; }
+.home-explore-card span { min-height: 48px; display: flex; align-items: center; padding: 0 0 0 14px; font-family: var(--font-brand-en); font-size: 1.2rem; direction: ltr; }
+.home-explore-card i { justify-self: center; color: #99663a; font-size: .74rem; }
+.home-explore-card:hover img { transform: scale(1.025); }
+
+/* Product rail */
+.home-sameday__rail,
+.home-occasions__rail {
+  display: flex;
+  gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 4px 4px 24px;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  padding: 2px 2px 8px;
+  scroll-snap-type: inline mandatory;
+  overscroll-behavior-inline: contain;
   scrollbar-width: none;
+  direction: ltr;
 }
-
-.home-sameday-row::-webkit-scrollbar {
-  display: none;
-}
-
-.home-sameday-card {
-  display: flex;
+.home-sameday__rail::-webkit-scrollbar,
+.home-occasions__rail::-webkit-scrollbar { display: none; }
+.home-product-card {
+  flex: 0 0 calc((100% - 36px) / 4);
   min-width: 0;
-  flex-direction: column;
   overflow: hidden;
   scroll-snap-align: start;
-  border: 1px solid rgba(157, 111, 63, 0.18);
-  border-radius: 18px;
-  background: rgba(255, 252, 247, 0.92);
-  box-shadow: 0 16px 42px rgba(70, 50, 35, 0.10);
-  color: inherit;
-  text-decoration: none;
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
-}
-
-.home-sameday-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(157, 111, 63, 0.32);
-  box-shadow: 0 22px 54px rgba(70, 50, 35, 0.14);
-}
-
-.home-sameday-card__main {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  color: inherit;
-  text-decoration: none;
-}
-
-.home-sameday-card__media {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-}
-
-.home-sameday-card__media img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
-  object-fit: cover;
-  filter: saturate(0.96) brightness(0.98);
-  transition: transform 360ms ease;
-}
-
-.home-sameday-card:hover .home-sameday-card__media img {
-  transform: scale(1.035);
-}
-
-.home-sameday-card__badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 252, 247, 0.88);
-  color: #8c6138;
-  font-size: 0.68rem;
-  font-weight: 700;
-  backdrop-filter: blur(8px);
-}
-
-.home-sameday-card__badge i {
-  font-size: 0.78rem;
-}
-
-.home-sameday-card__body {
-  min-height: 92px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 12px 12px 14px;
-  text-align: center;
-  background: linear-gradient(180deg, #fffaf3 0%, #f8efe5 100%);
-}
-
-.home-sameday-card__body strong {
-  color: #56473d;
-  font-size: 0.92rem;
-  font-weight: 500;
-  line-height: 1.7;
-}
-
-.home-sameday-card__price {
-  color: #9d6f3f;
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.home-sameday-card__body em {
-  color: #9d6f3f;
-  font-size: 0.86rem;
-  font-style: normal;
-  font-weight: 600;
-}
-
-.home-sameday-benefits {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  max-width: 980px;
-  margin: 22px auto 0;
-  border-top: 1px solid rgba(157, 111, 63, 0.18);
-  border-bottom: 1px solid rgba(157, 111, 63, 0.18);
-}
-
-.home-sameday-benefits div {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 12px;
-  align-items: center;
-  padding: 14px 18px;
-  text-align: right;
-}
-
-.home-sameday-benefits div + div {
-  border-right: 1px solid rgba(157, 111, 63, 0.16);
-}
-
-.home-sameday-benefits i {
-  grid-row: 1 / 3;
-  color: #b68452;
-  font-size: 28px;
-}
-
-.home-sameday-benefits strong {
-  color: #3a3029;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.home-sameday-benefits span {
-  margin-top: 4px;
-  color: rgba(45, 42, 39, 0.54);
-  font-size: 0.82rem;
-}
-
-.home-sameday-more {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.home-sameday-more a {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 28px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #c8955f, #a87343);
-  color: #fffaf3;
-  font-size: 0.88rem;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 16px 34px rgba(168, 115, 67, 0.22);
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.home-sameday-more a:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 42px rgba(168, 115, 67, 0.30);
-}
-
-.home-sameday-more small {
-  display: block;
-  margin-top: 12px;
-  color: rgba(45, 42, 39, 0.46);
-  font-size: 0.78rem;
-}
-
-/* =========================
-   Abroad section
-   ========================= */
-
-.home-abroad-premium-section {
-  margin-top: 0;
-  padding: 104px 0 92px;
-  background:
-    radial-gradient(circle at 82% 44%, rgba(199, 155, 107, 0.09), transparent 34%),
-    linear-gradient(180deg, #f8f4ee 0%, #f5eee7 100%);
-  border-top: 1px solid rgba(45, 42, 39, 0.04);
-  border-bottom: 1px solid rgba(45, 42, 39, 0.04);
-}
-
-.home-abroad-premium-section .container {
-  width: min(1380px, 92%);
-}
-
-.home-abroad {
-  display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(420px, 0.82fr);
-  align-items: center;
-  gap: 86px;
-}
-
-.home-abroad__media {
-  overflow: hidden;
-  border-radius: 22px;
-  background: #111;
-  box-shadow: 0 28px 70px rgba(50, 34, 20, 0.14), 0 10px 28px rgba(0, 0, 0, 0.08);
-}
-
-.home-abroad__media img {
-  display: block;
-  width: 100%;
-  height: 455px;
-  object-fit: cover;
-  object-position: center;
-}
-
-.home-abroad__content {
-  max-width: 590px;
-  margin-inline: auto;
-  text-align: center;
-  direction: ltr;
-}
-
-.home-abroad__kicker {
-  display: block;
-  margin-bottom: 22px;
-  color: #c8955e;
-  font-family: var(--font-ui-en);
-  font-size: 0.82rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-.home-abroad__content h2 {
-  margin: 0;
-  color: #302925;
-  font-family: var(--font-brand-en);
-  font-size: clamp(3rem, 4.25vw, 4.45rem);
-  font-weight: 500;
-  line-height: 1.03;
-  letter-spacing: -0.045em;
-}
-
-.home-abroad__divider {
-  position: relative;
-  width: 104px;
-  height: 14px;
-  margin: 28px auto 22px;
-}
-
-.home-abroad__divider::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(199, 155, 107, 0.95), transparent);
-}
-
-.home-abroad__divider::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: #c8955e;
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.home-abroad__content p {
-  max-width: 46ch;
-  margin: 0 auto;
-  color: rgba(48, 41, 37, 0.72);
-  font-size: 1rem;
-  line-height: 2;
-}
-
-.home-abroad__btn {
-  display: inline-flex;
-  min-width: 240px;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  margin-top: 30px;
-  padding: 0 26px;
-  border-radius: 999px;
-  background: #c9955f;
-  box-shadow: 0 14px 30px rgba(201, 149, 95, 0.26);
-  color: #fff;
-  font-family: var(--font-ui-en);
-  font-size: 0.88rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
-}
-
-.home-abroad__btn:hover {
-  transform: translateY(-2px);
-  background: #bd8953;
-  box-shadow: 0 18px 38px rgba(201, 149, 95, 0.32);
-}
-
-.home-abroad__features {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 38px;
-}
-
-.home-abroad__features > div {
-  position: relative;
-  min-height: 66px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  color: rgba(48, 41, 37, 0.76);
-}
-
-.home-abroad__features > div:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  right: 0;
-  width: 1px;
-  height: 52px;
-  background: rgba(199, 155, 107, 0.22);
-}
-
-.home-abroad__icon {
-  display: block;
-  color: #c8955e;
-  font-size: 1.75rem;
-  line-height: 1;
-}
-.home-abroad__icon i {
-  display: block;
-  width: 1em;
-  height: 1em;
-  line-height: 1;
-}
-
-.home-abroad__features strong {
-  color: rgba(48, 41, 37, 0.72);
-  font-family: var(--font-ui-en);
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-/* =========================
-   Experience section
-   ========================= */
-
-.home-experience-section {
-  margin-top: 0;
-  padding: 56px 0 86px;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(199, 155, 107, 0.09), transparent 28%),
-    linear-gradient(180deg, #f6f1ea 0%, #fbf7f1 52%, #f4ede5 100%);
-  border-top: 1px solid rgba(120, 90, 65, 0.08);
-  border-bottom: 1px solid rgba(120, 90, 65, 0.06);
-  overflow: hidden;
-}
-
-.home-experience-section .container {
-  width: min(1460px, 92%);
-}
-
-.home-experience {
-  display: grid;
-  grid-template-columns: minmax(0, 1.16fr) minmax(390px, 0.84fr);
-  align-items: center;
-  gap: 72px;
-  direction: ltr;
-}
-
-.home-experience__media {
-  overflow: hidden;
-  border-radius: 18px;
-  background: #111;
-  box-shadow: 0 28px 70px rgba(58, 43, 30, 0.13), 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.home-experience__media img {
-  display: block;
-  width: 100%;
-  height: 455px;
-  object-fit: cover;
-  object-position: center;
-  transition: transform 0.8s ease, filter 0.4s ease;
-}
-
-.home-experience__media:hover img {
-  transform: scale(1.025);
-  filter: saturate(1.03);
-}
-
-.home-experience__content {
-  max-width: 560px;
-  margin-inline: auto;
-  text-align: center;
-  direction: rtl;
-}
-
-.home-experience__kicker {
-  display: block;
-  margin-bottom: 18px;
-  color: #b98952;
-  font-family: var(--font-fa);
-  font-size: 0.9rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.home-experience__content h2 {
-  margin: 0;
-  color: #342b26;
-  font-family: var(--font-fa);
-  font-size: clamp(1.65rem, 2.35vw, 2.5rem);
-  font-weight: 800;
-  line-height: 1.72;
-  letter-spacing: -0.035em;
-}
-
-.home-experience__divider {
-  position: relative;
-  width: 108px;
-  height: 14px;
-  margin: 22px auto 24px;
-}
-
-.home-experience__divider::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184, 139, 87, 0.8), transparent);
-}
-
-.home-experience__divider::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  background: #b98952;
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.home-experience__content p {
-  max-width: 42ch;
-  margin: 0 auto;
-  color: rgba(52, 43, 38, 0.68);
-  font-family: var(--font-fa);
-  font-size: 0.96rem;
-  line-height: 2.25;
-}
-
-.home-experience__btn {
-  display: inline-flex;
-  min-width: 220px;
-  min-height: 52px;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 30px;
-  padding: 0 28px;
-  border-radius: 999px;
-  background: #c9955f;
-  box-shadow: 0 14px 30px rgba(201, 149, 95, 0.24);
-  color: #fff;
-  font-family: var(--font-fa);
-  font-size: 0.92rem;
-  font-weight: 900;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-}
-
-.home-experience__btn:hover {
-  transform: translateY(-2px);
-  background: #bd8953;
-  box-shadow: 0 18px 38px rgba(201, 149, 95, 0.32);
-}
-
-.home-experience__features {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 36px;
-  direction: rtl;
-}
-
-.home-experience__features > div {
-  position: relative;
-  min-height: 66px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-}
-
-.home-experience__features > div:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  left: 0;
-  width: 1px;
-  height: 52px;
-  background: rgba(199, 155, 107, 0.22);
-}
-
-.home-experience__icon {
-  color: #b98952;
-  font-size: 1.55rem;
-  line-height: 1;
-}
-
-.home-experience__features strong {
-  color: rgba(52, 43, 38, 0.7);
-  font-family: var(--font-fa);
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1.55;
-  white-space: nowrap;
-}
-
-/* =========================
-   Home occasions
-   ========================= */
-
-.home-occasions-section {
-  margin-top: 0;
-  padding: 42px 0 48px;
-  background:
-    linear-gradient(180deg, rgba(246, 241, 234, 0.88), rgba(246, 241, 234, 0.94)),
-    url("../../../img/home-occasions-bg.webp") center / cover no-repeat;
-  border-top: 1px solid rgba(157, 111, 63, 0.12);
-  border-bottom: 1px solid rgba(157, 111, 63, 0.12);
-  overflow: hidden;
-}
-
-.home-occasions-section .container {
-  width: min(1380px, 88%);
-  margin-inline: auto;
-}
-
-.home-occasions-head {
-  max-width: 720px;
-  margin: 0 auto 24px;
-  text-align: center;
-}
-
-.home-occasions-head span {
-  display: block;
-  margin-bottom: 8px;
-  color: #b98a57;
-  font-family: var(--font-ui-en);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-.home-occasions-head h2 {
-  margin: 0;
-  color: #302925;
-  font-family: var(--font-fa);
-  font-size: clamp(1.7rem, 2.6vw, 3rem);
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.045em;
-}
-
-.home-occasions-head p {
-  max-width: 560px;
-  margin: 10px 0 0;
-  margin-inline: auto;
-  color: rgba(52, 43, 38, 0.7);
-  font-family: var(--font-fa);
-  font-size: 0.86rem;
-  line-height: 2;
-}
-
-.home-occasions-head__line {
-  position: relative;
-  width: 92px;
-  height: 14px;
-  margin: 10px auto 0;
-}
-
-.home-occasions-head__line::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184, 139, 87, 0.85), transparent);
-}
-
-.home-occasions-head__line::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  background: #b98952;
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.home-occasions-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  max-width: 1160px;
-  margin: 0 auto;
-  overflow: visible;
-  padding: 0;
-}
-
+  border: 1px solid var(--home-line);
+  border-radius: var(--home-radius);
+  background: #fffaf4;
+}
+.home-product-card__main { display: block; }
+.home-product-card__media { position: relative; overflow: hidden; background: #eee4d8; }
+.home-product-card__media img { width: 100%; aspect-ratio: 4 / 4.65; object-fit: cover; transition: transform 420ms ease; }
+.home-product-card:hover .home-product-card__media img { transform: scale(1.025); }
+.home-product-card__badge { position: absolute; top: 9px; right: 9px; min-height: 25px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; background: rgba(255,250,244,.9); color: #7f5837; font-size: .58rem; }
+.home-product-card__body { min-height: 66px; padding: 11px 12px; display: flex; flex-direction: column; justify-content: center; direction: rtl; }
+.home-product-card__body strong { overflow: hidden; color: #3b312b; font-size: .75rem; font-weight: 600; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; }
+.home-product-card__body span { margin-top: 4px; color: #8b796a; font-family: var(--font-ui-en); font-size: .6rem; direction: ltr; text-align: right; }
+.home-product-card--empty { padding: 12px; }
+.home-product-card--empty img { width: 100%; aspect-ratio: 4 / 4.65; object-fit: cover; }
+.home-product-card--empty span { display: block; padding: 12px 0 2px; text-align: center; font-size: .72rem; }
+
+/* Occasions */
+.home-occasions { padding-bottom: 0; }
 .home-occasion-card {
-  position: relative;
-  display: block;
-  width: 100%;
-  min-width: 0;
+  flex: 0 0 calc((100% - 60px) / 6);
+  min-width: 138px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
-  scroll-snap-align: unset;
-  text-decoration: none;
-  transition: 0.3s ease;
-}
-
-.home-occasion-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.08);
-}
-
-.home-occasion-card__media {
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-}
-
-.home-occasion-card__media img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.45s ease, filter 0.4s ease;
-}
-
-.home-occasion-card:hover .home-occasion-card__media img {
-  transform: scale(1.04);
-  filter: saturate(1.03);
-}
-
-.home-occasion-card__body {
-  position: relative;
-  min-height: 82px;
+  scroll-snap-align: start;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0,1fr) 30px;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px 14px;
-  border-top: 1px solid rgba(157, 111, 63, 0.08);
-  background: #f9f5ef;
+  border: 1px solid var(--home-line);
+  border-radius: 12px;
+  background: #fffaf4;
+}
+.home-occasion-card img { grid-column: 1 / -1; width: 100%; aspect-ratio: 1.35 / 1; object-fit: cover; }
+.home-occasion-card span { min-height: 38px; display: flex; align-items: center; padding-left: 9px; color: #453a32; font-family: var(--font-ui-en); font-size: .58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-occasion-card i { justify-self: center; color: #9c6a3d; font-size: .64rem; }
+
+/* Wedding editorial */
+.home-wedding__card { position: relative; min-height: 410px; overflow: hidden; border-radius: var(--home-radius); background: #3b2c20; }
+.home-wedding__card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 44%; }
+.home-wedding__veil { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(35,24,17,.74), rgba(35,24,17,.3) 55%, rgba(35,24,17,.08)); }
+.home-wedding__content { position: relative; z-index: 1; min-height: 410px; width: min(52%, 590px); padding: 52px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; color: #fff; direction: ltr; }
+.home-wedding__content > span { color: #e7c69f; }
+.home-wedding__content h2 { color: #fff; font-size: clamp(2.8rem, 5vw, 4.8rem); line-height: .9; }
+.home-wedding__content p { max-width: 430px; margin-top: 16px; color: rgba(255,255,255,.82); font-size: .78rem; line-height: 1.85; direction: rtl; text-align: right; }
+.home-wedding__content .home-button { margin-top: 20px; }
+
+/* International + workshops */
+.home-service-cards { padding-bottom: var(--home-section-space); }
+.home-service-cards__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.home-service-card { position: relative; min-height: 260px; overflow: hidden; border-radius: var(--home-radius); background: #d9c8b6; }
+.home-service-card > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.home-service-card__veil { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(252,246,238,.93), rgba(252,246,238,.65) 62%, rgba(252,246,238,.1)); }
+.home-service-card > div:last-child { position: relative; z-index: 1; width: min(70%, 430px); min-height: 260px; padding: 34px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.home-service-card h2 { font-size: clamp(2rem, 3vw, 3rem); }
+.home-service-card p { margin-top: 8px; color: #716156; font-size: .72rem; line-height: 1.8; direction: rtl; text-align: right; }
+.home-service-card em { min-height: 40px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; color: #875c35; font-family: var(--font-ui-en); font-size: .62rem; font-style: normal; }
+
+/* Brand note */
+.home-brand-note { border-top: 1px solid var(--home-line); background: #f8f2e9; }
+.home-brand-note__inner { min-height: 154px; display: grid; grid-template-columns: 220px minmax(0,1fr) auto; align-items: center; gap: 34px; }
+.home-brand-note__inner > div { display: flex; flex-direction: column; direction: ltr; }
+.home-brand-note__inner > div span { font-family: var(--font-brand-en); font-size: 2.5rem; font-weight: 600; line-height: .9; }
+.home-brand-note__inner > div strong { margin-top: 6px; color: #8c7969; font-family: var(--font-ui-en); font-size: .56rem; font-weight: 500; }
+.home-brand-note__inner p { max-width: 680px; color: #75675d; font-size: .73rem; line-height: 1.9; }
+.home-brand-note__inner > a { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; color: #865a35; font-family: var(--font-ui-en); font-size: .66rem; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .home-explore__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .home-product-card { flex-basis: calc((100% - 24px) / 3); }
+  .home-occasion-card { flex-basis: 170px; }
+  .home-brand-note__inner { grid-template-columns: 180px minmax(0,1fr); padding: 26px 0; }
+  .home-brand-note__inner > a { grid-column: 2; }
 }
 
-.home-occasion-card__body strong {
-  display: block;
-  margin: 0 0 6px;
-  color: #332a25;
-  font-family: var(--font-fa);
-  font-size: 1.28rem;
-  font-weight: 600;
-  line-height: 1.2;
+@media (max-width: 760px) {
+  :root { --home-section-space: 50px; --home-radius: 11px; }
+  .home-container { width: calc(100% - 32px); }
+  .home-section { padding-top: var(--home-section-space); }
+  .home-section__head { margin-bottom: 16px; }
+  .home-section__head--row { align-items: end; gap: 12px; }
+  .home-section__head h2 { font-size: 2rem; }
+  .home-section__head p { margin-top: 5px; font-size: .68rem; line-height: 1.75; }
+  .home-section__head > div > span { font-size: .52rem; }
+  .home-text-link { min-width: 54px; justify-content: flex-end; font-size: .58rem; }
+
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides {
+    height: clamp(420px, 58svh, 610px) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+  body.page-home .site-main .home-hero .hero-slide img { object-position: center 50% !important; }
+  .home-hero__veil { background: linear-gradient(0deg, rgba(31,23,18,.54) 0%, rgba(31,23,18,.2) 54%, rgba(31,23,18,.05) 80%); }
+  .page-home .hero-slide__content--cms {
+    width: calc(100% - 36px);
+    bottom: 34px !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+  .page-home .hero-slide__kicker { font-size: .5rem; margin-bottom: 7px; }
+  .page-home .hero-slide__title { max-width: 94%; font-size: clamp(2.7rem, 13vw, 4.15rem); line-height: .9; }
+  .page-home .hero-slide__description { max-width: 88%; margin-top: 10px; font-size: .7rem; line-height: 1.75; }
+  .page-home .hero-slide__actions { margin-top: 14px; }
+  .page-home .home-button { min-height: 42px; padding: 0 18px; font-size: .6rem; }
+  .page-home .hero-slider__nav { display: none; }
+  .page-home .hero-slider__dots { bottom: 12px; }
+
+  .page-home .zad-stories__container { width: calc(100% - 24px); padding: 14px 0 11px; }
+  .page-home .zad-stories__track { gap: 11px; }
+  .page-home .zad-stories__item { flex-basis: 67px; }
+  .page-home .zad-story-trigger { min-height: 88px; }
+  .page-home .zad-story-trigger__ring { width: 62px; height: 62px; }
+  .page-home .zad-story-trigger__title { font-size: .56rem; }
+
+  .home-explore { padding-top: 38px; }
+  .home-explore .home-section__head p { display: none; }
+  .home-explore__grid { gap: 8px; }
+  .home-explore-card { grid-template-columns: minmax(0,1fr) 28px; }
+  .home-explore-card img { aspect-ratio: 1.45 / 1; }
+  .home-explore-card span { min-height: 42px; padding-left: 9px; font-size: 1.02rem; }
+  .home-explore-card i { font-size: .58rem; }
+
+  .home-sameday__rail,
+  .home-occasions__rail { width: calc(100vw - 16px); margin-left: 0; gap: 9px; padding-right: 16px; }
+  .home-product-card { flex-basis: 58vw; max-width: 235px; }
+  .home-product-card__body { min-height: 58px; padding: 9px 10px; }
+  .home-product-card__body strong { font-size: .68rem; }
+  .home-product-card__body span { font-size: .54rem; }
+  .home-product-card__badge { top: 7px; right: 7px; min-height: 22px; font-size: .52rem; }
+
+  .home-occasion-card { flex-basis: 39vw; min-width: 138px; }
+  .home-occasion-card img { aspect-ratio: 1.35 / 1; }
+  .home-occasion-card span { min-height: 34px; font-size: .53rem; }
+
+  .home-wedding__card { min-height: 330px; }
+  .home-wedding__card > img { object-position: center 42%; }
+  .home-wedding__veil { background: linear-gradient(0deg, rgba(35,24,17,.78), rgba(35,24,17,.2) 70%, rgba(35,24,17,.02)); }
+  .home-wedding__content { width: 100%; min-height: 330px; padding: 24px 20px; justify-content: flex-end; }
+  .home-wedding__content h2 { font-size: 2.7rem; }
+  .home-wedding__content p { max-width: 92%; margin-top: 10px; font-size: .67rem; }
+  .home-wedding__content .home-button { margin-top: 12px; }
+
+  .home-service-cards { padding-bottom: 48px; }
+  .home-service-cards__grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .home-service-card { min-height: 225px; }
+  .home-service-card__veil { background: linear-gradient(0deg, rgba(250,244,236,.94), rgba(250,244,236,.52) 70%, rgba(250,244,236,.12)); }
+  .home-service-card > div:last-child { width: 100%; min-height: 225px; padding: 14px; justify-content: flex-end; }
+  .home-service-card > div > span { font-size: .45rem; margin-bottom: 4px; }
+  .home-service-card h2 { font-size: 1.45rem; }
+  .home-service-card p { display: none; }
+  .home-service-card em { min-height: 32px; margin-top: 5px; font-size: .5rem; }
+
+  .home-brand-note__inner { min-height: 0; padding: 26px 0; display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .home-brand-note__inner > div span { font-size: 2.25rem; }
+  .home-brand-note__inner p { font-size: .68rem; line-height: 1.8; }
+  .home-brand-note__inner > a { grid-column: auto; min-height: 40px; }
 }
 
-.home-occasion-card__body span {
-  display: block;
-  color: #a77945;
-  font-family: var(--font-ui-en);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+@media (max-width: 390px) {
+  .home-container { width: calc(100% - 28px); }
+  .home-section { padding-top: 46px; }
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides { height: clamp(410px, 57svh, 570px) !important; }
+  body.page-home .site-main .home-hero .hero-slide img { min-height: 0 !important; }
+  .home-product-card { flex-basis: 60vw; }
+  .home-service-card h2 { font-size: 1.3rem; }
 }
 
-.home-occasion-card__body div::after {
-  content: "";
-  display: block;
-  width: 34px;
-  height: 1px;
-  margin-top: 9px;
-  background: rgba(185, 138, 87, 0.72);
+@media (prefers-reduced-motion: reduce) {
+  .page-home *, .page-home *::before, .page-home *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
 
-.home-occasion-card__body i,
-.home-occasion-card__arrow {
-  color: #a77945;
-  font-size: 1.35rem;
-  font-style: normal;
-  line-height: 1;
+/* ZAD Home v2 visual correction — compact mobile-first pass */
+
+/* Keep the editorial rhythm compact and predictable regardless of source-image ratio. */
+.page-home .home-section {
+  padding-top: clamp(42px, 4.5vw, 64px);
 }
 
-.home-occasions-more {
-  margin-top: 20px;
-  text-align: center;
+.page-home .home-explore {
+  padding-top: 30px;
 }
 
-.home-occasions-more a {
-  display: inline-flex;
-  align-items: center;
+.page-home .home-section__head,
+.page-home .home-section__head--row {
+  direction: ltr;
+  text-align: left;
+}
+
+.page-home .home-section__head > div {
+  direction: ltr;
+  text-align: left;
+}
+
+.page-home .home-section__head p {
+  direction: rtl;
+  text-align: left;
+}
+
+/* Explore ZAD: the mock uses compact landscape tiles, never tall portrait posters. */
+.page-home .home-explore__grid {
+  direction: ltr;
+  gap: 12px;
+}
+
+.page-home .home-explore-card {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+
+.page-home .home-explore-card img {
+  width: 100%;
+  height: 178px !important;
+  min-height: 0 !important;
+  max-height: 178px !important;
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+}
+
+.page-home .home-explore-card span {
+  min-height: 46px;
+}
+
+/* Same-day: four compact cards on desktop; about 1.6 cards visible on phones. */
+.page-home .home-product-card {
+  flex: 0 0 calc((100% - 36px) / 4);
+  max-width: none;
+}
+
+.page-home .home-product-card__media img,
+.page-home .home-product-card--empty img {
+  width: 100%;
+  height: 280px !important;
+  min-height: 0 !important;
+  max-height: 280px !important;
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+}
+
+/* Occasions are discovery chips/cards, not another product-poster row. */
+.page-home .home-occasion-card {
+  flex: 0 0 calc((100% - 60px) / 6);
+  min-width: 138px;
+}
+
+.page-home .home-occasion-card img {
+  width: 100%;
+  height: 142px !important;
+  min-height: 0 !important;
+  max-height: 142px !important;
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+}
+
+/* A single published story should still look intentional. */
+.page-home .zad-stories__track:has(.zad-stories__item:only-child) {
   justify-content: center;
-  gap: 14px;
-  min-width: 178px;
-  min-height: 44px;
-  padding: 0 22px;
-  border-radius: 999px;
-  background: #352a23;
-  color: #f8ede0;
-  font-family: var(--font-fa);
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-decoration: none;
-  box-shadow: 0 14px 30px rgba(45, 34, 27, 0.14);
 }
 
-.home-occasions-more a:hover {
-  transform: translateY(-3px);
-  background: #4a3a30;
+.page-home .home-wedding__card,
+.page-home .home-wedding__content {
+  min-height: 360px;
 }
 
-.home-occasions-more a span {
-  color: #c99b63;
-  font-size: 1rem;
+.page-home .home-service-card,
+.page-home .home-service-card > div:last-child {
+  min-height: 220px;
 }
 
-/* =========================
-   Home responsive
-   ========================= */
-
-@media (max-width: 1180px) {
-  .home-sameday-row {
-    grid-auto-columns: calc((100% - 32px) / 3);
-  }
-}
-
-@media (max-width: 1100px) {
-  .home-abroad {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
-    gap: 54px;
-  }
-
-  .home-abroad__media img,
-  .home-experience__media img {
-    height: 420px;
-  }
-
-  .home-abroad__content h2 {
-    font-size: clamp(2.6rem, 4.8vw, 3.7rem);
-  }
-
-  .home-experience {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
-    gap: 54px;
-  }
-
-  .home-experience__content h2 {
-    font-size: clamp(2rem, 4.2vw, 2.75rem);
+@media (min-width: 761px) {
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides {
+    height: clamp(500px, 60svh, 680px) !important;
   }
 }
 
 @media (max-width: 900px) {
-  .home-sameday-section {
-    padding: 52px 0 58px;
+  .page-home .home-explore-card img {
+    height: 154px !important;
+    max-height: 154px !important;
   }
 
-  .home-sameday-head {
-    margin-bottom: 30px;
-  }
-
-  .home-sameday-head > i {
-    font-size: 28px;
-  }
-
-  .home-sameday-head h2 {
-    font-size: clamp(1.9rem, 8vw, 3rem);
-  }
-
-  .home-sameday-head p {
-    font-size: 0.9rem;
-  }
-
-  .home-sameday-row {
-    grid-auto-columns: 44%;
-    gap: 14px;
-    padding-bottom: 20px;
-  }
-
-  .home-sameday-card__body {
-    min-height: 96px;
-    padding: 13px 14px 15px;
-  }
-
-  .home-sameday-benefits {
-    grid-template-columns: 1fr 1fr;
-    margin-top: 26px;
-  }
-
-  .home-sameday-benefits div {
-    padding: 16px 14px;
-  }
-
-  .home-sameday-benefits div + div {
-    border-right: 0;
-  }
-
-  .home-sameday-benefits div:nth-child(even) {
-    border-right: 1px solid rgba(157, 111, 63, 0.14);
-  }
-
-  .home-sameday-benefits div:nth-child(n + 3) {
-    border-top: 1px solid rgba(157, 111, 63, 0.14);
-  }
-
-  .home-experience-section {
-    padding: 50px 0 58px;
-  }
-
-  .home-experience {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
-  .home-experience__media {
-    border-radius: 18px;
-  }
-
-  .home-experience__media img {
-    height: 300px;
-  }
-
-  .home-experience__content {
-    max-width: 100%;
-  }
-
-  .home-experience__kicker {
-    margin-bottom: 16px;
-    font-size: 0.82rem;
-  }
-
-  .home-experience__content h2 {
-    font-size: clamp(1.55rem, 7vw, 2.2rem);
-    line-height: 1.75;
-  }
-
-  .home-experience__content p {
-    max-width: 36ch;
-    font-size: 0.88rem;
-    line-height: 2.15;
-  }
-
-  .home-experience__btn {
-    min-width: 200px;
-    min-height: 48px;
-    margin-top: 26px;
-    font-size: 0.84rem;
-  }
-
-  .home-experience__features {
-    margin-top: 30px;
-  }
-
-  .home-occasions-section .container {
-    width: min(100% - 32px, 760px);
-  }
-
-  .home-occasions-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-}
-
-@media (max-width: 860px) {
-  .home-abroad-premium-section {
-    padding: 48px 0 52px;
-  }
-
-  .home-abroad {
-    grid-template-columns: 1fr;
-    gap: 34px;
-  }
-
-  .home-abroad__media {
-    border-radius: 18px;
-  }
-
-  .home-abroad__media img {
-    height: 300px;
-  }
-
-  .home-abroad__content {
-    max-width: 560px;
-  }
-
-  .home-abroad__kicker {
-    margin-bottom: 16px;
-    font-size: 0.72rem;
-    letter-spacing: 0.18em;
-  }
-
-  .home-abroad__content h2 {
-    font-size: clamp(2.2rem, 9vw, 3.2rem);
-    line-height: 1.05;
-  }
-
-  .home-abroad__content p {
-    max-width: 38ch;
-    font-size: 0.9rem;
-    line-height: 2;
-  }
-
-  .home-abroad__btn {
-    min-width: 220px;
-    min-height: 46px;
-    margin-top: 26px;
-    font-size: 0.74rem;
-  }
-
-  .home-abroad__features {
-    margin-top: 30px;
+  .page-home .home-product-card__media img,
+  .page-home .home-product-card--empty img {
+    height: 250px !important;
+    max-height: 250px !important;
   }
 }
 
 @media (max-width: 760px) {
-  .home-trust-strip {
-    padding: 18px 0 16px;
-    overflow: hidden;
+  :root {
+    --home-section-space: 42px;
   }
 
-  .home-trust-strip__inner {
-    grid-template-columns: 1fr auto 1fr auto 1fr;
-    gap: 8px;
-    max-width: 100%;
+  body.page-home .site-main .home-hero,
+  body.page-home .site-main .home-hero .hero-slides {
+    height: clamp(380px, 54svh, 520px) !important;
+    min-height: 0 !important;
+    max-height: 520px !important;
   }
 
-  .home-trust-divider {
-    height: 44px;
+  .page-home .home-container {
+    width: calc(100% - 28px);
   }
 
-  .home-trust-item__icon {
-    margin-bottom: 8px;
+  .page-home .home-section {
+    padding-top: 42px;
   }
 
-  .home-trust-item__icon img {
-    width: 24px;
-    height: 24px;
+  .page-home .home-explore {
+    padding-top: 26px;
   }
 
-  .home-trust-item h3 {
-    font-size: 0.72rem;
-    line-height: 1.6;
-    white-space: nowrap;
+  .page-home .home-section__head {
+    margin-bottom: 13px;
   }
 
-  .home-trust-item p {
-    font-size: 0.62rem;
-    line-height: 1.6;
-    white-space: nowrap;
+  .page-home .home-section__head h2 {
+    font-size: clamp(1.72rem, 8vw, 2rem);
   }
 
-  .home-categories-section {
-    padding: 34px 0;
-  }
-
-  .page-home .container--wide-home {
-    width: 92%;
-    max-width: 92%;
-  }
-
-  .page-home .home-categories {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .page-home .home-category-card {
-    min-height: 0;
-    aspect-ratio: 16 / 9;
-    border-radius: 14px;
-  }
-
-  .page-home .home-category-card img {
-    min-height: 0;
-    height: 100%;
-  }
-
-  .page-home .home-category-card__overlay,
-  .page-home .home-category-card--workshops .home-category-card__overlay {
-    background:
-      linear-gradient(180deg, rgba(246, 231, 211, 0.34), rgba(246, 231, 211, 0.72)),
-      linear-gradient(90deg, rgba(40, 24, 14, 0.16), rgba(40, 24, 14, 0.04));
-  }
-
-  .page-home .home-category-card__content,
-  .page-home .home-category-card--flowers .home-category-card__content,
-  .page-home .home-category-card--workshops .home-category-card__content {
-    inset: 0;
-    width: 68%;
-    margin: auto;
-    padding: 22px;
-  }
-
-  .page-home .home-category-card__icon {
-    margin-bottom: 8px;
-    font-size: 1rem;
-  }
-
-  .page-home .home-category-card__content h2 {
-    font-size: clamp(1.55rem, 7vw, 2.25rem);
-  }
-
-  .page-home .home-category-card__content span {
-    margin-top: 4px;
-    font-size: 0.58rem;
-    letter-spacing: 0.24em;
-  }
-
-  .page-home .home-category-card__line {
-    width: 42px;
-    margin: 12px auto 10px;
-  }
-
-  .page-home .home-category-card__content p {
-    font-size: 0.78rem;
-    line-height: 1.85;
-  }
-
-  .page-home .home-category-card__content em {
-    min-width: 144px;
-    min-height: 34px;
-    margin-top: 16px;
-    padding: 0 16px;
-    font-size: 0.72rem;
-  }
-}
-
-@media (max-width: 560px) {
-  .home-sameday-section {
-    padding: 44px 0 48px;
-  }
-
-  .home-sameday-row {
-    grid-auto-columns: 72%;
-  }
-
-  .home-sameday-card__body strong {
-    font-size: 0.96rem;
-  }
-
-  .home-sameday-benefits {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 20px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    margin-top: 18px;
-    padding: 10px 8px;
-    border-top: 1px solid rgba(157, 111, 63, 0.12);
-    border-bottom: 1px solid rgba(157, 111, 63, 0.12);
-    white-space: nowrap;
-    scrollbar-width: none;
-  }
-
-  .home-sameday-benefits::-webkit-scrollbar {
-    display: none;
-  }
-
-  .home-sameday-benefits div {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0;
-    border: 0 !important;
-    text-align: right;
-  }
-
-  .home-sameday-benefits i {
-    margin: 0;
-    font-size: 18px;
-  }
-
-  .home-sameday-benefits strong {
-    font-size: 0.78rem;
-    font-weight: 600;
-  }
-
-  .home-sameday-benefits span {
-    display: none;
-  }
-
-  .home-sameday-more a {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .home-abroad-premium-section .container,
-  .home-experience-section .container {
-    width: 92%;
-  }
-
-  .home-abroad__media img,
-  .home-experience__media img {
-    height: 245px;
-  }
-
-  .home-abroad__content h2 {
-    font-size: 2rem;
-    line-height: 1.1;
-  }
-
-  .home-abroad__features {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 20px;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-  }
-
-  .home-abroad__features::-webkit-scrollbar {
-    display: none;
-  }
-
-  .home-abroad__features > div {
-    flex: none;
-    min-height: auto;
-    display: inline-flex;
-    flex-direction: row;
+  .page-home .home-explore__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .home-abroad__features > div:not(:last-child)::after {
-    display: none;
+  .page-home .home-explore-card {
+    grid-template-columns: minmax(0, 1fr) 28px;
   }
 
-  .home-abroad__icon {
-    font-size: 1.25rem;
+  .page-home .home-explore-card img {
+    height: 122px !important;
+    max-height: 122px !important;
   }
 
-  .home-experience__features {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-    width: 100%;
+  .page-home .home-explore-card span {
+    min-height: 38px;
+    padding-left: 8px;
+    font-size: .92rem;
   }
 
-  .home-experience__features > div {
-    min-height: 58px;
-    gap: 7px;
+  .page-home .home-sameday__rail,
+  .page-home .home-occasions__rail {
+    width: calc(100vw - 14px);
+    gap: 9px;
+    padding-right: 14px;
+    scroll-padding-inline: 14px;
   }
 
-  .home-experience__features > div:not(:last-child)::after {
-    top: 8px;
-    height: 44px;
+  .page-home .home-product-card {
+    flex: 0 0 62vw !important;
+    width: 62vw !important;
+    min-width: 208px;
+    max-width: 242px;
   }
 
-  .home-experience__icon {
-    font-size: 1.35rem;
+  .page-home .home-product-card__media img,
+  .page-home .home-product-card--empty img {
+    height: 230px !important;
+    max-height: 230px !important;
   }
 
-  .home-experience__features strong {
-    font-size: 0.62rem;
-    white-space: normal;
+  .page-home .home-product-card__body {
+    min-height: 54px;
+    padding: 8px 9px;
   }
 
-  .home-occasions-head span {
-    font-size: 0.72rem;
+  .page-home .home-occasion-card {
+    flex: 0 0 42vw !important;
+    width: 42vw !important;
+    min-width: 142px;
+    max-width: 172px;
   }
 
-  .home-occasions-head p {
-    font-size: 0.88rem;
-  }
-}
-
-@media (max-width: 520px) {
-  .home-occasions-section {
-    padding: 38px 0 44px;
+  .page-home .home-occasion-card img {
+    height: 118px !important;
+    max-height: 118px !important;
   }
 
-  .home-occasions-head {
-    margin-bottom: 24px;
+  .page-home .home-wedding__card,
+  .page-home .home-wedding__content {
+    min-height: 286px;
   }
 
-  .home-occasions-row {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 78%;
-    grid-template-columns: none;
-    justify-content: flex-start;
-    gap: 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 3px 2px 16px;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 2px;
-    overscroll-behavior-inline: contain;
-    touch-action: pan-x pan-y;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+  .page-home .home-wedding__content {
+    padding: 20px 17px;
   }
 
-  .home-occasions-row::-webkit-scrollbar {
-    display: none;
+  .page-home .home-wedding__content h2 {
+    font-size: 2.35rem;
   }
 
-  .home-occasion-card {
-    scroll-snap-align: start;
+  .page-home .home-service-card,
+  .page-home .home-service-card > div:last-child {
+    min-height: 176px;
   }
 
-  .home-occasion-card__body {
-    min-height: 72px;
-    padding: 13px 14px 12px;
+  .page-home .home-service-card > div:last-child {
+    padding: 12px;
   }
 
-  .home-occasion-card__body strong {
-    font-size: 1rem;
+  .page-home .home-service-card h2 {
+    font-size: 1.2rem;
   }
 
-  .home-occasion-card__body span {
-    font-size: 0.62rem;
+  .page-home .zad-stories__container {
+    padding-top: 10px;
+    padding-bottom: 8px;
   }
 
-  .home-occasions-more {
-    margin-top: 20px;
+  .page-home .zad-story-trigger {
+    min-height: 82px;
   }
 }
 
-/* Final polish: keep photography crisp and make horizontal collections tactile. */
-.page-home .home-category-card img {
-  filter: saturate(1) contrast(1.01) brightness(0.99);
+@media (max-width: 420px) {
+  .page-home .home-explore-card img {
+    height: 112px !important;
+    max-height: 112px !important;
+  }
+
+  .page-home .home-product-card {
+    flex-basis: 64vw !important;
+    width: 64vw !important;
+    min-width: 200px;
+  }
+
+  .page-home .home-product-card__media img,
+  .page-home .home-product-card--empty img {
+    height: 216px !important;
+    max-height: 216px !important;
+  }
+
+  .page-home .home-occasion-card {
+    flex-basis: 44vw !important;
+    width: 44vw !important;
+    min-width: 138px;
+  }
 }
 
-.page-home .home-category-card--flowers img {
-  object-position: center 46%;
+/* ZAD Home v2 professional typography + motion */
+
+/* Persian is the content language; English is an editorial accent only. */
+body.page-home,
+.page-home button,
+.page-home a,
+.page-home input { font-family: var(--font-fa); }
+
+.page-home .home-section__head,
+.page-home .home-section__head--row,
+.page-home .home-section__head > div {
+  direction: rtl;
+  text-align: right;
+}
+.page-home .home-section__head--row { align-items: flex-end; }
+.page-home .home-section__head > div > span,
+.page-home .home-wedding__content > span,
+.page-home .home-service-card > div > span,
+.page-home .home-brand-note__inner > div > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #a57245;
+  font-family: var(--font-ui-en);
+  font-size: .57rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: .15em;
+  direction: ltr;
+  text-align: right;
+}
+.page-home .home-section__head h2,
+.page-home .home-wedding__content h2,
+.page-home .home-service-card h2 {
+  color: #332b25;
+  font-family: var(--font-fa);
+  font-size: clamp(1.55rem,2.55vw,2.35rem);
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -.018em;
+}
+.page-home .home-section__head p {
+  max-width: 560px;
+  margin-top: 5px;
+  color: #796b61;
+  font-family: var(--font-fa);
+  font-size: .78rem;
+  line-height: 1.95;
+  direction: rtl;
+  text-align: right;
+}
+.page-home .home-text-link {
+  color: #8a6039;
+  font-family: var(--font-fa);
+  font-size: .66rem;
+  font-weight: 500;
+}
+.page-home .home-text-link i,
+.page-home .home-button i,
+.page-home .home-service-card em i,
+.page-home .home-explore-card > i,
+.page-home .home-occasion-card > i { transition: transform 180ms ease; }
+.page-home .home-text-link:hover i,
+.page-home .home-button:hover i,
+.page-home .home-service-card:hover em i,
+.page-home .home-explore-card:hover > i,
+.page-home .home-occasion-card:hover > i { transform: translateX(-3px); }
+
+/* Hero: Persian hierarchy first; small English signature. */
+.page-home .hero-slide__content--cms {
+  direction: rtl;
+  text-align: right !important;
+  align-items: flex-start !important;
+}
+.page-home .hero-slide__kicker {
+  font-family: var(--font-ui-en);
+  font-size: .58rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  direction: ltr;
+  text-align: right;
+}
+.page-home .hero-slide__title {
+  max-width: 720px;
+  font-family: var(--font-fa);
+  font-size: clamp(2.5rem,4.6vw,4.7rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -.025em;
+  text-shadow: 0 6px 26px rgba(0,0,0,.15);
+}
+.page-home .hero-slide__description {
+  max-width: 520px;
+  margin-top: 8px;
+  font-family: var(--font-fa);
+  font-size: .82rem;
+  line-height: 2;
+  direction: rtl;
+  text-align: right;
+}
+.page-home .home-button {
+  font-family: var(--font-fa);
+  font-size: .67rem;
+  font-weight: 500;
+}
+.page-home .hero-slide.is-active img {
+  transform: scale(1.012);
+  transition: transform 7s cubic-bezier(.16,1,.3,1);
 }
 
-.page-home .home-category-card--workshops img {
-  object-position: center 43%;
+/* Explore: clear bilingual card labels without floating text. */
+.page-home .home-explore-card {
+  box-shadow: 0 8px 24px rgba(64,45,31,.025);
+  transition: transform 220ms cubic-bezier(.22,1,.36,1), border-color 220ms ease, box-shadow 220ms ease;
+}
+.page-home .home-explore-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(143,98,59,.2);
+  box-shadow: 0 14px 34px rgba(64,45,31,.06);
+}
+.page-home .home-explore-card .home-explore-card__label {
+  min-width: 0;
+  min-height: 46px;
+  padding: 7px 12px 7px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  direction: rtl;
+  text-align: right;
+}
+.page-home .home-explore-card .home-explore-card__label strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: #40352e;
+  font-family: var(--font-fa);
+  font-size: .78rem;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.page-home .home-explore-card .home-explore-card__label small {
+  margin-top: 1px;
+  color: rgba(64,53,46,.46);
+  font-family: var(--font-brand-en);
+  font-size: .83rem;
+  line-height: 1;
+  direction: ltr;
 }
 
-.home-sameday-row,
-.home-occasions-row,
-.home-sameday-benefits,
-.home-abroad__features {
-  overscroll-behavior-inline: contain;
-  -webkit-overflow-scrolling: touch;
+/* Commerce cards */
+.page-home .home-product-card {
+  transition: transform 220ms cubic-bezier(.22,1,.36,1), box-shadow 220ms ease, border-color 220ms ease;
+}
+.page-home .home-product-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(143,98,59,.18);
+  box-shadow: 0 14px 32px rgba(64,45,31,.055);
+}
+.page-home .home-product-card__body { text-align: right; }
+.page-home .home-product-card__body strong {
+  font-family: var(--font-fa);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.7;
+}
+.page-home .home-product-card__body span {
+  font-family: var(--font-fa);
+  font-size: .58rem;
+  direction: rtl;
+  text-align: right;
 }
 
-.home-sameday-row,
-.home-occasions-row {
-  touch-action: pan-x pan-y;
+/* Occasion labels */
+.page-home .home-occasion-card {
+  grid-template-columns: minmax(0,1fr) 28px;
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+.page-home .home-occasion-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(143,98,59,.18);
+  box-shadow: 0 10px 24px rgba(64,45,31,.04);
+}
+.page-home .home-occasion-card__label {
+  min-width: 0;
+  min-height: 42px;
+  padding: 6px 9px 6px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  direction: rtl;
+  text-align: right;
+}
+.page-home .home-occasion-card__label strong {
+  overflow: hidden;
+  color: #43372f;
+  font-family: var(--font-fa);
+  font-size: .62rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.page-home .home-occasion-card__label small {
+  margin-top: 1px;
+  color: rgba(67,55,47,.43);
+  font-family: var(--font-ui-en);
+  font-size: .44rem;
+  line-height: 1.2;
+  direction: ltr;
 }
 
-.home-sameday-card__badge--stock {
-  background: rgba(55, 42, 34, 0.82);
+/* Wedding + services */
+.page-home .home-wedding__content {
+  direction: rtl;
+  text-align: right;
+  align-items: flex-start;
+}
+.page-home .home-wedding__content > span { text-align: right; }
+.page-home .home-wedding__content h2 {
   color: #fff;
+  font-size: clamp(1.9rem,3.4vw,3.35rem);
+  line-height: 1.55;
+}
+.page-home .home-wedding__editorial {
+  display: block;
+  margin-top: -2px;
+  color: rgba(255,255,255,.78);
+  font-family: var(--font-brand-en);
+  font-size: clamp(1.15rem,1.9vw,1.7rem);
+  font-weight: 400;
+  line-height: 1.05;
+  direction: ltr;
+}
+.page-home .home-wedding__content p {
+  margin-top: 12px;
+  font-family: var(--font-fa);
+  font-size: .76rem;
+  line-height: 1.95;
+}
+.page-home .home-service-card {
+  transition: transform 220ms cubic-bezier(.22,1,.36,1), box-shadow 220ms ease;
+}
+.page-home .home-service-card:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(64,45,31,.065); }
+.page-home .home-service-card > div:last-child { direction: rtl; text-align: right; align-items: flex-start; }
+.page-home .home-service-card h2 { font-size: clamp(1.35rem,2.3vw,2.05rem); line-height: 1.55; }
+.page-home .home-service-card p { font-family: var(--font-fa); font-size: .7rem; line-height: 1.9; }
+.page-home .home-service-card em { font-family: var(--font-fa); font-size: .61rem; font-weight: 500; }
+
+/* Brand note becomes a quiet editorial close, not a second logo block. */
+.page-home .home-brand-note__inner {
+  grid-template-columns: minmax(240px,.75fr) minmax(0,1.4fr) auto;
+  direction: rtl;
+}
+.page-home .home-brand-note__inner > div { direction: rtl; text-align: right; }
+.page-home .home-brand-note__inner > div > span { margin: 0 0 6px; }
+.page-home .home-brand-note__inner > div > strong {
+  color: #40352e;
+  font-family: var(--font-fa);
+  font-size: .9rem;
+  font-weight: 500;
+  line-height: 1.8;
+}
+.page-home .home-brand-note__inner p { font-family: var(--font-fa); font-size: .72rem; line-height: 1.95; }
+.page-home .home-brand-note__inner > a { font-family: var(--font-fa); font-size: .65rem; }
+
+/* Motion: progressive enhancement only. */
+html.js-home-motion .page-home [data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 520ms ease, transform 620ms cubic-bezier(.22,1,.36,1);
+}
+html.js-home-motion .page-home [data-reveal].is-revealed { opacity: 1; transform: translateY(0); }
+html.js-home-motion .page-home [data-reveal-group] > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 430ms ease var(--reveal-delay,0ms), transform 520ms cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms);
+}
+html.js-home-motion .page-home [data-reveal].is-revealed [data-reveal-group] > * { opacity: 1; transform: translateY(0); }
+
+@media (max-width:760px) {
+  .page-home .home-section__head h2 { font-size: 1.48rem; line-height: 1.65; }
+  .page-home .home-section__head p { max-width: 31ch; margin-top: 3px; font-size: .69rem; line-height: 1.9; }
+  .page-home .home-section__head > div > span { margin-bottom: 4px; font-size: .48rem; letter-spacing: .14em; }
+  .page-home .home-text-link { min-width: auto; font-size: .57rem; }
+
+  .page-home .hero-slide__content--cms { direction: rtl; text-align: right !important; }
+  .page-home .hero-slide__kicker { font-size: .47rem; }
+  .page-home .hero-slide__title { max-width: 92%; font-size: clamp(1.9rem,9vw,2.55rem); line-height: 1.55; }
+  .page-home .hero-slide__description { max-width: 86%; margin-top: 4px; font-size: .67rem; line-height: 1.9; }
+  .page-home .home-button { min-height: 41px; padding-inline: 16px; font-size: .59rem; }
+
+  .page-home .home-explore-card .home-explore-card__label { min-height: 40px; padding: 5px 8px 5px 0; }
+  .page-home .home-explore-card .home-explore-card__label strong { font-size: .67rem; }
+  .page-home .home-explore-card .home-explore-card__label small { font-size: .69rem; }
+
+  .page-home .home-product-card__body strong { font-size: .64rem; }
+  .page-home .home-product-card__body span { font-size: .52rem; }
+
+  .page-home .home-occasion-card__label { min-height: 36px; padding: 4px 7px 4px 0; }
+  .page-home .home-occasion-card__label strong { font-size: .55rem; }
+  .page-home .home-occasion-card__label small { font-size: .39rem; }
+
+  .page-home .home-wedding__content h2 { font-size: 1.85rem; line-height: 1.55; }
+  .page-home .home-wedding__editorial { margin-top: -4px; font-size: 1.05rem; }
+  .page-home .home-wedding__content p { margin-top: 8px; font-size: .65rem; }
+  .page-home .home-service-card h2 { font-size: 1.02rem; line-height: 1.65; }
+  .page-home .home-service-card em { font-size: .49rem; }
+
+  .page-home .home-brand-note__inner { grid-template-columns: 1fr; gap: 12px; }
+  .page-home .home-brand-note__inner > div > strong { font-size: .82rem; }
+  .page-home .home-brand-note__inner p { font-size: .68rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-home *,
-  .page-home *::before,
-  .page-home *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+  html.js-home-motion .page-home [data-reveal],
+  html.js-home-motion .page-home [data-reveal-group] > * { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .page-home .hero-slide.is-active img { transform: none !important; transition: none !important; }
+}
+
+/* ZAD MOBILE HERO ASPECT HOTFIX START
+   Phone portrait contract:
+   - Exact 4:3 frame at every phone width.
+   - ~30% taller than the previous compact target at 390px.
+   - 390px viewport => 292.5px hero
+   - 440px viewport => 330px hero
+   Recommended admin mobile artwork: 1600x1200 (or any exact 4:3 export).
+*/
+@media (max-width: 760px) and (orientation: portrait) {
+  body.page-home {
+    --zad-home-mobile-hero-ratio: 4 / 3;
+  }
+
+  body.page-home .site-main .home-hero {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: var(--zad-home-mobile-hero-ratio) !important;
+    margin-top: 0 !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slides,
+  body.page-home .site-main .home-hero .hero-slide,
+  body.page-home .site-main .home-hero .hero-slide picture {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  body.page-home .site-main .home-hero .hero-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
   }
 }
+/* ZAD MOBILE HERO ASPECT HOTFIX END */
 
-/* Scoped Home visual refinements. */
-.page-home .home-category-card__overlay {
-  background:
-    radial-gradient(circle at 50% 48%, rgba(255, 244, 229, 0.34), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.12), rgba(248, 235, 216, 0.48) 48%, rgba(35, 22, 14, 0.05));
-}
+/* ZAD HOME MOBILE HERO 16-9 HOTFIX START
+   Canonical phone-portrait hero geometry.
+   440px viewport -> 247.5px hero
+   390px viewport -> 219.375px hero
+   Recommended mobile admin artwork: 1600x900 (16:9).
+*/
+@media (max-width: 760px) and (orientation: portrait) {
+  body.page-home .site-main .home-hero {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 16 / 9 !important;
+    overflow: hidden !important;
+    margin-top: 0 !important;
+  }
 
-.page-home .home-category-card--workshops .home-category-card__overlay {
-  background:
-    radial-gradient(circle at 72% 48%, rgba(255, 244, 229, 0.44), transparent 34%),
-    linear-gradient(90deg, rgba(43, 28, 18, 0.08), rgba(248, 235, 216, 0.28) 46%, rgba(248, 235, 216, 0.54));
-}
+  body.page-home .site-main .home-hero > .hero-slides {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
 
+  body.page-home .site-main .home-hero .hero-slide,
+  body.page-home .site-main .home-hero .hero-slide.is-active {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
 
-.home-sameday-section {
-  padding-top: 42px;
-}
+  body.page-home .site-main .home-hero .hero-slide picture {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
 
-@media (max-width: 560px) {
-  .home-sameday-row {
-    grid-auto-columns: 72%;
-    gap: 14px;
-    padding-inline: 2px 12px;
+  body.page-home .site-main .home-hero .hero-slide img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center center !important;
   }
 }
+/* ZAD HOME MOBILE HERO 16-9 HOTFIX END */
+
+/* ZAD HOME HERO STICKY COVER START
+   Scroll behavior only:
+   - Navbar / notice bar are untouched.
+   - Hero keeps its current size and artwork behavior.
+   - Hero sticks below the existing sticky navbar.
+   - Following Home content scrolls above it and covers it.
+*/
+body.page-home .site-main {
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+  isolation: isolate;
+}
+
+body.page-home .site-main > .home-hero {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: var(--zad-header-height, 68px) !important;
+  z-index: 0 !important;
+}
+
+/* Every block after the hero belongs to the foreground scrolling layer. */
+body.page-home .site-main > :not(.home-hero) {
+  position: relative;
+  z-index: 2;
+}
+
+/* The first foreground block is opaque, so the cover transition is clean. */
+body.page-home .site-main > .home-hero + * {
+  background-color: var(--home-ivory, #fbf7f0);
+}
+
+@media (max-width: 760px) {
+  body.page-home .site-main > .home-hero {
+    top: var(--zad-mobile-header-height, 40px) !important;
+  }
+}
+/* ZAD HOME HERO STICKY COVER END */
+
+/* ZAD HOME HERO STICKY COVER V2 START
+   Scroll-only behavior.
+   IMPORTANT:
+   - Does NOT define or change Hero height / aspect-ratio / image geometry.
+   - Does NOT touch Navbar or Notice Bar.
+   - Hero stays in normal document flow, then pins below the current sticky navbar.
+   - Following Home sections use a foreground layer and scroll over the pinned Hero.
+*/
+body.page-home .site-main {
+  overflow: visible !important;
+  isolation: isolate !important;
+}
+
+body.page-home .site-main > .home-hero {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: var(--zad-header-height, 68px) !important;
+  z-index: 0 !important;
+}
+
+/* Scrolling content becomes the opaque foreground that covers the Hero. */
+body.page-home .site-main > .home-hero ~ * {
+  position: relative;
+  z-index: 2;
+}
+
+body.page-home .site-main > .home-hero + * {
+  background: var(--home-ivory, #fbf7f0);
+}
+
+/* Keep horizontal safety on the page itself, not on site-main:
+   overflow on a sticky ancestor can disable sticky positioning. */
+body.page-home {
+  overflow-x: clip;
+}
+
+@media (max-width: 760px) {
+  body.page-home .site-main > .home-hero {
+    top: var(--zad-mobile-header-height, 40px) !important;
+  }
+}
+/* ZAD HOME HERO STICKY COVER V2 END */
+
+/* ZAD HOME HERO COVER FIXED V3 START
+   Reliable fixed-layer cover effect.
+   This block DOES NOT set Hero height, aspect-ratio, image crop, navbar or notice styles.
+   JS measures the Hero exactly as it already renders, inserts an equal-height spacer,
+   then fixes the Hero while following Home content scrolls above it.
+*/
+body.page-home.home-hero-cover-enabled .site-main {
+  position: relative !important;
+  overflow: visible !important;
+  isolation: isolate !important;
+}
+
+body.page-home.home-hero-cover-enabled .site-main > .home-hero {
+  position: fixed !important;
+  top: var(--zad-home-fixed-hero-top) !important;
+  right: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: var(--zad-home-fixed-hero-height) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  z-index: 1 !important;
+}
+
+body.page-home.home-hero-cover-enabled .site-main > .home-hero-fixed-spacer {
+  display: block !important;
+  width: 100% !important;
+  height: var(--zad-home-fixed-hero-height) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Everything after the spacer becomes the foreground scrolling layer. */
+body.page-home.home-hero-cover-enabled .site-main > .home-hero-fixed-spacer ~ * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Guarantee an opaque first covering surface. */
+body.page-home.home-hero-cover-enabled .site-main > .home-hero-fixed-spacer + * {
+  background-color: var(--home-ivory, #fbf7f0);
+}
+
+body.page-home {
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-home.home-hero-cover-enabled .site-main > .home-hero {
+    transform: none !important;
+  }
+}
+/* ZAD HOME HERO COVER FIXED V3 END */
+
+/* ZAD HOME BASELINE RESTORE V4 START
+   Restore the approved pre-scroll Home baseline.
+   No Hero sizing/aspect/image changes.
+   No Navbar/Notice source-file changes.
+*/
+@media (max-width: 760px) {
+  body.page-home .site-header {
+    margin-bottom: calc(var(--zad-mobile-header-height, 40px) * -1) !important;
+  }
+
+  body.page-home .site-main {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  body.page-home .site-main > .home-hero {
+    margin-top: 0 !important;
+  }
+}
+/* ZAD HOME BASELINE RESTORE V4 END */
+
+/* ZAD HOME LAYERED HERO SCROLL FINAL START
+   Scroll behavior only.
+   Hero size, aspect-ratio, images, navbar and notice bar are NOT changed.
+*/
+body.page-home .site-main {
+  overflow: visible !important;
+}
+
+body.page-home .home-hero-pin-spacer {
+  display: none;
+  width: 100%;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+body.page-home .home-hero-pin-spacer.is-active {
+  display: block;
+}
+
+body.page-home .home-hero.is-scroll-pinned {
+  position: fixed !important;
+  top: var(--home-pinned-top) !important;
+  left: var(--home-pinned-left) !important;
+  right: auto !important;
+  width: var(--home-pinned-width) !important;
+  height: var(--home-pinned-height) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  z-index: 1 !important;
+}
+
+body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer ~ * {
+  position: relative;
+  z-index: 3;
+}
+
+body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer ~ section {
+  background-color: var(--home-ivory, #fbf7f0);
+}
+
+body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer + .zad-stories {
+  background-color: var(--home-ivory, #fbf7f0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-home .home-hero.is-scroll-pinned {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* ZAD HOME LAYERED HERO SCROLL FINAL END */

@@ -1,0 +1,163 @@
+{% if home_stories %}
+<section class="zad-stories" data-story-root aria-labelledby="zad-stories-title">
+  <div class="zad-stories__container">
+    <div class="zad-stories__heading">
+      <div>
+        <span>THE LATEST AT ZAD</span>
+        <h2 id="zad-stories-title">این روزها در زاد</h2>
+      </div>
+      <p>برای دیدن ورق بزنید</p>
+    </div>
+
+    <div class="zad-stories__track" role="list" aria-label="استوری‌های زاد">
+      {% for story in home_stories %}
+        <div class="zad-stories__item" role="listitem">
+          <button
+            class="zad-story-trigger"
+            type="button"
+            data-story-trigger
+            data-story-index="{{ forloop.counter0 }}"
+            data-story-id="{{ story.id }}"
+            data-story-version="{{ story.version }}"
+            aria-label="مشاهده استوری {{ story.title }}؛ {{ story.clips|length }} کلیپ"
+          >
+            <span class="zad-story-trigger__ring">
+              <img
+                src="{{ story.cover_url }}"
+                alt=""
+                width="184"
+                height="184"
+                loading="lazy"
+                decoding="async"
+              >
+              <span class="zad-story-trigger__play" aria-hidden="true">
+                <i class="bi bi-play-fill"></i>
+              </span>
+            </span>
+            <span class="zad-story-trigger__title">{{ story.title }}</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="zad-story-payload" data-story-payload hidden>
+    {% for story in home_stories %}
+      <section
+        data-story-group
+        data-story-id="{{ story.id }}"
+        data-story-version="{{ story.version }}"
+        data-story-title="{{ story.title }}"
+        data-story-cover="{{ story.cover_url }}"
+      >
+        {% for clip in story.clips %}
+          <div
+            data-story-clip
+            data-clip-id="{{ clip.id }}"
+            data-clip-title="{{ clip.title }}"
+            data-clip-caption="{{ clip.caption }}"
+            data-clip-video="{{ clip.video_url }}"
+            data-clip-poster="{{ clip.poster_url }}"
+            data-clip-duration="{{ clip.duration_ms }}"
+            data-clip-cta-text="{{ clip.cta_text }}"
+            data-clip-cta-url="{{ clip.cta_url }}"
+          ></div>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+
+  <dialog class="zad-story-viewer" data-story-viewer aria-label="نمایش استوری‌های زاد">
+    <div class="zad-story-viewer__shell">
+      <button
+        class="zad-story-viewer__desktop-nav zad-story-viewer__desktop-nav--previous"
+        type="button"
+        data-story-previous-visible
+        aria-label="استوری قبلی"
+      ><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+
+      <article class="zad-story-viewer__stage" data-story-stage>
+        <video
+          class="zad-story-viewer__video"
+          data-story-video
+          playsinline
+          muted
+          preload="metadata"
+          disablepictureinpicture
+          controlslist="nodownload noplaybackrate nofullscreen"
+        ></video>
+
+        <div class="zad-story-viewer__scrim zad-story-viewer__scrim--top" aria-hidden="true"></div>
+        <div class="zad-story-viewer__scrim zad-story-viewer__scrim--bottom" aria-hidden="true"></div>
+
+        <div class="zad-story-viewer__progress" data-story-progress aria-label="پیشرفت کلیپ‌ها"></div>
+
+        <header class="zad-story-viewer__header">
+          <div class="zad-story-viewer__identity">
+            <img data-story-avatar alt="" width="72" height="72">
+            <div>
+              <strong data-story-name></strong>
+              <span data-story-counter></span>
+            </div>
+          </div>
+
+          <div class="zad-story-viewer__controls">
+            <button type="button" data-story-play aria-label="توقف ویدئو">
+              <i class="bi bi-pause-fill" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-story-mute aria-label="فعال‌کردن صدا" aria-pressed="true">
+              <i class="bi bi-volume-mute-fill" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-story-close aria-label="بستن استوری">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+        </header>
+
+        <button
+          class="zad-story-viewer__tap-zone zad-story-viewer__tap-zone--previous"
+          type="button"
+          data-story-previous
+          aria-label="کلیپ قبلی"
+        ></button>
+        <button
+          class="zad-story-viewer__tap-zone zad-story-viewer__tap-zone--next"
+          type="button"
+          data-story-next
+          aria-label="کلیپ بعدی"
+        ></button>
+
+        <div class="zad-story-viewer__loading" data-story-loading role="status">
+          <span aria-hidden="true"></span>
+          <em>در حال آماده‌سازی ویدئو…</em>
+        </div>
+
+        <div class="zad-story-viewer__error" data-story-error hidden>
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+          <p>پخش این کلیپ ممکن نشد.</p>
+          <button type="button" data-story-retry>تلاش دوباره</button>
+        </div>
+
+        <div class="zad-story-viewer__content" data-story-content>
+          <strong data-story-clip-title></strong>
+          <p data-story-caption></p>
+          <a data-story-cta href="#" hidden>
+            <span></span>
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          </a>
+        </div>
+
+        <p class="zad-story-viewer__hint" data-story-hint>برای مکث، نگه دارید</p>
+        <span class="sr-only" data-story-announcer aria-live="polite"></span>
+      </article>
+
+      <button
+        class="zad-story-viewer__desktop-nav zad-story-viewer__desktop-nav--next"
+        type="button"
+        data-story-next-visible
+        aria-label="استوری بعدی"
+      ><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    </div>
+  </dialog>
+</section>
+{% endif %}

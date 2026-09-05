@@ -71,16 +71,16 @@ def _get_active_home_hero_slides():
 
     return [
         {
-            "title": "Flowers, Bakery & Gifts in Mashhad",
-            "kicker": "zad Concept Store",
-            "description": "Premium flowers, bakery, and gifts with fast coordination in Mashhad.",
+            "title": "Flower Studio",
+            "kicker": "ZAD CONCEPT STORE",
+            "description": "گل‌های تازه، طراحی هنرمندانه و هدیه‌هایی برای لحظه‌های ماندگار شما.",
             "image_url": settings.STATIC_URL + "main/img/hero-1.webp",
             "mobile_image_url": settings.STATIC_URL + "main/img/hero-mobile-1.webp",
-            "primary_button_text": "Call Now",
-            "primary_button_url": "",
-            "secondary_button_text": "تلگرام",
+            "primary_button_text": "مشاهده مجموعه",
+            "primary_button_url": "/flowers/",
+            "secondary_button_text": "",
             "secondary_button_url": "",
-            "show_content": False,
+            "show_content": True,
             "style_class": "",
             "content_position": "bottom-right",
             "mobile_content_position": "bottom-center",

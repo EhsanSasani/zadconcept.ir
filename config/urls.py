@@ -6,11 +6,14 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 
 from main.sitemaps import sitemaps
+from main.views.media_views import private_story_source
 
 handler404 = "main.views.custom_404"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("media/stories/source/", private_story_source),
+    path("media/stories/source/<path:filename>", private_story_source),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
     path("", include("main.urls")),
 ]

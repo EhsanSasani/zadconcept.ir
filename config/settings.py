@@ -140,6 +140,25 @@ else:
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "media"))
 
+# Homepage story uploads are processed outside Gunicorn by a single FFmpeg
+# worker. Originals never become public story sources and are removed after a
+# validated optimized output unless explicitly retained for operations.
+STORY_VIDEO_MAX_UPLOAD_BYTES = int(
+    os.getenv("STORY_VIDEO_MAX_UPLOAD_BYTES", "100000000")
+)
+STORY_VIDEO_MAX_DURATION_SECONDS = float(
+    os.getenv("STORY_VIDEO_MAX_DURATION_SECONDS", "45")
+)
+STORY_VIDEO_PROCESS_TIMEOUT_SECONDS = int(
+    os.getenv("STORY_VIDEO_PROCESS_TIMEOUT_SECONDS", "600")
+)
+STORY_VIDEO_KEEP_ORIGINALS = env_bool("STORY_VIDEO_KEEP_ORIGINALS", False)
+STORY_VIDEO_CRF = int(os.getenv("STORY_VIDEO_CRF", "24"))
+STORY_VIDEO_FFMPEG_PRESET = os.getenv("STORY_VIDEO_FFMPEG_PRESET", "medium")
+STORY_VIDEO_FFMPEG_THREADS = int(os.getenv("STORY_VIDEO_FFMPEG_THREADS", "1"))
+STORY_FFMPEG_BINARY = os.getenv("STORY_FFMPEG_BINARY", "ffmpeg")
+STORY_FFPROBE_BINARY = os.getenv("STORY_FFPROBE_BINARY", "ffprobe")
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
@@ -337,6 +356,11 @@ LOGGING = {
     "loggers": {
         "main.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
         "main.indexnow": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "main.story_video": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
@@ -370,6 +394,8 @@ JAZZMIN_SETTINGS = {
         "main.SameDayFlower",
         "main.WeddingProduct",
         "main.WeddingPageContent",
+        "main.Story",
+        "main.StoryClip",
         "main.HomeHeroSlide",
         "main.SiteHero",
         "main.HeroFont",
@@ -390,6 +416,8 @@ JAZZMIN_SETTINGS = {
         "main.SameDayFlower": "fas fa-bolt",
         "main.WeddingProduct": "fas fa-ring",
         "main.WeddingPageContent": "fas fa-heart",
+        "main.Story": "fas fa-circle-play",
+        "main.StoryClip": "fas fa-film",
         "main.HomeHeroSlide": "fas fa-images",
         "main.SiteHero": "fas fa-image",
         "main.HeroFont": "fas fa-font",

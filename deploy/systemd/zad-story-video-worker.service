@@ -1,0 +1,29 @@
+[Unit]
+Description=Optimize ZAD homepage story videos
+After=network-online.target zad.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cloud-admin
+Group=www-data
+WorkingDirectory=/var/www/zad/app
+EnvironmentFile=/var/www/zad/app/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/var/www/zad/app/.venv/bin/python manage.py process_story_videos --poll-interval 3
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUQuota=100%
+MemoryMax=2G
+TasksMax=64
+UMask=0007
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
