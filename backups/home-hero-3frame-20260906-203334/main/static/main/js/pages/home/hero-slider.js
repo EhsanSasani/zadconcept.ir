@@ -54,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function canAutoPlay() {
     return (
+      mobileViewport.matches &&
       !reducedMotion.matches &&
       !document.hidden &&
       heroIsVisible

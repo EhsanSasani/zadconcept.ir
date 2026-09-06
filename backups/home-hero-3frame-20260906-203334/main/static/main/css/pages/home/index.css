@@ -1253,47 +1253,53 @@ body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer + .zad-stories 
 /* ZAD HOME LAYERED HERO SCROLL FINAL END */
 
 /* ZAD MOBILE HERO FRAME SEQUENCE START
-   One Home Hero slide, three production frames.
-   The Hero's existing geometry stays untouched.
+   UI prototype only: three static frames inside the first mobile Hero slide.
+   Hero geometry and global navigation remain untouched.
 */
-.page-home .hero-slide.has-mobile-frame-sequence .home-hero-sequence {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: block;
-  overflow: hidden;
-  pointer-events: none;
-  transform: scale(1);
-  transition: transform 6s cubic-bezier(.16, 1, .3, 1);
+.page-home .home-hero-sequence {
+  display: none;
 }
 
-.page-home .hero-slide.has-mobile-frame-sequence.is-active .home-hero-sequence {
-  transform: scale(1.012);
-}
+@media (max-width: 760px) {
+  .page-home .hero-slide.has-mobile-frame-sequence .home-hero-sequence {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+    transform: scale(1);
+    transition: transform 6s cubic-bezier(.16, 1, .3, 1);
+  }
 
-.page-home .home-hero-sequence__frame {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: block;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  opacity: 0;
-  transition: opacity 360ms cubic-bezier(.22, 1, .36, 1);
-}
+  .page-home .hero-slide.has-mobile-frame-sequence.is-active .home-hero-sequence {
+    transform: scale(1.012);
+  }
 
-.page-home .home-hero-sequence__frame.is-active {
-  z-index: 1;
-  opacity: 1;
-}
+  .page-home .home-hero-sequence__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0;
+    transition: opacity 360ms cubic-bezier(.22, 1, .36, 1);
+  }
 
-.page-home .home-hero-sequence__frame--making {
-  background-image: url("../../../img/home/hero-sequence/worktable-02.webp");
-}
+  .page-home .home-hero-sequence__frame.is-active {
+    z-index: 1;
+    opacity: 1;
+  }
 
-.page-home .home-hero-sequence__frame--finished {
-  background-image: url("../../../img/home/hero-sequence/worktable-03.webp");
+  .page-home .home-hero-sequence__frame--making {
+    background-image: url("../../../img/home/hero-sequence/worktable-02.webp");
+  }
+
+  .page-home .home-hero-sequence__frame--finished {
+    background-image: url("../../../img/home/hero-sequence/worktable-03.webp");
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

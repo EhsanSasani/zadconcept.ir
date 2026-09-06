@@ -11,20 +11,47 @@
 {% block content %}
 <section class="global-hero home-hero" aria-label="استودیو گل زاد">
   <div class="hero-slides" id="heroSlides">
-    <article class="hero-slide hero-slide--1 has-mobile-frame-sequence is-active" aria-hidden="false">
-      <picture class="hero-slide__primary-media">
-        <img
-          src="{% static 'main/img/home/hero-sequence/worktable-01.webp' %}"
-          alt="ZAD Flower Studio"
-          width="1448"
-          height="1086"
-          fetchpriority="high"
-          decoding="async"
-        >
-      </picture>
-      {% include "main/components/home_hero_frame_sequence.html" %}
-    </article>
+    {% for slide in home_hero_slides %}
+      <article class="hero-slide hero-slide--{{ forloop.counter }} hero-configurable {{ slide.style_class }} hero-position--{{ slide.content_position|default:'bottom-right' }} hero-mobile-position--{{ slide.mobile_content_position|default:'bottom-center' }}{% if forloop.first %} has-mobile-frame-sequence is-active{% endif %}" aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
+        <picture class="hero-slide__primary-media"{% if slide.mobile_image_url %} data-admin-mobile-image="{{ slide.mobile_image_url }}"{% endif %}>
+          {% if forloop.first %}
+            <source media="(max-width:760px)" srcset="{% static 'main/img/home/hero-sequence/worktable-01.webp' %}">
+          {% elif slide.mobile_image_url %}
+            <source media="(max-width:760px)" srcset="{{ slide.mobile_image_url }}">
+          {% endif %}
+          <img src="{{ slide.image_url }}" alt="{{ slide.title|default:'ZAD Flower Studio' }}" width="1920" height="1080"{% if forloop.first %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
+        </picture>
+        {% if forloop.first %}{% include "main/components/home_hero_frame_sequence.html" %}{% endif %}
+        {% if slide.show_content %}
+          <div class="home-hero__veil" aria-hidden="true"></div>
+
+
+          <div class="hero-slide__content hero-slide__content--cms container" data-hero-content>
+            {% if slide.kicker %}<span class="hero-slide__kicker" data-hero-kicker>{{ slide.kicker }}</span>{% endif %}
+            {% if slide.title %}{% if forloop.first %}<h1 class="hero-slide__title" data-hero-title>{{ slide.title }}</h1>{% else %}<h2 class="hero-slide__title" data-hero-title>{{ slide.title }}</h2>{% endif %}{% endif %}
+            {% if slide.description %}<p class="hero-slide__description" data-hero-text>{{ slide.description }}</p>{% endif %}
+            {% if slide.primary_button_text and slide.primary_button_url or slide.secondary_button_text and slide.secondary_button_url %}
+              <div class="hero-slide__actions">
+                {% if slide.primary_button_text and slide.primary_button_url %}<a href="{{ slide.primary_button_url }}" class="home-button home-button--gold">{{ slide.primary_button_text }} <i class="bi bi-arrow-left" aria-hidden="true"></i></a>{% endif %}
+                {% if slide.secondary_button_text and slide.secondary_button_url %}<a href="{{ slide.secondary_button_url }}" class="home-button home-button--ghost">{{ slide.secondary_button_text }}</a>{% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </article>
+    {% empty %}
+      <article class="hero-slide hero-slide--1 has-mobile-frame-sequence is-active" aria-hidden="false">
+        <picture class="hero-slide__primary-media"><source media="(max-width:760px)" srcset="{% static 'main/img/home/hero-sequence/worktable-01.webp' %}"><img src="{% static 'main/img/hero-1.webp' %}" alt="استودیو گل زاد" width="1920" height="1080" fetchpriority="high" decoding="async"></picture>
+        {% include "main/components/home_hero_frame_sequence.html" %}
+      </article>
+    {% endfor %}
   </div>
+
+  {% if home_hero_slides|length > 1 %}
+    <button class="hero-slider__nav hero-slider__nav--prev" id="heroPrev" type="button" aria-label="اسلاید قبلی"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    <button class="hero-slider__nav hero-slider__nav--next" id="heroNext" type="button" aria-label="اسلاید بعدی"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+    <div class="hero-slider__dots" id="heroDots" aria-label="انتخاب اسلاید">{% for slide in home_hero_slides %}<button type="button" class="{% if forloop.first %}is-active{% endif %}" aria-label="اسلاید {{ forloop.counter }}"></button>{% endfor %}</div>
+  {% endif %}
 </section>
 
 {% include "main/components/story_rail.html" %}
@@ -125,7 +152,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=12"></script>
+<script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=11"></script>
   <script src="{% static 'main/js/pages/home/home-motion.js' %}?v=1"></script>
   {% if home_stories %}<script src="{% static 'main/js/components/story-viewer.js' %}?v=4"></script>{% endif %}
 {% endblock %}
