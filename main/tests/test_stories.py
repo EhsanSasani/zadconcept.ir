@@ -2,7 +2,7 @@ import shutil
 import subprocess
 import tempfile
 from datetime import timedelta
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from unittest import skipUnless
 
@@ -14,6 +14,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from main.models import Story, StoryClip
 from main.story_presentation import get_home_story_presentations
@@ -97,6 +98,22 @@ class StoryPresentationTests(TestCase):
             self.ready_clip.optimized_video.url,
         )
 
+    def test_presentation_supports_images_and_videos_in_the_same_story(self):
+        image_clip = StoryClip.objects.create(
+            story=self.story,
+            media_type=StoryClip.MediaType.IMAGE,
+            image="stories/images/demo/story-image.webp",
+            image_duration_ms=6500,
+            sort_order=1,
+        )
+
+        clips = get_home_story_presentations()[0]["clips"]
+
+        self.assertEqual([clip["media_type"] for clip in clips], ["video", "image"])
+        self.assertEqual(clips[1]["image_url"], image_clip.image.url)
+        self.assertEqual(clips[1]["video_url"], "")
+        self.assertEqual(clips[1]["duration_ms"], 6500)
+
     def test_unready_and_inactive_clips_are_never_exposed(self):
         queued = StoryClip.objects.create(
             story=self.story,
@@ -118,6 +135,8 @@ class StoryPresentationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.ready_clip.optimized_video.url, body)
         self.assertIn("data-story-viewer", body)
+        self.assertIn("لحظه‌های زاد", body)
+        self.assertIn("ZAD MOMENTS", body)
         self.assertNotIn(queued.source_video.url, body)
         self.assertNotIn(inactive.optimized_video.url, body)
 
@@ -195,15 +214,16 @@ class StoryAdminTests(TestCase):
         response = self.client.get(reverse("admin:main_story_add"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "کلیپ‌های این استوری")
+        self.assertContains(response, "عکس‌ها و ویدئوهای این استوری")
+        self.assertContains(response, "image/*")
         self.assertContains(response, "video/mp4")
-        self.assertContains(response, "وارد صف")
+        self.assertContains(response, "بعد از ذخیره آماده می‌شود")
 
     def test_story_clip_admin_is_available(self):
         response = self.client.get(reverse("admin:main_storyclip_changelist"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "کلیپ‌های استوری")
+        self.assertContains(response, "محتواهای استوری")
 
     def test_inline_admin_upload_creates_a_queued_clip(self):
         response = self.client.post(
@@ -219,6 +239,8 @@ class StoryAdminTests(TestCase):
                 "clips-MAX_NUM_FORMS": "1000",
                 "clips-0-title": "کلیپ پنل",
                 "clips-0-caption": "",
+                "clips-0-media_type": StoryClip.MediaType.VIDEO,
+                "clips-0-image_duration_ms": "5000",
                 "clips-0-cta_text": "",
                 "clips-0-cta_url": "",
                 "clips-0-sort_order": "0",
@@ -236,6 +258,47 @@ class StoryAdminTests(TestCase):
         clip = StoryClip.objects.get(story__slug="admin-upload")
         self.assertEqual(clip.processing_status, StoryClip.ProcessingStatus.QUEUED)
         self.assertTrue(clip.source_video.name.startswith("stories/source/"))
+
+    def test_inline_admin_image_is_optimized_and_ready_immediately(self):
+        image_bytes = BytesIO()
+        Image.new("RGB", (24, 40), "#d7aa86").save(image_bytes, format="PNG")
+
+        response = self.client.post(
+            reverse("admin:main_story_add"),
+            data={
+                "title": "عکس از پنل",
+                "slug": "admin-image",
+                "is_active": "on",
+                "sort_order": "1",
+                "clips-TOTAL_FORMS": "1",
+                "clips-INITIAL_FORMS": "0",
+                "clips-MIN_NUM_FORMS": "0",
+                "clips-MAX_NUM_FORMS": "1000",
+                "clips-0-title": "عکس پنل",
+                "clips-0-caption": "",
+                "clips-0-media_type": StoryClip.MediaType.IMAGE,
+                "clips-0-image_duration_ms": "6000",
+                "clips-0-cta_text": "",
+                "clips-0-cta_url": "",
+                "clips-0-sort_order": "0",
+                "clips-0-is_active": "on",
+                "clips-0-image": SimpleUploadedFile(
+                    "phone-photo.png",
+                    image_bytes.getvalue(),
+                    content_type="image/png",
+                ),
+                "_save": "ذخیره",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        clip = StoryClip.objects.get(story__slug="admin-image")
+        self.assertEqual(clip.media_type, StoryClip.MediaType.IMAGE)
+        self.assertEqual(clip.processing_status, StoryClip.ProcessingStatus.READY)
+        self.assertEqual(clip.image_duration_ms, 6000)
+        self.assertTrue(clip.image.name.endswith(".webp"))
+        with clip.image.open("rb") as image_handle:
+            self.assertEqual(image_handle.read(4), b"RIFF")
 
 
 @skipUnless(

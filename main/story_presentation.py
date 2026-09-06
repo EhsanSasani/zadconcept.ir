@@ -1,6 +1,6 @@
 import hashlib
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from .models import Story, StoryClip
 
@@ -27,10 +27,16 @@ def get_home_story_presentations(*, story_limit=12, clip_limit=20):
     ready_clips = (
         StoryClip.objects.filter(
             is_active=True,
-            processing_status=StoryClip.ProcessingStatus.READY,
         )
-        .exclude(optimized_video="")
-        .exclude(poster_image="")
+        .filter(
+            Q(media_type=StoryClip.MediaType.IMAGE, image__gt="")
+            | Q(
+                media_type=StoryClip.MediaType.VIDEO,
+                processing_status=StoryClip.ProcessingStatus.READY,
+                optimized_video__gt="",
+                poster_image__gt="",
+            )
+        )
         .order_by("sort_order", "id")
     )
     stories = (
@@ -46,19 +52,31 @@ def get_home_story_presentations(*, story_limit=12, clip_limit=20):
         clips = []
         version_clip_objects = []
         for clip in public_clip_objects:
-            video_url = _media_url(clip.optimized_video)
-            poster_url = _media_url(clip.poster_image)
-            if not video_url or not poster_url:
-                continue
+            if clip.media_type == StoryClip.MediaType.IMAGE:
+                image_url = _media_url(clip.image)
+                if not image_url:
+                    continue
+                video_url = ""
+                poster_url = image_url
+                duration_ms = clip.image_duration_ms
+            else:
+                video_url = _media_url(clip.optimized_video)
+                poster_url = _media_url(clip.poster_image)
+                if not video_url or not poster_url:
+                    continue
+                image_url = ""
+                duration_ms = clip.duration_ms
             version_clip_objects.append(clip)
             clips.append(
                 {
                     "id": clip.pk,
+                    "media_type": clip.media_type,
                     "title": clip.title,
                     "caption": clip.caption,
                     "video_url": video_url,
+                    "image_url": image_url,
                     "poster_url": poster_url,
-                    "duration_ms": clip.duration_ms,
+                    "duration_ms": duration_ms,
                     "cta_text": clip.cta_text,
                     "cta_url": clip.cta_url,
                 }

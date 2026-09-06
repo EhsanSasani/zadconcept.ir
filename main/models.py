@@ -274,6 +274,13 @@ def story_clip_poster_upload_to(instance, filename):
     return f"stories/posters/{story_slug}/story-poster-{token}.webp"
 
 
+def story_clip_image_upload_to(instance, filename):
+    story = getattr(instance, "story", None)
+    story_slug = _upload_slug(getattr(story, "slug", ""), "story")
+    token = uuid.uuid4().hex[:12]
+    return f"stories/images/{story_slug}/story-image-{token}.webp"
+
+
 def home_hero_upload_to(instance, filename):
     order = instance.sort_order or instance.pk or "new"
     return f"heroes/home/home-hero-{order}.{_upload_extension(filename)}"
@@ -1791,7 +1798,7 @@ class Story(TimeStampedModel):
         blank=True,
         null=True,
         help_text=(
-            "اختیاری است؛ اگر خالی بماند، پوستر اولین ویدئوی آماده استفاده می‌شود."
+            "اختیاری است؛ اگر خالی بماند، تصویر اولین محتوای آماده استفاده می‌شود."
         ),
     )
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
@@ -1849,6 +1856,10 @@ class Story(TimeStampedModel):
 
 
 class StoryClip(TimeStampedModel):
+    class MediaType(models.TextChoices):
+        VIDEO = "video", "ویدئو"
+        IMAGE = "image", "عکس"
+
     class ProcessingStatus(models.TextChoices):
         QUEUED = "queued", "در صف بهینه‌سازی"
         PROCESSING = "processing", "در حال بهینه‌سازی"
@@ -1870,6 +1881,24 @@ class StoryClip(TimeStampedModel):
         "توضیح کوتاه",
         max_length=240,
         blank=True,
+    )
+    media_type = models.CharField(
+        "نوع محتوا",
+        max_length=10,
+        choices=MediaType.choices,
+        default=MediaType.VIDEO,
+    )
+    image = models.ImageField(
+        "عکس استوری",
+        upload_to=story_clip_image_upload_to,
+        blank=True,
+        help_text="عکس هنگام ذخیره به WebP بهینه تبدیل می‌شود.",
+    )
+    image_duration_ms = models.PositiveIntegerField(
+        "مدت نمایش عکس (میلی‌ثانیه)",
+        default=5000,
+        validators=[MinValueValidator(2000), MaxValueValidator(15000)],
+        help_text="بین ۲۰۰۰ تا ۱۵۰۰۰ میلی‌ثانیه؛ مقدار پیشنهادی ۵۰۰۰ است.",
     )
     source_video = models.FileField(
         "ویدئوی اصلی",
@@ -1907,7 +1936,7 @@ class StoryClip(TimeStampedModel):
         help_text="مسیر داخلی مثل /flowers/ یا یک لینک کامل https:// وارد کنید.",
     )
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
-    sort_order = models.PositiveIntegerField("ترتیب کلیپ", default=0)
+    sort_order = models.PositiveIntegerField("ترتیب نمایش", default=0)
     processing_status = models.CharField(
         "وضعیت پردازش",
         max_length=16,
@@ -1951,8 +1980,8 @@ class StoryClip(TimeStampedModel):
 
     class Meta:
         ordering = ["sort_order", "id"]
-        verbose_name = "کلیپ استوری"
-        verbose_name_plural = "کلیپ‌های استوری"
+        verbose_name = "محتوای استوری"
+        verbose_name_plural = "محتواهای استوری"
         indexes = [
             models.Index(
                 fields=["processing_status", "created_at"],
@@ -1965,7 +1994,7 @@ class StoryClip(TimeStampedModel):
         ]
 
     def __str__(self):
-        label = self.title or f"کلیپ {self.sort_order + 1}"
+        label = self.title or f"محتوا {self.sort_order + 1}"
         return f"{self.story.title}: {label}"
 
     @property
@@ -1974,6 +2003,8 @@ class StoryClip(TimeStampedModel):
 
     @property
     def is_ready(self):
+        if self.media_type == self.MediaType.IMAGE:
+            return bool(self.image)
         return bool(
             self.processing_status == self.ProcessingStatus.READY
             and self.optimized_video
@@ -1982,6 +2013,16 @@ class StoryClip(TimeStampedModel):
 
     def clean(self):
         super().clean()
+        if self.media_type == self.MediaType.IMAGE and not self.image:
+            raise ValidationError({"image": "برای محتوای تصویری، یک عکس انتخاب کنید."})
+        if (
+            self.media_type == self.MediaType.VIDEO
+            and not self.source_video
+            and not self.optimized_video
+        ):
+            raise ValidationError(
+                {"source_video": "برای محتوای ویدئویی، یک ویدئو بارگذاری کنید."}
+            )
         self.cta_text = (self.cta_text or "").strip()
         self.cta_url = (self.cta_url or "").strip()
         if self.cta_text and not self.cta_url:
@@ -2000,14 +2041,37 @@ class StoryClip(TimeStampedModel):
     def save(self, *args, **kwargs):
         current_source = self.source_video.name if self.source_video else ""
         previous_source = ""
+        previous_files = {}
         if self.pk:
-            previous_source = (
+            previous_files = (
                 type(self).objects.filter(pk=self.pk)
-                .values_list("source_video", flat=True)
+                .values("source_video", "optimized_video", "poster_image", "image")
                 .first()
-                or ""
+                or {}
             )
-        source_changed = bool(current_source) and previous_source != current_source
+            previous_source = previous_files.get("source_video") or ""
+
+        if self.media_type == self.MediaType.IMAGE:
+            self.source_video = ""
+            self.optimized_video = ""
+            self.poster_image = ""
+            self.processing_status = self.ProcessingStatus.READY
+            self.processing_error = ""
+            self.duration_ms = self.image_duration_ms
+            self.video_width = 0
+            self.video_height = 0
+            self.optimized_size_bytes = 0
+            self.processed_at = timezone.now()
+            current_source = ""
+        else:
+            self.image = ""
+            current_image = ""
+
+        source_changed = (
+            self.media_type == self.MediaType.VIDEO
+            and bool(current_source)
+            and previous_source != current_source
+        )
 
         if source_changed:
             self.processing_status = self.ProcessingStatus.QUEUED
@@ -2034,18 +2098,30 @@ class StoryClip(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
-        if previous_source and previous_source != current_source:
-            source_storage = self.source_video.storage
+        stale_files = []
+        current_files = {
+            "source_video": self.source_video.name if self.source_video else "",
+            "optimized_video": self.optimized_video.name if self.optimized_video else "",
+            "poster_image": self.poster_image.name if self.poster_image else "",
+            "image": self.image.name if self.image else "",
+        }
+        for field_name, previous_name in previous_files.items():
+            if previous_name and previous_name != current_files.get(field_name, ""):
+                storage = type(self)._meta.get_field(field_name).storage
+                stale_files.append((storage, previous_name))
 
-            def delete_replaced_source():
-                try:
-                    source_storage.delete(previous_source)
-                except OSError:
-                    # Database state is authoritative; an orphaned upload can
-                    # be cleaned operationally without failing the admin save.
-                    pass
+        if stale_files:
 
-            transaction.on_commit(delete_replaced_source)
+            def delete_replaced_media():
+                for storage, stored_name in stale_files:
+                    try:
+                        storage.delete(stored_name)
+                    except OSError:
+                        # Database state remains authoritative if storage is
+                        # temporarily unavailable during an admin edit.
+                        pass
+
+            transaction.on_commit(delete_replaced_media)
 
 
 class NewsPost(TimeStampedModel):

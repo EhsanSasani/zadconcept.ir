@@ -2201,6 +2201,16 @@ class MainViewsTests(TestCase):
         tag.save(update_fields=["is_occasion", "updated_at"])
         self.assertContains(self.client.get(reverse("occasions")), tag.name)
 
+    def test_home_hero_fallback_is_image_only(self):
+        response = self.client.get(reverse("index"))
+        first_slide = response.context["home_hero_slides"][0]
+
+        self.assertEqual(first_slide["title"], "")
+        self.assertEqual(first_slide["kicker"], "")
+        self.assertEqual(first_slide["description"], "")
+        self.assertEqual(first_slide["primary_button_text"], "")
+        self.assertFalse(first_slide["show_content"])
+
     def test_multiple_home_slides_remain_visible_in_admin_order(self):
         HomeHeroSlide.objects.create(
             title="First managed slide",

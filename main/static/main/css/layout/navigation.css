@@ -3,6 +3,7 @@
   --zad-header-height: 66px;
   --zad-mobile-header-height: 58px;
   --zad-utility-height: 31px;
+  --zad-utility-bg: #0A2735;
   --zad-ink: #302923;
   --zad-forest: #173d38;
   --zad-cream: #fbf7f0;
@@ -19,7 +20,7 @@ body.has-zad-menu { overflow: hidden; }
   min-height: var(--zad-utility-height);
   display: flex;
   align-items: center;
-  background: var(--zad-forest);
+  background: var(--zad-utility-bg);
   color: rgba(255,255,255,.92);
 }
 .zad-utility__inner {
@@ -1146,11 +1147,22 @@ body.page-home .home-hero { margin-top: 0 !important; }
     max-height: var(--zad-mobile-header-height) !important;
     padding: 0 10px !important;
     grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+    grid-template-rows: var(--zad-mobile-header-height) !important;
+  }
+
+  /* Remove the old empty right-column spacer; both side controls now exist. */
+  .zad-header__inner::after {
+    content: none !important;
+    display: none !important;
   }
 
   /* Slightly larger logo than the previous compact pass. */
   .zad-header__brand {
+    grid-row: 1 !important;
+    align-self: center !important;
     gap: 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
     transform: none !important;
   }
 
@@ -1200,14 +1212,54 @@ body.page-home .home-hero { margin-top: 0 !important; }
     font-size: 1.08rem !important;
   }
 
-  /* Keep only the left hamburger. */
+  /* Keep only the standalone mobile hamburger. */
   .zad-header__actions .zad-menu-button,
   .zad-header__actions .zad-menu-button--desktop {
     display: none !important;
   }
 
   .zad-header__actions {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: start !important;
+    justify-content: flex-start !important;
+    height: var(--zad-mobile-header-height) !important;
+    margin: 0 !important;
     min-width: 40px !important;
+  }
+
+  /* Mobile-only visual order: search on the left, menu on the right. */
+  .zad-header__inner > .zad-menu-button {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: end !important;
+    margin: 0 !important;
+  }
+
+  .zad-header-search {
+    align-self: center !important;
+    margin: 0 !important;
+  }
+
+  /* Each floating surface opens from the side of its mobile trigger. */
+  .zad-site-menu__panel {
+    right: 12px !important;
+    left: auto !important;
+    transform: translate3d(18px, -8px, 0) scale(.965) !important;
+    transform-origin: right top !important;
+  }
+
+  .zad-quick-search__panel {
+    right: auto !important;
+    left: 12px !important;
+    transform: translate3d(-14px, -8px, 0) scale(.975) !important;
+    transform-origin: left top !important;
+  }
+
+  .zad-quick-search.is-open .zad-quick-search__panel {
+    transform: translate3d(0, 0, 0) scale(1) !important;
   }
 
   /* Re-anchor floating UI to the new short navbar. */
@@ -1220,6 +1272,16 @@ body.page-home .home-hero { margin-top: 0 !important; }
 @media (max-width: 390px) {
   .zad-header__brand-name {
     font-size: 1.65rem !important;
+  }
+
+  .zad-site-menu__panel {
+    right: 9px !important;
+    left: auto !important;
+  }
+
+  .zad-quick-search__panel {
+    right: auto !important;
+    left: 9px !important;
   }
 }
 /* ZAD MOBILE NAV SLIM V2 END */

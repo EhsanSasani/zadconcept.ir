@@ -104,7 +104,31 @@ body.page-home .site-main .home-hero .hero-slide img { object-fit: cover !import
 /* Stories: compact mobile-first rail */
 .page-home .zad-stories { border: 0; border-bottom: 1px solid var(--home-line); background: var(--home-ivory); }
 .page-home .zad-stories__container { width: min(100% - 36px, 1180px); padding: 18px 0 15px; }
-.page-home .zad-stories__heading { display: none; }
+.page-home .zad-stories__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 2px 12px;
+}
+.page-home .zad-stories__heading h2 {
+  margin: 0;
+  color: rgba(53, 44, 38, .76);
+  font-family: var(--font-fa);
+  font-size: .76rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.page-home .zad-stories__heading span {
+  margin: 0;
+  color: rgba(164, 115, 71, .78);
+  font-family: var(--font-brand-en);
+  font-size: .7rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: .18em;
+  white-space: nowrap;
+}
 .page-home .zad-stories__track { gap: clamp(14px, 2.4vw, 30px); padding: 2px 1px 4px; }
 .page-home .zad-stories__item { flex-basis: 78px; }
 .page-home .zad-story-trigger { min-height: 98px; }
@@ -256,6 +280,9 @@ body.page-home .site-main .home-hero .hero-slide img { object-fit: cover !import
   .page-home .hero-slider__dots { bottom: 12px; }
 
   .page-home .zad-stories__container { width: calc(100% - 24px); padding: 14px 0 11px; }
+  .page-home .zad-stories__heading { margin: 0 1px 10px; }
+  .page-home .zad-stories__heading h2 { font-size: .72rem; }
+  .page-home .zad-stories__heading span { font-size: .64rem; }
   .page-home .zad-stories__track { gap: 11px; }
   .page-home .zad-stories__item { flex-basis: 67px; }
   .page-home .zad-story-trigger { min-height: 88px; }
@@ -1224,3 +1251,62 @@ body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer + .zad-stories 
   }
 }
 /* ZAD HOME LAYERED HERO SCROLL FINAL END */
+
+/* ZAD MOBILE HERO FRAME SEQUENCE START
+   UI prototype only: three static frames inside the first mobile Hero slide.
+   Hero geometry and global navigation remain untouched.
+*/
+.page-home .home-hero-sequence {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .page-home .hero-slide.has-mobile-frame-sequence .home-hero-sequence {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+    transform: scale(1);
+    transition: transform 6s cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .page-home .hero-slide.has-mobile-frame-sequence.is-active .home-hero-sequence {
+    transform: scale(1.012);
+  }
+
+  .page-home .home-hero-sequence__frame {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0;
+    transition: opacity 360ms cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .page-home .home-hero-sequence__frame.is-active {
+    z-index: 1;
+    opacity: 1;
+  }
+
+  .page-home .home-hero-sequence__frame--making {
+    background-image: url("../../../img/home/hero-sequence/worktable-02.webp");
+  }
+
+  .page-home .home-hero-sequence__frame--finished {
+    background-image: url("../../../img/home/hero-sequence/worktable-03.webp");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home .hero-slide.has-mobile-frame-sequence .home-hero-sequence,
+  .page-home .home-hero-sequence__frame {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+/* ZAD MOBILE HERO FRAME SEQUENCE END */

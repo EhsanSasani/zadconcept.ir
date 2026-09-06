@@ -54,10 +54,13 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: 2px 2px 8px;
+  direction: ltr;
   scroll-behavior: smooth;
-  scroll-snap-type: inline mandatory;
+  scroll-snap-type: x proximity;
   scrollbar-width: none;
   overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .zad-stories__track::-webkit-scrollbar {
@@ -66,7 +69,9 @@
 
 .zad-stories__item {
   flex: 0 0 88px;
+  direction: rtl;
   scroll-snap-align: start;
+  scroll-snap-stop: normal;
 }
 
 .zad-story-trigger {
@@ -86,8 +91,10 @@
 .zad-story-trigger__ring {
   position: relative;
   display: grid;
+  flex: 0 0 auto;
   width: 84px;
   height: 84px;
+  aspect-ratio: 1 / 1;
   place-items: center;
   margin-inline: auto;
   padding: 3px;
@@ -103,13 +110,28 @@
     box-shadow 220ms ease;
 }
 
-.zad-story-trigger__ring img {
+.zad-story-trigger__media {
+  position: absolute;
+  inset: 3px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.zad-story-trigger__media img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  aspect-ratio: 1 / 1 !important;
   border-radius: inherit;
-  object-fit: cover;
-  transition: filter 220ms ease;
+  object-fit: cover !important;
+  object-position: center !important;
+  transition:
+    filter 220ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .zad-story-trigger__play {
@@ -172,7 +194,7 @@
     0 0 0 3px rgba(120, 110, 102, 0.14);
 }
 
-.zad-story-trigger.is-seen .zad-story-trigger__ring img {
+.zad-story-trigger.is-seen .zad-story-trigger__media img {
   filter: saturate(0.68) contrast(0.94);
 }
 
@@ -237,6 +259,68 @@ body.has-story-viewer {
   animation: zad-story-exit 170ms ease-in both;
 }
 
+/* Highlight-to-highlight cube transition -------------------------------- */
+
+.zad-story-viewer__cube-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  background: #12100f;
+  perspective: 1100px;
+  -webkit-perspective: 1100px;
+  perspective-origin: 50% 50%;
+  pointer-events: none;
+}
+
+.zad-story-viewer__cube {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.zad-story-viewer__cube-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #12100f;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  box-shadow: 0 0 26px rgba(0, 0, 0, 0.16);
+}
+
+.zad-story-viewer__cube-face--current {
+  transform: rotateY(0deg) translateZ(var(--zad-story-cube-depth));
+}
+
+.zad-story-viewer__cube-layer.is-forward
+  .zad-story-viewer__cube-face--incoming {
+  transform: rotateY(90deg) translateZ(var(--zad-story-cube-depth));
+}
+
+.zad-story-viewer__cube-layer.is-backward
+  .zad-story-viewer__cube-face--incoming {
+  transform: rotateY(-90deg) translateZ(var(--zad-story-cube-depth));
+}
+
+.zad-story-viewer__cube-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: block;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
 @keyframes zad-story-enter {
   from {
     opacity: 0;
@@ -259,7 +343,8 @@ body.has-story-viewer {
   }
 }
 
-.zad-story-viewer__video {
+.zad-story-viewer__video,
+.zad-story-viewer__image {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -268,6 +353,15 @@ body.has-story-viewer {
   height: 100%;
   background: #12100f;
   object-fit: cover;
+}
+
+.zad-story-viewer__video[hidden],
+.zad-story-viewer__image[hidden] {
+  display: none;
+}
+
+.zad-story-viewer__controls button[hidden] {
+  display: none;
 }
 
 .zad-story-viewer__scrim {
@@ -707,6 +801,16 @@ body.has-story-viewer {
     line-height: 1.55;
   }
 
+  .zad-story-trigger:active .zad-story-trigger__ring {
+    transform: scale(0.94);
+    transition-duration: 90ms;
+  }
+
+  .zad-story-trigger:active .zad-story-trigger__media img {
+    transform: scale(1.045);
+    transition-duration: 90ms;
+  }
+
   .zad-story-viewer__shell {
     display: block;
     padding: 0;
@@ -757,7 +861,7 @@ body.has-story-viewer {
   }
 
   .zad-story-trigger__ring,
-  .zad-story-trigger__ring img,
+  .zad-story-trigger__media img,
   .zad-story-viewer__controls button,
   .zad-story-viewer__desktop-nav,
   .zad-story-viewer__content a {
@@ -772,5 +876,9 @@ body.has-story-viewer {
 
   .zad-story-viewer__loading span {
     animation-duration: 1.4s;
+  }
+
+  .zad-story-viewer__cube-layer {
+    display: none;
   }
 }

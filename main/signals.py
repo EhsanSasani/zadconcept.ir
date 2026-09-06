@@ -76,7 +76,7 @@ def touch_product_when_gallery_changes(sender, instance, **kwargs):
 @receiver(post_delete, sender=StoryClip)
 def delete_story_clip_media(sender, instance, **kwargs):
     stored_files = []
-    for field_name in ("source_video", "optimized_video", "poster_image"):
+    for field_name in ("source_video", "optimized_video", "poster_image", "image"):
         field_file = getattr(instance, field_name, None)
         if field_file and field_file.name:
             stored_files.append((field_file.storage, field_file.name))

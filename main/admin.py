@@ -888,6 +888,11 @@ class StoryAdminForm(forms.ModelForm):
 
 
 class StoryClipAdminForm(forms.ModelForm):
+    image = AdminImageUploadField(
+        required=False,
+        label="عکس استوری",
+        help_text=ADMIN_IMAGE_HELP_TEXT,
+    )
     source_video = AdminVideoUploadField(
         required=False,
         label="ویدئوی اصلی",
@@ -901,7 +906,7 @@ class StoryClipAdminForm(forms.ModelForm):
             "caption": forms.Textarea(
                 attrs={
                     "rows": 2,
-                    "placeholder": "توضیح کوتاه روی ویدئو (اختیاری)",
+                    "placeholder": "توضیح کوتاه روی عکس یا ویدئو (اختیاری)",
                 }
             ),
             "cta_url": forms.TextInput(
@@ -915,14 +920,28 @@ class StoryClipAdminForm(forms.ModelForm):
     def clean_source_video(self):
         return validate_admin_video(self.cleaned_data.get("source_video"))
 
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
+
     def clean(self):
         cleaned_data = super().clean()
+        media_type = cleaned_data.get("media_type")
+        image = cleaned_data.get("image")
         source_video = cleaned_data.get("source_video")
         optimized_video = getattr(self.instance, "optimized_video", None)
-        if not source_video and not optimized_video:
+        if media_type == StoryClip.MediaType.IMAGE and not image:
+            self.add_error(
+                "image",
+                "برای محتوای تصویری، یک عکس انتخاب کنید.",
+            )
+        if (
+            media_type == StoryClip.MediaType.VIDEO
+            and not source_video
+            and not optimized_video
+        ):
             self.add_error(
                 "source_video",
-                "برای ساخت کلیپ، یک فایل ویدئو بارگذاری کنید.",
+                "برای محتوای ویدئویی، یک فایل ویدئو بارگذاری کنید.",
             )
         return cleaned_data
 
@@ -965,7 +984,12 @@ class StoryClipAdminDisplayMixin:
     @admin.display(description="وضعیت")
     def processing_badge(self, obj):
         if not obj or not obj.pk:
-            return "بعد از ذخیره وارد صف می‌شود"
+            return "بعد از ذخیره آماده می‌شود"
+        if obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            return format_html(
+                '<span class="zad-story-status is-ready">{}</span>',
+                "عکس آماده انتشار",
+            )
         css_class = self.status_css_classes.get(obj.processing_status, "")
         return format_html(
             '<span class="zad-story-status {}">{}</span>',
@@ -974,8 +998,21 @@ class StoryClipAdminDisplayMixin:
         )
 
     @admin.display(description="پیش‌نمایش خروجی")
-    def story_video_preview(self, obj):
-        if not obj or not obj.pk or not obj.poster_image:
+    def story_media_preview(self, obj):
+        if not obj or not obj.pk:
+            return format_html(
+                '<span class="zad-story-video-empty">{}</span>',
+                "هنوز خروجی آماده نیست",
+            )
+        if obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            image_url = safe_image_url(obj.image)
+            if not image_url:
+                return "عکس قابل نمایش نیست"
+            return format_html(
+                '<img src="{}" class="zad-admin-story-poster" alt="" />',
+                image_url,
+            )
+        if not obj.poster_image:
             return format_html(
                 '<span class="zad-story-video-empty">{}</span>',
                 "هنوز خروجی آماده نیست",
@@ -998,6 +1035,8 @@ class StoryClipAdminDisplayMixin:
 
     @admin.display(description="مشخصات خروجی")
     def output_summary(self, obj):
+        if obj and obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            return f"عکس · {obj.image_duration_ms / 1000:g} ثانیه"
         if not obj or obj.processing_status != StoryClip.ProcessingStatus.READY:
             return "—"
         seconds = obj.duration_ms / 1000
@@ -1022,9 +1061,11 @@ class StoryClipInline(StoryClipAdminDisplayMixin, admin.StackedInline):
     ordering = ("sort_order", "id")
     fields = (
         ("sort_order", "is_active"),
+        ("media_type", "image_duration_ms"),
+        "image",
         "source_video",
         "processing_badge",
-        "story_video_preview",
+        "story_media_preview",
         "output_summary",
         "processing_message",
         "title",
@@ -1033,12 +1074,12 @@ class StoryClipInline(StoryClipAdminDisplayMixin, admin.StackedInline):
     )
     readonly_fields = (
         "processing_badge",
-        "story_video_preview",
+        "story_media_preview",
         "output_summary",
         "processing_message",
     )
-    verbose_name = "کلیپ ویدئویی"
-    verbose_name_plural = "کلیپ‌های این استوری"
+    verbose_name = "محتوای استوری"
+    verbose_name_plural = "عکس‌ها و ویدئوهای این استوری"
 
 
 class HeroAdminForm(forms.ModelForm):
@@ -2413,7 +2454,7 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
             "هویت استوری",
             {
                 "description": (
-                    "هر استوری یک حلقه در صفحه خانه است و می‌تواند چند کلیپ "
+                    "هر استوری یک حلقه در صفحه خانه است و می‌تواند چند عکس یا ویدئو "
                     "مرتب‌شده داشته باشد."
                 ),
                 "fields": (
@@ -2450,8 +2491,19 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
                 _ready_clip_count=Count(
                     "clips",
                     filter=Q(
-                        clips__processing_status=StoryClip.ProcessingStatus.READY,
                         clips__is_active=True,
+                    )
+                    & (
+                        Q(
+                            clips__media_type=StoryClip.MediaType.IMAGE,
+                            clips__image__gt="",
+                        )
+                        | Q(
+                            clips__media_type=StoryClip.MediaType.VIDEO,
+                            clips__processing_status=StoryClip.ProcessingStatus.READY,
+                            clips__optimized_video__gt="",
+                            clips__poster_image__gt="",
+                        )
                     ),
                     distinct=True,
                 )
@@ -2462,7 +2514,7 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
     @admin.display(description="کاور")
     def story_cover_preview(self, obj):
         if not obj or not obj.pk:
-            return "بعد از پردازش اولین کلیپ ساخته می‌شود"
+            return "از اولین محتوای آماده ساخته می‌شود"
         image = obj.cover_image
         if not image:
             first_ready_clip = next(
@@ -2470,12 +2522,16 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
                     clip
                     for clip in obj.clips.all()
                     if clip.is_active
-                    and clip.processing_status == StoryClip.ProcessingStatus.READY
-                    and clip.poster_image
+                    and clip.is_ready
                 ),
                 None,
             )
-            image = first_ready_clip.poster_image if first_ready_clip else None
+            image = (
+                first_ready_clip.image
+                if first_ready_clip
+                and first_ready_clip.media_type == StoryClip.MediaType.IMAGE
+                else first_ready_clip.poster_image if first_ready_clip else None
+            )
         if not image:
             return format_html(
                 '<span class="zad-story-cover-empty">{}</span>',
@@ -2489,7 +2545,7 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
             image_url,
         )
 
-    @admin.display(description="کلیپ آماده", ordering="_ready_clip_count")
+    @admin.display(description="محتوای آماده", ordering="_ready_clip_count")
     def ready_clip_count(self, obj):
         if not obj or not obj.pk:
             return 0
@@ -2497,8 +2553,15 @@ class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
         if annotated is not None:
             return annotated
         return obj.clips.filter(
-            processing_status=StoryClip.ProcessingStatus.READY,
             is_active=True,
+        ).filter(
+            Q(media_type=StoryClip.MediaType.IMAGE, image__gt="")
+            | Q(
+                media_type=StoryClip.MediaType.VIDEO,
+                processing_status=StoryClip.ProcessingStatus.READY,
+                optimized_video__gt="",
+                poster_image__gt="",
+            )
         ).count()
 
     @admin.display(description="وضعیت زمانی")
@@ -2518,7 +2581,7 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
     form = StoryClipAdminForm
     actions = ActiveActionsMixin.actions + ("retry_processing",)
     list_display = (
-        "story_video_preview",
+        "story_media_preview",
         "title_or_order",
         "story",
         "processing_badge",
@@ -2527,7 +2590,7 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
         "sort_order",
         "updated_at",
     )
-    list_filter = ("processing_status", "is_active", "story")
+    list_filter = ("media_type", "processing_status", "is_active", "story")
     search_fields = ("title", "caption", "story__title")
     list_editable = ("is_active", "sort_order")
     ordering = ("story__sort_order", "story_id", "sort_order", "id")
@@ -2535,7 +2598,7 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
         "optimized_video",
         "poster_image",
         "processing_badge",
-        "story_video_preview",
+        "story_media_preview",
         "output_summary",
         "processing_message",
         "processing_attempts",
@@ -2546,17 +2609,20 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
     save_on_top = True
     fieldsets = (
         (
-            "ویدئو",
+            "عکس یا ویدئو",
             {
                 "description": (
-                    "پس از ذخیره، Worker فایل را به MP4 استاندارد تبدیل می‌کند. "
-                    "تا پایان پردازش این کلیپ در سایت نمایش داده نمی‌شود."
+                    "نوع محتوا را انتخاب کنید. عکس همان لحظه بهینه می‌شود؛ "
+                    "ویدئو پس از ذخیره توسط Worker پردازش می‌شود."
                 ),
                 "fields": (
                     "story",
+                    "media_type",
+                    "image",
+                    "image_duration_ms",
                     "source_video",
                     "processing_badge",
-                    "story_video_preview",
+                    "story_media_preview",
                     "output_summary",
                     "processing_message",
                 ),
@@ -2595,9 +2661,9 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("story")
 
-    @admin.display(description="کلیپ")
+    @admin.display(description="محتوا")
     def title_or_order(self, obj):
-        return obj.title or f"کلیپ {obj.sort_order + 1}"
+        return obj.title or f"محتوا {obj.sort_order + 1}"
 
     @admin.action(permissions=["change"], description="تلاش دوباره برای بهینه‌سازی")
     def retry_processing(self, request, queryset):
@@ -2609,9 +2675,9 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
             updated_at=timezone.now(),
         )
         skipped = queryset.count() - updated
-        message = f"{updated} کلیپ دوباره در صف قرار گرفت."
+        message = f"{updated} ویدئو دوباره در صف قرار گرفت."
         if skipped:
-            message += f" {skipped} کلیپ فایل اصلی نداشت و رد شد."
+            message += f" {skipped} محتوا فایل ویدئوی اصلی نداشت و رد شد."
         self.message_user(request, message)
 
 

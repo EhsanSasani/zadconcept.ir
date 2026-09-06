@@ -264,19 +264,19 @@
 /* ZAD MOBILE HERO CLEAN COMPACT END */
 
 /* ZAD HOME MOBILE HERO 16-9 HOTFIX START
-   Canonical phone-portrait hero geometry.
-   440px viewport -> 247.5px hero
-   390px viewport -> 219.375px hero
+   Canonical phone-portrait hero geometry with ~2cm extra height.
+   440px viewport -> 323.5px hero
+   390px viewport -> 295.375px hero
    Recommended mobile admin artwork: 1600x900 (16:9).
 */
 @media (max-width: 760px) and (orientation: portrait) {
   body.page-home .site-main .home-hero {
     position: relative !important;
     width: 100% !important;
-    height: auto !important;
+    height: calc(56.25vw + 76px) !important;
     min-height: 0 !important;
     max-height: none !important;
-    aspect-ratio: 16 / 9 !important;
+    aspect-ratio: auto !important;
     overflow: hidden !important;
     margin-top: 0 !important;
   }
