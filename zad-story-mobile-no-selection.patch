@@ -1,0 +1,60 @@
+diff --git a/main/static/main/css/components/story-viewer.css b/main/static/main/css/components/story-viewer.css
+index 36bb3ad..29e58bb 100644
+--- a/main/static/main/css/components/story-viewer.css
++++ b/main/static/main/css/components/story-viewer.css
+@@ -253,6 +253,14 @@ body.has-story-viewer {
+   isolation: isolate;
+   animation: zad-story-enter 280ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+   touch-action: none;
++  -webkit-tap-highlight-color: transparent;
++}
++
++.zad-story-viewer__stage,
++.zad-story-viewer__stage * {
++  -webkit-user-select: none;
++  user-select: none;
++  -webkit-touch-callout: none;
+ }
+ 
+ .zad-story-viewer.is-closing .zad-story-viewer__stage {
+@@ -353,6 +361,8 @@ body.has-story-viewer {
+   height: 100%;
+   background: #12100f;
+   object-fit: cover;
++  pointer-events: none;
++  -webkit-user-drag: none;
+ }
+ 
+ .zad-story-viewer__video[hidden],
+diff --git a/main/templates/main/components/story_rail.html b/main/templates/main/components/story_rail.html
+index 2a38c01..f598831 100644
+--- a/main/templates/main/components/story_rail.html
++++ b/main/templates/main/components/story_rail.html
+@@ -86,12 +86,14 @@
+           preload="metadata"
+           disablepictureinpicture
+           controlslist="nodownload noplaybackrate nofullscreen"
++          draggable="false"
+         ></video>
+         <img
+           class="zad-story-viewer__image"
+           data-story-image
+           alt=""
+           decoding="async"
++          draggable="false"
+           hidden
+         >
+ 
+diff --git a/main/templates/main/pages/home/index.html b/main/templates/main/pages/home/index.html
+index 0c89fba..1e13911 100644
+--- a/main/templates/main/pages/home/index.html
++++ b/main/templates/main/pages/home/index.html
+@@ -4,7 +4,7 @@
+ {% block body_class %}page-home{% endblock %}
+ 
+ {% block page_css %}
+-  <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=6">
++  <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=7">
+   <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=39">
+ {% endblock %}
+ 
