@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=7">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=39">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/responsive-desktop.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/occasions-scale.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/moments-discover.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/daily-occasions.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -32,46 +32,7 @@
 
 {% include "main/components/home_moments_discover.html" %}
 
-<section class="home-section home-sameday" aria-labelledby="home-sameday-title" data-reveal>
-  <div class="home-container">
-    <header class="home-section__head home-section__head--row">
-      <div><span>SAME DAY · MASHHAD</span><h2 id="home-sameday-title">گل‌های آماده ارسال امروز</h2><p>گل‌های منتخب امروز برای سفارش و تحویل در شهر مشهد.</p></div>
-      <a href="{% url 'flowers_same_day' %}" class="home-text-link">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-    </header>
-
-    <div class="home-sameday__rail" data-sameday-slider data-reveal-group aria-label="محصولات ارسال روز">
-      {% for product in home_same_day_products %}
-        <article class="home-product-card" data-catalog-card data-product-type="{{ product.category.slug|default:'collection' }}" data-product-code="{{ product.product_code }}" data-product-name="{{ product.name|default:'' }}" data-product-price="{{ product.display_price }}" data-product-contact="{{ product.order_contact_text }}" data-product-stock="{{ product.stock_status_label }}" data-product-description="{{ product.description|default:'' }}">
-          <a href="{{ product.get_absolute_url }}" class="home-product-card__main" data-zad-modal-card>
-            <div class="home-product-card__media">
-              {% if product.cover_image %}<img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}" {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %} sizes="(max-width:760px) 58vw, 280px" width="520" height="650" loading="lazy" decoding="async" data-product-image>{% else %}<img src="{% static 'main/img/sub-bouquet.webp' %}" alt="{{ product.seo_name }}" width="520" height="650" loading="lazy" decoding="async" data-product-image>{% endif %}
-              {% if product.stock_status == 'out_of_stock' %}<span class="home-product-card__badge">ناموجود</span>{% elif product.stock_status == 'preorder' %}<span class="home-product-card__badge">پیش‌سفارش</span>{% endif %}
-            </div>
-            <div class="home-product-card__body"><strong>{{ product.display_name }}</strong><span>{{ product.display_price }}</span></div>
-          </a>
-        </article>
-      {% empty %}
-        <a class="home-product-card home-product-card--empty" href="{% url 'flowers' %}"><img src="{% static 'main/img/sub-bouquet.webp' %}" alt="گل‌های زاد" width="520" height="650" loading="lazy" decoding="async"><span>مشاهده مجموعه گل‌ها</span></a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<section class="home-section home-occasions" aria-labelledby="home-occasions-title" data-reveal>
-  <div class="home-container">
-    <header class="home-section__head home-section__head--row">
-      <div><span>FOR THE MOMENT</span><h2 id="home-occasions-title">برای هر مناسبت</h2><p>برای هر احساس و هر موقعیت، انتخابی متناسب با همان لحظه.</p></div>
-      <a href="{% url 'occasions' %}" class="home-text-link">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-    </header>
-    <div class="home-occasions__rail" data-reveal-group aria-label="مناسبت‌ها">
-      {% for item in home_occasion_cards %}
-        <a class="home-occasion-card" href="{{ item.url }}">{% if item.image|slice:':7' == '/media/' %}<img src="{{ item.image }}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">{% else %}<img src="{% static item.image %}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">{% endif %}<span class="home-occasion-card__label"><strong>{{ item.label }}</strong><small>{{ item.label_en }}</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-      {% empty %}
-        <a class="home-occasion-card" href="{% url 'occasions' %}"><img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" width="720" height="900" loading="lazy" decoding="async"><span class="home-occasion-card__label"><strong>لحظه‌های خاص</strong><small>Occasions</small></span><i class="bi bi-arrow-left"></i></a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
+{% include "main/components/home_daily_occasions.html" %}
 
 <section class="home-section home-wedding" aria-labelledby="home-wedding-title" data-reveal>
   <div class="home-container">
@@ -112,6 +73,7 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script src="{% static 'main/js/pages/home/daily-rail.js' %}?v=1" defer></script>
 <script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=12"></script>
   <script src="{% static 'main/js/pages/home/home-motion.js' %}?v=1"></script>
   <script src="{% static 'main/js/pages/home/moments-rail.js' %}?v=2"></script>

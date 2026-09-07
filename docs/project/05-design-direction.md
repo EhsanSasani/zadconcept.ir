@@ -98,3 +98,21 @@ desktop so they cover the Hero. No scroll handlers or synthetic spacers are adde
 Desktop Hero behavior is unchanged. Rail arrows and their spacing/handlers are
 removed on all widths; viewer previous/next controls are preserved. Verify the
 cover effect on a real phone in portrait and landscape after applying the follow-up.
+
+## Approved follow-up: daily flowers + occasions (base `11d5187`)
+
+The user approved the close-up mobile mock for these two sections only. Match
+Discover's ivory/navy/orange palette, local fonts, rounded photo cards and circular
+arrows. Daily products use a native horizontal rail with a live overflow indicator;
+occasions use a two-column phone grid and a wider adaptive desktop grid. Keep all
+managed occasion links, stock states, real fixed prices and product-modal payloads.
+Admin media stays authoritative; the mock's example bouquets are not product data.
+Load `daily-occasions.css` instead of the superseded `occasions-scale.css` layer.
+Hero, Moments, Discover, navigation and the sections after Occasions stay protected.
+
+Verification: Django 6.0.2 checks and 20 focused tests passed, including the new
+`main.tests.test_home_daily_occasions` suite, catalog isolation and existing home
+contracts. No model/migration changes. Native rail progress, keyboard and reduced
+motion were checked with Node. Browser/device visual verification remains pending:
+the cloud browser rejects localhost with `ERR_BLOCKED_BY_CLIENT`. Verify 320,
+390, 440, 768, 1024, 1440px, phone landscape and enlarged text before visual sign-off.
