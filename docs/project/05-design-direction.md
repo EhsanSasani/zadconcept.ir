@@ -116,3 +116,27 @@ contracts. No model/migration changes. Native rail progress, keyboard and reduce
 motion were checked with Node. Browser/device visual verification remains pending:
 the cloud browser rejects localhost with `ERR_BLOCKED_BY_CLIENT`. Verify 320,
 390, 440, 768, 1024, 1440px, phone landscape and enlarged text before visual sign-off.
+
+## Approved follow-up: single International Orders feature
+
+After Occasions, show one International Orders feature card. The former wedding
+feature and two small service cards are removed from this position. On phones the
+new card is the same full-width 4:3 geometry as the former wedding card; tablet and
+desktop use one full-width controlled-height card. Live HTML owns the Persian copy
+and CTA. Responsive WebP artwork keeps the bouquet on the left and text-safe blue
+space on the right. The destination remains the existing `international_orders`
+route. Wedding and Workshops remain available through Discover and their own pages.
+
+## Approved follow-up: deep-navy About + complete Footer
+
+The approved concept is option 3: a home-only deep-petroleum About panel with a
+bottom-left peach/ivory floral cutout, followed seamlessly by the site-wide navy
+Footer. Footer navigation restores every destination from the previously published
+Footer while retaining the redesigned catalog links: 20 named Django routes in
+Shop, Discover, Services/Guide, Address and Legal groups. Phone, Telegram,
+Instagram and address remain driven by site settings. Mobile uses two readable
+columns; tablet and desktop progressively widen without hiding links. Decorative
+flowers are responsive transparent WebP assets, while all copy remains live HTML.
+Focused Django checks and Footer render tests pass; no model or migration changes.
+Cloud-browser localhost access remains blocked, so final visual inspection is done
+on the user's local phone and desktop after applying the patch.

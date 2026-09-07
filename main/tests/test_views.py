@@ -430,6 +430,39 @@ class MainViewsTests(TestCase):
             response,
             f'href="{reverse("international_orders")}"',
         )
+        self.assertContains(response, 'class="zad-international__card"', count=1)
+        self.assertNotContains(response, 'class="home-wedding__card"')
+        self.assertNotContains(response, 'class="home-service-card"')
+
+    def test_footer_keeps_all_published_destinations(self):
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, 'class="zad-home-about"', count=1)
+        self.assertContains(response, 'class="zad-footer"', count=1)
+        for route in (
+            "flowers",
+            "flowers_same_day",
+            "bakery",
+            "gifts",
+            "weddings",
+            "occasions",
+            "events",
+            "about",
+            "blog",
+            "international_orders",
+            "international_orders_en",
+            "mashhad_hub",
+            "service_area",
+            "contact",
+            "faq",
+            "delivery_policy",
+            "refund_policy",
+            "payment_methods",
+            "privacy",
+            "terms",
+        ):
+            with self.subTest(route=route):
+                self.assertContains(response, f'href="{reverse(route)}"')
 
 
     def test_home_view_preserves_routing_and_context_contract(self):

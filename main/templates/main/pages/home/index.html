@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{% static 'main/css/pages/home/responsive-desktop.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/moments-discover.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/daily-occasions.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/international-feature.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -34,42 +35,9 @@
 
 {% include "main/components/home_daily_occasions.html" %}
 
-<section class="home-section home-wedding" aria-labelledby="home-wedding-title" data-reveal>
-  <div class="home-container">
-    <article class="home-wedding__card">
-      <img src="{% static 'main/img/sub-bridal-bouquet.webp' %}" alt="عروسی زاد" width="900" height="1125" loading="lazy" decoding="async">
-      <div class="home-wedding__veil" aria-hidden="true"></div>
-      <div class="home-wedding__content">
-        <span>WEDDING BY ZAD</span>
-        <h2 id="home-wedding-title">برای روز خاص شما</h2>
-        <strong class="home-wedding__editorial">Your Special Day, Our Passion</strong>
-        <p>طراحی گل و جزئیات روزی که قرار است به یاد بماند.</p>
-        <a href="{% url 'weddings' %}" class="home-button home-button--light">مشاهده مجموعه عروسی <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-      </div>
-    </article>
-  </div>
-</section>
+{% include "main/components/home_international_feature.html" %}
 
-<section class="home-section home-service-cards" aria-label="خدمات ویژه زاد" data-reveal>
-  <div class="home-container home-service-cards__grid" data-reveal-group>
-    <a href="{% url 'international_orders' %}" class="home-service-card">
-      <img src="{% static 'main/img/home-abroad.webp' %}" alt="سفارش از خارج ایران" width="1600" height="1067" loading="lazy" decoding="async"><div class="home-service-card__veil" aria-hidden="true"></div>
-      <div><span>GLOBAL ORDERS</span><h2>سفارش از خارج ایران</h2><p>از هر جای دنیا برای عزیزانتان در ایران سفارش ثبت کنید.</p><em>ثبت سفارش <i class="bi bi-arrow-left" aria-hidden="true"></i></em></div>
-    </a>
-    <a href="{% url 'events' %}" class="home-service-card">
-      <img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌های زاد" width="1600" height="1067" loading="lazy" decoding="async"><div class="home-service-card__veil" aria-hidden="true"></div>
-      <div><span>LEARN · CREATE</span><h2>ورکشاپ‌های زاد</h2><p>تجربه، یادگیری و ساختن در فضای زاد.</p><em>مشاهده ورکشاپ‌ها <i class="bi bi-arrow-left" aria-hidden="true"></i></em></div>
-    </a>
-  </div>
-</section>
-
-<section class="home-brand-note" aria-label="درباره زاد" data-reveal>
-  <div class="home-container home-brand-note__inner">
-    <div><span>ABOUT ZAD</span><strong>برای لحظه‌هایی که ارزش ماندن دارند.</strong></div>
-    <p>گل، هدیه و تجربه‌هایی که برای یک لحظه مشخص طراحی می‌شوند؛ از انتخاب روزانه تا مراسم و سفارش از راه دور.</p>
-    <a href="{% url 'about' %}">داستان زاد <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-  </div>
-</section>
+{% include "main/components/home_about_footer_intro.html" %}
 {% endblock %}
 
 {% block extra_js %}
