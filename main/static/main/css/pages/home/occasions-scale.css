@@ -1,0 +1,208 @@
+/*
+ * ZAD Home — Occasions scale override
+ * Additive layer only. Loaded after Home responsive styles.
+ */
+
+/* Phones */
+@media (max-width: 760px) {
+  .page-home .home-occasions {
+    padding-top: 58px !important;
+  }
+
+  .page-home .home-occasions .home-section__head {
+    margin-bottom: 18px !important;
+  }
+
+  .page-home .home-occasions .home-section__head h2 {
+    font-size: 1.62rem !important;
+  }
+
+  .page-home .home-occasions .home-section__head > div > span {
+    font-size: .52rem !important;
+  }
+
+  .page-home .home-occasions .home-section__head p {
+    max-width: 34ch !important;
+    font-size: .72rem !important;
+  }
+
+  .page-home .home-occasions__rail {
+    gap: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .page-home .home-occasion-card {
+    flex: 0 0 60vw !important;
+    width: 60vw !important;
+    min-width: 205px !important;
+    max-width: 258px !important;
+    grid-template-columns: minmax(0, 1fr) 34px !important;
+    border-radius: 15px !important;
+  }
+
+  .page-home .home-occasion-card img {
+    width: 100% !important;
+    height: 177px !important;
+    min-height: 177px !important;
+    max-height: 177px !important;
+    aspect-ratio: auto !important;
+    object-fit: cover !important;
+  }
+
+  .page-home .home-occasion-card__label {
+    min-height: 54px !important;
+    padding: 7px 10px 7px 0 !important;
+  }
+
+  .page-home .home-occasion-card__label strong {
+    font-size: .66rem !important;
+  }
+
+  .page-home .home-occasion-card__label small {
+    margin-top: 2px !important;
+    font-size: .46rem !important;
+  }
+
+  .page-home .home-occasion-card > i {
+    font-size: .7rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-home .home-occasions {
+    padding-top: 54px !important;
+  }
+
+  .page-home .home-occasion-card {
+    flex-basis: 62vw !important;
+    width: 62vw !important;
+    min-width: 198px !important;
+    max-width: 242px !important;
+  }
+
+  .page-home .home-occasion-card img {
+    height: 168px !important;
+    min-height: 168px !important;
+    max-height: 168px !important;
+  }
+}
+
+/* Tablet and larger */
+@media (min-width: 761px) {
+  .page-home .home-occasions {
+    padding-top: clamp(72px, 6.5vw, 108px) !important;
+  }
+
+  .page-home .home-occasions .home-section__head {
+    margin-bottom: clamp(24px, 2.2vw, 32px) !important;
+  }
+
+  .page-home .home-occasions .home-section__head h2 {
+    font-size: clamp(2rem, 2.45vw, 2.85rem) !important;
+  }
+
+  .page-home .home-occasions .home-section__head p {
+    font-size: clamp(.78rem, .86vw, .94rem) !important;
+  }
+
+  .page-home .home-occasions__rail {
+    gap: clamp(14px, 1.25vw, 20px) !important;
+    padding-bottom: 13px !important;
+  }
+
+  .page-home .home-occasion-card {
+    flex: 0 0 calc((100% - 60px) / 4) !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    grid-template-columns: minmax(0, 1fr) 36px !important;
+    border-radius: 15px !important;
+  }
+
+  .page-home .home-occasion-card img {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 1.38 / 1 !important;
+    object-fit: cover !important;
+  }
+
+  .page-home .home-occasion-card__label {
+    min-height: clamp(52px, 4.2vw, 64px) !important;
+    padding: 8px 11px 8px 0 !important;
+  }
+
+  .page-home .home-occasion-card__label strong {
+    font-size: clamp(.66rem, .64vw, .78rem) !important;
+  }
+
+  .page-home .home-occasion-card__label small {
+    margin-top: 2px !important;
+    font-size: clamp(.45rem, .44vw, .54rem) !important;
+  }
+
+  .page-home .home-occasion-card > i {
+    font-size: clamp(.68rem, .62vw, .78rem) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 979px) {
+  .page-home .home-occasion-card {
+    flex-basis: calc((100% - 28px) / 3) !important;
+  }
+}
+
+@media (min-width: 980px) and (max-width: 1199px) {
+  .page-home .home-occasion-card {
+    flex-basis: calc((100% - 28px) / 3) !important;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .page-home .home-occasion-card {
+    flex-basis: calc((100% - 48px) / 4) !important;
+  }
+}
+
+@media (min-width: 1600px) and (max-width: 2559px) {
+  .page-home .home-occasion-card {
+    flex-basis: calc((100% - 72px) / 5) !important;
+  }
+}
+
+@media (min-width: 2560px) {
+  .page-home .home-occasion-card {
+    flex-basis: calc((100% - 80px) / 5) !important;
+  }
+
+  .page-home .home-occasion-card__label {
+    min-height: 68px !important;
+  }
+
+  .page-home .home-occasion-card__label strong {
+    font-size: .82rem !important;
+  }
+
+  .page-home .home-occasion-card__label small {
+    font-size: .56rem !important;
+  }
+}
+
+@media (min-width: 3840px) {
+  .page-home .home-occasions {
+    padding-top: 138px !important;
+  }
+
+  .page-home .home-occasion-card__label {
+    min-height: 74px !important;
+  }
+
+  .page-home .home-occasion-card__label strong {
+    font-size: .9rem !important;
+  }
+
+  .page-home .home-occasion-card__label small {
+    font-size: .62rem !important;
+  }
+}

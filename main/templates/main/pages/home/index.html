@@ -6,6 +6,8 @@
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=7">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=39">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/responsive-desktop.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/occasions-scale.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -40,7 +42,7 @@
       <a href="{% url 'flowers' %}" class="home-explore-card"><img src="{% static 'main/img/cat-flowers.webp' %}" alt="استودیو گل زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>استودیو گل</strong><small>Flower Studio</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
       <a href="{% url 'weddings' %}" class="home-explore-card"><img src="{% static 'main/img/sub-bridal-bouquet.webp' %}" alt="عروسی زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>عروسی</strong><small>Wedding</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
       <a href="{% url 'bakery' %}" class="home-explore-card"><img src="{% static 'main/img/cat-bakery.webp' %}" alt="سوییت‌بار زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>سوییت‌بار</strong><small>Sweet Bar</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
-      <a href="{% url 'gifts' %}" class="home-explore-card"><img src="{% static 'main/img/cat-gifts.webp' %}" alt="کانسپت استور زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>کانسپت استور</strong><small>Concept Store</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+      <a href="{% url 'events' %}" class="home-explore-card"><img src="{% static 'main/img/home-workshop.webp' %}" alt="ورکشاپ‌های زاد" width="900" height="1125" loading="lazy" decoding="async"><span class="home-explore-card__label"><strong>ورکشاپ‌ها</strong><small>Workshops</small></span><i class="bi bi-arrow-left" aria-hidden="true"></i></a>
     </div>
   </div>
 </section>
