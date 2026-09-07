@@ -140,3 +140,44 @@ flowers are responsive transparent WebP assets, while all copy remains live HTML
 Focused Django checks and Footer render tests pass; no model or migration changes.
 Cloud-browser localhost access remains blocked, so final visual inspection is done
 on the user's local phone and desktop after applying the patch.
+
+## Approved Flower Studio landing direction
+
+The Flower Studio landing keeps its admin-managed desktop/mobile Hero artwork but
+adopts the final Home geometry and cover behavior. On phones the Hero uses the
+Home formula `56.25vw + 76px`; on larger screens it uses the Home desktop height.
+The Hero pins below the existing header while the opaque ivory collection surface
+scrolls above it, beginning with the same shallow rounded top edge as Home.
+
+The category directory is Persian-first and uses a two-column phone grid, three
+columns from tablet upward, compact live HTML labels, and navy/orange circular
+actions. Admin category cover uploads remain authoritative. Six responsive WebP
+fallback pairs provide distinct artwork when no cover is uploaded. The benefits
+strip is quiet and compact; the single consultation CTA uses the Home deep-navy
+and floral language and meets the global Footer without a competing card surface.
+Header, menu, Home, models, migrations and managed content ownership stay unchanged.
+
+## Approved site-wide ZAD Editorial system
+
+The final Home and Flower Studio direction now extends to every active public
+page except the locked Home, Flower Studio landing and Wedding landing. The
+system is opt-in through the `page-zad-v2` body class and the scoped
+`pages/shared/zad-editorial.css` layer, so protected landings cannot inherit the
+redesign accidentally.
+
+The shared contract uses Home's ivory `#fbf7f0`, deep petroleum `#073e52` and
+controlled orange `#f76532`, local Persian/English fonts, quiet borders, compact
+editorial typography and image-led cards. Managed image Heroes use the exact
+Flower Studio cover behavior: the desktop Home height token, mobile
+`56.25vw + 76px`, landscape protection, a sticky layer below the header and an
+opaque ivory content surface with a shallow rounded leading edge. Pages without
+a photographic Hero use a deep-petroleum editorial intro instead of inventing
+decorative imagery.
+
+Catalogs, same-day delivery, subcategories, occasions, product details, Wedding
+collections, Workshops, international orders, Mashhad landings, Journal,
+About, Contact, FAQ, policies and 404 are covered. Product/admin ownership,
+prices, stock states, filters, forms, routes, SEO metadata and copy remain in
+their existing Django surfaces. Mobile product and occasion grids use two
+columns, tablet uses three where appropriate, and wide catalog grids use four.
+All motion is progressive and collapses under `prefers-reduced-motion`.

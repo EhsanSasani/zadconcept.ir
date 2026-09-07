@@ -153,8 +153,69 @@
   .weddings-category-card__media img,
   .weddings-gallery__item img { transition: none; }
 }
+
+/* Wedding landing — match the approved Flower Studio Hero and scroll model. */
+body.page-weddings.page-weddings {
+  overflow-x: clip;
+}
+
+body.page-weddings .weddings-shell {
+  overflow: visible;
+  isolation: isolate;
+}
+
+body.page-weddings .weddings-shell > .weddings-hero {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: var(--zad-header-height, 68px) !important;
+  z-index: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+}
+
+body.page-weddings .weddings-shell > :is(
+  .weddings-intro,
+  .weddings-directory,
+  .weddings-gallery
+) {
+  position: relative;
+  z-index: 3;
+}
+
+body.page-weddings .weddings-shell > .weddings-hero + .weddings-intro {
+  margin-top: -24px;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  background: #fffaf4;
+}
+
+@media (max-width: 760px) {
+  body.page-weddings .weddings-shell > .weddings-hero {
+    top: var(--zad-mobile-header-height, 40px) !important;
+    height: calc(56.25vw + 76px) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+  }
+
+  body.page-weddings .weddings-shell > .weddings-hero + .weddings-intro {
+    margin-top: -18px;
+    border-radius: 24px 24px 0 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body.page-weddings .weddings-shell > .weddings-hero {
+    height: max(240px, 76svh) !important;
+  }
+}
 .weddings-hero__media img {
-  object-position: center calc(50% + 10px);
+  object-position: center;
 }
 /* Wedding category cards — horizontal ratio */
 .weddings-category-card {
@@ -782,7 +843,7 @@
 
 .weddings-gallery {
   padding-top: 38px !important;
-  background: transparent !important;
+  background: var(--wedding-paper) !important;
 }
 
 /* Compact editorial gallery heading */

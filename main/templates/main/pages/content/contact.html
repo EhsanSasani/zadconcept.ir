@@ -1,9 +1,12 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-contact{% endblock %}
+{% block body_class %}page-contact page-zad-v2{% endblock %}
 
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/contact.css' %}?v=1">{% endblock %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/content/contact.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 {% include "main/components/breadcrumbs.html" %}

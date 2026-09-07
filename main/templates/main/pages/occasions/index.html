@@ -1,10 +1,11 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-occasions page-catalog-section{% endblock %}
+{% block body_class %}page-occasions page-catalog-section page-zad-v2{% endblock %}
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/pages/occasions/index.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -43,7 +44,13 @@
       </section>
     {% else %}
       <div class="occasions-empty">
-        {{ page_content.empty.body|default:page_content.empty.title|default:"هنوز مناسبتی برای نمایش ثبت نشده است." }}
+        {% if page_content.empty.body %}
+          {{ page_content.empty.body }}
+        {% elif page_content.empty.title %}
+          {{ page_content.empty.title }}
+        {% else %}
+          هنوز مناسبتی برای نمایش ثبت نشده است.
+        {% endif %}
       </div>
     {% endif %}
 

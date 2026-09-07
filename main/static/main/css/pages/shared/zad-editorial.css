@@ -1,0 +1,1393 @@
+/* ZAD Editorial v2
+   Shared visual contract for every public page except the locked Home,
+   Flower Studio landing and Wedding landing. All rules stay opt-in. */
+
+body.page-zad-v2 {
+  --ze-paper: #fbf7f0;
+  --ze-paper-soft: #f5ede3;
+  --ze-paper-deep: #eadfd3;
+  --ze-navy: #073e52;
+  --ze-navy-deep: #0a2735;
+  --ze-orange: #f76532;
+  --ze-orange-text: #b83d13;
+  --ze-ink: #302923;
+  --ze-muted: rgba(48, 41, 35, .62);
+  --ze-line: rgba(7, 62, 82, .14);
+  --ze-shadow: 0 18px 46px rgba(43, 35, 29, .08);
+  overflow-x: clip;
+  background: var(--ze-paper);
+  color: var(--ze-ink);
+}
+
+.page-zad-v2 .site-main {
+  position: relative;
+  z-index: 2;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .container,
+.page-zad-v2 .flowers-container,
+.page-zad-v2 .occasions-container,
+.page-zad-v2 .wsr-container,
+.page-zad-v2 .io-container {
+  width: min(calc(100% - 32px), 1280px);
+  margin-inline: auto;
+}
+
+.page-zad-v2 h1,
+.page-zad-v2 h2,
+.page-zad-v2 h3,
+.page-zad-v2 strong {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 p {
+  color: var(--ze-muted);
+}
+
+.page-zad-v2 .section-kicker,
+.page-zad-v2 .flower-world-head__kicker,
+.page-zad-v2 .same-day-intro__kicker,
+.page-zad-v2 .category-split-hero__kicker,
+.page-zad-v2 .item-detail__eyebrow,
+.page-zad-v2 .item-detail-panel__kicker,
+.page-zad-v2 .wedding-collection-kicker,
+.page-zad-v2 .about-eyebrow,
+.page-zad-v2 .info-hero__kicker,
+.page-zad-v2 .io-eyebrow {
+  color: var(--ze-orange-text);
+  font-family: var(--font-ui-en);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.page-zad-v2 .section-block {
+  margin-top: clamp(48px, 6vw, 82px);
+}
+
+.page-zad-v2 .section-head {
+  margin-bottom: clamp(22px, 3vw, 36px);
+}
+
+.page-zad-v2 .section-head--center,
+.page-zad-v2 .catalog-section-head,
+.page-zad-v2 .catalog-detail-head {
+  justify-content: center;
+  text-align: center;
+}
+
+.page-zad-v2 .section-title-en,
+.page-zad-v2 .section-head h1,
+.page-zad-v2 .section-head h2 {
+  color: var(--ze-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.page-zad-v2 .section-link,
+.page-zad-v2 .text-link,
+.page-zad-v2 .info-text-link {
+  color: var(--ze-orange-text);
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+/* Default managed Hero: same geometry, sticky cover and shallow arch as Flowers. */
+body.page-zad-v2 > .page-hero {
+  position: sticky !important;
+  top: var(--zad-header-height, 40px) !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  background: #ded6cd;
+}
+
+.page-zad-v2 > .page-hero .page-hero__slides,
+.page-zad-v2 > .page-hero .page-hero__slide,
+.page-zad-v2 > .page-hero picture,
+.page-zad-v2 > .page-hero img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.page-zad-v2 > .page-hero img {
+  object-fit: cover !important;
+  filter: none !important;
+}
+
+.page-zad-v2 > .page-hero .page-hero__content {
+  right: clamp(16px, 4vw, 60px);
+  bottom: clamp(34px, 7vw, 84px);
+  left: auto;
+  width: min(560px, calc(100% - 32px));
+  padding: clamp(16px, 2.3vw, 26px);
+  border: 1px solid rgba(255, 255, 255, .44);
+  border-radius: 18px;
+  background: rgba(251, 247, 240, .87);
+  box-shadow: 0 18px 52px rgba(10, 39, 53, .12);
+  color: var(--ze-ink);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.page-zad-v2 > .page-hero .page-hero__content h1 {
+  color: var(--ze-navy);
+  font-size: clamp(1.65rem, 3vw, 3rem);
+  font-weight: 650;
+  text-shadow: none;
+}
+
+.page-zad-v2 > .page-hero .page-hero__content p {
+  margin-top: 8px;
+  color: var(--ze-muted);
+  font-size: clamp(.78rem, 1vw, .92rem);
+}
+
+.page-zad-v2 > .page-hero + .page-hero-mood {
+  display: none;
+}
+
+.page-zad-v2 > .page-hero ~ .site-main {
+  margin-top: -24px;
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+}
+
+/* Catalog directories */
+.page-zad-v2 .catalog-primary-section,
+.page-zad-v2 .flower-world-section,
+.page-zad-v2 .catalog-products-section,
+.page-zad-v2 .same-day-catalog,
+.page-zad-v2 .flowers-child-directory {
+  position: relative;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .flower-world-head,
+.page-zad-v2 .same-day-intro,
+.page-zad-v2 .flowers-directory__head {
+  max-width: 720px;
+  margin: 0 auto clamp(24px, 3vw, 38px);
+  text-align: center;
+}
+
+.page-zad-v2 .flower-world-head h2,
+.page-zad-v2 .same-day-intro h1,
+.page-zad-v2 .same-day-intro h2,
+.page-zad-v2 .flowers-directory__head h1,
+.page-zad-v2 .flowers-directory__head h2 {
+  color: var(--ze-navy);
+  font-size: clamp(1.55rem, 2.8vw, 2.5rem);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.page-zad-v2 .flower-world-head p,
+.page-zad-v2 .same-day-intro p,
+.page-zad-v2 .flowers-directory__head p {
+  max-width: 58ch;
+  margin: 8px auto 0;
+  color: var(--ze-muted);
+  font-size: .86rem;
+}
+
+.page-zad-v2 .flower-world-head::after,
+.page-zad-v2 .same-day-intro__rule,
+.page-zad-v2 .flowers-directory__head::after {
+  content: "";
+  display: block;
+  width: 62px;
+  height: 1px;
+  margin: 20px auto 0;
+  background: var(--ze-line);
+}
+
+.page-zad-v2 .flower-world-head--split {
+  display: block;
+}
+
+.page-zad-v2 .flower-world-head--split .section-link {
+  display: inline-block;
+  margin-top: 14px;
+}
+
+.page-zad-v2 .catalog-card-grid,
+.page-zad-v2 .flower-type-grid,
+.page-zad-v2 .flower-moment-grid,
+.page-zad-v2 .flowers-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.7vw, 22px);
+}
+
+.page-zad-v2 .catalog-image-card,
+.page-zad-v2 .flower-type-card__main,
+.page-zad-v2 .flower-moment-card,
+.page-zad-v2 .flowers-category-card {
+  position: relative;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ze-paper-deep);
+  box-shadow: var(--ze-shadow);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.page-zad-v2 .catalog-image-card:hover,
+.page-zad-v2 .flower-type-card__main:hover,
+.page-zad-v2 .flower-moment-card:hover,
+.page-zad-v2 .flowers-category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 54px rgba(43, 35, 29, .13);
+}
+
+.page-zad-v2 .catalog-image-card__media,
+.page-zad-v2 .flower-type-card__media,
+.page-zad-v2 .flower-moment-card__media,
+.page-zad-v2 .flowers-category-card__media,
+.page-zad-v2 .catalog-image-card__media img,
+.page-zad-v2 .flower-type-card__media img,
+.page-zad-v2 .flower-moment-card__media img,
+.page-zad-v2 .flowers-category-card__media img {
+  width: 100%;
+  height: 100%;
+}
+
+.page-zad-v2 .catalog-image-card__media img,
+.page-zad-v2 .flower-type-card__media img,
+.page-zad-v2 .flower-moment-card__media img,
+.page-zad-v2 .flowers-category-card__media img {
+  object-fit: cover;
+  filter: saturate(.92) brightness(.9);
+  transition: transform 520ms ease;
+}
+
+.page-zad-v2 .catalog-image-card:hover img,
+.page-zad-v2 .flower-type-card__main:hover img,
+.page-zad-v2 .flower-moment-card:hover img,
+.page-zad-v2 .flowers-category-card:hover img {
+  transform: scale(1.035);
+}
+
+.page-zad-v2 .catalog-image-card__overlay,
+.page-zad-v2 .flower-type-card__overlay,
+.page-zad-v2 .flowers-category-card__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 34%, rgba(10, 39, 53, .78) 100%);
+}
+
+.page-zad-v2 .catalog-image-card__content,
+.page-zad-v2 .flower-type-card__content,
+.page-zad-v2 .flowers-category-card__content {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: clamp(14px, 2vw, 22px);
+  color: var(--ze-paper);
+}
+
+.page-zad-v2 .catalog-image-card__content h3,
+.page-zad-v2 .flower-type-card__content h3,
+.page-zad-v2 .flowers-category-card__content strong {
+  color: var(--ze-paper);
+  font-size: clamp(1rem, 1.5vw, 1.35rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .catalog-image-card__content p,
+.page-zad-v2 .flower-type-card__content p,
+.page-zad-v2 .flowers-category-card__content > span {
+  display: none;
+}
+
+.page-zad-v2 .catalog-image-card__eyebrow,
+.page-zad-v2 .flower-type-card__content > span,
+.page-zad-v2 .flowers-category-card__content small {
+  color: rgba(251, 247, 240, .72);
+  font-family: var(--font-ui-en);
+  font-size: .54rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.page-zad-v2 .flower-moment-card__body {
+  padding: 14px 16px 16px;
+  background: var(--ze-paper-soft);
+}
+
+.page-zad-v2 .flower-moment-card__body h3 {
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.page-zad-v2 .flower-moment-card__body p {
+  margin-top: 4px;
+  font-size: .74rem;
+  line-height: 1.75;
+}
+
+.page-zad-v2 .flower-type-card__children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 4px 0;
+}
+
+.page-zad-v2 .flower-type-card__children a {
+  padding: 7px 11px;
+  border: 1px solid var(--ze-line);
+  border-radius: 999px;
+  color: var(--ze-navy);
+  background: rgba(255, 255, 255, .34);
+  font-size: .68rem;
+}
+
+/* Product grids and filters */
+.page-zad-v2 .catalog-products-section,
+.page-zad-v2 .same-day-catalog,
+.page-zad-v2 .wedding-collection-products {
+  padding-top: clamp(46px, 6vw, 78px);
+  padding-bottom: clamp(64px, 8vw, 110px);
+}
+
+.page-zad-v2 .flowers-grid,
+.page-zad-v2 .product-grid,
+.page-zad-v2 .same-day-grid,
+.page-zad-v2 .wedding-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.65vw, 22px);
+}
+
+.page-zad-v2 .flowers-product-card {
+  border: 1px solid rgba(7, 62, 82, .08);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: 0 12px 34px rgba(43, 35, 29, .065);
+}
+
+.page-zad-v2 .flowers-product-card__media {
+  aspect-ratio: 4 / 5;
+  background: var(--ze-paper-deep);
+}
+
+.page-zad-v2 .flowers-product-card__media img {
+  filter: saturate(.94) brightness(.99);
+}
+
+.page-zad-v2 .flowers-product-card__body {
+  min-height: 92px;
+  padding: 14px 15px;
+  background: var(--ze-paper-soft);
+}
+
+.page-zad-v2 .flowers-product-card__type {
+  color: var(--ze-orange-text);
+}
+
+.page-zad-v2 .flowers-product-card__arrow {
+  border-color: rgba(247, 101, 50, .28);
+  color: #fff;
+  background: var(--ze-orange);
+}
+
+.page-zad-v2 .flowers-product-card:hover .flowers-product-card__arrow {
+  border-color: var(--ze-navy);
+  background: var(--ze-navy);
+}
+
+.page-zad-v2 .catalog-filter-card,
+.page-zad-v2 .catalog-filter--switch .catalog-filter__grid,
+.page-zad-v2 .catalog-filter-chip {
+  border-color: var(--ze-line);
+  background: rgba(255, 255, 255, .34);
+  color: var(--ze-navy);
+  box-shadow: none;
+}
+
+.page-zad-v2 .catalog-filter-card.is-active,
+.page-zad-v2 .catalog-filter-chip.is-active {
+  border-color: rgba(247, 101, 50, .42);
+  background: #f6dfd2;
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .empty-box,
+.page-zad-v2 .flowers-empty,
+.page-zad-v2 .occasions-empty,
+.page-zad-v2 .wsr-empty,
+.page-zad-v2 .journal-empty {
+  width: 100%;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  border: 1px dashed rgba(7, 62, 82, .22);
+  border-radius: 16px;
+  background: var(--ze-paper-soft);
+  color: var(--ze-muted);
+  text-align: center;
+}
+
+/* Split category Hero used by subcategories. */
+.page-zad-v2 .category-split-hero {
+  padding: clamp(38px, 5vw, 70px) 0 0;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .category-split-hero__card {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr);
+  min-height: 460px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--ze-navy);
+  box-shadow: var(--ze-shadow);
+}
+
+.page-zad-v2 .category-split-hero__copy {
+  align-self: center;
+  padding: clamp(30px, 5vw, 72px);
+}
+
+.page-zad-v2 .category-split-hero__copy h1 {
+  margin-top: 10px;
+  color: var(--ze-paper);
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .category-split-hero__copy p {
+  margin-top: 12px;
+  color: rgba(251, 247, 240, .72);
+  font-size: .88rem;
+}
+
+.page-zad-v2 .category-split-hero__back {
+  display: inline-flex;
+  margin-top: 24px;
+  color: #ffd8c9;
+  font-size: .76rem;
+}
+
+.page-zad-v2 .category-split-hero__media,
+.page-zad-v2 .category-split-hero__media img {
+  width: 100%;
+  height: 100%;
+}
+
+.page-zad-v2 .category-split-hero__media img {
+  object-fit: cover;
+}
+
+/* Occasions */
+.page-zad-v2 .occasions-brand-mark {
+  display: none;
+}
+
+.page-zad-v2 .occasions-shell {
+  padding: clamp(52px, 7vw, 92px) 0 clamp(72px, 9vw, 120px);
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .occasions-shell > .occasions-container > .section-head {
+  display: block;
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-zad-v2 .occasions-shell .section-head h1 {
+  margin-top: 8px;
+}
+
+.page-zad-v2 .occasions-shell .section-head p {
+  max-width: 58ch;
+  margin: 10px auto 0;
+  font-size: .86rem;
+}
+
+.page-zad-v2 .occasions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.7vw, 22px);
+}
+
+.page-zad-v2 .occasion-card {
+  min-height: 0;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  box-shadow: var(--ze-shadow);
+}
+
+.page-zad-v2 .occasion-card__shade {
+  background: linear-gradient(180deg, transparent 38%, rgba(10, 39, 53, .8) 100%);
+}
+
+.page-zad-v2 .occasion-card__content {
+  padding: clamp(15px, 2vw, 22px);
+}
+
+.page-zad-v2 .occasion-card__content h2 {
+  color: var(--ze-paper);
+  font-size: clamp(1rem, 1.5vw, 1.35rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .occasion-card__content p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: rgba(251, 247, 240, .72);
+  font-size: .72rem;
+}
+
+.page-zad-v2 .occasion-card__en {
+  color: #ffd1bf;
+  font-size: .54rem;
+  letter-spacing: .14em;
+}
+
+/* Product detail */
+.page-zad-v2.page-item > .page-hero {
+  display: none;
+}
+
+.page-zad-v2.page-item > .site-main {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+.page-zad-v2 .item-detail {
+  padding-top: clamp(30px, 5vw, 68px);
+}
+
+.page-zad-v2 .item-detail__grid {
+  gap: clamp(28px, 5vw, 72px);
+}
+
+.page-zad-v2 .item-detail__image-frame {
+  border-radius: 16px;
+  background: var(--ze-paper-deep);
+  box-shadow: var(--ze-shadow);
+}
+
+.page-zad-v2 .item-detail__image-frame > img {
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.page-zad-v2 .item-detail__close {
+  border: 1px solid rgba(7, 62, 82, .12);
+  color: var(--ze-navy);
+  background: rgba(251, 247, 240, .88);
+}
+
+.page-zad-v2 .item-detail__info {
+  align-self: center;
+}
+
+.page-zad-v2 .item-detail__info h1 {
+  color: var(--ze-navy);
+  font-size: clamp(1.8rem, 3.2vw, 3.25rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .item-detail__chips span,
+.page-zad-v2 .item-detail__tags span,
+.page-zad-v2 .item-detail__links a {
+  border-color: var(--ze-line);
+  background: var(--ze-paper-soft);
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .item-detail__purchase-box,
+.page-zad-v2 .item-detail-panel {
+  border: 1px solid var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+.page-zad-v2 .item-detail__price {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .item-detail-extra,
+.page-zad-v2 .item-detail-related {
+  padding-bottom: clamp(54px, 7vw, 90px);
+}
+
+/* Wedding collection remains separate from the locked Wedding landing. */
+.page-zad-v2 .wedding-collection-page {
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .wedding-collection-intro {
+  padding: clamp(52px, 7vw, 92px) 0 clamp(24px, 3vw, 38px);
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .wedding-collection-intro__content {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-zad-v2 .wedding-collection-intro h1 {
+  color: var(--ze-navy);
+  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .wedding-collection-intro p {
+  max-width: 58ch;
+  margin: 10px auto 0;
+  color: var(--ze-muted);
+}
+
+.page-zad-v2 .wedding-product-card__body {
+  min-height: 60px;
+  justify-content: center;
+  background: var(--ze-paper-soft);
+}
+
+.page-zad-v2 .wedding-product-card__code {
+  color: var(--ze-navy);
+}
+
+/* Editorial information pages, journal and Mashhad hub. */
+.page-zad-v2 .info-page,
+.page-zad-v2 .journal-page,
+.page-zad-v2 .mashhad-page {
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .info-hero {
+  padding: clamp(58px, 8vw, 108px) 0 clamp(52px, 7vw, 92px);
+  background: var(--ze-navy);
+}
+
+.page-zad-v2 .info-hero__inner {
+  max-width: 1080px;
+}
+
+.page-zad-v2 .info-hero__topline,
+.page-zad-v2 .info-hero__meta {
+  color: rgba(251, 247, 240, .56);
+  border-color: rgba(251, 247, 240, .16);
+}
+
+.page-zad-v2 .info-hero__copy h1 {
+  max-width: 17ch;
+  color: var(--ze-paper);
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .info-hero__copy p {
+  max-width: 64ch;
+  color: rgba(251, 247, 240, .7);
+}
+
+.page-zad-v2 .info-layout {
+  gap: clamp(28px, 5vw, 68px);
+  padding-top: clamp(48px, 6vw, 82px);
+  padding-bottom: clamp(72px, 9vw, 120px);
+}
+
+.page-zad-v2 .info-index {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+}
+
+.page-zad-v2 .info-index a,
+.page-zad-v2 .info-quick-links a {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .info-paper {
+  border: 1px solid rgba(7, 62, 82, .08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .34);
+  box-shadow: none;
+}
+
+.page-zad-v2 .info-section__heading > span,
+.page-zad-v2 .journal-card__number {
+  color: var(--ze-orange-text);
+}
+
+.page-zad-v2 .info-contact {
+  border-radius: 16px;
+  background: var(--ze-navy);
+}
+
+.page-zad-v2 .info-contact h2,
+.page-zad-v2 .info-contact p,
+.page-zad-v2 .info-contact__kicker {
+  color: var(--ze-paper);
+}
+
+.page-zad-v2 .journal-list,
+.page-zad-v2 .list-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.page-zad-v2 .journal-card,
+.page-zad-v2 .list-card {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+/* Blog article */
+.page-zad-v2 .blog-detail {
+  width: min(calc(100% - 32px), 920px);
+  padding: clamp(38px, 6vw, 76px) 0 clamp(72px, 9vw, 120px);
+}
+
+.page-zad-v2 .blog-detail .cover-image {
+  margin: 0 0 clamp(26px, 4vw, 44px);
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: var(--ze-shadow);
+}
+
+.page-zad-v2 .blog-detail h1 {
+  color: var(--ze-navy);
+  font-size: clamp(1.8rem, 3.5vw, 3.25rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .blog-detail__body {
+  color: var(--ze-ink);
+  font-size: clamp(.92rem, 1.1vw, 1.02rem);
+  line-height: 2.15;
+}
+
+/* Contact and FAQ */
+.page-zad-v2 .contact-landing,
+.page-zad-v2 .faq-landing {
+  gap: clamp(28px, 5vw, 70px);
+  padding-top: clamp(52px, 7vw, 92px);
+}
+
+.page-zad-v2 .contact-landing__content h1,
+.page-zad-v2 .faq-landing__content h1 {
+  max-width: 15ch;
+  color: var(--ze-navy);
+  font-size: clamp(1.8rem, 3.2vw, 3.15rem);
+  font-weight: 650;
+}
+
+.page-zad-v2 .contact-info-panel,
+.page-zad-v2 .faq-contact-panel,
+.page-zad-v2 .contact-lead-box {
+  border: 1px solid var(--ze-line);
+  border-radius: 16px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+.page-zad-v2 .contact-paths,
+.page-zad-v2 .faq-highlights,
+.page-zad-v2 .contact-guidance__grid {
+  gap: 12px;
+}
+
+.page-zad-v2 .contact-paths article,
+.page-zad-v2 .faq-highlights article,
+.page-zad-v2 .contact-guidance__grid article {
+  border: 1px solid var(--ze-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .3);
+  box-shadow: none;
+}
+
+.page-zad-v2 .contact-paths i,
+.page-zad-v2 .faq-highlights i {
+  color: var(--ze-orange);
+}
+
+.page-zad-v2 .lead-form input,
+.page-zad-v2 .lead-form select,
+.page-zad-v2 .lead-form textarea,
+.page-zad-v2 .wsr-request input,
+.page-zad-v2 .wsr-request select,
+.page-zad-v2 .wsr-request textarea {
+  border-color: var(--ze-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .72);
+  color: var(--ze-ink);
+}
+
+.page-zad-v2 .faq-topic-nav {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+}
+
+.page-zad-v2 .faq-card {
+  border-color: var(--ze-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .32);
+  box-shadow: none;
+}
+
+.page-zad-v2 .faq-card summary {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .contact-final-cta,
+.page-zad-v2 .faq-final-cta {
+  width: min(calc(100% - 32px), 1280px);
+  margin-bottom: 0;
+  padding: clamp(42px, 6vw, 74px);
+  border: 0;
+  border-radius: 18px 18px 0 0;
+  background: var(--ze-navy);
+  box-shadow: none;
+  text-align: center;
+}
+
+.page-zad-v2 .contact-final-cta h2,
+.page-zad-v2 .faq-final-cta h2,
+.page-zad-v2 .contact-final-cta p,
+.page-zad-v2 .faq-final-cta p,
+.page-zad-v2 .contact-final-cta .section-kicker,
+.page-zad-v2 .faq-final-cta .section-kicker {
+  color: var(--ze-paper);
+}
+
+/* Shared buttons */
+.page-zad-v2 .btn,
+.page-zad-v2 .about-button,
+.page-zad-v2 .info-button,
+.page-zad-v2 .wsr-primary-button,
+.page-zad-v2 .wsr-request__submit,
+.page-zad-v2 .io-button,
+.page-zad-v2 .io-final-cta__button {
+  min-height: 44px;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.page-zad-v2 .btn-call,
+.page-zad-v2 .about-button--navy,
+.page-zad-v2 .wsr-primary-button,
+.page-zad-v2 .wsr-request__submit,
+.page-zad-v2 .io-button--primary,
+.page-zad-v2 .io-final-cta__button {
+  border-color: var(--ze-navy);
+  background: var(--ze-navy);
+  color: #fff;
+}
+
+.page-zad-v2 .btn-telegram,
+.page-zad-v2 .btn-bale,
+.page-zad-v2 .btn-light,
+.page-zad-v2 .io-button--ghost {
+  border-color: var(--ze-line);
+  background: var(--ze-paper-soft);
+  color: var(--ze-navy);
+}
+
+/* About: keep its content, align surfaces and Hero behavior. */
+.page-zad-v2 .about-page {
+  overflow: visible;
+  background: var(--ze-paper);
+}
+
+body.page-zad-v2.page-about .about-hero {
+  position: sticky !important;
+  top: var(--zad-header-height, 40px) !important;
+  z-index: 0 !important;
+  height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+}
+
+body.page-zad-v2.page-about .about-hero__media,
+body.page-zad-v2.page-about .about-hero__media picture,
+body.page-zad-v2.page-about .about-hero__media img {
+  width: 100%;
+  height: 100% !important;
+}
+
+.page-zad-v2 .about-manifesto {
+  position: relative;
+  z-index: 2;
+  margin-top: -24px;
+  border-radius: 28px 28px 0 0;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .about-principles,
+.page-zad-v2 .about-worlds,
+.page-zad-v2 .about-workshops {
+  position: relative;
+  z-index: 2;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .about-world-card,
+.page-zad-v2 .about-workshops__figure,
+.page-zad-v2 .about-manifesto__media {
+  border-radius: 14px;
+}
+
+.page-zad-v2 .about-closing {
+  background: var(--ze-navy);
+}
+
+/* Workshops: sticky visual Hero, opaque story flow. */
+.page-zad-v2 .wsr-page {
+  overflow: visible;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .wsr-hero {
+  position: sticky !important;
+  top: var(--zad-header-height, 40px) !important;
+  z-index: 0 !important;
+  height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.page-zad-v2 .wsr-hero__media,
+.page-zad-v2 .wsr-hero__media img {
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.page-zad-v2 .wsr-hero__content {
+  max-width: 520px;
+  padding: clamp(18px, 3vw, 30px);
+  border-radius: 18px;
+  background: rgba(251, 247, 240, .87);
+  backdrop-filter: blur(16px);
+}
+
+.page-zad-v2 .wsr-hero__content h1 {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .wsr-hero__content p {
+  color: var(--ze-muted);
+}
+
+.page-zad-v2 .wsr-worlds {
+  position: relative;
+  z-index: 3;
+  margin-top: -24px;
+  border-radius: 28px 28px 0 0;
+}
+
+.page-zad-v2 .wsr-worlds,
+.page-zad-v2 .wsr-upcoming,
+.page-zad-v2 .wsr-events,
+.page-zad-v2 .wsr-gallery,
+.page-zad-v2 .wsr-request {
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .wsr-world-card,
+.page-zad-v2 .wsr-event-card,
+.page-zad-v2 .wsr-request__panel {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+.page-zad-v2 .wsr-world-card__icon,
+.page-zad-v2 .wsr-event-card__badge {
+  color: var(--ze-orange-text);
+  background: #f6dfd2;
+}
+
+.page-zad-v2 .wsr-gallery__item,
+.page-zad-v2 .wsr-event-card__media {
+  border-radius: 12px;
+}
+
+/* Workshop detail */
+.page-zad-v2 .event-detail {
+  padding-top: clamp(48px, 7vw, 92px);
+  padding-bottom: clamp(72px, 9vw, 120px);
+}
+
+.page-zad-v2 .event-detail__main,
+.page-zad-v2 .event-detail__info-card,
+.page-zad-v2 .event-detail__reserve {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+/* International orders: same cover motion with a page-specific conversion flow. */
+.page-zad-v2 .io-page {
+  overflow: visible;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .io-hero {
+  position: sticky !important;
+  top: var(--zad-header-height, 40px) !important;
+  z-index: 0 !important;
+  height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px)) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.page-zad-v2 .io-hero__media,
+.page-zad-v2 .io-hero__media img {
+  width: 100%;
+  height: 100%;
+}
+
+.page-zad-v2 .io-hero__media img {
+  object-fit: cover;
+  filter: none;
+}
+
+.page-zad-v2 .io-hero__copy {
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 18px;
+  background: rgba(251, 247, 240, .88);
+  backdrop-filter: blur(16px);
+}
+
+.page-zad-v2 .io-hero__copy h1,
+.page-zad-v2 .io-hero__copy h1 span {
+  color: var(--ze-navy);
+}
+
+.page-zad-v2 .io-hero__lead {
+  color: var(--ze-muted);
+}
+
+.page-zad-v2 .io-trust {
+  position: relative;
+  z-index: 3;
+  margin-top: -24px;
+  border-radius: 28px 28px 0 0;
+}
+
+.page-zad-v2 .io-trust,
+.page-zad-v2 .io-categories,
+.page-zad-v2 .io-how,
+.page-zad-v2 .io-payment,
+.page-zad-v2 .io-faq {
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .io-category-card,
+.page-zad-v2 .io-step,
+.page-zad-v2 .io-payment-card,
+.page-zad-v2 .io-faq__shell {
+  border-color: var(--ze-line);
+  border-radius: 14px;
+  background: var(--ze-paper-soft);
+  box-shadow: none;
+}
+
+.page-zad-v2 .io-category-card__image {
+  border-radius: 12px 12px 0 0;
+}
+
+.page-zad-v2 .io-category-card__icon,
+.page-zad-v2 .io-step__icon,
+.page-zad-v2 .io-step__number {
+  color: var(--ze-orange-text);
+  background: #f6dfd2;
+}
+
+.page-zad-v2 .io-local__copy {
+  background: var(--ze-navy);
+}
+
+.page-zad-v2 .io-local__copy h2,
+.page-zad-v2 .io-local__copy h2 span,
+.page-zad-v2 .io-local__copy p,
+.page-zad-v2 .io-local__points span {
+  color: var(--ze-paper);
+}
+
+.page-zad-v2 .io-final-cta {
+  background: var(--ze-navy);
+}
+
+.page-zad-v2 .io-final-cta__copy h2,
+.page-zad-v2 .io-final-cta__copy p {
+  color: var(--ze-paper);
+}
+
+/* 404 */
+.page-zad-v2.page-not-found .site-main {
+  display: grid;
+  min-height: calc(100svh - 108px);
+  place-items: center;
+  background: var(--ze-paper);
+}
+
+.page-zad-v2 .error-404__link {
+  width: min(78vw, 620px);
+  border-radius: 20px;
+}
+
+/* Tablet */
+@media (max-width: 1023px) {
+  .page-zad-v2 .catalog-card-grid,
+  .page-zad-v2 .flower-type-grid,
+  .page-zad-v2 .flower-moment-grid,
+  .page-zad-v2 .flowers-category-grid,
+  .page-zad-v2 .occasions-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .page-zad-v2 .flowers-grid,
+  .page-zad-v2 .product-grid,
+  .page-zad-v2 .same-day-grid,
+  .page-zad-v2 .wedding-collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .page-zad-v2 .container,
+  .page-zad-v2 .flowers-container,
+  .page-zad-v2 .occasions-container,
+  .page-zad-v2 .wsr-container,
+  .page-zad-v2 .io-container,
+  .page-zad-v2 .blog-detail {
+    width: min(calc(100% - 24px), 1280px);
+  }
+
+  body.page-zad-v2 > .page-hero,
+  body.page-zad-v2.page-about .about-hero,
+  .page-zad-v2 .wsr-hero,
+  .page-zad-v2 .io-hero {
+    top: var(--zad-mobile-header-height, 40px) !important;
+    height: calc(56.25vw + 76px) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .page-zad-v2 > .page-hero ~ .site-main,
+  .page-zad-v2 .about-manifesto,
+  .page-zad-v2 .wsr-worlds,
+  .page-zad-v2 .io-trust {
+    margin-top: -18px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .page-zad-v2 > .page-hero .page-hero__content {
+    right: 12px;
+    bottom: 28px;
+    width: calc(100% - 24px);
+    padding: 13px 14px;
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 > .page-hero .page-hero__content h1 {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+  }
+
+  .page-zad-v2 > .page-hero .page-hero__content p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: .7rem;
+  }
+
+  .page-zad-v2 .section-block {
+    margin-top: 38px;
+  }
+
+  .page-zad-v2 .catalog-card-grid,
+  .page-zad-v2 .flower-type-grid,
+  .page-zad-v2 .flower-moment-grid,
+  .page-zad-v2 .flowers-category-grid,
+  .page-zad-v2 .occasions-grid,
+  .page-zad-v2 .flowers-grid,
+  .page-zad-v2 .product-grid,
+  .page-zad-v2 .same-day-grid,
+  .page-zad-v2 .wedding-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .page-zad-v2 .catalog-image-card,
+  .page-zad-v2 .flower-type-card__main,
+  .page-zad-v2 .flowers-category-card,
+  .page-zad-v2 .occasion-card {
+    aspect-ratio: 4 / 5;
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 .flower-moment-card {
+    aspect-ratio: auto;
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 .flower-moment-card__media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .page-zad-v2 .catalog-image-card__content,
+  .page-zad-v2 .flower-type-card__content,
+  .page-zad-v2 .flowers-category-card__content,
+  .page-zad-v2 .occasion-card__content {
+    padding: 11px;
+  }
+
+  .page-zad-v2 .catalog-image-card__content h3,
+  .page-zad-v2 .flower-type-card__content h3,
+  .page-zad-v2 .flowers-category-card__content strong,
+  .page-zad-v2 .occasion-card__content h2 {
+    font-size: clamp(.84rem, 4vw, 1rem);
+  }
+
+  .page-zad-v2 .occasion-card__content p {
+    display: none;
+  }
+
+  .page-zad-v2 .flowers-product-card {
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 .flowers-product-card__body {
+    min-height: 78px;
+    padding: 10px 9px;
+  }
+
+  .page-zad-v2 .category-split-hero {
+    padding-top: 24px;
+  }
+
+  .page-zad-v2 .category-split-hero__card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    border-radius: 14px;
+  }
+
+  .page-zad-v2 .category-split-hero__copy {
+    padding: 26px 20px 30px;
+  }
+
+  .page-zad-v2 .category-split-hero__media {
+    order: -1;
+    aspect-ratio: 4 / 3;
+  }
+
+  .page-zad-v2 .item-detail__grid {
+    gap: 24px;
+  }
+
+  .page-zad-v2 .item-detail__image-frame {
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 .item-detail__info h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-zad-v2 .journal-list,
+  .page-zad-v2 .list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-zad-v2 .contact-final-cta,
+  .page-zad-v2 .faq-final-cta {
+    width: 100%;
+    padding: 42px 18px;
+    border-radius: 0;
+  }
+
+  .page-zad-v2 .wsr-hero__content,
+  .page-zad-v2 .io-hero__copy {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .page-zad-v2 .wsr-hero__content p,
+  .page-zad-v2 .io-hero__lead {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: .72rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .page-zad-v2 .container,
+  .page-zad-v2 .flowers-container,
+  .page-zad-v2 .occasions-container,
+  .page-zad-v2 .wsr-container,
+  .page-zad-v2 .io-container,
+  .page-zad-v2 .blog-detail {
+    width: min(calc(100% - 18px), 1280px);
+  }
+
+  .page-zad-v2 .catalog-card-grid,
+  .page-zad-v2 .flower-type-grid,
+  .page-zad-v2 .flower-moment-grid,
+  .page-zad-v2 .flowers-category-grid,
+  .page-zad-v2 .occasions-grid,
+  .page-zad-v2 .flowers-grid,
+  .page-zad-v2 .product-grid,
+  .page-zad-v2 .same-day-grid,
+  .page-zad-v2 .wedding-collection-grid {
+    gap: 8px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  body.page-zad-v2 > .page-hero,
+  body.page-zad-v2.page-about .about-hero,
+  .page-zad-v2 .wsr-hero,
+  .page-zad-v2 .io-hero {
+    height: max(240px, 76svh) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-zad-v2 *,
+  .page-zad-v2 *::before,
+  .page-zad-v2 *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
