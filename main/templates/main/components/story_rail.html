@@ -6,7 +6,10 @@
       <span lang="en" dir="ltr">ZAD MOMENTS</span>
     </div>
 
-    <div class="zad-stories__track" role="list" aria-label="استوری‌های زاد">
+    {% if moments_design %}
+    <div class="zad-moments-rail" data-moments-rail>
+    {% endif %}
+    <div class="zad-stories__track"{% if moments_design %} id="zad-moments-track" data-moments-track{% endif %} role="list" aria-label="استوری‌های زاد">
       {% for story in home_stories %}
         <div class="zad-stories__item" role="listitem">
           <button
@@ -38,6 +41,9 @@
         </div>
       {% endfor %}
     </div>
+    {% if moments_design %}
+    </div>
+    {% endif %}
   </div>
 
   <div class="zad-story-payload" data-story-payload hidden>

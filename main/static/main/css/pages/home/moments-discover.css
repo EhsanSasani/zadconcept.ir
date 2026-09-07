@@ -1,0 +1,301 @@
+/* Approved Moments + Discover mock; deliberately scoped away from Hero/nav.
+   Tuning: palette, cover size and spacing live here, not in story-viewer.css. */
+.page-home .zad-moments-discover {
+  --moments-paper: #fbf7f0;
+  --moments-navy: #073e52;
+  --moments-orange: #ff713d;
+  --moments-action: #f76532;
+  --moments-orange-text: #b83d13;
+  --moments-cover: clamp(58px, 17vw, 74px);
+  --moments-gap: clamp(8px, 2.5vw, 14px);
+  position: relative;
+  z-index: 3;
+  margin-top: -18px;
+  border-radius: 24px 24px 0 0;
+  background: var(--moments-paper);
+  color: var(--moments-navy);
+  /* No transform/contain/overflow here: the story dialog must stay viewport-sized. */
+}
+.page-home .zad-moments-discover .zad-stories {
+  z-index: auto;
+  overflow: visible;
+  border: 0;
+  background: none;
+}
+.page-home .zad-moments-discover .zad-stories__container {
+  width: min(calc(100% - 24px), 1280px);
+  padding: 18px 0 0;
+}
+.page-home .zad-moments-discover .zad-stories__heading {
+  align-items: center;
+  gap: 12px;
+  margin: 0 10px 18px;
+}
+.page-home .zad-moments-discover .zad-stories__heading h2 {
+  color: var(--moments-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(1rem, 4.2vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.7;
+}
+.page-home .zad-moments-discover .zad-stories__heading span {
+  color: var(--moments-orange-text);
+  font-family: var(--font-ui-en);
+  font-size: .56rem;
+  font-weight: 500;
+  letter-spacing: .23em;
+  line-height: 1.5;
+}
+.page-home .zad-moments-rail { position: relative; direction: ltr; }
+.page-home .zad-moments-discover .zad-stories__track {
+  justify-content: flex-start;
+  gap: var(--moments-gap);
+  padding: 5px 3px 8px;
+  scroll-padding-inline: 3px;
+  scroll-snap-type: x proximity;
+}
+.page-home .zad-moments-discover .zad-stories__item {
+  flex: 0 0 var(--moments-cover);
+  min-width: 0;
+}
+.page-home .zad-moments-discover .zad-story-trigger {
+  min-height: 0;
+  align-content: start;
+  color: #303739;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.page-home .zad-moments-discover .zad-story-trigger__ring {
+  box-sizing: border-box;
+  width: var(--moments-cover);
+  height: var(--moments-cover);
+  padding: 3px;
+  border: 1px solid var(--moments-orange);
+  background: #fffdf9;
+  box-shadow: none;
+}
+.page-home .zad-moments-discover .zad-story-trigger__media { inset: 3px; }
+.page-home .zad-moments-discover .zad-story-trigger__play { display: none; }
+.page-home .zad-moments-discover .zad-story-trigger__title {
+  display: block;
+  min-height: 2.9em;
+  margin-top: 6px;
+  overflow: visible;
+  color: #4b4945;
+  font-size: .6rem;
+  font-weight: 400;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+}
+.page-home .zad-moments-discover .zad-story-trigger.is-seen .zad-story-trigger__ring {
+  border-color: #99948c;
+  box-shadow: none;
+}
+.page-home .zad-moments-discover .zad-story-trigger:focus-visible {
+  outline: 2px solid var(--moments-navy);
+  outline-offset: 2px;
+}
+.page-home .zad-moments-discover .zad-discover { padding: 28px 0 0; }
+.page-home .zad-discover__container { width: min(calc(100% - 24px), 1280px); margin-inline: auto; }
+.page-home .zad-discover__heading { position: relative; margin: 0 0 20px; text-align: center; }
+.page-home .zad-discover__rule,
+.page-home .zad-moments-discover__closing > span {
+  display: block;
+  width: 25px;
+  height: 1px;
+  margin: 0 auto 20px;
+  background: #8197a0;
+}
+.page-home .zad-discover__eyebrow {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--moments-orange-text);
+  font-family: var(--font-ui-en);
+  font-size: .58rem;
+  font-weight: 500;
+  letter-spacing: .3em;
+}
+.page-home .zad-discover__heading h2 {
+  margin: 0;
+  color: var(--moments-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(1.22rem, 5.2vw, 1.55rem);
+  font-weight: 600;
+  line-height: 1.65;
+}
+.page-home .zad-discover__heading p {
+  max-width: 58ch;
+  margin: 7px auto 0;
+  color: #354f59;
+  font-size: clamp(.65rem, 2.8vw, .78rem);
+  line-height: 1.9;
+  text-wrap: pretty;
+}
+.page-home .zad-discover__signature { display: none; }
+.page-home .zad-discover__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  direction: ltr;
+}
+.page-home .zad-discover-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #8b72541a;
+  border-radius: 12px;
+  background: #fdfaf5;
+  color: var(--moments-navy);
+  text-decoration: none;
+  box-shadow: 0 5px 18px #5a46360a;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Override the site's global image policy only inside these four new cards. */
+.page-home .zad-discover-card > img {
+  display: block;
+  grid-column: 1 / -1;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 1.2 / 1 !important;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+.page-home .zad-discover-card__label { display: grid; min-width: 0; padding: 7px 0 8px 12px; text-align: left; }
+.page-home .zad-discover-card__label strong {
+  justify-self: start;
+  color: var(--moments-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(.7rem, 3.1vw, .9rem);
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.page-home .zad-discover-card__label small { color: #46515a; font-family: var(--font-brand-en); font-size: .87rem; line-height: 1.25; }
+.page-home .zad-discover-card__arrow {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  justify-self: center;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: var(--moments-action);
+  color: white;
+  font-size: .95rem;
+}
+.page-home .zad-discover-card:nth-child(even) .zad-discover-card__arrow { background: var(--moments-navy); }
+.page-home .zad-discover-card:hover { border-color: #a78d7155; box-shadow: 0 9px 24px #5a463614; }
+.page-home .zad-discover-card:focus-visible { outline: 3px solid var(--moments-navy); outline-offset: 3px; }
+.page-home .zad-moments-discover__closing {
+  position: relative;
+  z-index: 1;
+  padding: 30px 12px 26px;
+  color: #343d43;
+  font-family: var(--font-ui-en);
+  font-size: .5rem;
+  font-weight: 500;
+  letter-spacing: .33em;
+  text-align: center;
+}
+.page-home .zad-moments-discover__closing > span { margin-bottom: 20px; }
+.page-home .zad-moments-discover__wave { display: none; }
+@media (min-width: 761px) {
+  .page-home .zad-moments-discover { --moments-cover: 90px; --moments-gap: 22px; margin-top: -24px; border-radius: 34px 34px 0 0; }
+  .page-home .zad-moments-discover .zad-stories__container,
+  .page-home .zad-discover__container { width: min(calc(100% - 72px), 1280px); }
+  .page-home .zad-moments-discover .zad-stories__container { padding-top: 24px; }
+  .page-home .zad-moments-discover .zad-stories__heading { margin: 0 4px 18px; }
+  .page-home .zad-moments-discover .zad-stories__heading h2 { font-size: 1.65rem; }
+  .page-home .zad-moments-discover .zad-stories__heading span { font-size: .68rem; }
+  .page-home .zad-moments-discover .zad-story-trigger__title { font-family: var(--font-brand-en), var(--font-fa); font-size: .9rem; }
+  .page-home .zad-moments-rail { padding-inline: 0; }
+  .page-home .zad-moments-discover .zad-stories__track { gap: var(--moments-gap); }
+  .page-home .zad-moments-discover .zad-discover { padding-top: 14px; }
+  .page-home .zad-discover__heading { margin-bottom: 20px; }
+  .page-home .zad-discover__rule { width: 30px; margin-bottom: 28px; }
+  .page-home .zad-discover__heading h2 { font-size: clamp(1.55rem, 2.3vw, 2.15rem); }
+  .page-home .zad-discover__heading p { font-size: .83rem; }
+  .page-home .zad-discover__eyebrow { font-size: .65rem; }
+  .page-home .zad-discover__grid { gap: 16px; }
+  .page-home .zad-discover-card { grid-template-columns: minmax(0, 1fr) 48px; }
+  .page-home .zad-discover-card__label { padding: 9px 0 9px 16px; }
+  .page-home .zad-discover-card__label strong { font-size: 1rem; }
+  .page-home .zad-discover-card__label small { font-size: 1rem; }
+  .page-home .zad-discover-card__arrow { width: 34px; height: 34px; }
+  .page-home .zad-moments-discover__closing { padding: 44px 12px 48px; }
+}
+@media (min-width: 1024px) {
+  .page-home .zad-moments-discover {
+    --moments-cover: clamp(96px, 9vw, 120px);
+    --moments-gap: clamp(20px, 2.5vw, 40px);
+    background-image: url("../../../img/home/moments/surface.webp");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+  .page-home .zad-moments-discover .zad-stories__container { padding-top: 25px; }
+  .page-home .zad-moments-discover .zad-stories__heading { margin-inline: 8px; }
+  .page-home .zad-moments-discover .zad-stories__heading h2 { font-size: clamp(1.85rem, 2.4vw, 2.2rem); }
+  .page-home .zad-moments-discover .zad-stories__heading span { margin-left: 50px; }
+  .page-home .zad-moments-discover .zad-stories__track { justify-content: safe center; }
+  .page-home .zad-discover__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .page-home .zad-discover__signature {
+    position: absolute;
+    right: 6px;
+    bottom: 0;
+    display: block;
+    color: #8a8983;
+    font-family: "Segoe Script", "Snell Roundhand", cursive;
+    font-size: .85rem;
+    font-style: italic;
+    line-height: 1.05;
+    transform: rotate(-6deg);
+  }
+  .page-home .zad-discover__signature::after { content: ""; position: absolute; left: calc(100% + 5px); bottom: 0; width: 22px; height: 1px; background: var(--moments-orange); }
+  .page-home .zad-moments-discover__closing { padding: 54px 12px 58px; }
+  .page-home .zad-moments-discover__wave { position: absolute; left: 0; bottom: 0; display: block; width: min(30%, 440px); height: 155px; pointer-events: none; }
+  .page-home .zad-moments-discover__wave svg { display: block; width: 100%; height: 100%; fill: #0a4c62; }
+  .page-home .zad-moments-discover__wave > span { position: absolute; left: 36px; bottom: 20px; color: #e6eef0; font-family: var(--font-ui-en); font-size: .48rem; line-height: 1.9; letter-spacing: .3em; }
+  .page-home .zad-moments-discover__wave i { display: inline-block; width: 44px; height: 1px; margin-left: 12px; vertical-align: middle; background: var(--moments-orange); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-home .zad-moments-discover .zad-stories__track { scroll-behavior: auto; }
+  .page-home .zad-moments-discover .zad-story-trigger__ring,
+  .page-home .zad-moments-discover .zad-story-trigger__media img,
+  .page-home .zad-discover-card { transition: none; }
+  .page-home .zad-moments-discover .zad-story-trigger:hover .zad-story-trigger__ring { transform: none; }
+}
+
+/* Mobile uses the same native sticky/opaque-cover model as desktop.
+   The section qualifier beats hero-policy.css's later portrait `relative` rule.
+   No height, crop, navbar or slider changes; no scroll listeners or spacers. */
+@media (max-width: 760px) {
+  body.page-home .site-main > section.home-hero {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: var(--zad-mobile-header-height, 40px) !important;
+    z-index: 0 !important;
+  }
+
+  body.page-home .site-main > .home-hero ~ .zad-moments-discover,
+  body.page-home .site-main > .home-hero ~ .home-section {
+    position: relative;
+    z-index: 3;
+    background-color: var(--home-ivory, #fbf7f0) !important;
+    background-clip: border-box;
+  }
+
+  body.page-home .site-main > .home-hero ~ .home-brand-note {
+    position: relative;
+    z-index: 3;
+    background-color: #f8f2e9 !important;
+    background-clip: border-box;
+  }
+}

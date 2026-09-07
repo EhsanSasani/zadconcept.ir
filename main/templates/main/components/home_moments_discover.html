@@ -1,0 +1,45 @@
+{% load static %}
+<div class="zad-moments-discover">
+  {% include "main/components/story_rail.html" with moments_design=True %}
+
+  <section class="home-explore zad-discover" aria-labelledby="home-explore-title">
+    <div class="zad-discover__container">
+      <header class="zad-discover__heading">
+        <span class="zad-discover__rule" aria-hidden="true"></span>
+        <span class="zad-discover__eyebrow" lang="en" dir="ltr">DISCOVER</span>
+        <h2 id="home-explore-title">دنیای زاد را کشف کنید</h2>
+        <p>از گل‌ها تا لحظه‌ها، هر آنچه که دنیای شما را زیباتر می‌کند.</p>
+        <span class="zad-discover__signature" lang="en" dir="ltr" aria-hidden="true">More<br>than<br>Flowers.</span>
+      </header>
+
+      <div class="zad-discover__grid">
+        <a href="{% url 'flowers' %}" class="zad-discover-card">
+          <img src="{% static 'main/img/home/moments/flowers-640.webp' %}" srcset="{% static 'main/img/home/moments/flowers-640.webp' %} 640w, {% static 'main/img/home/moments/flowers-960.webp' %} 960w" sizes="(max-width: 760px) calc((100vw - 36px) / 2), (max-width: 1023px) calc((100vw - 88px) / 2), (max-width: 1360px) calc((100vw - 108px) / 4), 313px" alt="چیدمان رزهای هلویی و گل‌های سفید در گلدان کرم" width="960" height="960" loading="lazy" decoding="async">
+          <span class="zad-discover-card__label"><strong dir="rtl">استودیو گل</strong><small lang="en" dir="ltr">Flower Studio</small></span>
+          <span class="zad-discover-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+        </a>
+        <a href="{% url 'weddings' %}" class="zad-discover-card">
+          <img src="{% static 'main/img/home/moments/wedding-640.webp' %}" srcset="{% static 'main/img/home/moments/wedding-640.webp' %} 640w, {% static 'main/img/home/moments/wedding-960.webp' %} 960w" sizes="(max-width: 760px) calc((100vw - 36px) / 2), (max-width: 1023px) calc((100vw - 88px) / 2), (max-width: 1360px) calc((100vw - 108px) / 4), 313px" alt="دسته‌گل سفید و کرم در دست عروس" width="960" height="960" loading="lazy" decoding="async">
+          <span class="zad-discover-card__label"><strong dir="rtl">عروسی</strong><small lang="en" dir="ltr">Wedding</small></span>
+          <span class="zad-discover-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+        </a>
+        <a href="{% url 'bakery' %}" class="zad-discover-card">
+          <img src="{% static 'main/img/home/moments/bakery-640.webp' %}" srcset="{% static 'main/img/home/moments/bakery-640.webp' %} 640w, {% static 'main/img/home/moments/bakery-960.webp' %} 960w" sizes="(max-width: 760px) calc((100vw - 36px) / 2), (max-width: 1023px) calc((100vw - 88px) / 2), (max-width: 1360px) calc((100vw - 108px) / 4), 313px" alt="کیک سه‌طبقه سفید با گل‌های هلویی" width="960" height="960" loading="lazy" decoding="async">
+          <span class="zad-discover-card__label"><strong dir="rtl">سوییت‌بار</strong><small lang="en" dir="ltr">Sweet Bar</small></span>
+          <span class="zad-discover-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+        </a>
+        <a href="{% url 'events' %}" class="zad-discover-card">
+          <img src="{% static 'main/img/home/moments/workshops-640.webp' %}" srcset="{% static 'main/img/home/moments/workshops-640.webp' %} 640w, {% static 'main/img/home/moments/workshops-960.webp' %} 960w" sizes="(max-width: 760px) calc((100vw - 36px) / 2), (max-width: 1023px) calc((100vw - 88px) / 2), (max-width: 1360px) calc((100vw - 108px) / 4), 313px" alt="دست‌های گل‌آرا در حال ساخت چیدمان گل در ورکشاپ" width="960" height="960" loading="lazy" decoding="async">
+          <span class="zad-discover-card__label"><strong dir="rtl">ورکشاپ‌ها</strong><small lang="en" dir="ltr">Workshops</small></span>
+          <span class="zad-discover-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="zad-moments-discover__closing" lang="en" dir="ltr"><span aria-hidden="true"></span>ZAD FLOWER STUDIO</div>
+  <div class="zad-moments-discover__wave" aria-hidden="true">
+    <svg viewBox="0 0 440 200" preserveAspectRatio="none" focusable="false"><path d="M0 0C55 70 120 78 215 95C335 110 394 120 440 200H0Z"/></svg>
+    <span lang="en" dir="ltr">FLOWERS<br>PEOPLE<br>BRIGHTER DAYS <i></i></span>
+  </div>
+</div>
