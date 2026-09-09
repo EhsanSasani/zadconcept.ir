@@ -1,13 +1,15 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
+from .admin_content import PageContentBlockAdminForm
 from .models import (
     PROTECTED_SYSTEM_TAG_SLUGS,
     PROPOSAL_COLLECTION_TAG_SLUG,
@@ -27,15 +29,22 @@ from .models import (
     PublishStatus,
     SameDayFlower,
     SiteHero,
+    Story,
+    StoryClip,
     Tag,
     TelegramBotUser,
     WeddingCollectionContent,
     WeddingGalleryImage,
+    WeddingFilm,
     WeddingPageContent,
     WeddingProduct,
     WorkshopGalleryImage,
     WorkshopPageContent,
     ensure_unique_tag,
+)
+from .video_pipeline import (
+    VideoUploadError,
+    validate_story_video_upload,
 )
 
 admin.site.site_header = "پنل مدیریت زاد"
@@ -48,6 +57,11 @@ ADMIN_IMAGE_ACCEPT = "image/*,.heic,.heif,.heics,.heifs,.hif,.jfif,.jpe"
 ADMIN_IMAGE_HELP_TEXT = (
     "JPG/JPEG، PNG، WebP، HEIC/HEIF، AVIF، TIFF، BMP و GIF ثابت "
     "تا ۲۰ مگابایت پذیرفته می‌شوند و هنگام ذخیره به WebP بهینه تبدیل می‌شوند."
+)
+ADMIN_VIDEO_ACCEPT = "video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm"
+ADMIN_VIDEO_HELP_TEXT = (
+    "MP4، MOV، M4V یا WebM تا ۱۰۰ مگابایت بارگذاری کنید. ویدئو در صف "
+    "بهینه‌سازی قرار می‌گیرد و فقط خروجی استاندارد آن در سایت پخش می‌شود."
 )
 
 
@@ -82,6 +96,34 @@ class AdminImageUploadField(forms.FileField):
         if not self.help_text:
             self.help_text = ADMIN_IMAGE_HELP_TEXT
 
+    def clean(self, data, initial=None):
+        return validate_admin_image(super().clean(data, initial))
+
+
+class PersianVideoInput(forms.ClearableFileInput):
+    initial_text = "ویدئوی اصلی موجود"
+    input_text = "بارگذاری ویدئوی جدید"
+    clear_checkbox_label = "حذف فایل اصلی"
+
+    def __init__(self, attrs=None):
+        attrs = dict(attrs or {})
+        attrs.setdefault("accept", ADMIN_VIDEO_ACCEPT)
+        super().__init__(attrs)
+
+
+class AdminVideoUploadField(forms.FileField):
+    widget = PersianVideoInput
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.help_text:
+            limit_mb = settings.STORY_VIDEO_MAX_UPLOAD_BYTES // 1_000_000
+            duration = settings.STORY_VIDEO_MAX_DURATION_SECONDS
+            self.help_text = (
+                f"MP4، MOV، M4V یا WebM تا {limit_mb} مگابایت و {duration:g} ثانیه؛ "
+                "فقط خروجی بهینه‌شده در سایت پخش می‌شود."
+            )
+
 HERO_SLUG_TARGET_PAGES = {
     SiteHero.TargetPage.EVENTS,
     SiteHero.TargetPage.OCCASIONS,
@@ -113,6 +155,13 @@ def validate_admin_image(uploaded_file):
         return normalize_admin_image(uploaded_file)
     except ImageUploadError as error:
         raise forms.ValidationError(str(error), code="invalid_image") from error
+
+
+def validate_admin_video(uploaded_file):
+    try:
+        return validate_story_video_upload(uploaded_file)
+    except VideoUploadError as error:
+        raise forms.ValidationError(str(error), code="invalid_video") from error
 
 
 def safe_image_url(image):
@@ -839,6 +888,77 @@ class EventAdminForm(forms.ModelForm):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
 
 
+class StoryAdminForm(forms.ModelForm):
+    class Meta:
+        model = Story
+        fields = "__all__"
+        field_classes = {"cover_image": AdminImageUploadField}
+
+    def clean_cover_image(self):
+        return validate_admin_image(self.cleaned_data.get("cover_image"))
+
+
+class StoryClipAdminForm(forms.ModelForm):
+    image = AdminImageUploadField(
+        required=False,
+        label="عکس استوری",
+        help_text=ADMIN_IMAGE_HELP_TEXT,
+    )
+    source_video = AdminVideoUploadField(
+        required=False,
+        label="ویدئوی اصلی",
+        help_text=ADMIN_VIDEO_HELP_TEXT,
+    )
+
+    class Meta:
+        model = StoryClip
+        fields = "__all__"
+        widgets = {
+            "caption": forms.Textarea(
+                attrs={
+                    "rows": 2,
+                    "placeholder": "توضیح کوتاه روی عکس یا ویدئو (اختیاری)",
+                }
+            ),
+            "cta_url": forms.TextInput(
+                attrs={
+                    "dir": "ltr",
+                    "placeholder": "/flowers/ یا https://...",
+                }
+            ),
+        }
+
+    def clean_source_video(self):
+        return validate_admin_video(self.cleaned_data.get("source_video"))
+
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("story"):
+            self.add_error("story", "استوری این محتوا را انتخاب کنید.")
+        media_type = cleaned_data.get("media_type")
+        image = cleaned_data.get("image")
+        source_video = cleaned_data.get("source_video")
+        optimized_video = getattr(self.instance, "optimized_video", None)
+        if media_type == StoryClip.MediaType.IMAGE and not image:
+            self.add_error(
+                "image",
+                "برای محتوای تصویری، یک عکس انتخاب کنید.",
+            )
+        if (
+            media_type == StoryClip.MediaType.VIDEO
+            and not source_video
+            and not optimized_video
+        ):
+            self.add_error(
+                "source_video",
+                "برای محتوای ویدئویی، یک فایل ویدئو بارگذاری کنید.",
+            )
+        return cleaned_data
+
+
 class WorkshopGalleryImageAdminForm(forms.ModelForm):
     class Meta:
         model = WorkshopGalleryImage
@@ -864,6 +984,115 @@ class WorkshopGalleryImageInline(AdminImagePreviewMixin, admin.TabularInline):
     ordering = ("sort_order", "id")
     verbose_name = "تصویر گالری"
     verbose_name_plural = "گالری همین ورکشاپ"
+
+
+class StoryClipAdminDisplayMixin:
+    status_css_classes = {
+        StoryClip.ProcessingStatus.QUEUED: "is-queued",
+        StoryClip.ProcessingStatus.PROCESSING: "is-processing",
+        StoryClip.ProcessingStatus.READY: "is-ready",
+        StoryClip.ProcessingStatus.FAILED: "is-failed",
+    }
+
+    @admin.display(description="وضعیت")
+    def processing_badge(self, obj):
+        if not obj or not obj.pk:
+            return "بعد از ذخیره آماده می‌شود"
+        if obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            return format_html(
+                '<span class="zad-story-status is-ready">{}</span>',
+                "عکس آماده انتشار",
+            )
+        css_class = self.status_css_classes.get(obj.processing_status, "")
+        return format_html(
+            '<span class="zad-story-status {}">{}</span>',
+            css_class,
+            obj.get_processing_status_display(),
+        )
+
+    @admin.display(description="پیش‌نمایش خروجی")
+    def story_media_preview(self, obj):
+        if not obj or not obj.pk:
+            return format_html(
+                '<span class="zad-story-video-empty">{}</span>',
+                "هنوز خروجی آماده نیست",
+            )
+        if obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            image_url = safe_image_url(obj.image)
+            if not image_url:
+                return "عکس قابل نمایش نیست"
+            return format_html(
+                '<img src="{}" class="zad-admin-story-poster" alt="" />',
+                image_url,
+            )
+        if not obj.poster_image:
+            return format_html(
+                '<span class="zad-story-video-empty">{}</span>',
+                "هنوز خروجی آماده نیست",
+            )
+        poster_url = safe_image_url(obj.poster_image)
+        video_url = safe_image_url(obj.optimized_video) if obj.optimized_video else ""
+        if not poster_url:
+            return "پوستر قابل نمایش نیست"
+        if video_url:
+            return format_html(
+                '<video class="zad-admin-story-video" poster="{}" controls '
+                'playsinline preload="metadata"><source src="{}" type="video/mp4"></video>',
+                poster_url,
+                video_url,
+            )
+        return format_html(
+            '<img src="{}" class="zad-admin-story-poster" alt="" />',
+            poster_url,
+        )
+
+    @admin.display(description="مشخصات خروجی")
+    def output_summary(self, obj):
+        if obj and obj.media_type == StoryClip.MediaType.IMAGE and obj.image:
+            return f"عکس · {obj.image_duration_ms / 1000:g} ثانیه"
+        if not obj or obj.processing_status != StoryClip.ProcessingStatus.READY:
+            return "—"
+        seconds = obj.duration_ms / 1000
+        size_mb = obj.optimized_size_bytes / 1_000_000
+        return f"{obj.video_width}×{obj.video_height} · {seconds:.1f} ثانیه · {size_mb:.1f} MB"
+
+    @admin.display(description="خطا / راهنما")
+    def processing_message(self, obj):
+        if not obj or not obj.processing_error:
+            return "—"
+        return format_html(
+            '<span class="zad-story-processing-error">{}</span>',
+            obj.processing_error,
+        )
+
+
+class StoryClipInline(StoryClipAdminDisplayMixin, admin.StackedInline):
+    model = StoryClip
+    form = StoryClipAdminForm
+    extra = 1
+    show_change_link = True
+    ordering = ("sort_order", "id")
+    fields = (
+        ("sort_order", "is_active"),
+        ("media_type", "image_duration_ms"),
+        "image",
+        "source_video",
+        "processing_badge",
+        "story_media_preview",
+        "output_summary",
+        "processing_message",
+        "title",
+        "caption",
+        ("cta_text", "cta_url"),
+    )
+    readonly_fields = (
+        "processing_badge",
+        "story_media_preview",
+        "output_summary",
+        "processing_message",
+    )
+    verbose_name = "محتوای استوری"
+    verbose_name_plural = "عکس‌ها و ویدئوهای این استوری"
 
 
 class HeroAdminForm(forms.ModelForm):
@@ -2208,9 +2437,297 @@ class ProductImageAdmin(
         self.message_user(request, f"{updated} تصویر به عنوان کاور محصول تنظیم شد.")
 
 
+@admin.register(Story)
+class StoryAdmin(ActiveActionsMixin, admin.ModelAdmin):
+    form = StoryAdminForm
+    inlines = (StoryClipInline,)
+    list_display = (
+        "story_cover_preview",
+        "title",
+        "ready_clip_count",
+        "schedule_status",
+        "is_active",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = ("is_active", "starts_at", "ends_at")
+    search_fields = ("title", "slug", "clips__title", "clips__caption")
+    list_editable = ("is_active", "sort_order")
+    ordering = ("sort_order", "id")
+    readonly_fields = (
+        "story_cover_preview",
+        "ready_clip_count",
+        "created_at",
+        "updated_at",
+    )
+    save_on_top = True
+    list_per_page = 30
+    fieldsets = (
+        (
+            "هویت استوری",
+            {
+                "description": (
+                    "هر استوری یک حلقه در صفحه خانه است و می‌تواند چند عکس یا ویدئو "
+                    "مرتب‌شده داشته باشد."
+                ),
+                "fields": (
+                    "title",
+                    "cover_image",
+                    "story_cover_preview",
+                ),
+            },
+        ),
+        (
+            "نمایش و زمان‌بندی",
+            {
+                "fields": (
+                    ("is_active", "sort_order"),
+                    ("starts_at", "ends_at"),
+                    "ready_clip_count",
+                ),
+            },
+        ),
+        (
+            "تنظیمات پیشرفته",
+            {
+                "fields": ("slug", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                _ready_clip_count=Count(
+                    "clips",
+                    filter=Q(
+                        clips__is_active=True,
+                    )
+                    & (
+                        Q(
+                            clips__media_type=StoryClip.MediaType.IMAGE,
+                            clips__image__gt="",
+                        )
+                        | Q(
+                            clips__media_type=StoryClip.MediaType.VIDEO,
+                            clips__processing_status=StoryClip.ProcessingStatus.READY,
+                            clips__optimized_video__gt="",
+                            clips__poster_image__gt="",
+                        )
+                    ),
+                    distinct=True,
+                )
+            )
+            .prefetch_related("clips")
+        )
+
+    @admin.display(description="کاور")
+    def story_cover_preview(self, obj):
+        if not obj or not obj.pk:
+            return "از اولین محتوای آماده ساخته می‌شود"
+        image = obj.cover_image
+        if not image:
+            first_ready_clip = next(
+                (
+                    clip
+                    for clip in obj.clips.all()
+                    if clip.is_active
+                    and clip.is_ready
+                ),
+                None,
+            )
+            image = (
+                first_ready_clip.image
+                if first_ready_clip
+                and first_ready_clip.media_type == StoryClip.MediaType.IMAGE
+                else first_ready_clip.poster_image if first_ready_clip else None
+            )
+        if not image:
+            return format_html(
+                '<span class="zad-story-cover-empty">{}</span>',
+                "بدون کاور آماده",
+            )
+        image_url = safe_image_url(image)
+        if not image_url:
+            return "کاور قابل نمایش نیست"
+        return format_html(
+            '<img src="{}" class="zad-admin-story-cover" alt="" />',
+            image_url,
+        )
+
+    @admin.display(description="محتوای آماده", ordering="_ready_clip_count")
+    def ready_clip_count(self, obj):
+        if not obj or not obj.pk:
+            return 0
+        annotated = getattr(obj, "_ready_clip_count", None)
+        if annotated is not None:
+            return annotated
+        return obj.clips.filter(
+            is_active=True,
+        ).filter(
+            Q(media_type=StoryClip.MediaType.IMAGE, image__gt="")
+            | Q(
+                media_type=StoryClip.MediaType.VIDEO,
+                processing_status=StoryClip.ProcessingStatus.READY,
+                optimized_video__gt="",
+                poster_image__gt="",
+            )
+        ).count()
+
+    @admin.display(description="وضعیت زمانی")
+    def schedule_status(self, obj):
+        now = timezone.now()
+        if not obj.is_active:
+            return "غیرفعال"
+        if obj.starts_at and obj.starts_at > now:
+            return "زمان‌بندی‌شده"
+        if obj.ends_at and obj.ends_at <= now:
+            return "پایان‌یافته"
+        return "در حال نمایش"
+
+
+@admin.register(StoryClip)
+class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.ModelAdmin):
+    form = StoryClipAdminForm
+    actions = ActiveActionsMixin.actions + ("retry_processing",)
+    list_display = (
+        "story_media_preview",
+        "title_or_order",
+        "story",
+        "processing_badge",
+        "output_summary",
+        "is_active",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = ("media_type", "processing_status", "is_active", "story")
+    search_fields = ("title", "caption", "story__title")
+    list_editable = ("is_active", "sort_order")
+    ordering = ("story__sort_order", "story_id", "sort_order", "id")
+    readonly_fields = (
+        "optimized_video",
+        "poster_image",
+        "processing_badge",
+        "story_media_preview",
+        "output_summary",
+        "processing_message",
+        "processing_attempts",
+        "processed_at",
+        "created_at",
+        "updated_at",
+    )
+    save_on_top = True
+    fieldsets = (
+        (
+            "عکس یا ویدئو",
+            {
+                "description": (
+                    "نوع محتوا را انتخاب کنید. عکس همان لحظه بهینه می‌شود؛ "
+                    "ویدئو پس از ذخیره توسط Worker پردازش می‌شود."
+                ),
+                "fields": (
+                    "story",
+                    "media_type",
+                    "image",
+                    "image_duration_ms",
+                    "source_video",
+                    "processing_badge",
+                    "story_media_preview",
+                    "output_summary",
+                    "processing_message",
+                ),
+            },
+        ),
+        (
+            "محتوا و دکمه",
+            {
+                "fields": (
+                    "title",
+                    "caption",
+                    ("cta_text", "cta_url"),
+                ),
+            },
+        ),
+        (
+            "نمایش",
+            {"fields": (("is_active", "sort_order"),)},
+        ),
+        (
+            "اطلاعات فنی",
+            {
+                "fields": (
+                    "optimized_video",
+                    "poster_image",
+                    "processing_attempts",
+                    "processed_at",
+                    "created_at",
+                    "updated_at",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(story__isnull=False).select_related("story")
+
+    @admin.display(description="محتوا")
+    def title_or_order(self, obj):
+        return obj.title or f"محتوا {obj.sort_order + 1}"
+
+    @admin.action(permissions=["change"], description="تلاش دوباره برای بهینه‌سازی")
+    def retry_processing(self, request, queryset):
+        retryable = queryset.exclude(source_video="")
+        updated = retryable.update(
+            processing_status=StoryClip.ProcessingStatus.QUEUED,
+            processing_error="",
+            processed_at=None,
+            updated_at=timezone.now(),
+        )
+        skipped = queryset.count() - updated
+        message = f"{updated} ویدئو دوباره در صف قرار گرفت."
+        if skipped:
+            message += f" {skipped} محتوا فایل ویدئوی اصلی نداشت و رد شد."
+        self.message_user(request, message)
+
+
+class WeddingFilmAdminForm(forms.ModelForm):
+    source_video = AdminVideoUploadField(required=False, label="بارگذاری فیلم")
+
+    class Meta:
+        model = WeddingFilm
+        fields = ("title", "caption", "source_video", "is_active")
+        labels = {"title": "عنوان فیلم", "caption": "توضیح زیر فیلم"}
+
+    def clean_source_video(self):
+        return validate_admin_video(self.cleaned_data.get("source_video"))
+
+
+@admin.register(WeddingFilm)
+class WeddingFilmAdmin(StoryClipAdminDisplayMixin, admin.ModelAdmin):
+    form = WeddingFilmAdminForm
+    list_display = ("__str__", "processing_badge", "output_summary", "is_active", "updated_at")
+    search_fields = ("title", "caption")
+    list_filter = ("processing_status", "is_active")
+    readonly_fields = ("processing_badge", "story_media_preview", "output_summary", "processing_message")
+    actions = ("retry_processing",)
+    retry_processing = StoryClipAdmin.retry_processing
+    fieldsets = (
+        ("فیلم گالری عروسی", {
+            "description": "فیلم را بارگذاری و ذخیره کنید؛ پس از بهینه‌سازی، آن را از تنظیمات صفحهٔ عروسی انتخاب کنید. این فیلم در استوری‌های Home نمایش داده نمی‌شود.",
+            "fields": ("title", "caption", "source_video", "is_active"),
+        }),
+        ("آماده‌سازی و پیش‌نمایش", {
+            "fields": ("processing_badge", "processing_message", "output_summary", "story_media_preview"),
+        }),
+    )
+
+
 @admin.register(NewsPost)
 class NewsPostAdmin(
-    HiddenFromAdminIndexMixin,
     PublishActionsMixin,
     AdminImagePreviewMixin,
     admin.ModelAdmin,
@@ -3108,7 +3625,7 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
         (
             "۶) گالری تصاویر",
             {
-                "fields": ("gallery_title",),
+                "fields": ("gallery_title", "film_clip"),
                 "description": "عنوان گالری را اینجا بنویسید و تصاویر را در جدول پایین همین فرم مدیریت کنید.",
             },
         ),
@@ -3164,7 +3681,7 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
 
 
 @admin.register(WorkshopPageContent)
-class WorkshopPageContentAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+class WorkshopPageContentAdmin(admin.ModelAdmin):
     list_display = (
         "__str__",
         "is_active",
@@ -3175,66 +3692,14 @@ class WorkshopPageContentAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
     save_on_top = True
 
     fieldsets = (
-        (
-            "بخش فلسفه ورکشاپ‌ها",
-            {
-                "fields": (
-                    "story_kicker",
-                    "story_title",
-                    "story_text",
-                ),
-            },
-        ),
-        (
-            "بخش برنامه‌های آینده",
-            {
-                "fields": (
-                    "upcoming_kicker",
-                    "upcoming_title",
-                    "upcoming_empty_title",
-                    "upcoming_empty_text",
-                ),
-            },
-        ),
-        (
-            "بخش انواع ورکشاپ",
-            {
-                "fields": (
-                    "types_kicker",
-                    "types_title",
-                    "public_title",
-                    "public_text",
-                    "private_title",
-                    "private_text",
-                    "corporate_title",
-                    "corporate_text",
-                ),
-            },
-        ),
-        (
-            "بخش درخواست و هماهنگی",
-            {
-                "fields": (
-                    "cta_title",
-                    "cta_text",
-                ),
-            },
-        ),
-        (
-            "نمایش",
-            {
-                "fields": (
-                    "is_active",
-                    "created_at",
-                    "updated_at",
-                ),
-            },
-        ),
+        ("برنامه‌های پیش رو", {"description": "این متن‌ها در صفحه فعلی ورکشاپ نمایش داده می‌شوند.", "fields": ("upcoming_title", "upcoming_empty_title", "upcoming_empty_text")}),
+        ("وضعیت", {"fields": ("is_active", "created_at", "updated_at")}),
     )
 
 
 @admin.register(PageContentBlock)
-class PageContentBlockAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+class PageContentBlockAdmin(admin.ModelAdmin):
+    form = PageContentBlockAdminForm
     list_display = (
         "page",
         "section_key",

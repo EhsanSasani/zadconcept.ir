@@ -9,3 +9,4 @@ class MainConfig(AppConfig):
 
     def ready(self):
         from . import signals  # noqa: F401
+        from . import video_pipeline  # noqa: F401

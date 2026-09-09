@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% load static zad_admin %}
+{% block bodyclass %}{{ block.super }} dashboard zad-dashboard-page{% endblock %}
+{% block content_title %}مدیریت زاد{% endblock %}
+{% block breadcrumbs %}<span class="zad-muted">محتوا، محصولات و ارتباط با مشتری</span>{% endblock %}
+{% block content %}
+{% zad_dashboard as panel %}
+<div class="zad-dashboard">
+  <header class="zad-dashboard-heading"><div><p class="zad-eyebrow" lang="en" dir="ltr">ZAD WORKSPACE</p><h1>امروز از کجا شروع کنیم؟</h1><p>کارهای روزمره و محتوای سایت، در یک فضای مرتب.</p></div><div class="zad-quick-actions">{% for action in panel.actions %}<a class="zad-button{% if not forloop.first %} zad-button--quiet{% endif %}" href="{{ action.url }}">{{ action.label }} <span aria-hidden="true">＋</span></a>{% endfor %}</div></header>
+  <div class="zad-dashboard-grid">
+    <section class="zad-panel zad-pages"><header><h2>صفحات سایت</h2><a href="#zad-all-sections">همهٔ بخش‌ها</a></header>
+      <div class="zad-page-grid">{% for page in panel.pages %}<article class="zad-page-card"><img src="{% static page.image %}" width="640" height="640" alt="" loading="lazy"><div><h3>{{ page.title }}</h3><p>{{ page.note }}</p><a href="{{ page.url }}">مدیریت محتوا ←</a><a class="zad-public-link" href="{{ page.public_url }}" target="_blank" rel="noopener">مشاهده صفحه ↗</a></div></article>{% empty %}<p>بخش‌های قابل مدیریت بر اساس دسترسی شما نمایش داده می‌شوند.</p>{% endfor %}</div>
+    </section>
+    <section class="zad-panel zad-history"><header><h2>فعالیت‌های اخیر شما</h2></header><ol>{% for entry in panel.history %}<li><span class="zad-activity-dot" aria-hidden="true"></span><div><strong>{{ entry.object_repr }}</strong><p>{% if entry.is_addition %}ایجاد شد{% elif entry.is_deletion %}حذف شد{% else %}ویرایش شد{% endif %} · {{ entry.content_type.name }}</p><time>{{ entry.action_time|date:"Y/m/d · H:i" }}</time></div></li>{% empty %}<li><p>هنوز فعالیتی برای نمایش ثبت نشده است.</p></li>{% endfor %}</ol></section>
+    <section class="zad-panel zad-workflow-note"><h2>قبل از انتشار</h2><p>تصویر اصلی، قیمت و موجودی را بررسی کنید. وضعیت «منتشرشده» و گزینهٔ «فعال» هر دو روی دیده‌شدن محصول اثر دارند.</p><p class="zad-muted">راهنمای محل نمایش، داخل فرم ویرایش هر بخش قرار دارد.</p></section>
+  </div>
+  <section id="zad-all-sections" class="zad-panel zad-all-sections"><header><h2>همهٔ ابزارهای مدیریت</h2></header><div class="zad-section-grid">{% for group in panel.groups %}<section><h3><i class="fas {{ group.icon }}" aria-hidden="true"></i> {{ group.label }}</h3><ul>{% for item in group.items %}<li><a href="{{ item.admin_url|default:item.add_url }}">{{ item.name }} <span aria-hidden="true">←</span></a></li>{% endfor %}</ul></section>{% empty %}<p>هنوز دسترسی مدیریت بخشی به حساب شما اختصاص داده نشده است.</p>{% endfor %}</div></section>
+</div>
+{% endblock %}

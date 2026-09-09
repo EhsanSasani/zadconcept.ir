@@ -128,7 +128,9 @@ class SourceLayoutTests(SimpleTestCase):
         loose_css = sorted(
             path.name
             for path in css_root.glob("*.css")
-            if path.name not in {"admin-wedding-page.css", "admin_custom.css"}
+            if path.name not in {
+                "admin-wedding-page.css", "admin_custom.css", "admin_modern.css"
+            }
         )
         loose_js = sorted(path.name for path in js_root.glob("*.js"))
 

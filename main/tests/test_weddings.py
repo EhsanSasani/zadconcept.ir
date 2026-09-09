@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import base64
 from datetime import timedelta
 from io import StringIO
@@ -12,6 +14,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.operations.special import RunPython
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -848,7 +851,21 @@ class WeddingDataMigrationTests(TransactionTestCase):
     def setUp(self):
         super().setUp()
         executor = MigrationExecutor(connection)
-        executor.migrate([self.migrate_from])
+        # 0027 deletes production records irreversibly. The test database has
+        # none of those records, so only this setup downgrade may skip its
+        # reverse. The migration under test still runs both directions normally.
+        cleanup = executor.loader.get_migration(
+            "main", "0027_delete_selected_products"
+        ).operations[0]
+        latest_apps = executor.loader.project_state().apps
+        deleted_codes = cleanup.code.__globals__["PRODUCT_CODES_TO_DELETE"]
+        self.assertFalse(
+            latest_apps.get_model("main", "Product").objects.filter(
+                product_code__in=deleted_codes
+            ).exists()
+        )
+        with patch.object(cleanup, "reverse_code", RunPython.noop):
+            executor.migrate([self.migrate_from])
         old_apps = executor.loader.project_state([self.migrate_from]).apps
         CategoryV15 = old_apps.get_model("main", "Category")
         ProductV15 = old_apps.get_model("main", "Product")

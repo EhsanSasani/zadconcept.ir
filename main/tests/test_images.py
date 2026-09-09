@@ -608,12 +608,13 @@ class OptimizeImagesCommandTests(TestCase):
             product = Product.objects.create(
                 name="Responsive test",
                 category=category,
-                cover_image=SimpleUploadedFile(
-                    "cover.png",
-                    image_bytes.getvalue(),
-                    content_type="image/png",
-                ),
+                # A pre-refactor database reference; new uploads are already
+                # WebP and should not be re-encoded by the backfill command.
+                cover_image="products/covers/legacy-cover.png",
             )
+            original = Path(directory) / product.cover_image.name
+            original.parent.mkdir(parents=True, exist_ok=True)
+            original.write_bytes(image_bytes.getvalue())
 
             expected = Path(directory) / "products/covers" / (
                 f"product-{product.product_code}.webp"
@@ -633,6 +634,7 @@ class OptimizeImagesCommandTests(TestCase):
             optimized = Path(directory) / product.cover_image.name
             self.assertEqual(optimized.name, f"product-{product.product_code}-2.webp")
             self.assertTrue(optimized.exists())
+            self.assertEqual(original.read_bytes(), image_bytes.getvalue())
             for width in (520, 1040, 1600):
                 self.assertTrue(
                     optimized.with_name(f"{optimized.stem}-{width}w.webp").exists()

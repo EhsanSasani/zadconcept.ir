@@ -1,0 +1,27 @@
+{% load static %}
+<section class="home-section zad-international" aria-labelledby="zad-international-title" data-reveal>
+  <div class="home-container">
+    <a class="zad-international__card" href="{% url 'international_orders' %}" aria-label="سفارش گل از خارج ایران برای عزیزانتان در مشهد">
+      <picture class="zad-international__media">
+        <source media="(max-width: 760px)" srcset="{% static 'main/img/home/international/international-orders-mobile-960.webp' %}">
+        <img
+          src="{% static 'main/img/home/international/international-orders-1280.webp' %}"
+          srcset="{% static 'main/img/home/international/international-orders-1280.webp' %} 1280w, {% static 'main/img/home/international/international-orders-1536.webp' %} 1536w"
+          sizes="(max-width: 1352px) calc(100vw - 72px), 1280px"
+          alt="دسته‌گل رز هلویی و سفید با روبان سرمه‌ای و پاکت پیام"
+          width="1536"
+          height="1024"
+          loading="lazy"
+          decoding="async"
+        >
+      </picture>
+      <span class="zad-international__veil" aria-hidden="true"></span>
+      <span class="zad-international__content">
+        <span class="zad-international__eyebrow" lang="en" dir="ltr">INTERNATIONAL ORDERS</span>
+        <strong id="zad-international-title">از دور، کنار عزیزانتان</strong>
+        <span class="zad-international__copy">از هر جای دنیا، برای عزیزانتان در مشهد گل بفرستید.</span>
+        <span class="zad-international__cta">سفارش از خارج ایران <i class="bi bi-arrow-left" aria-hidden="true"></i></span>
+      </span>
+    </a>
+  </div>
+</section>

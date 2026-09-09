@@ -1,8 +1,11 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-international-orders page-international-orders--fa{% endblock %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/international/orders.css' %}?v=1">{% endblock %}
+{% block body_class %}page-international-orders page-international-orders--fa page-zad-v2{% endblock %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/international/orders.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 <article class="io-page" aria-labelledby="international-title">
@@ -41,6 +44,7 @@
     </div>
   </section>
 
+  <div class="zad-scroll-content">
   <section class="io-trust" aria-label="مزایای سفارش از خارج ایران">
     <div class="io-container io-trust__panel">
       <div class="io-trust__item">
@@ -251,5 +255,6 @@
       </a>
     </div>
   </section>
+  </div><!-- .zad-scroll-content -->
 </article>
 {% endblock %}

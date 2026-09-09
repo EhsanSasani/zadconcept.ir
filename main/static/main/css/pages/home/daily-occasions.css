@@ -1,0 +1,239 @@
+/* Approved daily flowers + occasions. Match Discover; scope all rules here. */
+.page-home .zad-shop {
+  --shop-paper: #fbf7f0;
+  --shop-card: #fdfaf5;
+  --shop-navy: #073e52;
+  --shop-orange: #f76532;
+  --shop-link: #b83d13;
+  --shop-muted: #626567;
+  --shop-gap: 12px;
+  padding: 34px 0 0;
+  color: var(--shop-navy);
+  background: var(--shop-paper);
+}
+.page-home .zad-shop + .zad-shop { padding-top: 40px; }
+.page-home .zad-shop__container {
+  width: min(calc(100% - 32px), 1280px);
+  margin-inline: auto;
+}
+.page-home .zad-shop__heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0 0 20px;
+  direction: rtl;
+  text-align: right;
+}
+.page-home .zad-shop__eyebrow {
+  grid-column: 1 / -1;
+  margin-bottom: 3px;
+  color: var(--shop-link);
+  font: 500 .55rem / 1.6 var(--font-ui-en);
+  letter-spacing: .16em;
+}
+.page-home .zad-shop__heading h2 {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--shop-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(1.13rem, 4.8vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.7;
+}
+.page-home .zad-shop__heading p {
+  margin: 0;
+  color: var(--shop-muted);
+  font-size: clamp(.64rem, 2.65vw, .78rem);
+  line-height: 1.9;
+}
+.page-home .zad-shop__all {
+  display: inline-flex;
+  align-items: center;
+  justify-self: end;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--shop-link);
+  font-size: .66rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.page-home .zad-daily-rail {
+  display: flex;
+  gap: var(--shop-gap);
+  direction: ltr;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  scrollbar-width: none;
+  padding: 3px 2px 12px;
+  margin: -3px -2px -12px;
+}
+.page-home .zad-daily-rail::-webkit-scrollbar { display: none; }
+.page-home .zad-shop-card {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #8b72541a;
+  border-radius: 12px;
+  background: var(--shop-card);
+  color: var(--shop-navy);
+  box-shadow: 0 5px 18px #5a46360a;
+  text-decoration: none;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.page-home .zad-daily-rail > .zad-shop-card {
+  flex: 0 0 61%;
+  scroll-snap-align: start;
+}
+.page-home .zad-shop-card__link { display: block; height: 100%; color: inherit; text-decoration: none; }
+.page-home .zad-shop-card__media { position: relative; overflow: hidden; background: #eee4d8; }
+/* Defeat the global image policy only for these two sections. */
+.page-home .zad-shop .zad-shop-card__media > img {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 1.05 / 1 !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  transition: transform 280ms ease;
+}
+.page-home .zad-shop-card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 20px);
+  padding: 5px 9px;
+  border-radius: 99px;
+  background: #fffdf8f5;
+  color: var(--shop-navy);
+  font-size: .63rem;
+  font-weight: 500;
+  line-height: 1.6;
+  direction: rtl;
+}
+.page-home .zad-shop-card__badge::after { content: ""; flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--shop-navy); }
+.page-home .zad-shop-card__badge--unavailable { color: #65615e; }
+.page-home .zad-shop-card__badge--unavailable::after { background: #80776e; }
+.page-home .zad-shop-card__badge--preorder { color: #925128; }
+.page-home .zad-shop-card__badge--preorder::after { background: #925128; }
+.page-home .zad-shop-card__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 7px;
+  min-height: 66px;
+  padding: 9px 10px 10px 12px;
+  direction: ltr;
+}
+.page-home .zad-shop-card__copy { display: grid; min-width: 0; gap: 2px; text-align: left; }
+.page-home .zad-shop-card__copy strong {
+  color: var(--shop-navy);
+  font-family: var(--font-fa);
+  font-size: clamp(.74rem, 3.2vw, .92rem);
+  font-weight: 600;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.page-home .zad-shop-card__copy small,
+.page-home .zad-shop-card__price { color: var(--shop-muted); font-size: .64rem; line-height: 1.7; overflow-wrap: anywhere; }
+.page-home .zad-shop-card__price { color: var(--shop-navy); }
+.page-home .zad-shop-card__copy small[lang="en"] { font-family: var(--font-brand-en); font-size: 1rem; line-height: 1.25; }
+.page-home .zad-shop-card__arrow {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--shop-orange);
+  color: white;
+  font-size: 1rem;
+}
+.page-home .zad-shop-card:nth-child(even) .zad-shop-card__arrow { background: var(--shop-navy); }
+.page-home .zad-daily-progress {
+  width: 48px;
+  height: 3px;
+  margin: 22px auto 0;
+  border-radius: 99px;
+  background: #d9d9d6;
+  overflow: hidden;
+  direction: ltr;
+}
+.page-home .zad-daily-progress[hidden] { display: none; }
+.page-home .zad-daily-progress > span { display: block; height: 100%; width: 50%; border-radius: inherit; background: var(--shop-navy); }
+.page-home .zad-occasion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--shop-gap);
+  direction: ltr;
+}
+.page-home .zad-shop .zad-occasion-grid .zad-shop-card__media > img { aspect-ratio: 1.2 / 1 !important; }
+.page-home .zad-occasion-grid .zad-shop-card__body { grid-template-columns: minmax(0, 1fr) 30px; padding-inline: 10px 7px; }
+.page-home .zad-occasion-grid .zad-shop-card__arrow { width: 28px; height: 28px; font-size: .9rem; }
+.page-home .zad-shop__browse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  min-height: 46px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: 1px solid #073e5255;
+  border-radius: 99px;
+  color: var(--shop-navy);
+  font-size: .8rem;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: center;
+  direction: ltr;
+}
+.page-home .zad-shop__browse span { padding-left: 24px; direction: rtl; }
+.page-home .zad-shop :is(a, .zad-daily-rail):focus-visible { outline: 2px solid var(--shop-navy); outline-offset: 3px; }
+.page-home .zad-shop-card:focus-within { outline: 2px solid var(--shop-navy); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .page-home .zad-shop-card:hover { border-color: #a78d7155; box-shadow: 0 9px 24px #5a463614; }
+  .page-home .zad-shop-card:hover img { transform: scale(1.025); }
+  .page-home .zad-shop__browse:hover { background: #073e5208; }
+  .page-home .zad-shop__all:hover { text-decoration: underline; text-underline-offset: 4px; }
+}
+@media (min-width: 761px) {
+  .page-home .zad-shop { --shop-gap: 18px; padding-top: 42px; }
+  .page-home .zad-shop + .zad-shop { padding-top: 56px; }
+  .page-home .zad-shop__container { width: min(calc(100% - 72px), 1280px); }
+  .page-home .zad-shop__heading { margin-bottom: 24px; }
+  .page-home .zad-shop__heading h2 { font-size: clamp(1.55rem, 2.3vw, 2.15rem); }
+  .page-home .zad-shop__heading p { font-size: .83rem; }
+  .page-home .zad-shop__eyebrow { font-size: .65rem; }
+  .page-home .zad-shop__all { font-size: .78rem; }
+  .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 36px) / 2.25); }
+  .page-home .zad-occasion-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .page-home .zad-shop-card__body,
+  .page-home .zad-occasion-grid .zad-shop-card__body { min-height: 78px; grid-template-columns: minmax(0, 1fr) 38px; padding: 12px 14px 12px 16px; }
+  .page-home .zad-shop-card__copy strong { font-size: 1rem; }
+  .page-home .zad-shop-card__copy small { font-size: .73rem; }
+  .page-home .zad-shop-card__copy small[lang="en"] { font-size: 1.1rem; }
+  .page-home .zad-shop-card__arrow,
+  .page-home .zad-occasion-grid .zad-shop-card__arrow { width: 36px; height: 36px; font-size: 1.1rem; }
+  .page-home .zad-shop-card__badge { top: 14px; left: 14px; padding: 6px 12px; font-size: .75rem; }
+  .page-home .zad-shop__browse { max-width: 440px; margin: 24px auto 0; min-height: 48px; font-size: .87rem; }
+}
+@media (min-width: 1024px) {
+  .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 36px) / 3); }
+  .page-home .zad-occasion-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+}
+@media (min-width: 1360px) {
+  .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 54px) / 4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-home .zad-shop-card,
+  .page-home .zad-shop .zad-shop-card__media > img { transition: none; }
+  .page-home .zad-shop-card:hover img { transform: none; }
+}

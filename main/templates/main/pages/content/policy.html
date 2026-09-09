@@ -1,8 +1,11 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-policy page-info{% endblock %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">{% endblock %}
+{% block body_class %}page-policy page-info page-zad-v2{% endblock %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 <article class="info-page policy-page" aria-labelledby="policy-title">

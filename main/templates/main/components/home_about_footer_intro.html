@@ -1,0 +1,13 @@
+{% load static %}
+<section class="zad-home-about" aria-labelledby="zad-home-about-title" data-reveal>
+  <picture class="zad-home-about__flowers" aria-hidden="true">
+    <source srcset="{% static 'main/img/home/about-footer/about-flowers-640.webp' %}" media="(max-width: 760px)">
+    <img src="{% static 'main/img/home/about-footer/about-flowers-960.webp' %}" alt="" width="960" height="668" loading="lazy" decoding="async">
+  </picture>
+  <div class="home-container zad-home-about__inner">
+    <span class="zad-home-about__eyebrow" lang="en" dir="ltr">ABOUT ZAD</span>
+    <h2 id="zad-home-about-title">برای لحظه‌هایی که ارزش ماندن دارند.</h2>
+    <p>گل، هدیه و تجربه‌هایی که با دقت انتخاب می‌شوند تا لحظه‌های خاص زندگی شما را زیباتر کنند.</p>
+    <a href="{% url 'about' %}">درباره زاد <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+  </div>
+</section>

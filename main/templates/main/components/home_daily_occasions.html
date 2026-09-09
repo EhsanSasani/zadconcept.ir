@@ -1,0 +1,82 @@
+{% load static %}
+<section class="home-section home-sameday zad-shop" aria-labelledby="home-sameday-title" data-reveal>
+  <div class="zad-shop__container">
+    <header class="zad-shop__heading">
+      <span class="zad-shop__eyebrow" lang="en" dir="ltr">SAME DAY · MASHHAD</span>
+      <h2 id="home-sameday-title">گل‌های آماده ارسال امروز</h2>
+      <p>انتخاب امروز، تحویل امروز</p>
+      <a href="{% url 'flowers_same_day' %}" class="zad-shop__all">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+    </header>
+
+    <div class="zad-daily-rail" data-daily-rail role="region" aria-label="محصولات ارسال امروز؛ برای دیدن محصولات بیشتر اسکرول کنید" tabindex="0">
+      {% for product in home_same_day_products %}
+        <article class="zad-shop-card" data-catalog-card data-product-type="{{ product.category.slug|default:'collection' }}" data-product-code="{{ product.product_code }}" data-product-name="{{ product.name|default:'' }}" data-product-price="{{ product.display_price }}" data-product-contact="{{ product.order_contact_text }}" data-product-stock="{{ product.stock_status_label }}" data-product-description="{{ product.description|default:'' }}">
+          <a href="{{ product.get_absolute_url }}" class="zad-shop-card__link" data-zad-modal-card>
+            <div class="zad-shop-card__media">
+              {% if product.cover_image %}
+                <img src="{{ product.cover_image.url }}" {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %} sizes="(max-width: 760px) 60vw, (max-width: 1023px) 42vw, (max-width: 1352px) 30vw, 306px" alt="{{ product.seo_name }}" width="520" height="650" loading="lazy" decoding="async" data-product-image>
+              {% else %}
+                <img src="{% static 'main/img/sub-bouquet.webp' %}" alt="{{ product.seo_name }}" width="520" height="650" loading="lazy" decoding="async" data-product-image>
+              {% endif %}
+              {% if product.stock_status == 'out_of_stock' %}
+                <span class="zad-shop-card__badge zad-shop-card__badge--unavailable">ناموجود</span>
+              {% elif product.stock_status == 'preorder' %}
+                <span class="zad-shop-card__badge zad-shop-card__badge--preorder">پیش‌سفارش</span>
+              {% else %}
+                <span class="zad-shop-card__badge">آماده ارسال</span>
+              {% endif %}
+            </div>
+            <div class="zad-shop-card__body">
+              <div class="zad-shop-card__copy" dir="rtl">
+                <strong>{{ product.name|default:product.category.name }}</strong>
+                {% if product.product_code %}<small>کد <bdi>{{ product.product_code }}</bdi></small>{% endif %}
+                {% if product.has_price %}<span class="zad-shop-card__price">{{ product.display_price }}</span>{% endif %}
+              </div>
+              <span class="zad-shop-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </a>
+        </article>
+      {% empty %}
+        <a class="zad-shop-card zad-shop-card--empty" href="{% url 'flowers' %}">
+          <div class="zad-shop-card__media"><img src="{% static 'main/img/sub-bouquet.webp' %}" alt="مجموعه گل‌های زاد" width="520" height="650" loading="lazy" decoding="async"></div>
+          <div class="zad-shop-card__body"><div class="zad-shop-card__copy" dir="rtl"><strong>مجموعه گل‌های زاد</strong><small>مشاهده گل‌ها</small></div><span class="zad-shop-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span></div>
+        </a>
+      {% endfor %}
+    </div>
+    <div class="zad-daily-progress" data-daily-progress aria-hidden="true" hidden><span></span></div>
+  </div>
+</section>
+
+<section class="home-section home-occasions zad-shop" aria-labelledby="home-occasions-title" data-reveal>
+  <div class="zad-shop__container">
+    <header class="zad-shop__heading">
+      <span class="zad-shop__eyebrow" lang="en" dir="ltr">FOR THE MOMENT</span>
+      <h2 id="home-occasions-title">برای هر مناسبت</h2>
+      <p>برای لحظه‌هایی که گل می‌خواهند</p>
+      <a href="{% url 'occasions' %}" class="zad-shop__all">مشاهده همه <i class="bi bi-arrow-left" aria-hidden="true"></i></a>
+    </header>
+    <div class="zad-occasion-grid">
+      {% for item in home_occasion_cards %}
+        <a class="zad-shop-card" href="{{ item.url }}">
+          <div class="zad-shop-card__media">
+            {% if item.image|slice:':7' == '/media/' or item.image|slice:':8' == 'https://' or item.image|slice:':7' == 'http://' %}
+              <img src="{{ item.image }}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">
+            {% else %}
+              <img src="{% static item.image %}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">
+            {% endif %}
+          </div>
+          <div class="zad-shop-card__body">
+            <div class="zad-shop-card__copy"><strong dir="rtl">{{ item.label }}</strong><small lang="en" dir="ltr">{{ item.label_en }}</small></div>
+            <span class="zad-shop-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+          </div>
+        </a>
+      {% empty %}
+        <a class="zad-shop-card" href="{% url 'occasions' %}">
+          <div class="zad-shop-card__media"><img src="{% static 'main/img/occasions/special.webp' %}" alt="مناسبت‌های زاد" width="720" height="900" loading="lazy" decoding="async"></div>
+          <div class="zad-shop-card__body"><div class="zad-shop-card__copy"><strong dir="rtl">لحظه‌های خاص</strong><small lang="en" dir="ltr">Occasions</small></div><span class="zad-shop-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span></div>
+        </a>
+      {% endfor %}
+    </div>
+    <a class="zad-shop__browse" href="{% url 'occasions' %}"><span>همه مناسبت‌ها</span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+  </div>
+</section>

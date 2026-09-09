@@ -430,6 +430,39 @@ class MainViewsTests(TestCase):
             response,
             f'href="{reverse("international_orders")}"',
         )
+        self.assertContains(response, 'class="zad-international__card"', count=1)
+        self.assertNotContains(response, 'class="home-wedding__card"')
+        self.assertNotContains(response, 'class="home-service-card"')
+
+    def test_footer_keeps_all_published_destinations(self):
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, 'class="zad-home-about"', count=1)
+        self.assertContains(response, 'class="zad-footer"', count=1)
+        for route in (
+            "flowers",
+            "flowers_same_day",
+            "bakery",
+            "gifts",
+            "weddings",
+            "occasions",
+            "events",
+            "about",
+            "blog",
+            "international_orders",
+            "international_orders_en",
+            "mashhad_hub",
+            "service_area",
+            "contact",
+            "faq",
+            "delivery_policy",
+            "refund_policy",
+            "payment_methods",
+            "privacy",
+            "terms",
+        ):
+            with self.subTest(route=route):
+                self.assertContains(response, f'href="{reverse(route)}"')
 
 
     def test_home_view_preserves_routing_and_context_contract(self):
@@ -1082,8 +1115,8 @@ class MainViewsTests(TestCase):
         self.assertEqual(fallback_result["page_hero_title"], generic_hero.title)
         self.assertIsNone(no_fallback_result)
 
-    def test_home_hero_uses_all_admin_managed_fields(self):
-        HomeHeroSlide.objects.create(
+    def test_retired_home_hero_fields_do_not_override_the_approved_sequence(self):
+        slide = HomeHeroSlide.objects.create(
             title="Admin Home Hero",
             kicker="ADMIN KICKER",
             description="Admin home description",
@@ -1098,12 +1131,18 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("index"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "/media/heroes/home/desktop.jpg")
-        self.assertContains(response, "/media/heroes/home/mobile/mobile.jpg")
-        self.assertContains(response, "Admin Home Hero")
-        self.assertContains(response, "Admin home description")
-        self.assertContains(response, 'href="/flowers/"')
-        self.assertContains(response, 'href="/contact/"')
+        self.assertContains(response, "main/img/home/hero-sequence/worktable-01.webp")
+        self.assertContains(response, "data-hero-frame-sequence")
+        for retired_value in (
+            "/media/heroes/home/desktop.jpg",
+            "/media/heroes/home/mobile/mobile.jpg",
+            "Admin Home Hero", "Admin home description", "Primary action",
+        ):
+            with self.subTest(retired_value=retired_value):
+                self.assertNotContains(response, retired_value)
+        slide.refresh_from_db()
+        self.assertEqual(slide.image.name, "heroes/home/desktop.jpg")
+        self.assertEqual(slide.title, "Admin Home Hero")
 
     def test_legacy_section_redirects_to_new_category(self):
         response = self.client.get(reverse("index"), {"section": "bakery"})
@@ -1425,7 +1464,7 @@ class MainViewsTests(TestCase):
 
         self.assertEqual(list_response.status_code, 200)
         self.assertIs(list_response.resolver_match.func, views.events)
-        self.assertTemplateUsed(list_response, "main/pages/workshops/index.html")
+        self.assertTemplateUsed(list_response, "main/pages/workshops/redesign.html")
         self.assertEqual(list_response.context["page_type"], "workshops")
         self.assertEqual(list_response.context["active_nav"], "events")
         self.assertEqual(
@@ -1448,8 +1487,8 @@ class MainViewsTests(TestCase):
             WorkshopPageContent,
         )
         self.assertEqual(
-            list_response.context["workshops_hero_kicker"],
-            "ZAD WORKSHOPS",
+            list_response.context["workshops_hero_text"],
+            "یاد بگیر، تجربه کن، کنار هم باش.",
         )
         self.assertEqual(
             list_response.context["workshops_hero_title"],
@@ -1553,16 +1592,18 @@ class MainViewsTests(TestCase):
         workshops = self.client.get(reverse("events"))
         home = self.client.get(reverse("index"))
 
-        self.assertContains(workshops, "فضایی برای کار با دست‌ها")
-        self.assertContains(workshops, "در ورکشاپ‌های زاد چه تجربه‌ای دارید؟")
-        self.assertContains(home, "کار عملی با متریال")
-        self.assertContains(home, "انتخاب و ساختن با سلیقه شخصی")
+        self.assertContains(workshops, "یاد بگیر، تجربه کن، کنار هم باش.")
+        self.assertContains(workshops, "سه دنیای ورکشاپ زاد")
+        for workshop_type in ("آموزشی", "تجربه‌محور", "دورهمی"):
+            self.assertContains(workshops, f"<h3>{workshop_type}</h3>", html=True)
+        self.assertContains(home, '<strong dir="rtl">ورکشاپ‌ها</strong>', html=True)
+        self.assertContains(home, f'href="{reverse("events")}" class="zad-discover-card"')
         self.assertNotContains(workshops, "فعلاً با گل‌ها")
         self.assertNotContains(workshops, "گل، مرز ورکشاپ‌های زاد نیست")
         self.assertNotContains(home, "به گل محدود نمی‌مانند")
 
-    def test_workshops_page_uses_managed_section_copy(self):
-        WorkshopPageContent.objects.create(
+    def test_workshops_page_uses_only_the_connected_managed_copy(self):
+        copy = WorkshopPageContent.objects.create(
             story_kicker="Managed story kicker",
             story_title="Managed story title",
             story_text="Managed story text",
@@ -1584,7 +1625,8 @@ class MainViewsTests(TestCase):
 
         response = self.client.get(reverse("events"))
 
-        for managed_copy in (
+        self.assertContains(response, "Managed upcoming title")
+        for retired_copy in (
             "Managed story kicker",
             "Managed story title",
             "Managed story text",
@@ -1597,19 +1639,26 @@ class MainViewsTests(TestCase):
             "Managed corporate title",
             "Managed corporate text",
             "Managed upcoming kicker",
-            "Managed upcoming title",
             "Managed CTA title",
             "Managed CTA text",
         ):
-            with self.subTest(managed_copy=managed_copy):
-                self.assertContains(response, managed_copy)
+            with self.subTest(retired_copy=retired_copy):
+                self.assertNotContains(response, retired_copy)
 
         self.published_event.delete()
         empty_response = self.client.get(reverse("events"))
         self.assertContains(empty_response, "Managed empty title")
         self.assertContains(empty_response, "Managed empty text")
 
-    def test_events_page_uses_page_hero_from_admin(self):
+        copy.refresh_from_db()
+        self.assertEqual(copy.story_title, "Managed story title")
+        copy.is_active = False
+        copy.save(update_fields=["is_active"])
+        fallback_response = self.client.get(reverse("events"))
+        self.assertNotContains(fallback_response, "Managed upcoming title")
+        self.assertContains(fallback_response, "برنامه بعدی به‌زودی اعلام می‌شود")
+
+    def test_events_page_uses_admin_hero_images_with_the_approved_copy(self):
         SiteHero.objects.create(
             title="Admin Events Hero",
             kicker="ADMIN EVENTS",
@@ -1622,9 +1671,11 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("events"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Admin Events Hero")
-        self.assertContains(response, "ADMIN EVENTS")
-        self.assertContains(response, "Admin events description")
+        self.assertContains(response, '<h1 id="workshops-title">ورکشاپ‌های زاد</h1>', html=True)
+        self.assertContains(response, "یاد بگیر، تجربه کن، کنار هم باش.")
+        self.assertNotContains(response, "Admin Events Hero")
+        self.assertNotContains(response, "ADMIN EVENTS")
+        self.assertNotContains(response, "Admin events description")
         self.assertContains(response, "/media/heroes/pages/events.jpg")
         self.assertContains(response, "/media/heroes/pages/mobile/events.jpg")
 
@@ -2201,7 +2252,17 @@ class MainViewsTests(TestCase):
         tag.save(update_fields=["is_occasion", "updated_at"])
         self.assertContains(self.client.get(reverse("occasions")), tag.name)
 
-    def test_multiple_home_slides_remain_visible_in_admin_order(self):
+    def test_home_hero_fallback_is_image_only(self):
+        response = self.client.get(reverse("index"))
+        first_slide = response.context["home_hero_slides"][0]
+
+        self.assertEqual(first_slide["title"], "")
+        self.assertEqual(first_slide["kicker"], "")
+        self.assertEqual(first_slide["description"], "")
+        self.assertEqual(first_slide["primary_button_text"], "")
+        self.assertFalse(first_slide["show_content"])
+
+    def test_retired_home_slides_keep_admin_order_without_replacing_the_single_scene(self):
         HomeHeroSlide.objects.create(
             title="First managed slide",
             image="heroes/home/first.jpg",
@@ -2214,9 +2275,14 @@ class MainViewsTests(TestCase):
         )
 
         response = self.client.get(reverse("index"))
-        self.assertContains(response, "First managed slide")
-        self.assertContains(response, "Second managed slide")
-        self.assertEqual(len(response.context["home_hero_slides"]), 2)
+        self.assertNotContains(response, "First managed slide")
+        self.assertNotContains(response, "Second managed slide")
+        self.assertEqual(
+            [slide["title"] for slide in response.context["home_hero_slides"]],
+            ["First managed slide", "Second managed slide"],
+        )
+        self.assertContains(response, 'class="hero-slide hero-slide--1', count=1)
+        self.assertContains(response, "data-hero-frame>", count=3)
 
     def test_workshop_copy_keeps_only_the_latest_active_record(self):
         first = WorkshopPageContent.objects.create(story_title="First", is_active=True)
@@ -2258,6 +2324,7 @@ class MainViewsTests(TestCase):
                 "title": "Image Event",
                 "slug": "image-event",
                 "description": "Event description",
+                "workshop_type": Event.WorkshopType.EXPERIENCE,
                 "start_at": timezone.now() + timedelta(days=1),
                 "end_at": timezone.now() + timedelta(days=1, hours=2),
                 "location": "Mashhad",

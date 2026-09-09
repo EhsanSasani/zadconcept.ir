@@ -1,8 +1,11 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-events page-workshops page-workshops-redesign{% endblock %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/workshops/redesign.css' %}?v=1">{% endblock %}
+{% block body_class %}page-events page-workshops page-workshops-redesign page-zad-v2{% endblock %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/workshops/redesign.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 <article class="wsr-page">
@@ -38,6 +41,7 @@
     </div>
   </section>
 
+  <div class="zad-scroll-content">
   <section class="wsr-worlds" aria-labelledby="workshop-worlds-title">
     <div class="wsr-container">
       <div class="wsr-section-heading">
@@ -248,6 +252,7 @@
       </div>
     </div>
   </section>
+  </div><!-- .zad-scroll-content -->
 </article>
 {% endblock %}
 

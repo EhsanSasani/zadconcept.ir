@@ -1,0 +1,12 @@
+{% load i18n admin_urls %}
+<div class="zad-submit-bar">
+  {% if show_save %}<input type="submit" name="_save" value="ذخیره تغییرات" class="zad-button">{% endif %}
+  {% if show_save_and_continue %}<input type="submit" name="_continue" value="{% if can_change %}ذخیره و ادامه{% else %}ذخیره و مشاهده{% endif %}" class="zad-button zad-button--quiet">{% endif %}
+  <details class="zad-save-more"><summary>بیشتر</summary><div>
+    {% if show_save_and_add_another %}<input type="submit" name="_addanother" value="ذخیره و افزودن یکی دیگر" class="zad-button zad-button--quiet">{% endif %}
+    {% if show_save_as_new %}<input type="submit" name="_saveasnew" value="ذخیره به‌عنوان جدید" class="zad-button zad-button--quiet">{% endif %}
+    {% if show_close %}<a href="{% url opts|admin_urlname:'changelist' %}" class="zad-button zad-button--quiet">بستن</a>{% endif %}
+    {% if show_delete_link and original %}{% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}<a href="{% add_preserved_filters delete_url %}" class="zad-delete-link">حذف…</a>{% endif %}
+  </div></details>
+  <span class="zad-save-status" role="status" aria-live="polite"></span>
+</div>

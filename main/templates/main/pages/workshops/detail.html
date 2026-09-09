@@ -1,8 +1,11 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-event-detail{% endblock %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/workshops/detail.css' %}?v=1">{% endblock %}
+{% block body_class %}page-event-detail page-zad-v2{% endblock %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'main/css/pages/workshops/detail.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 {% include "main/components/breadcrumbs.html" %}

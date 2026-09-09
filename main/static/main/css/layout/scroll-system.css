@@ -1,0 +1,127 @@
+/* Scroll geometry is resolved after legacy page/hero policies.
+   One opaque, normal-flow surface covers each sticky hero, including gaps.
+   No scroll listeners, fixed-position swaps, transformed ancestors or spacers. */
+body {
+  --zad-scroll-overlap: 24px;
+  --zad-scroll-radius: 28px;
+  --zad-scroll-hero-height: var(--zad-home-hero-desktop, clamp(540px, 68svh, 760px));
+}
+
+body .zad-scroll-content {
+  display: flow-root;
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  margin-top: calc(-1 * var(--zad-scroll-overlap));
+  border-radius: var(--zad-scroll-radius) var(--zad-scroll-radius) 0 0;
+  background: #fbf7f0;
+  /* Keep fixed story dialogs viewport-relative and focus rings visible. */
+  overflow: visible;
+}
+
+body .zad-scroll-content > :first-child {
+  margin-top: 0;
+}
+
+body.page-weddings .zad-scroll-content {
+  background: #fffaf4;
+}
+body.page-weddings .zad-scroll-content > .weddings-intro {
+  border-radius: inherit;
+  background: #fffaf4;
+}
+body.page-home .zad-scroll-content {
+  --zad-scroll-radius: 34px;
+}
+
+body.page-zad-v2 :is(.about-page, .wsr-page, .io-page) {
+  overflow: visible;
+  isolation: isolate;
+}
+
+/* A clipped scroll ancestor disables native sticky descendants. flow-root
+   contains margins without creating a second scrolling viewport. */
+body.page-zad-v2 > .page-hero ~ .site-main {
+  display: flow-root;
+  overflow: clip;
+  min-width: 0;
+}
+body.page-zad-v2.page-item > .site-main {
+  margin-top: 0;
+  border-radius: 0;
+}
+
+/* These two text-led heroes previously had a fixed outer height and a taller
+   inner min-height. Grow for real content/zoom instead of clipping the CTA. */
+body.page-zad-v2 :is(.wsr-hero, .io-hero) {
+  height: auto !important;
+  min-height: var(--zad-scroll-hero-height) !important;
+  max-height: none !important;
+}
+body.page-zad-v2 :is(.wsr-hero__inner, .io-hero__inner) {
+  box-sizing: border-box;
+  height: auto;
+  min-height: var(--zad-scroll-hero-height);
+}
+body.page-zad-v2 .wsr-hero__inner {
+  padding-block: 32px 56px;
+}
+body.page-zad-v2 .io-hero__inner {
+  padding-block: 80px 56px;
+}
+body.page-zad-v2 :is(.wsr-hero__content, .io-hero__copy) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  /* A translucent color is sufficient; avoid filtering a large scrolling layer. */
+  backdrop-filter: none;
+}
+body.page-zad-v2 :is(.wsr-hero__content p, .io-hero__lead) {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+body.page-zad-v2 .category-split-hero__media {
+  min-width: 0;
+  margin: 0;
+}
+body.page-zad-v2 :is(.category-split-hero__copy, .item-detail__grid > *) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  body {
+    --zad-scroll-overlap: 18px;
+    --zad-scroll-radius: 24px;
+    --zad-scroll-hero-height: calc(56.25vw + 76px);
+  }
+  body.page-home .zad-scroll-content { --zad-scroll-radius: 24px; }
+  body.page-zad-v2 .wsr-hero__content {
+    width: 100%;
+  }
+  body.page-zad-v2 .io-hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.page-zad-v2 .io-hero__copy { width: 100%; }
+  body.page-zad-v2 :is(.wsr-hero__content h1, .io-hero__copy h1) {
+    font-size: clamp(1.5rem, 6vw, 2.4rem);
+    line-height: 1.35;
+  }
+  body.page-zad-v2 :is(.wsr-hero__content p, .io-hero__lead) {
+    font-size: .875rem;
+    line-height: 1.8;
+  }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  body { --zad-scroll-hero-height: max(240px, 76svh); }
+}
+
+/* Text-led heroes can exceed a short viewport after wrapping or text zoom.
+   Let them scroll normally there so their lower controls remain reachable. */
+@media (max-width: 760px), (max-height: 560px) {
+  body.page-zad-v2 :is(.wsr-hero, .io-hero) {
+    position: relative !important;
+    top: auto !important;
+  }
+}

@@ -1,28 +1,12 @@
 /* ZAD admin: RTL, responsive layout, and product workflow fixes */
 
-@font-face {
-    font-family: "VazirmatnZadAdmin";
-    src: url("../admin/fonts/Vazirmatn-Regular.woff2") format("woff2");
-    font-display: swap;
-    font-style: normal;
-    font-weight: 400;
-}
-
-@font-face {
-    font-family: "VazirmatnZadAdmin";
-    src: url("../admin/fonts/Vazirmatn-Bold.woff2") format("woff2");
-    font-display: swap;
-    font-style: normal;
-    font-weight: 700;
-}
-
 html,
 body,
 button,
 input,
 select,
 textarea {
-    font-family: "VazirmatnZadAdmin", Tahoma, sans-serif !important;
+    font-family: var(--font-fa) !important;
 }
 
 /*
@@ -43,143 +27,6 @@ textarea {
     clip-path: inset(50%) !important;
     white-space: nowrap !important;
     border: 0 !important;
-}
-
-/*
- * Jazzmin 3 / AdminLTE 4 can load the LTR sidebar rule while Django's admin
- * content is RTL. In that combination the negative margin and our old
- * translateX correction cancel each other, leaving the sidebar over most of
- * the mobile viewport. Make the compact sidebar a real right-side drawer and
- * let `sidebar-open` be the only open-state source of truth.
- */
-@media (max-width: 991.98px) {
-    .app-wrapper {
-        grid-template-areas:
-            "lte-app-header"
-            "lte-app-main"
-            "lte-app-footer" !important;
-        grid-template-columns: minmax(0, 1fr) !important;
-    }
-
-    .app-header,
-    .app-main,
-    .app-footer {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    .app-sidebar {
-        position: fixed !important;
-        inset: 0 0 0 auto !important;
-        z-index: 1040 !important;
-        width: min(var(--lte-sidebar-width, 250px), calc(100vw - 48px)) !important;
-        min-width: 0 !important;
-        max-width: calc(100vw - 48px) !important;
-        max-height: 100dvh !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        transform: translate3d(100%, 0, 0) !important;
-        transition:
-            transform 0.22s ease,
-            visibility 0s linear 0.22s !important;
-    }
-
-    body.sidebar-open .app-sidebar {
-        visibility: visible !important;
-        pointer-events: auto !important;
-        transform: translate3d(0, 0, 0) !important;
-        transition:
-            transform 0.22s ease,
-            visibility 0s linear 0s !important;
-    }
-
-    body.sidebar-open {
-        overflow: hidden !important;
-    }
-
-    .sidebar-overlay {
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 1039 !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        background: rgba(0, 0, 0, 0.42) !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        transition:
-            opacity 0.18s ease,
-            visibility 0s linear 0.18s !important;
-    }
-
-    body.sidebar-open .sidebar-overlay {
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-        transition:
-            opacity 0.18s ease,
-            visibility 0s linear 0s !important;
-    }
-
-    /*
-     * Compatibility with Jazzmin releases still based on AdminLTE 3.
-     * Newer Jazzmin uses .app-sidebar; older releases use .main-sidebar.
-     */
-    html[dir="rtl"] .main-sidebar {
-        position: fixed !important;
-        inset: 0 0 0 auto !important;
-        right: 0 !important;
-        left: auto !important;
-        margin: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        transform: translate3d(100%, 0, 0) !important;
-    }
-
-    html[dir="rtl"] body.sidebar-open .main-sidebar {
-        visibility: visible !important;
-        pointer-events: auto !important;
-        transform: translate3d(0, 0, 0) !important;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .app-sidebar,
-        .sidebar-overlay,
-        html[dir="rtl"] .main-sidebar {
-            transition: none !important;
-        }
-    }
-}
-
-/*
- * Temporarily hide out-of-scope models from the Jazzmin sidebar and dashboard.
- * This is presentation-only: models, data, URLs and product-image inlines remain
- * available to the application.
- */
-.nav-sidebar li:has(a[href*="/admin/main/productimage/"]),
-.nav-sidebar li:has(a[href*="/admin/main/newspost/"]),
-.nav-sidebar li:has(a[href*="/admin/main/workshoppagecontent/"]),
-.nav-sidebar li:has(a[href*="/admin/main/pagecontentblock/"]),
-.dashboard .card-body tr:has(a[href*="/admin/main/productimage/"]),
-.dashboard .card-body tr:has(a[href*="/admin/main/newspost/"]),
-.dashboard .card-body tr:has(a[href*="/admin/main/workshoppagecontent/"]),
-.dashboard .card-body tr:has(a[href*="/admin/main/pagecontentblock/"]),
-body.dashboard tr:has(a[href*="/admin/main/productimage/"]),
-body.dashboard tr:has(a[href*="/admin/main/newspost/"]),
-body.dashboard tr:has(a[href*="/admin/main/workshoppagecontent/"]),
-body.dashboard tr:has(a[href*="/admin/main/pagecontentblock/"]) {
-    display: none !important;
-}
-
-/* Fallback: hide the link itself if a Jazzmin release changes its wrappers. */
-a[href*="/admin/main/productimage/"],
-a[href*="/admin/main/newspost/"],
-a[href*="/admin/main/workshoppagecontent/"],
-a[href*="/admin/main/pagecontentblock/"] {
-    display: none !important;
 }
 
 img.zad-admin-preview,
@@ -864,4 +711,110 @@ label,
     .object-tools a {
         justify-content: center;
     }
+}
+/* Story manager ---------------------------------------------------------- */
+
+.zad-admin-story-cover {
+  width: 62px;
+  height: 62px;
+  border: 2px solid #c99a62;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.16);
+}
+
+.zad-admin-story-poster,
+.zad-admin-story-video {
+  display: block;
+  width: min(72px, 100%);
+  aspect-ratio: 9 / 16;
+  border-radius: 8px;
+  background: #151515;
+  object-fit: cover;
+}
+
+.change-form .zad-admin-story-poster,
+.change-form .zad-admin-story-video {
+  width: min(180px, 100%);
+  border-radius: 12px;
+}
+
+.zad-story-cover-empty,
+.zad-story-video-empty {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.zad-story-status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.zad-story-status.is-queued {
+  border-color: rgba(234, 179, 8, 0.36);
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.zad-story-status.is-processing {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.14);
+  color: #7dd3fc;
+}
+
+.zad-story-status.is-ready {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.zad-story-status.is-failed {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+}
+
+.zad-story-processing-error {
+  display: block;
+  max-width: 560px;
+  color: #fca5a5;
+  line-height: 1.9;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-queued {
+  color: #854d0e;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-processing {
+  color: #075985;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-ready {
+  color: #166534;
+}
+
+html[data-bs-theme="light"] .zad-story-status.is-failed,
+html[data-bs-theme="light"] .zad-story-processing-error {
+  color: #991b1b;
+}
+
+@media (max-width: 767px) {
+  .zad-admin-story-poster,
+  .zad-admin-story-video {
+    width: 132px;
+  }
 }

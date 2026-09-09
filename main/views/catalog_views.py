@@ -369,7 +369,7 @@ COLLECTION_LANDING_CONTENT = {
         "cta_kicker": "CUSTOM ORDER",
         "cta_title": "دسته‌گل اختصاصی، دقیقاً مطابق سلیقه شما",
         "cta_text": "برای انتخاب رنگ، سبک چیدمان، بودجه و زمان ارسال، با ما تماس بگیرید یا در تلگرام پیام بدهید.",
-        "cta_image": "main/img/footer-floral.webp",
+        "cta_image": "main/img/home/about-footer/about-flowers-960.webp",
         "cta_alt": "سفارش اختصاصی گل",
     },
     Category.Section.BAKERY: {

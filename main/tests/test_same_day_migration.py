@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.operations.special import RunPython
 from django.test import TransactionTestCase
 
 
@@ -10,7 +13,21 @@ class SameDayScopeDataMigrationTests(TransactionTestCase):
     def setUp(self):
         super().setUp()
         executor = MigrationExecutor(connection)
-        executor.migrate([self.migrate_from])
+        # 0027 deletes production records irreversibly. The test database has
+        # none of those records, so only this setup downgrade may skip its
+        # reverse. The migration under test still runs both directions normally.
+        cleanup = executor.loader.get_migration(
+            "main", "0027_delete_selected_products"
+        ).operations[0]
+        latest_apps = executor.loader.project_state().apps
+        deleted_codes = cleanup.code.__globals__["PRODUCT_CODES_TO_DELETE"]
+        self.assertFalse(
+            latest_apps.get_model("main", "Product").objects.filter(
+                product_code__in=deleted_codes
+            ).exists()
+        )
+        with patch.object(cleanup, "reverse_code", RunPython.noop):
+            executor.migrate([self.migrate_from])
         old_apps = executor.loader.project_state([self.migrate_from]).apps
         CategoryV24 = old_apps.get_model("main", "Category")
         ProductV24 = old_apps.get_model("main", "Product")

@@ -1,11 +1,13 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-flowers-landing page-{{ section }}-landing{% endblock %}
+{% block body_class %}page-flowers-landing page-{{ section }}-landing{% if section != "flowers" %} page-zad-v2{% endif %}{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=6">
   <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/flower-studio.css' %}?v=1">
+  {% if section != "flowers" %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -56,6 +58,7 @@
   {% endif %}
 </section>
 
+  <div class="zad-scroll-content">
 <section class="flowers-collection" id="flowers-collection">
   <div class="flowers-container">
     {% if directory_only %}
@@ -70,7 +73,12 @@
           {% for item in landing_category_cards %}
             <a class="flowers-category-card" href="{{ item.url }}">
               <span class="flowers-category-card__media">
-                {% if item.image|slice:":7" == "/media/" %}
+                {% if item.image_640 and item.image_960 %}
+                  <picture>
+                    <source media="(max-width: 760px)" srcset="{% static item.image_640 %}">
+                    <img src="{% static item.image_960 %}" alt="{{ item.label }}" width="960" height="960" loading="lazy" decoding="async">
+                  </picture>
+                {% elif item.image|slice:":7" == "/media/" %}
                   <img src="{{ item.image }}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">
                 {% else %}
                   <img src="{% static item.image %}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">
@@ -167,9 +175,11 @@
 
           <div class="flowers-cta__actions">
             <a href="{{ page_content.cta.cta_url|default:'/contact/#lead-form' }}" class="flowers-btn">{{ page_content.cta.cta_text|default:"تماس با ما" }}</a>
-            <a href="{{ site_telegram_url|default:'#' }}" target="_blank" rel="noopener" class="flowers-btn flowers-btn--ghost">
-              هماهنگی در تلگرام
-            </a>
+            {% if section != "flowers" %}
+              <a href="{{ site_telegram_url|default:'#' }}" target="_blank" rel="noopener" class="flowers-btn flowers-btn--ghost">
+                هماهنگی در تلگرام
+              </a>
+            {% endif %}
           </div>
         </div>
 
@@ -184,6 +194,7 @@
     </div>
   </section>
 
+  </div><!-- .zad-scroll-content -->
 </div>
 {% endblock %}
 

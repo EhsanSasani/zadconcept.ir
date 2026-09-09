@@ -1,0 +1,12 @@
+{% extends "admin/change_form.html" %}
+{% load zad_admin %}
+{% block form_top %}
+{{ block.super }}
+{% zad_connection as connection %}
+{% if connection %}<aside class="zad-connection-guide"><h2>راهنمای اتصال به سایت</h2><p>{{ connection.text }}</p>{% if connection.url %}<a href="{{ connection.url }}" target="_blank" rel="noopener">مشاهده صفحه ↗</a>{% endif %}</aside>{% endif %}
+{% endblock %}
+{% block submit_buttons_bottom %}
+{% zad_product_placement as placement %}
+{% if placement %}<aside class="zad-placement"><h2>محل نمایش در سایت</h2><p>{{ placement.category }} · {{ placement.scope }}</p><dl><dt>انتشار</dt><dd>{{ placement.publication }}</dd><dt>موجودی</dt><dd>{{ placement.stock }}</dd></dl>{% if placement.is_public %}<p>محصول فعال و منتشرشده است.</p>{% else %}<p>محصول فعلاً برای نمایش عمومی فعال و منتشرشده نیست.</p>{% endif %}{% if placement.url %}<a href="{{ placement.url }}" target="_blank" rel="noopener">مشاهده محصول ↗</a>{% endif %}<small>این وضعیت مربوط به آخرین ذخیره است؛ دسته‌بندی و فیلترهای صفحه نیز روی نمایش اثر دارند.</small></aside>{% endif %}
+{{ block.super }}
+{% endblock %}

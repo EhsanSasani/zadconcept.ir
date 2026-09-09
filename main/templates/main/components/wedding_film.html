@@ -1,0 +1,27 @@
+{% load static %}
+<figure class="wedding-film{% if not wedding_film %} wedding-film--coming{% endif %}" aria-labelledby="wedding-film-title">
+  <div class="wedding-film__screen">
+    {% if wedding_film %}
+      <video class="wedding-film__video" controls playsinline preload="none" poster="{{ wedding_film.poster_image.url }}" aria-labelledby="wedding-film-title" data-wedding-film>
+        <source src="{{ wedding_film.optimized_video.url }}" type="video/mp4">
+        مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند. <a href="{{ wedding_film.optimized_video.url }}">دریافت فیلم</a>
+      </video>
+    {% else %}
+      {% if wedding_gallery %}
+        <img class="wedding-film__poster" src="{{ wedding_gallery.0.image.url }}" alt="" width="1200" height="800" loading="lazy" decoding="async">
+      {% else %}
+        <img class="wedding-film__poster" src="{% static 'main/img/home/moments/wedding-960.webp' %}" alt="" width="960" height="1200" loading="lazy" decoding="async">
+      {% endif %}
+      <div class="wedding-film__preview">
+        <span class="wedding-film__eyebrow" lang="en" dir="ltr">ZAD · WEDDING FILMS</span>
+        <span class="wedding-film__seal" aria-hidden="true"><i class="bi bi-camera-reels"></i></span>
+        <p class="wedding-film__promise">بعضی لحظه‌ها،<br>برای همیشه می‌مانند.</p>
+        <span class="wedding-film__soon">به‌زودی، یک روایت تازه</span>
+      </div>
+    {% endif %}
+  </div>
+  <figcaption class="wedding-film__caption">
+    <div><span class="wedding-film__number" lang="en" dir="ltr">THE WEDDING EDIT</span><h3 id="wedding-film-title">{{ wedding_film.title|default:"روایت یک روز ماندگار" }}</h3></div>
+    <p>{{ wedding_film.caption|default:"از اولین گل تا آخرین جزئیات؛ لحظه‌هایی با امضای زاد." }}</p>
+  </figcaption>
+</figure>

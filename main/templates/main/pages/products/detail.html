@@ -1,12 +1,13 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-item{% endblock %}
+{% block body_class %}page-item page-zad-v2{% endblock %}
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=3">
-  <link rel="stylesheet" href="{% static 'main/css/pages/products/lightbox.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'main/css/pages/products/lightbox.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -14,48 +15,45 @@
 
 <section class="container section-block item-detail item-detail--premium">
   <div class="item-detail__grid">
+    {% with gallery=product.gallery_images.all %}
     <article class="item-detail__media">
       <div class="item-detail__image-frame">
-        <a href="{{ subcategory_url|default:category_url|default:'/' }}" class="item-detail__close" aria-label="بازگشت">×</a>
+        <a href="{{ subcategory_url|default:category_url|default:'/' }}" class="item-detail__close" aria-label="بازگشت به مجموعه">×</a>
 
         {% if product.cover_image %}
-          <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}"{% endif %} width="1100" height="1300" sizes="(max-width: 760px) 100vw, 55vw" fetchpriority="high" decoding="async">
+          <img data-product-main src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}"{% endif %} width="1100" height="1300" sizes="(max-width: 860px) 100vw, 55vw" fetchpriority="high" decoding="async">
+        {% elif gallery %}
+          <img data-product-main src="{{ gallery.0.image.url }}" alt="{{ gallery.0.alt_text|default:product.seo_name }}"{% if gallery.0.image_srcset %} srcset="{{ gallery.0.image_srcset }}"{% endif %} width="1100" height="1300" sizes="(max-width: 860px) 100vw, 55vw" fetchpriority="high" decoding="async">
         {% else %}
-          <div class="item-detail__placeholder">تصویر هنوز اضافه نشده</div>
-        {% endif %}
-
-        {% if product.stock_status == "out_of_stock" %}
-          <span class="item-detail__floating-badge item-detail__floating-badge--out">ناموجود</span>
-        {% elif product.stock_status == "preorder" %}
-          <span class="item-detail__floating-badge">پیش‌سفارش</span>
-        {% else %}
-          <span class="item-detail__floating-badge">موجود</span>
+          <div class="item-detail__placeholder"><span>ZAD</span>تصویر هنوز اضافه نشده</div>
         {% endif %}
       </div>
 
-      {% with gallery=product.gallery_images.all %}
-        {% if gallery %}
-          <div class="item-detail__thumbs" aria-label="Product gallery">
-            {% if product.cover_image %}
-              <span class="item-detail__thumb is-active">
-                <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
-              </span>
-            {% endif %}
-
-            {% for image in gallery|slice:":5" %}
-              <span class="item-detail__thumb">
-                <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.seo_name }}"{% if image.image_srcset %} srcset="{{ image.image_srcset }}" sizes="120px"{% endif %} width="120" height="120" loading="lazy" decoding="async">
-              </span>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
+      {% if product.cover_image or gallery %}
+        <p class="item-detail__gallery-hint"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>برای دیدن جزئیات، تصویر را لمس کنید</p>
+      {% endif %}
+      {% if gallery %}
+        <div class="item-detail__thumbs" aria-label="تصاویر محصول">
+          {% if product.cover_image %}
+            <a href="{{ product.cover_image.url }}" class="item-detail__thumb is-active" aria-current="true" data-product-thumb aria-label="نمایش تصویر اصلی">
+              <img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}"{% if product.cover_srcset %} srcset="{{ product.cover_srcset }}"{% endif %} sizes="80px" width="120" height="120" loading="lazy" decoding="async">
+            </a>
+          {% endif %}
+          {% for image in gallery %}
+            <a href="{{ image.image.url }}" class="item-detail__thumb{% if not product.cover_image and forloop.first %} is-active{% endif %}"{% if not product.cover_image and forloop.first %} aria-current="true"{% endif %} data-product-thumb aria-label="نمایش تصویر {{ forloop.counter }} از گالری">
+              <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.seo_name }}"{% if image.image_srcset %} srcset="{{ image.image_srcset }}"{% endif %} sizes="80px" width="120" height="120" loading="lazy" decoding="async">
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
     </article>
+    {% endwith %}
 
     <aside class="item-detail__info">
       <p class="item-detail__eyebrow">zad {{ section_label|default:"Collection" }}</p>
 
-      <h1>{{  product.display_name  }}</h1>
+      <h1>{{ product.display_name }}</h1>
+      {% if product.name and product.product_code %}<p class="item-detail__code">{{ product.product_code }}</p>{% endif %}
 
       <div class="item-detail__chips">
         {% if product.category %}
@@ -81,7 +79,7 @@
 
       <div class="item-detail__purchase-box">
   <div>
-    <span class="item-detail__price-label">Price</span>
+    <span class="item-detail__price-label">قیمت</span>
 
     {% if product.has_price %}
       <p class="item-detail__price">{{ product.display_price }}</p>
@@ -97,7 +95,7 @@
 
       <div class="cta-row item-detail__cta">
         {% if product.stock_status == "out_of_stock" %}
-          <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="product-detail">Call</a>
+          <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="product-detail">تماس</a>
         {% else %}
           <a href="{{ site_call_href }}" class="btn btn-call" data-cta-position="product-detail">{{ item_call_text|default:"Call" }}</a>
         {% endif %}
@@ -112,11 +110,14 @@
         </a>
       </div>
 
-      
+      <details class="item-detail__order-note">
+        <summary>{{ page_content.before_order.title|default:"قبل از ثبت سفارش" }}</summary>
+        <p>{{ page_content.before_order.body|default:"رنگ گل‌ها، جزئیات چیدمان، بسته‌بندی و بعضی آیتم‌ها ممکن است براساس موجودی تازه همان روز کمی تغییر کند. پیش از ثبت نهایی سفارش، تیم زاد موجودی، زمان ارسال و جزئیات سفارش را با شما هماهنگ می‌کند." }}</p>
+      </details>
 
       {% with tags=product_tags %}
         {% if tags %}
-          <div class="item-detail__tags" aria-label="Product tags">
+          <div class="item-detail__tags" aria-label="برچسب‌های محصول">
             {% for tag in tags %}
               <span>{{ tag.name }}</span>
             {% endfor %}
@@ -139,14 +140,6 @@
   </div>
 </section>
 
-<section class="container section-block item-detail-extra">
-  <article class="item-detail-panel item-detail-panel--before-order">
-    <p class="item-detail-panel__kicker">{{ page_content.before_order.kicker|default:"Before Order" }}</p>
-    <h2>{{ page_content.before_order.title|default:"قبل از ثبت سفارش" }}</h2>
-    <p>{{ page_content.before_order.body|default:"رنگ گل‌ها، جزئیات چیدمان، بسته‌بندی و بعضی آیتم‌ها ممکن است براساس موجودی تازه همان روز کمی تغییر کند. پیش از ثبت نهایی سفارش، تیم زاد موجودی، زمان ارسال و جزئیات سفارش را با شما هماهنگ می‌کند." }}</p>
-  </article>
-</section>
-
 {% if similar_items %}
 <section class="container section-block featured-products-section item-detail-related">
   <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
@@ -165,5 +158,5 @@
 
 {% block extra_js %}
   <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
-  <script src="{% static 'main/js/pages/products/lightbox.js' %}?v=1"></script>
+  <script src="{% static 'main/js/pages/products/lightbox.js' %}?v=2"></script>
 {% endblock %}
