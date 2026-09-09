@@ -12,21 +12,30 @@ from ..views import _active_occasion_tags
 
 
 class AdminResponsiveRegressionTests(SimpleTestCase):
-    def test_mobile_sidebar_is_a_closed_drawer_until_sidebar_open(self):
+    def test_mobile_sidebar_uses_the_dedicated_drawer_state(self):
         css_path = (
             Path(__file__).resolve().parents[1]
             / "static"
             / "main"
             / "css"
-            / "admin_custom.css"
+            / "admin_modern.css"
         )
         css = css_path.read_text(encoding="utf-8")
 
         self.assertIn('grid-template-areas:', css)
-        self.assertIn("body.sidebar-open .app-sidebar", css)
-        self.assertIn("body.sidebar-open .sidebar-overlay", css)
-        self.assertIn("transform: translate3d(100%, 0, 0) !important", css)
-        self.assertNotIn("sidebar-open:not(.sidebar-collapse)", css)
+        self.assertIn("@media (max-width: 991.98px)", css)
+        self.assertRegex(
+            css,
+            r"body \.zad-sidebar \{[^}]*transform: translateX\(100%\) !important;"
+            r"[^}]*visibility: hidden !important;[^}]*pointer-events: none !important;",
+        )
+        self.assertRegex(
+            css,
+            r"body\.zad-menu-open \.zad-sidebar \{[^}]*visibility: visible !important;"
+            r"[^}]*pointer-events: auto !important;[^}]*transform: translateX\(0\)",
+        )
+        self.assertIn("body .zad-menu-backdrop:not([hidden])", css)
+        self.assertIn("@media (prefers-reduced-motion: reduce)", css)
 
 
 class PublicCopyRegressionTests(TestCase):
@@ -42,18 +51,20 @@ class PublicCopyRegressionTests(TestCase):
             f"مشهد، {street}",
         )
 
-    def test_legacy_admin_copy_is_normalized_on_the_home_page(self):
+    def test_retired_home_copy_does_not_replace_the_approved_discover(self):
         PageContentBlock.objects.create(
             page=PageContentBlock.Page.HOME,
             section_key="flowers",
-            title="گل‌های زاد",
+            title="عنوان آرشیوی جایگاه گل‌ها",
         )
 
         response = self.client.get(reverse("index"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "استودیو گل زاد")
-        self.assertNotContains(response, "گل‌های زاد")
+        self.assertContains(response, 'id="home-explore-title"')
+        self.assertContains(response, '<strong dir="rtl">استودیو گل</strong>', html=True)
+        self.assertNotContains(response, "عنوان آرشیوی جایگاه گل‌ها")
 
 
 class WeddingCatalogRegressionTests(TestCase):

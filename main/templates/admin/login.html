@@ -1,0 +1,20 @@
+{% extends "admin/login.html" %}
+{% load static %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'main/css/foundation/fonts.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'main/css/admin_custom.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'main/css/admin_modern.css' %}?v=2">{% endblock %}
+{% block extrahead %}{{ block.super }}<script src="{% static 'main/js/admin/theme.js' %}?v=1"></script>{% endblock %}
+{% block content %}
+<h1 class="zad-login-title">به فضای مدیریت زاد خوش آمدید</h1>
+<p class="zad-muted">برای مدیریت محتوا و محصولات وارد شوید.</p>
+<form action="{{ app_path }}" method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  {% if user.is_authenticated %}<p class="alert alert-warning">حساب فعلی دسترسی لازم را ندارد. با حساب مدیر وارد شوید.</p>{% endif %}
+  <div class="zad-login-field"><label for="{{ form.username.id_for_label }}">نام کاربری</label>{{ form.username }}{{ form.username.errors }}</div>
+  <div class="zad-login-field"><label for="{{ form.password.id_for_label }}">رمز عبور</label>{{ form.password }}{{ form.password.errors }}</div>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="zad-button" type="submit">ورود به پنل</button>
+  {% url 'admin_password_reset' as password_reset_url %}{% if password_reset_url %}<a href="{{ password_reset_url }}">بازیابی رمز عبور</a>{% endif %}
+</form>
+{% endblock %}

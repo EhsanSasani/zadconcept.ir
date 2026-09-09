@@ -282,7 +282,7 @@
   top: 8px;
   left: 18px;
   color: rgba(184, 144, 109, 0.5);
-  font-family: Georgia, serif;
+  font-family: var(--font-brand-en);
   font-size: 3.4rem;
   line-height: 1;
 }

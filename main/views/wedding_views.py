@@ -218,6 +218,7 @@ def weddings(request):
         {
             "wedding_content": wedding_content,
             "wedding_gallery": wedding_gallery,
+            "wedding_film": wedding_content.ready_film,
             "wedding_steps": wedding_content.steps,
             "wedding_collections": collections,
         }

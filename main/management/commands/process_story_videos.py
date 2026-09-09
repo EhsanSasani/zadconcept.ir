@@ -1,9 +1,10 @@
 import logging
+import math
 import signal
 import time
 from datetime import timedelta
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
 from django.utils import timezone
 
@@ -48,6 +49,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        if not math.isfinite(options["poll_interval"]) or options["poll_interval"] <= 0:
+            raise CommandError("poll-interval must be a positive finite number")
+        if options["max_jobs"] < 0 or options["retry_stale_minutes"] < 1:
+            raise CommandError("max-jobs cannot be negative and retry-stale-minutes must be positive")
         stop_requested = False
 
         def request_stop(signum, frame):
@@ -62,6 +67,7 @@ class Command(BaseCommand):
         def recover_stale_clips():
             stale_before = timezone.now() - timedelta(minutes=stale_minutes)
             stale = StoryClip.objects.filter(
+                media_type=StoryClip.MediaType.VIDEO,
                 processing_status=StoryClip.ProcessingStatus.PROCESSING,
                 updated_at__lt=stale_before,
             )
@@ -104,18 +110,21 @@ class Command(BaseCommand):
                 time.sleep(poll_interval)
                 continue
 
-            source_name = (
-                StoryClip.objects.filter(pk=clip_id)
-                .values_list("source_video", flat=True)
-                .first()
-                or ""
-            )
+            claimed = StoryClip.objects.filter(pk=clip_id).values(
+                "source_video", "processing_attempts"
+            ).first()
+            if claimed is None:
+                continue
+            source_name = claimed["source_video"]
+            attempt = claimed["processing_attempts"]
             try:
-                clip = process_story_clip(clip_id)
+                clip = process_story_clip(
+                    clip_id, expected_source_name=source_name, expected_attempt=attempt
+                )
             except StaleVideoUpload:
                 logger.info("Skipped stale story clip upload: clip_id=%s", clip_id)
             except VideoProcessingError as error:
-                mark_story_clip_failed(clip_id, source_name, str(error))
+                mark_story_clip_failed(clip_id, source_name, str(error), expected_attempt=attempt)
                 self.stderr.write(f"Story clip {clip_id} failed: {error}")
             except Exception:
                 logger.exception("Unexpected story processing failure: clip_id=%s", clip_id)
@@ -123,6 +132,7 @@ class Command(BaseCommand):
                     clip_id,
                     source_name,
                     "خطای غیرمنتظره‌ای هنگام پردازش رخ داد؛ دوباره تلاش کنید.",
+                    expected_attempt=attempt,
                 )
                 self.stderr.write(f"Story clip {clip_id} failed unexpectedly.")
             else:

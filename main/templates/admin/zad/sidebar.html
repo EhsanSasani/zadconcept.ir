@@ -1,0 +1,20 @@
+<aside class="app-sidebar zad-sidebar" id="jazzy-sidebar" aria-label="منوی مدیریت">
+  <div class="zad-admin-brand"><a href="{% url 'admin:index' %}" aria-label="پیشخوان زاد"><span lang="en" dir="ltr">ZAD</span><small>مدیریت محتوا و محصولات</small></a><button type="button" class="zad-menu-close" aria-label="بستن منو">×</button></div>
+  <div class="zad-sidebar-scroll">
+    <label class="zad-menu-search">پیدا کردن بخش مدیریت<input type="search" id="zad-menu-search" placeholder="مثلاً محصول، استوری، متن…" autocomplete="off"></label>
+    <nav>
+      <a class="zad-home-link" href="{% url 'admin:index' %}"><i class="fas fa-th-large" aria-hidden="true"></i> پیشخوان</a>
+      {% for group in groups %}
+      <details class="zad-nav-group"{% if group.active %} open{% endif %}>
+        <summary><i class="fas {{ group.icon }}" aria-hidden="true"></i><span>{{ group.label }}</span></summary>
+        <ul>{% for item in group.items %}<li data-menu-item><a href="{{ item.admin_url|default:item.add_url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.name }}</a></li>{% endfor %}</ul>
+      </details>
+      {% endfor %}
+      <p class="zad-menu-empty" hidden>بخشی با این نام پیدا نشد.</p>
+    </nav>
+  </div>
+  <div class="zad-sidebar-foot"><span>{{ user.get_short_name|default:user.get_username }}</span><a href="{% url 'index' %}" target="_blank" rel="noopener">مشاهده سایت ↗</a></div>
+</aside>
+<button type="button" class="zad-menu-backdrop" aria-label="بستن منوی مدیریت" tabindex="-1" hidden></button>
+
+<noscript><a class="zad-noscript-nav" href="{% url 'admin:index' %}">همهٔ ابزارهای مدیریت</a></noscript>

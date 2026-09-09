@@ -97,7 +97,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "main" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -368,19 +368,16 @@ LOGGING = {
 JAZZMIN_SETTINGS = {
     "site_title": "zad Admin",
     "site_header": "zad",
-    "site_brand": "zad Admin",
+    "site_brand": "ZAD",
+    "site_icon": "main/img/favicon.svg",
+    "login_logo": None,
+    "login_logo_dark": None,
     "welcome_sign": "خوش آمدید به پنل مدیریت زاد",
     "copyright": "zad Concept Store",
     "hide_models": [
         "main.ProductImage",
-        "main.NewsPost",
-        "main.WorkshopPageContent",
-        "main.PageContentBlock",
     ],
-    "search_model": [
-        "main.Product",
-        "main.WeddingProduct",
-    ],
+    "search_model": [],
     "topmenu_links": [
         {"name": "سایت", "url": "/", "new_window": True},
         {"model": "auth.User"},
@@ -421,6 +418,7 @@ JAZZMIN_SETTINGS = {
         "main.HomeHeroSlide": "fas fa-images",
         "main.SiteHero": "fas fa-image",
         "main.HeroFont": "fas fa-font",
+        "main.WeddingFilm": "fas fa-film",
         "main.BakeryItem": "fas fa-birthday-cake",
         "main.GiftItem": "fas fa-gift",
         "main.Category": "fas fa-sitemap",
@@ -433,14 +431,14 @@ JAZZMIN_SETTINGS = {
     "default_icon_children": "fas fa-circle",
     "related_modal_active": True,
     "changeform_format": "horizontal_tabs",
-    "custom_css": "main/css/admin_custom.css",
+    "custom_css": None,
     "use_google_fonts_cdn": False,
 }
 
 JAZZMIN_UI_TWEAKS = {
     "theme": "default",
-    "default_theme_mode": "dark",
-    "navbar": "navbar-dark",
+    "default_theme_mode": "light",
+    "navbar": "navbar-light",
     "no_navbar_border": True,
     "sidebar": "sidebar-dark-primary",
     "accent": "accent-lightblue",

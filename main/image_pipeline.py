@@ -5,7 +5,12 @@ from io import BytesIO
 from pathlib import Path
 
 from django.core.checks import Error, Tags, register
+from django.core.exceptions import ValidationError
+from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import models
+from django.db.models.fields.files import FieldFile
 from django.utils.text import slugify
 from PIL import Image, ImageCms, ImageOps, UnidentifiedImageError, features
 
@@ -37,6 +42,7 @@ MAX_IMAGE_DIMENSION = 3200
 MAX_ICC_PROFILE_BYTES = 1024 * 1024
 WEBP_QUALITY = 88
 WEBP_METHOD = 6
+RESPONSIVE_IMAGE_WIDTHS = (520, 1040, 1600)
 
 # Pillow reports a decoded format, not necessarily the filename extension.
 # MPO is included because several phone portrait/stereo JPEGs are detected as
@@ -237,7 +243,9 @@ def _prepare_pixels_for_webp(image, has_alpha):
     return converted, compatible_profile
 
 
-def normalize_admin_image(uploaded_file):
+def normalize_admin_image(
+    uploaded_file, *, max_dimension=MAX_IMAGE_DIMENSION, quality=WEBP_QUALITY
+):
     """Validate a new upload and return a clean, high-quality WebP upload.
 
     Existing ``FieldFile`` instances and clear-checkbox values are returned
@@ -246,7 +254,15 @@ def normalize_admin_image(uploaded_file):
     deliberately ignored; only successfully decoded content is trusted.
     """
 
-    if not uploaded_file or not hasattr(uploaded_file, "content_type"):
+    if (
+        not uploaded_file
+        or isinstance(uploaded_file, FieldFile)
+        or not (isinstance(uploaded_file, File) or hasattr(uploaded_file, "content_type"))
+    ):
+        return uploaded_file
+    # The form field, a legacy clean_<field> method and the model guard may all
+    # see one upload. Encode that upload once, without another lossy generation.
+    if getattr(uploaded_file, "_zad_normalized_image", False):
         return uploaded_file
 
     try:
@@ -303,11 +319,11 @@ def normalize_admin_image(uploaded_file):
 
             try:
                 if (
-                    normalized_image.width > MAX_IMAGE_DIMENSION
-                    or normalized_image.height > MAX_IMAGE_DIMENSION
+                    normalized_image.width > max_dimension
+                    or normalized_image.height > max_dimension
                 ):
                     normalized_image.thumbnail(
-                        (MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION),
+                        (max_dimension, max_dimension),
                         Image.Resampling.LANCZOS,
                     )
 
@@ -338,7 +354,7 @@ def normalize_admin_image(uploaded_file):
                     else:
                         save_options.update(
                             {
-                                "quality": WEBP_QUALITY,
+                                "quality": quality,
                                 "alpha_quality": 100,
                             }
                         )
@@ -388,8 +404,74 @@ def normalize_admin_image(uploaded_file):
         except (AttributeError, OSError, ValueError):
             pass
 
-    return SimpleUploadedFile(
+    result = SimpleUploadedFile(
         _webp_filename(uploaded_file.name),
         output_bytes,
         content_type="image/webp",
     )
+    result._zad_normalized_image = True
+    return result
+
+
+def normalize_new_model_images(instance, *, update_fields=None):
+    """Guard every new model image, including inline and import upload paths.
+
+    Only uncommitted file objects are decoded. Stored paths, fixture references
+    and ordinary content edits never read, replace or delete existing media.
+    Admin forms validate first so an invalid upload appears beside its field.
+    """
+
+    errors = {}
+    instance._zad_new_image_fields = set()
+    for field in instance._meta.concrete_fields:
+        if not isinstance(field, models.ImageField):
+            continue
+        if update_fields is not None and field.name not in update_fields:
+            continue
+        field_file = getattr(instance, field.name, None)
+        if not field_file or field_file._committed:
+            continue
+        try:
+            normalized = normalize_admin_image(field_file.file)
+        except ImageUploadError as error:
+            errors[field.name] = str(error)
+        else:
+            setattr(instance, field.name, normalized)
+            instance._zad_new_image_fields.add(field.name)
+    if errors:
+        raise ValidationError(errors)
+
+
+def create_responsive_image_variants(storage, stored_name):
+    """Create catalog srcset files from a newly committed normalized image.
+
+    Use the model's storage backend, preserve existing files, and never upscale.
+    Variant failure does not invalidate an already verified primary upload.
+    """
+
+    created = []
+    path = Path(stored_name)
+    try:
+        with storage.open(stored_name, "rb") as source_file, Image.open(source_file) as source:
+            source.load()
+            profile = _validated_icc_profile(source.info.get("icc_profile"))
+            for width in RESPONSIVE_IMAGE_WIDTHS:
+                if source.width <= width:
+                    continue
+                name = str(path.with_name(f"{path.stem}-{width}w.webp")).replace("\\", "/")
+                if storage.exists(name):
+                    continue
+                height = max(1, round(source.height * width / source.width))
+                with source.resize((width, height), Image.Resampling.LANCZOS) as variant:
+                    output = BytesIO()
+                    options = {"format": "WEBP", "quality": WEBP_QUALITY, "method": WEBP_METHOD}
+                    if profile:
+                        options["icc_profile"] = profile
+                    if _has_alpha(variant):
+                        options.update({"alpha_quality": 100, "exact": True})
+                    variant.save(output, **options)
+                actual_name = storage.save(name, ContentFile(output.getvalue()))
+                created.append(actual_name)
+    except (OSError, ValueError, Image.DecompressionBombError):
+        logger.exception("Could not create responsive image variants: %s", stored_name)
+    return created

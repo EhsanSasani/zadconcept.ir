@@ -2064,3 +2064,42 @@ body.page-home .home-hero { margin-top: 0 !important; }
   }
 }
 /* ZAD DESKTOP MOBILE-NAV SCALE TUNE END */
+
+/* Overlay bounds follow the visible viewport, including the mobile keyboard. */
+.zad-site-menu,
+.zad-quick-search {
+  top: var(--zad-overlay-top, 0px) !important;
+  bottom: auto !important;
+  height: var(--zad-overlay-height, 100dvh) !important;
+  overscroll-behavior: contain;
+}
+.zad-site-menu__panel,
+.zad-quick-search__panel {
+  top: min(var(--zad-panel-top, 88px), calc(var(--zad-overlay-height, 100dvh) * .18)) !important;
+  max-height: calc(var(--zad-overlay-height, 100dvh) - min(var(--zad-panel-top, 88px), calc(var(--zad-overlay-height, 100dvh) * .18)) - max(12px, env(safe-area-inset-bottom))) !important;
+  scrollbar-width: thin;
+  overscroll-behavior: contain !important;
+  overflow-wrap: anywhere;
+}
+.zad-site-menu__panel { right: max(12px, env(safe-area-inset-right)) !important; left: auto !important; max-width: calc(100vw - 24px); }
+.zad-quick-search__panel { left: max(12px, env(safe-area-inset-left)) !important; right: auto !important; }
+.zad-quick-search__top { grid-template-columns: minmax(0, 1fr) 44px !important; }
+.zad-quick-search__field { min-width: 0; }
+.zad-quick-search__field input { min-width: 0; font-size: 16px !important; }
+.zad-quick-search__field:focus-within { outline: 2px solid #bd6735; outline-offset: 2px; }
+.zad-site-menu__close,
+.zad-quick-search__close { min-width: 44px !important; min-height: 44px !important; width: 44px !important; height: 44px !important; cursor: pointer; }
+.zad-site-menu__secondary a,
+.zad-site-menu__socials a,
+.zad-site-menu__footer a { min-height: 44px !important; }
+.zad-quick-search__links a { color: #073e52; font-size: .8rem !important; }
+.zad-quick-search__panel > strong { font-size: .8rem !important; color: #073e52; }
+.zad-site-menu__label strong { font-size: clamp(.88rem, 1.35vw, 1.2rem) !important; }
+.zad-site-menu__secondary span { font-size: .8rem !important; }
+.zad-site-menu :is(a, button):focus-visible,
+.zad-quick-search :is(a, button):focus-visible { outline: 3px solid #bd6735 !important; outline-offset: 2px; }
+.zad-site-menu__panel,
+.zad-quick-search__panel { transition-duration: 220ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .zad-site-menu__primary a { transition-delay: 0s !important; }
+}

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -168,11 +169,13 @@ def probe_video(path):
     except (TypeError, ValueError) as error:
         raise VideoProcessingError("اطلاعات فنی ویدئو قابل خواندن نیست.") from error
 
+    if not isinstance(payload, dict) or not isinstance(payload.get("streams", []), list):
+        raise VideoProcessingError("اطلاعات فنی ویدئو معتبر نیست.")
     video_stream = next(
         (
             stream
             for stream in payload.get("streams", [])
-            if stream.get("codec_type") == "video"
+            if isinstance(stream, dict) and stream.get("codec_type") == "video"
         ),
         None,
     )
@@ -183,11 +186,11 @@ def probe_video(path):
         width = int(video_stream.get("width") or 0)
         height = int(video_stream.get("height") or 0)
         duration = float(
-            payload.get("format", {}).get("duration")
+            (payload.get("format") or {}).get("duration")
             or video_stream.get("duration")
             or 0
         )
-    except (TypeError, ValueError) as error:
+    except (AttributeError, TypeError, ValueError, OverflowError) as error:
         raise VideoProcessingError("ابعاد یا مدت ویدئو معتبر نیست.") from error
 
     if (
@@ -198,7 +201,7 @@ def probe_video(path):
         or width * height > 16_777_216
     ):
         raise VideoProcessingError("ابعاد ویدئو معتبر یا قابل پردازش نیست.")
-    if duration <= 0:
+    if not math.isfinite(duration) or duration <= 0:
         raise VideoProcessingError("مدت ویدئو قابل تشخیص نیست.")
 
     return {
@@ -211,22 +214,38 @@ def probe_video(path):
 
 
 def _materialize_source(field_file, directory):
-    """Return a local path for FileSystemStorage and future remote storage."""
+    """Validate worker input size even when an import bypassed the admin form."""
 
+    limit = _max_upload_bytes()
+    extension = Path(field_file.name).suffix.lower()
+    if extension not in ALLOWED_VIDEO_EXTENSIONS:
+        raise VideoProcessingError("فرمت فایل اصلی ویدئو پشتیبانی نمی‌شود.")
     try:
         source_path = Path(field_file.path)
     except (AttributeError, NotImplementedError, OSError, ValueError):
         source_path = None
 
     if source_path and source_path.is_file():
+        size = source_path.stat().st_size
+        if size < 1 or size > limit:
+            raise VideoProcessingError("حجم فایل اصلی ویدئو خارج از محدوده مجاز است.")
         return source_path
 
-    extension = Path(field_file.name).suffix.lower() or ".video"
     local_path = Path(directory) / f"source{extension}"
+    total = 0
     try:
         field_file.open("rb")
         with local_path.open("wb") as destination:
-            shutil.copyfileobj(field_file.file, destination, length=1024 * 1024)
+            while True:
+                chunk = field_file.read(min(1024 * 1024, limit - total + 1))
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > limit:
+                    raise VideoProcessingError("حجم فایل اصلی ویدئو خارج از محدوده مجاز است.")
+                destination.write(chunk)
+        if not total:
+            raise VideoProcessingError("فایل اصلی ویدئو خالی است.")
     except (OSError, ValueError) as error:
         raise VideoProcessingError("فایل اصلی ویدئو روی سرور قابل خواندن نیست.") from error
     finally:
@@ -282,6 +301,8 @@ def _encode_video(source_path, output_path):
             "44100",
             "-ac",
             "2",
+            "-t",
+            str(_max_duration_seconds()),
             "-map_metadata",
             "-1",
             "-movflags",
@@ -296,7 +317,7 @@ def _encode_video(source_path, output_path):
 
 
 def _create_poster(video_path, output_path, duration):
-    seek_seconds = min(max(duration * 0.15, 0.1), 2.0)
+    seek_seconds = min(duration * 0.15, 2.0)
     _run_media_command(
         [
             _ffmpeg_binary(),
@@ -351,10 +372,11 @@ def _validate_outputs(video_path, poster_path):
 
 
 def claim_next_story_clip():
-    """Atomically claim one queued item; safe with one or multiple workers."""
+    """Atomically claim one queued video; run one worker on the current VPS."""
 
     with transaction.atomic():
         queryset = StoryClip.objects.filter(
+            media_type=StoryClip.MediaType.VIDEO,
             processing_status=StoryClip.ProcessingStatus.QUEUED,
         ).exclude(source_video="").order_by("created_at", "id")
 
@@ -370,6 +392,8 @@ def claim_next_story_clip():
 
         claimed = StoryClip.objects.filter(
             pk=clip.pk,
+            source_video=clip.source_video.name,
+            media_type=StoryClip.MediaType.VIDEO,
             processing_status=StoryClip.ProcessingStatus.QUEUED,
         ).update(
             processing_status=StoryClip.ProcessingStatus.PROCESSING,
@@ -380,14 +404,19 @@ def claim_next_story_clip():
         return clip.pk if claimed else None
 
 
-def mark_story_clip_failed(clip_id, source_name, message):
+def mark_story_clip_failed(clip_id, source_name, message, *, expected_attempt=None):
     safe_message = str(message or "پردازش ویدئو ناموفق بود.")[:1000]
     with transaction.atomic():
         try:
             clip = StoryClip.objects.select_for_update().get(pk=clip_id)
         except StoryClip.DoesNotExist:
             return
-        if clip.source_video.name != source_name:
+        if (
+            clip.source_video.name != source_name
+            or clip.media_type != StoryClip.MediaType.VIDEO
+            or clip.processing_status != StoryClip.ProcessingStatus.PROCESSING
+            or (expected_attempt is not None and clip.processing_attempts != expected_attempt)
+        ):
             return
         clip.processing_status = StoryClip.ProcessingStatus.FAILED
         clip.processing_error = safe_message
@@ -402,7 +431,7 @@ def mark_story_clip_failed(clip_id, source_name, message):
         )
 
 
-def process_story_clip(clip_id):
+def process_story_clip(clip_id, *, expected_source_name=None, expected_attempt=None):
     """Transcode one claimed clip and atomically publish validated outputs."""
 
     try:
@@ -411,6 +440,14 @@ def process_story_clip(clip_id):
         raise StaleVideoUpload("Story clip was removed before processing.") from error
 
     source_name = clip.source_video.name
+    attempt = clip.processing_attempts
+    if (
+        clip.media_type != StoryClip.MediaType.VIDEO
+        or clip.processing_status != StoryClip.ProcessingStatus.PROCESSING
+        or (expected_source_name is not None and source_name != expected_source_name)
+        or (expected_attempt is not None and attempt != expected_attempt)
+    ):
+        raise StaleVideoUpload("The claimed video was replaced or requeued before processing.")
     if not source_name:
         raise VideoProcessingError("فایل اصلی برای پردازش در دسترس نیست.")
 
@@ -431,9 +468,8 @@ def process_story_clip(clip_id):
 
         new_video_name = ""
         new_poster_name = ""
-        old_video_name = ""
-        old_poster_name = ""
-        source_storage = clip.source_video.storage
+        video_storage = clip.optimized_video.storage
+        poster_storage = clip.poster_image.storage
 
         try:
             with transaction.atomic():
@@ -448,13 +484,15 @@ def process_story_clip(clip_id):
                         "Story clip was removed while processing."
                     ) from error
 
-                if current.source_video.name != source_name:
+                if (
+                    current.source_video.name != source_name
+                    or current.media_type != StoryClip.MediaType.VIDEO
+                    or current.processing_status != StoryClip.ProcessingStatus.PROCESSING
+                    or current.processing_attempts != attempt
+                ):
                     raise StaleVideoUpload(
                         "A newer story video upload replaced the claimed source."
                     )
-
-                old_video_name = current.optimized_video.name
-                old_poster_name = current.poster_image.name
 
                 with output_path.open("rb") as output_handle:
                     current.optimized_video.save(
@@ -505,25 +543,15 @@ def process_story_clip(clip_id):
                     ]
                 )
 
-                def clean_replaced_files():
-                    for stored_name in (old_video_name, old_poster_name):
-                        if stored_name and stored_name not in {
-                            new_video_name,
-                            new_poster_name,
-                        }:
-                            try:
-                                source_storage.delete(stored_name)
-                            except OSError:
-                                logger.warning(
-                                    "Could not delete replaced story media: %s",
-                                    stored_name,
-                                )
-                transaction.on_commit(clean_replaced_files)
+                # StoryClip.save schedules replacement cleanup after commit,
+                # including shared-reference checks and each field's storage.
         except Exception:
-            for stored_name in (new_video_name, new_poster_name):
+            for storage, stored_name in (
+                (video_storage, new_video_name), (poster_storage, new_poster_name)
+            ):
                 if stored_name:
                     try:
-                        source_storage.delete(stored_name)
+                        storage.delete(stored_name)
                     except OSError:
                         logger.warning(
                             "Could not clean incomplete story output: %s",

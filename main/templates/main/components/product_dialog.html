@@ -7,7 +7,7 @@
     </button>
 
     <div class="zad-product-modal__media">
-      <img src="" alt="" data-modal-image width="1100" height="1300" decoding="async">
+      <img alt="" data-modal-image width="1100" height="1300" decoding="async">
     </div>
 
     <div class="zad-product-modal__content">
@@ -30,8 +30,10 @@
         <span data-modal-contact>برای قیمت و ثبت سفارش با ما در ارتباط باشید.</span>
       </div>
 
+      <a class="zad-product-modal__detail" data-modal-detail>مشاهدهٔ جزئیات و تصاویر <span aria-hidden="true">←</span></a>
+
       <div class="zad-product-modal__actions">
-        <a href="{% url 'contact' %}" class="zad-product-modal__btn">
+        <a href="{{ site_call_href }}" class="zad-product-modal__btn" data-cta-position="product-modal-call">
           تماس
         </a>
 

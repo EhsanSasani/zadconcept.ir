@@ -2,110 +2,6 @@
    Base / fonts / variables / reset
    ========================= */
 
-@font-face {
-  font-family: "EstedadLocal";
-  src: url("../../fonts/Estedad-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "EstedadLocal";
-  src: url("../../fonts/Estedad-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "EstedadLocal";
-  src: url("../../fonts/Estedad-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "EstedadLocal";
-  src: url("../../fonts/Estedad-Bold.woff2") format("woff2");
-  font-weight: 700 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "VazirmatnLocal";
-  src: url("../../admin/fonts/Vazirmatn-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "VazirmatnLocal";
-  src: url("../../admin/fonts/Vazirmatn-Bold.woff2") format("woff2");
-  font-weight: 700 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "CormorantGaramond";
-  src: url("../../fonts/CormorantGaramond-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "CormorantGaramond";
-  src: url("../../fonts/CormorantGaramond-SemiBold.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "CormorantGaramond";
-  src: url("../../fonts/CormorantGaramond-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PlusJakartaSans";
-  src: url("../../fonts/PlusJakartaSans-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PlusJakartaSans";
-  src: url("../../fonts/PlusJakartaSans-Medium.ttf") format("truetype");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PlusJakartaSans";
-  src: url("../../fonts/PlusJakartaSans-SemiBold.ttf") format("truetype");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "PlusJakartaSans";
-  src: url("../../fonts/PlusJakartaSans-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   --bg: #f7f2eb;
   --bg-soft: #efe7dc;
@@ -140,9 +36,6 @@
 
   --hero-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.34));
 
-  --font-brand-en: "CormorantGaramond", serif;
-  --font-ui-en: "PlusJakartaSans", sans-serif;
-  --font-fa: "EstedadLocal", "VazirmatnLocal", Tahoma, sans-serif;
 }
 
 *,
@@ -238,3 +131,7 @@ button {
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+:where([lang="en"]) { font-family: var(--font-ui-en); }
+code, kbd, samp, pre { font-family: var(--font-ui-en); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

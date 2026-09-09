@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.db.models import Count, Q
@@ -8,6 +9,7 @@ from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
+from .admin_content import PageContentBlockAdminForm
 from .models import (
     PROTECTED_SYSTEM_TAG_SLUGS,
     PROPOSAL_COLLECTION_TAG_SLUG,
@@ -33,6 +35,7 @@ from .models import (
     TelegramBotUser,
     WeddingCollectionContent,
     WeddingGalleryImage,
+    WeddingFilm,
     WeddingPageContent,
     WeddingProduct,
     WorkshopGalleryImage,
@@ -93,6 +96,9 @@ class AdminImageUploadField(forms.FileField):
         if not self.help_text:
             self.help_text = ADMIN_IMAGE_HELP_TEXT
 
+    def clean(self, data, initial=None):
+        return validate_admin_image(super().clean(data, initial))
+
 
 class PersianVideoInput(forms.ClearableFileInput):
     initial_text = "ویدئوی اصلی موجود"
@@ -111,7 +117,12 @@ class AdminVideoUploadField(forms.FileField):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.help_text:
-            self.help_text = ADMIN_VIDEO_HELP_TEXT
+            limit_mb = settings.STORY_VIDEO_MAX_UPLOAD_BYTES // 1_000_000
+            duration = settings.STORY_VIDEO_MAX_DURATION_SECONDS
+            self.help_text = (
+                f"MP4، MOV، M4V یا WebM تا {limit_mb} مگابایت و {duration:g} ثانیه؛ "
+                "فقط خروجی بهینه‌شده در سایت پخش می‌شود."
+            )
 
 HERO_SLUG_TARGET_PAGES = {
     SiteHero.TargetPage.EVENTS,
@@ -925,6 +936,8 @@ class StoryClipAdminForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        if not cleaned_data.get("story"):
+            self.add_error("story", "استوری این محتوا را انتخاب کنید.")
         media_type = cleaned_data.get("media_type")
         image = cleaned_data.get("image")
         source_video = cleaned_data.get("source_video")
@@ -2659,7 +2672,7 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related("story")
+        return super().get_queryset(request).filter(story__isnull=False).select_related("story")
 
     @admin.display(description="محتوا")
     def title_or_order(self, obj):
@@ -2681,9 +2694,40 @@ class StoryClipAdmin(StoryClipAdminDisplayMixin, ActiveActionsMixin, admin.Model
         self.message_user(request, message)
 
 
+class WeddingFilmAdminForm(forms.ModelForm):
+    source_video = AdminVideoUploadField(required=False, label="بارگذاری فیلم")
+
+    class Meta:
+        model = WeddingFilm
+        fields = ("title", "caption", "source_video", "is_active")
+        labels = {"title": "عنوان فیلم", "caption": "توضیح زیر فیلم"}
+
+    def clean_source_video(self):
+        return validate_admin_video(self.cleaned_data.get("source_video"))
+
+
+@admin.register(WeddingFilm)
+class WeddingFilmAdmin(StoryClipAdminDisplayMixin, admin.ModelAdmin):
+    form = WeddingFilmAdminForm
+    list_display = ("__str__", "processing_badge", "output_summary", "is_active", "updated_at")
+    search_fields = ("title", "caption")
+    list_filter = ("processing_status", "is_active")
+    readonly_fields = ("processing_badge", "story_media_preview", "output_summary", "processing_message")
+    actions = ("retry_processing",)
+    retry_processing = StoryClipAdmin.retry_processing
+    fieldsets = (
+        ("فیلم گالری عروسی", {
+            "description": "فیلم را بارگذاری و ذخیره کنید؛ پس از بهینه‌سازی، آن را از تنظیمات صفحهٔ عروسی انتخاب کنید. این فیلم در استوری‌های Home نمایش داده نمی‌شود.",
+            "fields": ("title", "caption", "source_video", "is_active"),
+        }),
+        ("آماده‌سازی و پیش‌نمایش", {
+            "fields": ("processing_badge", "processing_message", "output_summary", "story_media_preview"),
+        }),
+    )
+
+
 @admin.register(NewsPost)
 class NewsPostAdmin(
-    HiddenFromAdminIndexMixin,
     PublishActionsMixin,
     AdminImagePreviewMixin,
     admin.ModelAdmin,
@@ -3581,7 +3625,7 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
         (
             "۶) گالری تصاویر",
             {
-                "fields": ("gallery_title",),
+                "fields": ("gallery_title", "film_clip"),
                 "description": "عنوان گالری را اینجا بنویسید و تصاویر را در جدول پایین همین فرم مدیریت کنید.",
             },
         ),
@@ -3637,7 +3681,7 @@ class WeddingPageContentAdmin(admin.ModelAdmin):
 
 
 @admin.register(WorkshopPageContent)
-class WorkshopPageContentAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+class WorkshopPageContentAdmin(admin.ModelAdmin):
     list_display = (
         "__str__",
         "is_active",
@@ -3648,66 +3692,14 @@ class WorkshopPageContentAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
     save_on_top = True
 
     fieldsets = (
-        (
-            "بخش فلسفه ورکشاپ‌ها",
-            {
-                "fields": (
-                    "story_kicker",
-                    "story_title",
-                    "story_text",
-                ),
-            },
-        ),
-        (
-            "بخش برنامه‌های آینده",
-            {
-                "fields": (
-                    "upcoming_kicker",
-                    "upcoming_title",
-                    "upcoming_empty_title",
-                    "upcoming_empty_text",
-                ),
-            },
-        ),
-        (
-            "بخش انواع ورکشاپ",
-            {
-                "fields": (
-                    "types_kicker",
-                    "types_title",
-                    "public_title",
-                    "public_text",
-                    "private_title",
-                    "private_text",
-                    "corporate_title",
-                    "corporate_text",
-                ),
-            },
-        ),
-        (
-            "بخش درخواست و هماهنگی",
-            {
-                "fields": (
-                    "cta_title",
-                    "cta_text",
-                ),
-            },
-        ),
-        (
-            "نمایش",
-            {
-                "fields": (
-                    "is_active",
-                    "created_at",
-                    "updated_at",
-                ),
-            },
-        ),
+        ("برنامه‌های پیش رو", {"description": "این متن‌ها در صفحه فعلی ورکشاپ نمایش داده می‌شوند.", "fields": ("upcoming_title", "upcoming_empty_title", "upcoming_empty_text")}),
+        ("وضعیت", {"fields": ("is_active", "created_at", "updated_at")}),
     )
 
 
 @admin.register(PageContentBlock)
-class PageContentBlockAdmin(HiddenFromAdminIndexMixin, admin.ModelAdmin):
+class PageContentBlockAdmin(admin.ModelAdmin):
+    form = PageContentBlockAdminForm
     list_display = (
         "page",
         "section_key",

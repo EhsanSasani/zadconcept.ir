@@ -1563,6 +1563,16 @@ class WeddingPageContent(TimeStampedModel):
         blank=True,
         null=True,
     )
+    film_clip = models.ForeignKey(
+        "WeddingFilm",
+        verbose_name="فیلم گالری",
+        on_delete=models.SET_NULL,
+        related_name="wedding_pages",
+        blank=True,
+        null=True,
+        limit_choices_to={"story__isnull": True, "media_type": "video"},
+        help_text="با دکمهٔ + فیلم را بارگذاری کنید؛ تا آماده‌شدن آن، قاب معرفی نمایش داده می‌شود.",
+    )
     is_active = models.BooleanField("فعال باشد؟", default=True, db_index=True)
 
     class Meta:
@@ -1620,11 +1630,18 @@ class WeddingPageContent(TimeStampedModel):
 
     @classmethod
     def current(cls):
-        return cls.objects.filter(is_active=True).order_by("-updated_at", "-id").first()
+        return cls.objects.filter(is_active=True).select_related("film_clip").order_by("-updated_at", "-id").first()
 
     @property
     def steps(self):
         return [line.strip() for line in self.steps_text.splitlines() if line.strip()]
+
+    @property
+    def ready_film(self):
+        clip = self.film_clip
+        if clip and clip.is_active and clip.media_type == "video" and clip.is_ready:
+            return clip
+        return None
 
 
 class WeddingCollectionContent(TimeStampedModel):
@@ -1871,6 +1888,8 @@ class StoryClip(TimeStampedModel):
         verbose_name="استوری",
         on_delete=models.CASCADE,
         related_name="clips",
+        blank=True,
+        null=True,
     )
     title = models.CharField(
         "عنوان داخل استوری",
@@ -1995,7 +2014,7 @@ class StoryClip(TimeStampedModel):
 
     def __str__(self):
         label = self.title or f"محتوا {self.sort_order + 1}"
-        return f"{self.story.title}: {label}"
+        return f"{self.story.title}: {label}" if self.story_id else label
 
     @property
     def duration_seconds(self):
@@ -2039,18 +2058,28 @@ class StoryClip(TimeStampedModel):
                 )
 
     def save(self, *args, **kwargs):
-        current_source = self.source_video.name if self.source_video else ""
-        previous_source = ""
-        previous_files = {}
-        if self.pk:
-            previous_files = (
-                type(self).objects.filter(pk=self.pk)
-                .values("source_video", "optimized_video", "poster_image", "image")
-                .first()
-                or {}
-            )
-            previous_source = previous_files.get("source_video") or ""
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            if not update_fields:
+                return
+            if not update_fields & {"media_type", "source_video", "image", "image_duration_ms"}:
+                # Worker metadata updates and caption edits must not reset media.
+                return super().save(*args, **kwargs)
 
+        file_fields = ("source_video", "optimized_video", "poster_image", "image")
+        previous_files = (
+            StoryClip.objects.filter(pk=self.pk).values(*file_fields).first() or {}
+            if self.pk else {}
+        )
+        current_source = self.source_video.name if self.source_video else ""
+        new_upload = bool(self.source_video and not self.source_video._committed)
+        source_changed = (
+            self.media_type == self.MediaType.VIDEO
+            and bool(current_source)
+            and (new_upload or previous_files.get("source_video", "") != current_source)
+        )
+        derived_fields = {"image"}
         if self.media_type == self.MediaType.IMAGE:
             self.source_video = ""
             self.optimized_video = ""
@@ -2058,70 +2087,71 @@ class StoryClip(TimeStampedModel):
             self.processing_status = self.ProcessingStatus.READY
             self.processing_error = ""
             self.duration_ms = self.image_duration_ms
-            self.video_width = 0
-            self.video_height = 0
-            self.optimized_size_bytes = 0
+            self.video_width = self.video_height = self.optimized_size_bytes = 0
             self.processed_at = timezone.now()
-            current_source = ""
+            derived_fields.update(file_fields)
         else:
             self.image = ""
-            current_image = ""
+            if source_changed:
+                self.processing_status = self.ProcessingStatus.QUEUED
+                self.processing_error = ""
+                self.processing_attempts = 0
+                self.duration_ms = self.video_width = self.video_height = self.optimized_size_bytes = 0
+                self.processed_at = None
+                derived_fields.add("source_video")
 
-        source_changed = (
-            self.media_type == self.MediaType.VIDEO
-            and bool(current_source)
-            and previous_source != current_source
-        )
-
-        if source_changed:
-            self.processing_status = self.ProcessingStatus.QUEUED
-            self.processing_error = ""
-            self.duration_ms = 0
-            self.video_width = 0
-            self.video_height = 0
-            self.optimized_size_bytes = 0
-            self.processed_at = None
-
-            update_fields = kwargs.get("update_fields")
-            if update_fields is not None:
-                kwargs["update_fields"] = set(update_fields) | {
-                    "source_video",
-                    "processing_status",
-                    "processing_error",
-                    "duration_ms",
-                    "video_width",
-                    "video_height",
-                    "optimized_size_bytes",
-                    "processed_at",
-                    "updated_at",
-                }
-
+        if self.media_type == self.MediaType.IMAGE or source_changed:
+            derived_fields.update({
+                "processing_status", "processing_error", "processing_attempts",
+                "duration_ms", "video_width", "video_height", "optimized_size_bytes",
+                "processed_at", "updated_at",
+            })
+        if update_fields is not None:
+            update_fields.update(derived_fields)
+            kwargs["update_fields"] = update_fields
         super().save(*args, **kwargs)
 
         stale_files = []
-        current_files = {
-            "source_video": self.source_video.name if self.source_video else "",
-            "optimized_video": self.optimized_video.name if self.optimized_video else "",
-            "poster_image": self.poster_image.name if self.poster_image else "",
-            "image": self.image.name if self.image else "",
-        }
         for field_name, previous_name in previous_files.items():
-            if previous_name and previous_name != current_files.get(field_name, ""):
-                storage = type(self)._meta.get_field(field_name).storage
-                stale_files.append((storage, previous_name))
+            if update_fields is not None and field_name not in update_fields:
+                continue
+            current_file = getattr(self, field_name)
+            if previous_name and previous_name != (current_file.name if current_file else ""):
+                stale_files.append((self._meta.get_field(field_name).storage, previous_name))
 
         if stale_files:
-
             def delete_replaced_media():
                 for storage, stored_name in stale_files:
+                    references = Q()
+                    for field_name in file_fields:
+                        references |= Q(**{field_name: stored_name})
+                    if StoryClip.objects.filter(references).exists():
+                        continue
                     try:
                         storage.delete(stored_name)
                     except OSError:
-                        # Database state remains authoritative if storage is
-                        # temporarily unavailable during an admin edit.
                         pass
-
             transaction.on_commit(delete_replaced_media)
+
+
+class WeddingFilmManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(story__isnull=True, media_type="video")
+
+
+class WeddingFilm(StoryClip):
+    """A standalone gallery film using the same durable video queue as stories."""
+    objects = WeddingFilmManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "فیلم عروسی"
+        verbose_name_plural = "فیلم‌های عروسی"
+
+    def save(self, *args, **kwargs):
+        self.story = None
+        self.media_type = self.MediaType.VIDEO
+        super().save(*args, **kwargs)
 
 
 class NewsPost(TimeStampedModel):

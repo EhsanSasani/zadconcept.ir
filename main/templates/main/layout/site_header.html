@@ -63,8 +63,10 @@
     </div>
   </div>
 
+</header>
+
   <div class="zad-quick-search" id="zad-quick-search" data-site-search aria-hidden="true" hidden>
-    <div class="zad-quick-search__panel" role="dialog" aria-modal="false" aria-labelledby="zad-search-title">
+    <div class="zad-quick-search__panel" role="dialog" aria-modal="true" aria-labelledby="zad-search-title" tabindex="-1">
       <div class="zad-quick-search__top">
         <label class="zad-quick-search__field">
           <i class="bi bi-search" aria-hidden="true"></i>
@@ -85,10 +87,9 @@
         <a href="{% url 'events' %}" data-search-text="ورکشاپ ها workshops"><i class="bi bi-stars"></i><span>ورکشاپ‌ها</span></a>
         <a href="{% url 'international_orders' %}" data-search-text="سفارش خارج ایران international orders"><i class="bi bi-globe2"></i><span>سفارش از خارج ایران</span></a>
       </div>
-      <p class="zad-quick-search__empty" data-site-search-empty hidden>نتیجه‌ای پیدا نشد.</p>
+      <p class="zad-quick-search__empty" data-site-search-empty role="status" hidden>نتیجه‌ای پیدا نشد.</p>
     </div>
   </div>
-</header>
 
 <div class="zad-site-menu" id="zad-site-menu" data-site-menu aria-hidden="true" hidden>
   <button type="button" class="zad-site-menu__backdrop" data-site-menu-close tabindex="-1" aria-label="بستن منو"></button>

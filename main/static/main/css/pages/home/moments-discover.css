@@ -252,7 +252,7 @@
     bottom: 0;
     display: block;
     color: #8a8983;
-    font-family: "Segoe Script", "Snell Roundhand", cursive;
+    font-family: var(--font-brand-en);
     font-size: .85rem;
     font-style: italic;
     line-height: 1.05;

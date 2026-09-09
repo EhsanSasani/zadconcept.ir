@@ -5,14 +5,15 @@
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=3">
-  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'main/css/pages/weddings/index.css' %}?v=12">
   <link rel="stylesheet" href="{% static 'main/css/pages/weddings/editorial.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'main/css/pages/weddings/film.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="weddings-shell" dir="rtl">
-  <section class="weddings-hero"{% if wedding_content.hero_title %} aria-labelledby="weddings-title"{% endif %}>
+  <section class="weddings-hero"{% if wedding_content.hero_title %} aria-label="{{ wedding_content.hero_title }}"{% endif %}>
     <div class="weddings-hero__media">
       <picture>
         {% if wedding_content.hero_mobile_image %}<source media="(max-width: 760px)" srcset="{{ wedding_content.hero_mobile_image.url }}">{% endif %}
@@ -134,7 +135,6 @@
     </div>
   </section>
 
-  {% if wedding_gallery %}
   <section class="weddings-gallery" aria-labelledby="weddings-gallery-title">
     <div class="container weddings-container">
       <header class="weddings-gallery__head weddings-gallery__head--compact">
@@ -144,6 +144,9 @@
         </h2>
       </header>
 
+      {% include "main/components/wedding_film.html" %}
+
+      {% if wedding_gallery %}
       {% if wedding_gallery|length >= 5 %}
         <div class="weddings-gallery__mosaic">
           {% for gallery_item in wedding_gallery|slice:":5" %}
@@ -183,9 +186,11 @@
           {% endfor %}
         </div>
       {% endif %}
+      {% endif %}
     </div>
   </section>
-{% endif %}
   </div><!-- .zad-scroll-content -->
 </div>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'main/js/pages/weddings/film.js' %}?v=1" defer></script>{% endblock %}
