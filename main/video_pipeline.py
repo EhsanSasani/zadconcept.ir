@@ -476,7 +476,6 @@ def process_story_clip(clip_id, *, expected_source_name=None, expected_attempt=N
                 try:
                     current = (
                         StoryClip.objects.select_for_update()
-                        .select_related("story")
                         .get(pk=clip_id)
                     )
                 except StoryClip.DoesNotExist as error:
