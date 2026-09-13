@@ -9,6 +9,7 @@ from ..models import Category, Product
 from ..page_context import _default_context
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
 from ..seo import product_node
+from ..editorial_links import guides_for_product
 
 
 def _telegram_href():
@@ -172,6 +173,7 @@ def _item_detail_context(request, product):
     context.update(
         {
             "product": product,
+            "editorial_guides": guides_for_product(product),
             "product_tags": product.tags.filter(is_active=True).order_by(
                 "sort_order",
                 "name",

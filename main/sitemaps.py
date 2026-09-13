@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Category, Event, NewsPost, Product, PublishStatus, Tag
+from .editorial import public_posts
 
 
 class CanonicalSitemap(Sitemap):
@@ -130,7 +131,7 @@ class BlogSitemap(CanonicalSitemap):
     priority = 0.6
 
     def items(self):
-        return NewsPost.objects.filter(status=PublishStatus.PUBLISHED).order_by(
+        return public_posts().order_by(
             "-updated_at"
         )
 

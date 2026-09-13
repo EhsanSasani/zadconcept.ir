@@ -1,63 +1,40 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
-
-{% block body_class %}page-blog page-info page-zad-v2{% endblock %}
-{% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/pages/content/policy.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
-{% endblock %}
-
+{% block body_class %}page-blog page-zad-v2 page-editorial{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1"><link rel="stylesheet" href="{% static 'main/css/pages/blog/editorial.css' %}?v=2">{% endblock %}
 {% block content %}
-<article class="info-page journal-page"{% if not has_managed_site_hero %} aria-labelledby="journal-title"{% endif %}>
-  {% if not has_managed_site_hero %}
-  <header class="info-hero">
-    <div class="container info-hero__inner">
-      <div class="info-hero__topline">
-        <div>
-          <a href="{% url 'index' %}" class="info-hero__home">خانه</a>
-          <span aria-hidden="true">/</span>
-          <span>مجله زاد</span>
-        </div>
-      </div>
-
-      <p class="info-hero__kicker" dir="ltr">ZAD · JOURNAL</p>
-      <div class="info-hero__copy">
-        <h1 id="journal-title">مجله زاد</h1>
-        <p>{{ page_content.intro.body|default:"یادداشت‌ها و راهنماهای کوتاه زاد برای انتخاب بهتر گل، هدیه و جزئیات مناسبت‌ها." }}</p>
-      </div>
-
-      <div class="info-hero__meta">
-        <span>راهنمای انتخاب و نگهداری</span>
-        <span>ایده‌هایی برای مناسبت‌ها</span>
-      </div>
-    </div>
+<div class="zad-journal">
+  <nav class="zad-journal__crumbs" aria-label="مسیر صفحه"><a href="{% url 'index' %}">خانه</a><span aria-hidden="true">/</span><span aria-current="page">مجله زاد</span></nav>
+  <header class="zad-journal__intro">
+    <p class="zad-journal__eyebrow" dir="ltr">ZAD JOURNAL / FLOWERS &amp; THOUGHTS</p>
+    <h1>برای انتخابی<br><span>با فکر و احساس.</span></h1>
+    <div class="zad-journal__intro-bottom"><p>مجله زاد؛ راهنمای انتخاب گل، هماهنگی سفارش و مراقبت از هدیه‌ای که با دقت انتخاب کرده‌اید.</p><a class="zad-journal__text-link" href="{% url 'flowers' %}">دیدن مجموعه گل‌ها <span aria-hidden="true">←</span></a></div>
   </header>
-  {% endif %}
-
-  <div class="container journal-page__body">
-    <div class="journal-page__heading">
-      <div>
-        <span dir="ltr">LATEST NOTES</span>
-        <h2>تازه‌ترین مطالب</h2>
-      </div>
-      <p>خواندنی‌های کوتاه، کاربردی و انتخاب‌شده از دنیای زاد.</p>
-    </div>
-
-    <section class="journal-list" aria-label="مطالب مجله زاد">
+  <section class="zad-journal__listing" aria-labelledby="journal-posts-title">
+    <div class="zad-journal__section-head"><h2 id="journal-posts-title">یادداشت‌ها و راهنماها</h2><span class="zad-journal__eyebrow" dir="ltr">THE READING ROOM</span></div>
+    <nav class="zad-journal__filters" aria-label="موضوع مطالب">
+      <a href="{% url 'blog' %}"{% if not current_topic %} aria-current="page"{% endif %}>همه مطالب</a>
+      {% for topic in topics %}<a href="{{ topic.url }}"{% if current_topic == topic.value %} aria-current="page"{% endif %}>{{ topic.label }}</a>{% endfor %}
+    </nav>
+    <div class="zad-journal__cards">
       {% for post in posts %}
-        <article class="journal-card">
-          <div class="journal-card__number" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</div>
-          <div class="journal-card__content">
-            {% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:"j F Y" }}</time>{% endif %}
-            <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
-            <p>{{ post.excerpt|default:post.body|truncatechars:190 }}</p>
-            <a href="{{ post.get_absolute_url }}" class="info-text-link">مطالعه مطلب <span aria-hidden="true">←</span></a>
-          </div>
-        </article>
-      {% empty %}
-        <div class="info-paper journal-empty">{{ page_content.empty.body|default:"هنوز مطلبی منتشر نشده است." }}</div>
-      {% endfor %}
-    </section>
-  </div>
-</article>
+      <article class="zad-note">
+        <a class="zad-note__visual{% if not post.cover_image %} zad-note__visual--type{% endif %}" href="{{ post.get_absolute_url }}" tabindex="-1" aria-hidden="true">
+          {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="" width="960" height="720" loading="lazy" decoding="async">{% else %}<span dir="ltr">ZAD<br>JOURNAL</span><span>{{ post.get_topic_display }}</span>{% endif %}
+        </a>
+        <div class="zad-note__meta"><span>{{ post.get_topic_display }}</span>{% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:'Y/m/d' }}</time>{% endif %}</div>
+        <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+        <p>{{ post.excerpt|default:post.body|truncatechars:190 }}</p>
+        <a class="zad-journal__text-link" href="{{ post.get_absolute_url }}">خواندن راهنما <span aria-hidden="true">←</span><span class="zad-journal__sr-only">: {{ post.title }}</span></a>
+      </article>
+      {% empty %}<p class="zad-journal__empty">هنوز مطلبی در این بخش منتشر نشده است.</p>{% endfor %}
+    </div>
+    {% if page_obj.has_other_pages %}<nav class="zad-journal__pagination" aria-label="صفحه‌بندی مطالب">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if current_topic %}&amp;topic={{ current_topic|urlencode }}{% endif %}" rel="prev">صفحه قبل</a>{% endif %}
+      <span>صفحه {{ page_obj.number }} از {{ paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if current_topic %}&amp;topic={{ current_topic|urlencode }}{% endif %}" rel="next">صفحه بعد</a>{% endif %}
+    </nav>{% endif %}
+  </section>
+  <aside class="zad-journal__next"><div><span class="zad-journal__eyebrow">از خواندن تا انتخاب</span><h2>برای چه کسی گل انتخاب می‌کنید؟</h2><p>مدل‌ها را ببینید و برای زمان، هزینه و امکان اجرای سفارش با زاد هماهنگ کنید.</p></div><a class="zad-journal__button" href="{% url 'contact' %}">هماهنگی با زاد <span aria-hidden="true">←</span></a></aside>
+</div>
 {% endblock %}

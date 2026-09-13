@@ -320,13 +320,20 @@ def article_node(post):
         "@id": f"{canonical}#article",
         "url": canonical,
         "headline": post.title,
-        "description": post.excerpt or post.body[:160],
+        "description": post.meta_description or post.excerpt or post.body[:160],
         "inLanguage": "fa-IR",
         "author": {"@id": business_id()},
         "publisher": {"@id": business_id()},
         "dateModified": post.updated_at.isoformat(),
         "mainEntityOfPage": {"@id": f"{canonical}#webpage"},
     }
+    if post.author_name:
+        author_type = "Organization" if post.author_name == "تحریریه زاد" else "Person"
+        node["author"] = {"@type": author_type, "name": post.author_name}
+    if post.reviewer_name:
+        node["reviewedBy"] = {"@type": "Person", "name": post.reviewer_name}
+    if post.reviewed_at:
+        node["lastReviewed"] = post.reviewed_at.isoformat()
     if post.published_at:
         node["datePublished"] = post.published_at.isoformat()
     if post.cover_image:

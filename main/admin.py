@@ -23,6 +23,9 @@ from .models import (
     HomeHeroSlide,
     LeadRequest,
     NewsPost,
+    ArticleBlock,
+    ArticleProduct,
+    ArticleLink,
     PageContentBlock,
     Product,
     ProductImage,
@@ -2726,6 +2729,34 @@ class WeddingFilmAdmin(StoryClipAdminDisplayMixin, admin.ModelAdmin):
     )
 
 
+class ArticleBlockAdminForm(forms.ModelForm):
+    class Meta:
+        model = ArticleBlock
+        fields = "__all__"
+        field_classes = {"image": AdminImageUploadField}
+        widgets = {"body": forms.Textarea(attrs={"rows": 5}), "table_data": forms.Textarea(attrs={"rows": 3, "dir": "ltr"})}
+
+    def clean_image(self):
+        return validate_admin_image(self.cleaned_data.get("image"))
+
+
+class ArticleBlockInline(admin.StackedInline):
+    model = ArticleBlock
+    form = ArticleBlockAdminForm
+    extra = 0
+
+
+class ArticleProductInline(admin.TabularInline):
+    model = ArticleProduct
+    extra = 0
+    autocomplete_fields = ("product",)
+
+
+class ArticleLinkInline(admin.TabularInline):
+    model = ArticleLink
+    extra = 0
+
+
 @admin.register(NewsPost)
 class NewsPostAdmin(
     PublishActionsMixin,
@@ -2733,75 +2764,29 @@ class NewsPostAdmin(
     admin.ModelAdmin,
 ):
     form = NewsPostAdminForm
-
-    list_display = (
-        "image_preview",
-        "title",
-        "status",
-        "published_at",
-        "created_at",
-        "updated_at",
-    )
-    list_filter = (
-        "status",
-        "published_at",
-        "created_at",
-    )
-    search_fields = (
-        "title",
-        "slug",
-        "excerpt",
-        "body",
-    )
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "image_preview",
-    )
-    ordering = (
-        "-published_at",
-        "-created_at",
-    )
+    inlines = (ArticleBlockInline, ArticleProductInline, ArticleLinkInline)
+    list_display = ("image_preview", "title", "topic", "status", "published_at", "updated_at")
+    list_filter = ("status", "topic", "published_at")
+    search_fields = ("title", "slug", "excerpt", "body")
+    readonly_fields = ("created_at", "updated_at", "image_preview", "preview_link")
+    autocomplete_fields = ("primary_category", "related_articles")
+    ordering = ("-published_at", "-created_at")
     date_hierarchy = "published_at"
-    list_editable = (
-        "status",
-    )
     save_on_top = True
-
     fieldsets = (
-        (
-            "محتوا",
-            {
-                "fields": (
-                    "title",
-                    "excerpt",
-                    "body",
-                ),
-            },
-        ),
-        (
-            "رسانه و انتشار",
-            {
-                "fields": (
-                    "cover_image",
-                    "image_preview",
-                    "status",
-                    "published_at",
-                ),
-            },
-        ),
-        (
-            "تنظیمات پیشرفته",
-            {
-                "fields": (
-                    "slug",
-                    "created_at",
-                    "updated_at",
-                ),
-                "classes": ("collapse",),
-            },
-        ),
+        ("محتوای مقاله", {"fields": ("title", "topic", "excerpt", "takeaway"), "description": "متن کامل را در بخش‌های مقاله پایین صفحه وارد کنید؛ محصولات منتخب را همراه دلیل ارتباط انتخاب کنید."}),
+        ("تصویر و انتشار", {"fields": ("cover_image", "image_preview", "status", "published_at", "preview_link")}),
+        ("نویسنده و بازبینی", {"fields": ("author_name", "reviewer_name", "reviewed_at")}),
+        ("سئو و ارتباط مطالب", {"fields": ("seo_title", "meta_description", "primary_category", "related_articles")}),
+        ("متن قدیمی", {"fields": ("body",), "classes": ("collapse",), "description": "برای مطالب قدیمی حفظ شده است؛ اگر بخش‌های مقاله وجود داشته باشد، بخش‌ها نمایش داده می‌شوند."}),
+        ("تنظیمات پیشرفته", {"fields": ("slug", "created_at", "updated_at"), "classes": ("collapse",), "description": "اسلاگ مقالهٔ منتشرشده را بدون تغییرمسیر عوض نکنید."}),
     )
+
+    @admin.display(description="پیش‌نمایش خصوصی")
+    def preview_link(self, obj):
+        if not obj or not obj.pk:
+            return "ابتدا مقاله را ذخیره کنید."
+        return format_html('<a href="{}?preview=1" target="_blank" rel="noopener">مشاهدهٔ پیش‌نمایش</a>', obj.get_absolute_url())
 
 
 @admin.register(WorkshopGalleryImage)

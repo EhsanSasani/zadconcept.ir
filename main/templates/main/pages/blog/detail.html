@@ -1,55 +1,46 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
-
-{% block body_class %}page-blog-detail page-zad-v2{% endblock %}
-
-{% block page_css %}
-  <link rel="stylesheet" href="{% static 'main/css/pages/blog/detail.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
-{% endblock %}
-
+{% block body_class %}page-blog-detail page-zad-v2 page-editorial{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1"><link rel="stylesheet" href="{% static 'main/css/pages/blog/detail.css' %}?v=1"><link rel="stylesheet" href="{% static 'main/css/pages/blog/editorial.css' %}?v=2">{% endblock %}
 {% block content %}
-{% include "main/components/breadcrumbs.html" %}
-
-<article class="container section-block blog-detail">
-  {% if post.cover_image %}
-    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="cover-image" width="1600" height="900" decoding="async">
-  {% endif %}
-
-  <div class="blog-detail__body">
-    {{ post.body|linebreaks }}
-  </div>
-</article>
-
-{% comment %}
-{% if related_links %}
-<section class="container section-block">
-  <div class="section-head">
-    <h2>Related Paths</h2>
-  </div>
-
-  <div class="inline-links">
-    {% for item in related_links %}
-      <a href="{{ item.url }}">{{ item.label }}</a>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-{% if related_products %}
-<section class="container section-block featured-products-section">
-  <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
-    <div>
-      <h2 class="section-title-en">Related Pieces</h2>
+<div class="zad-journal" data-editorial-article="{{ post.pk }}"{% if is_preview %} data-editorial-preview="true"{% endif %}>
+  <nav class="zad-journal__crumbs" aria-label="مسیر صفحه"><a href="{% url 'index' %}">خانه</a><span aria-hidden="true">/</span><a href="{% url 'blog' %}">مجله زاد</a><span aria-hidden="true">/</span><span aria-current="page">{{ post.title }}</span></nav>
+  {% if is_preview %}<p class="zad-journal__preview" role="status">پیش‌نمایش خصوصی · این نسخه برای بازدیدکنندگان منتشر نشده است.</p>{% endif %}
+  <article class="zad-article" aria-labelledby="article-title">
+    <header class="zad-article__header">
+      <p class="zad-journal__eyebrow">مجله زاد <span aria-hidden="true">/</span> {{ post.get_topic_display }}</p>
+      <h1 id="article-title">{{ post.title }}</h1>
+      {% if post.excerpt %}<p class="zad-article__standfirst">{{ post.excerpt }}</p>{% endif %}
+      <div class="zad-article__byline"><span>{{ post.author_name|default:'تحریریه زاد' }}</span>{% if post.published_at %}<time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|date:'Y/m/d' }}</time>{% endif %}{% if post.reviewer_name %}<span>بازبینی: {{ post.reviewer_name }}{% if post.reviewed_at %} · {{ post.reviewed_at|date:'Y/m/d' }}{% endif %}</span>{% endif %}<button class="zad-journal__copy" type="button" data-editorial-copy hidden>کپی لینک مطلب</button><span class="zad-journal__copy-status" data-copy-status role="status"></span></div>
+    </header>
+    {% if post.cover_image %}<figure class="zad-article__cover"><img src="{{ post.cover_image.url }}" alt="{{ post.title }}" width="1600" height="1000" fetchpriority="high" decoding="async"></figure>{% endif %}
+    <div class="zad-article__layout">
+      <aside class="zad-article__sidebar">
+        {% if toc %}<details class="zad-article__toc" open><summary>در این راهنما</summary><nav aria-label="فهرست مطلب"><ol>{% for entry in toc %}<li><a href="#{{ entry.id }}">{{ entry.title }}</a></li>{% endfor %}</ol></nav></details>{% endif %}
+        <a class="zad-article__sidebar-link" href="{% url 'flowers' %}" data-editorial-link="collection">مجموعه گل‌های زاد <span aria-hidden="true">←</span></a>
+      </aside>
+      <div class="zad-article__reading" data-editorial-reading>
+        {% if post.takeaway %}<aside class="zad-article__takeaway" aria-label="نکته اصلی"><span class="zad-journal__eyebrow">پیش از انتخاب</span><p>{{ post.takeaway }}</p></aside>{% endif %}
+        <div class="zad-article__body">
+          {% for block in article_blocks %}
+            {% if block.kind == 'heading' %}<h2 id="{{ block.anchor }}">{{ block.title }}</h2>
+            {% elif block.kind == 'text' %}{% if block.title %}<h3>{{ block.title }}</h3>{% endif %}{{ block.body|linebreaks }}
+            {% elif block.kind == 'image' %}{% if block.image %}<figure class="zad-article__figure"><img src="{{ block.image.url }}" alt="{{ block.alt_text }}" width="1200" height="900" loading="lazy" decoding="async">{% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}</figure>{% endif %}
+            {% elif block.kind == 'table' %}<div class="zad-article__table-wrap" role="region" aria-label="{{ block.title|default:'جدول مقایسه' }}" tabindex="0"><p class="zad-article__table-hint">برای دیدن همه ستون‌ها، جدول را به چپ و راست بکشید.</p><table>{% if block.title %}<caption>{{ block.title }}</caption>{% endif %}<thead><tr>{% for cell in block.headers %}<th scope="col">{{ cell }}</th>{% endfor %}</tr></thead><tbody>{% for row in block.rows %}<tr>{% for cell in row %}{% if forloop.first %}<th scope="row">{{ cell }}</th>{% else %}<td>{{ cell }}</td>{% endif %}{% endfor %}</tr>{% endfor %}</tbody></table></div>
+            {% elif block.kind == 'quote' %}<blockquote>{% if block.title %}<strong>{{ block.title }}</strong>{% endif %}{{ block.body|linebreaks }}</blockquote>
+            {% elif block.kind == 'cta' %}<aside class="zad-article__inline-cta">{% if block.title %}<h3>{{ block.title }}</h3>{% endif %}{{ block.body|linebreaks }}{% if block.link_url and block.link_label %}<a class="zad-journal__text-link" href="{{ block.link_url }}" data-editorial-link="inline_cta">{{ block.link_label }} <span aria-hidden="true">←</span></a>{% endif %}</aside>
+            {% elif block.kind == 'faq' %}<details class="zad-article__faq"><summary>{{ block.title }}</summary><div>{{ block.body|linebreaks }}</div></details>{% endif %}
+          {% empty %}{{ post.body|linebreaks }}{% endfor %}
+        </div>
+        {% if related_links %}<aside class="zad-article__paths" aria-labelledby="article-paths-title"><h2 id="article-paths-title">قدم بعدی شما</h2>{% for link in related_links %}<a href="{{ link.url }}" data-editorial-link="related_path"><strong>{{ link.label }} <span aria-hidden="true">←</span></strong>{% if link.description %}<span>{{ link.description }}</span>{% endif %}</a>{% endfor %}</aside>{% endif %}
+      </div>
     </div>
-  </div>
-
-  {% include "main/components/product_rail.html" with products=related_products %}
-</section>
-{% endif %}
-{% endcomment %}
+  </article>
+  {% if recommended_connections %}<section class="zad-journal__recommendations" aria-labelledby="article-products-title"><div class="zad-journal__section-head"><div><span class="zad-journal__eyebrow">در امتداد این راهنما</span><h2 id="article-products-title">مدل‌هایی برای بررسی</h2></div></div><p class="zad-journal__section-description">جزئیات هر مدل را ببینید؛ موجودی، زمان اجرا و هزینه نهایی هنگام هماهنگی سفارش مشخص می‌شود.</p><div class="zad-journal__products">
+    {% for connection in recommended_connections %}{% with product=connection.product %}<article class="zad-editorial-product"><a href="{{ product.get_absolute_url }}" data-editorial-link="product">{% if product.cover_image %}<img src="{{ product.cover_image.url }}" alt="{{ product.seo_name }}" width="520" height="650" loading="lazy" decoding="async">{% else %}<div class="zad-editorial-product__no-image">{{ product.seo_name }}</div>{% endif %}<span class="zad-editorial-product__badge">{{ connection.availability_label }}</span><h3>{{ product.seo_name }}</h3><p class="zad-editorial-product__price">{{ product.display_price }}</p></a>{% if connection.reason %}<p class="zad-editorial-product__reason">{{ connection.reason }}</p>{% endif %}</article>{% endwith %}{% endfor %}
+  </div></section>{% endif %}
+  <aside class="zad-journal__next"><div><span class="zad-journal__eyebrow">انتخاب شما، با همراهی زاد</span><h2>هنوز بین چند انتخاب مردد هستید؟</h2><p>مناسبت، بودجه و زمان مدنظرتان را بگویید تا درباره گزینه‌های قابل اجرا هماهنگ کنیم.</p></div><div class="zad-journal__actions">{% if site_telegram_url %}<a class="zad-journal__button" href="{{ site_telegram_url }}" target="_blank" rel="noopener" data-editorial-link="telegram" data-cta-position="article-end">هماهنگی در تلگرام <span aria-hidden="true">←</span></a>{% endif %}<a class="zad-journal__text-link" href="{% url 'contact' %}" data-editorial-link="contact">راه‌های ارتباط با زاد</a></div></aside>
+  {% if related_posts %}<section class="zad-journal__related" aria-labelledby="related-posts-title"><div class="zad-journal__section-head"><h2 id="related-posts-title">برای ادامه خواندن</h2><a class="zad-journal__text-link" href="{% url 'blog' %}">همه مطالب <span aria-hidden="true">←</span></a></div><div class="zad-journal__related-grid">{% for related in related_posts %}<article><span class="zad-journal__eyebrow">{{ related.get_topic_display }}</span><h3><a href="{{ related.get_absolute_url }}" data-editorial-link="related_article">{{ related.title }} <span aria-hidden="true">←</span></a></h3><p>{{ related.excerpt|truncatechars:140 }}</p></article>{% endfor %}</div></section>{% endif %}
+</div>
 {% endblock %}
-
-{% block extra_js %}
-  <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
-{% endblock %}
+{% block extra_js %}<script src="{% static 'main/js/pages/blog/editorial.js' %}?v=2" defer></script>{% endblock %}

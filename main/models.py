@@ -1,6 +1,6 @@
 import uuid
 from pathlib import PurePosixPath
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from django.core.exceptions import ValidationError
 from django.core.validators import (
@@ -2154,11 +2154,46 @@ class WeddingFilm(StoryClip):
         super().save(*args, **kwargs)
 
 
+def validate_editorial_url(value):
+    """Only explicit HTTPS URLs and root-relative site paths are editorial links."""
+    decoded = value
+    for _ in range(4):
+        decoded = unquote(decoded)
+    if not value or any(ord(c) < 33 or ord(c) == 127 for c in decoded) or "\\" in decoded:
+        raise ValidationError("پیوند باید بدون فاصله و نویسهٔ کنترلی باشد.")
+    try:
+        parts = urlsplit(decoded)
+        hostname = parts.hostname
+    except ValueError as exc:
+        raise ValidationError("نشانی پیوند معتبر نیست.") from exc
+    if decoded.startswith("/") and not decoded.startswith("//") and not parts.netloc:
+        return
+    if parts.scheme == "https" and hostname and not parts.username and not parts.password:
+        URLValidator(schemes=["https"])(decoded)
+        return
+    raise ValidationError("از مسیر داخلی با / یا نشانی کامل https استفاده کنید.")
+
+
 class NewsPost(TimeStampedModel):
+    class Topic(models.TextChoices):
+        SELECTION = "selection", "راهنمای انتخاب"
+        ORDER = "order", "راهنمای سفارش"
+        CARE = "care", "نگهداری گل"
+        DESIGN = "design", "طراحی و رنگ"
+
+    seo_title = models.CharField("عنوان سئو", max_length=180, blank=True)
+    meta_description = models.CharField("توضیح سئو", max_length=300, blank=True)
+    topic = models.CharField("موضوع", max_length=20, choices=Topic.choices, default=Topic.SELECTION, db_index=True)
+    author_name = models.CharField("نویسندهٔ واقعی", max_length=120, blank=True)
+    reviewer_name = models.CharField("بازبین واقعی", max_length=120, blank=True)
+    reviewed_at = models.DateField("تاریخ بازبینی", blank=True, null=True)
+    takeaway = models.TextField("پاسخ کوتاه ابتدای مقاله", blank=True)
+    primary_category = models.ForeignKey("Category", verbose_name="دستهٔ مرتبط", on_delete=models.SET_NULL, null=True, blank=True, related_name="editorial_posts")
+    related_articles = models.ManyToManyField("self", verbose_name="مطالب مرتبط", symmetrical=False, blank=True)
     title = models.CharField("عنوان", max_length=180)
     slug = models.SlugField("اسلاگ", max_length=200, unique=True, blank=True, allow_unicode=True)
     excerpt = models.CharField("خلاصه", max_length=300, blank=True)
-    body = models.TextField("متن")
+    body = models.TextField("متن قدیمی", blank=True)
     cover_image = models.ImageField("تصویر کاور", upload_to=news_cover_upload_to, null=True, blank=True)
     status = models.CharField(
         "وضعیت",
@@ -2187,6 +2222,82 @@ class NewsPost(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("blog_detail", args=[self.slug])
+
+
+class ArticleBlock(models.Model):
+    class Kind(models.TextChoices):
+        HEADING = "heading", "تیتر بخش"
+        TEXT = "text", "پاراگراف"
+        IMAGE = "image", "تصویر"
+        TABLE = "table", "جدول مقایسه"
+        QUOTE = "quote", "نکته"
+        CTA = "cta", "دعوت به اقدام"
+        FAQ = "faq", "پرسش و پاسخ"
+
+    post = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="blocks")
+    kind = models.CharField("نوع بخش", max_length=20, choices=Kind.choices, default=Kind.TEXT)
+    title = models.CharField("عنوان / پرسش", max_length=240, blank=True)
+    body = models.TextField("متن ساده / پاسخ", blank=True)
+    image = models.ImageField("تصویر", upload_to="news/blocks/", blank=True)
+    alt_text = models.CharField("توصیف تصویر", max_length=300, blank=True)
+    caption = models.CharField("زیرنویس", max_length=300, blank=True)
+    table_data = models.JSONField("ردیف‌های جدول", default=list, blank=True, help_text='آرایهٔ ردیف‌ها با تعداد ستون یکسان؛ ردیف اول عنوان ستون‌هاست، مانند [["نوع", "ویژگی"], ["باکس", "چیدمان در ظرف"]].')
+    link_label = models.CharField("متن پیوند", max_length=180, blank=True)
+    link_url = models.CharField("مقصد پیوند", max_length=500, blank=True, validators=[validate_editorial_url])
+    sort_order = models.PositiveIntegerField("ترتیب", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "pk"]
+        verbose_name = "بخش مقاله"
+        verbose_name_plural = "بخش‌های مقاله"
+
+    def clean(self):
+        errors = {}
+        if bool(self.link_label) != bool(self.link_url):
+            errors["link_url"] = "متن پیوند و مقصد را با هم وارد کنید."
+        if self.kind == self.Kind.CTA and not self.link_url:
+            errors["link_url"] = "دعوت به اقدام به پیوند نیاز دارد."
+        if self.kind in (self.Kind.HEADING, self.Kind.FAQ) and not self.title.strip():
+            errors["title"] = "عنوان این بخش ضروری است."
+        if self.kind in (self.Kind.TEXT, self.Kind.QUOTE, self.Kind.FAQ) and not self.body.strip():
+            errors["body"] = "متن این بخش ضروری است."
+        if self.kind == self.Kind.IMAGE:
+            if not self.image:
+                errors["image"] = "تصویر این بخش را انتخاب کنید."
+            if not self.alt_text.strip():
+                errors["alt_text"] = "توصیف قابل‌فهم تصویر ضروری است."
+        if self.kind == self.Kind.TABLE:
+            rows = self.table_data
+            if not isinstance(rows, list) or len(rows) < 2 or not all(isinstance(row, list) and row for row in rows) or any(len(row) != len(rows[0]) for row in rows) or any(not isinstance(cell, str) for row in rows for cell in row):
+                errors["table_data"] = "جدول باید حداقل دو ردیف و ستون‌های برابر با سلول‌های متنی داشته باشد."
+        if errors:
+            raise ValidationError(errors)
+
+
+class ArticleProduct(models.Model):
+    post = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="product_connections")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="محصول")
+    reason = models.CharField("چرا این محصول مرتبط است؟", max_length=300)
+    sort_order = models.PositiveIntegerField("ترتیب", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "pk"]
+        constraints = [models.UniqueConstraint(fields=["post", "product"], name="unique_article_product")]
+        verbose_name = "محصول مرتبط"
+        verbose_name_plural = "محصولات منتخب مقاله"
+
+
+class ArticleLink(models.Model):
+    post = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="editorial_links")
+    label = models.CharField("عنوان پیوند", max_length=180)
+    url = models.CharField("مقصد", max_length=500, validators=[validate_editorial_url])
+    description = models.CharField("توضیح ارتباط / منبع", max_length=300, blank=True)
+    sort_order = models.PositiveIntegerField("ترتیب", default=0)
+
+    class Meta:
+        ordering = ["sort_order", "pk"]
+        verbose_name = "پیوند مقاله"
+        verbose_name_plural = "پیوندها و منابع مقاله"
 
 
 class Event(TimeStampedModel):

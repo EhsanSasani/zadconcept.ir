@@ -95,6 +95,18 @@
     background-size: cover;
   }
 
+  /* Wide screens crop the 4:3 production frames more aggressively. Move the
+     shared focal point upward so the ZAD mark stays fully inside the Hero. */
+  @media (min-width: 1600px) {
+    body.page-home .site-main .home-hero .hero-slide img {
+      object-position: center 42% !important;
+    }
+
+    .page-home .home-hero-sequence__frame {
+      background-position: center 42%;
+    }
+  }
+
   /* Stories */
   .page-home .zad-stories__container {
     width: min(calc(100% - var(--home-responsive-gutter)), var(--home-responsive-shell));

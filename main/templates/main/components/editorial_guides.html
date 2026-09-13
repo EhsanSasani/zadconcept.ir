@@ -1,0 +1,10 @@
+{% if editorial_guides %}
+<section class="container section-block zad-guide-links" aria-labelledby="editorial-guides-heading" dir="rtl">
+  <h2 id="editorial-guides-heading">راهنمای انتخاب و سفارش</h2>
+  <ul>
+    {% for guide in editorial_guides %}
+      <li><a href="{{ guide.get_absolute_url }}">{{ guide.title }} <span aria-hidden="true">←</span></a>{% if guide.excerpt %}<p>{{ guide.excerpt|truncatechars:160 }}</p>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}

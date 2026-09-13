@@ -23,6 +23,7 @@ from ..forms import LeadRequestForm
 from ..managed_heroes import _get_site_hero
 from ..models import Category
 from ..page_context import _default_context, _with_home
+from ..editorial_links import guides_for_category
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
 
 
@@ -287,6 +288,7 @@ def _section_subcategory(request, section, subcategory_slug):
     context.update(
         {
             "subcategory_slug": category.slug,
+            "editorial_guides": guides_for_category(category),
             "subcategory_label": category.name,
             "collection_title": category.name,
             "collection_intro": content["intro"],

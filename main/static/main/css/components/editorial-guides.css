@@ -1,0 +1,9 @@
+.zad-guide-links { border-top: 1px solid #d9d9cc; padding-block: 32px; }
+.zad-guide-links h2 { color: #004e72; font-size: clamp(21px, 2.5vw, 28px); }
+.zad-guide-links ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; list-style: none; padding: 0; }
+.zad-guide-links li { min-width: 0; padding: 20px; background: #eeede2; overflow-wrap: anywhere; }
+.zad-guide-links a { display: block; min-height: 44px; color: #004e72; font-weight: 600; line-height: 1.9; text-decoration: none; }
+.zad-guide-links a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.zad-guide-links a:focus-visible { outline: 2px solid #004e72; outline-offset: 5px; }
+.zad-guide-links p { font-size: 14px; line-height: 2; color: #626b67; margin: 10px 0 0; }
+@media (max-width: 700px) { .zad-guide-links ul { grid-template-columns: 1fr; gap: 16px; } }
