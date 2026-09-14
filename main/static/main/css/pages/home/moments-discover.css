@@ -207,6 +207,43 @@
 }
 .page-home .zad-moments-discover__closing > span { margin-bottom: 20px; }
 .page-home .zad-moments-discover__wave { display: none; }
+/* Mobile story affordance: 10% larger covers and a warm, quiet ring. */
+@media (max-width: 760px) {
+  .page-home .zad-moments-discover {
+    --moments-cover: clamp(63.8px, 18.7vw, 81.4px);
+    --moments-ring: linear-gradient(135deg, #b95638 0%, #eb7948 52%, #e8aa83 100%);
+    --moments-ring-seen: #c4bbb0;
+  }
+
+  .page-home .zad-moments-discover .zad-story-trigger__ring {
+    border: 2px solid transparent;
+    background: linear-gradient(var(--moments-paper), var(--moments-paper)) padding-box,
+      var(--moments-ring) border-box;
+    transition: transform 160ms ease-out;
+  }
+
+  .page-home .zad-moments-discover .zad-story-trigger.is-seen .zad-story-trigger__ring {
+    border-color: var(--moments-ring-seen);
+    background: var(--moments-paper);
+  }
+
+  /* Avoid a sticky hover lift after a touch; keep the keyboard outline. */
+  .page-home .zad-moments-discover .zad-story-trigger:hover .zad-story-trigger__ring,
+  .page-home .zad-moments-discover .zad-story-trigger:focus-visible .zad-story-trigger__ring {
+    transform: none;
+  }
+
+  .page-home .zad-moments-discover .zad-story-trigger:active .zad-story-trigger__ring {
+    transform: scale(.96);
+  }
+}
+
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .page-home .zad-moments-discover .zad-story-trigger:active .zad-story-trigger__ring {
+    transform: none;
+  }
+}
+
 @media (min-width: 761px) {
   .page-home .zad-moments-discover { --moments-cover: 90px; --moments-gap: 22px; margin-top: -24px; border-radius: 34px 34px 0 0; }
   .page-home .zad-moments-discover .zad-stories__container,
