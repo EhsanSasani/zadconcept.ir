@@ -38,10 +38,17 @@ class WeddingFilmTests(TestCase):
         StoryClip.objects.filter(pk=clip.pk).update(
             processing_status=StoryClip.ProcessingStatus.READY,
             optimized_video='stories/videos/film.mp4', poster_image='stories/posters/film.webp',
+            video_width=720, video_height=1280,
         )
         response = self.client.get(reverse('weddings'))
         self.assertContains(response, 'stories/videos/film.mp4')
         self.assertContains(response, 'playsinline preload="none"')
+        self.assertContains(response, 'wedding-film--portrait')
+        self.assertContains(response, 'width="720" height="1280"')
+        StoryClip.objects.filter(pk=clip.pk).update(video_width=1920, video_height=1080)
+        landscape_response = self.client.get(reverse('weddings'))
+        self.assertNotContains(landscape_response, 'wedding-film--portrait')
+        self.assertContains(landscape_response, 'width="1920" height="1080"')
         self.assertNotContains(response, 'stories/source/raw.mov')
         self.assertEqual(get_home_story_presentations(), [])
         clip.is_active = False

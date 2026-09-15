@@ -17,6 +17,61 @@
 .wedding-film__caption h3 { margin-top: 10px; color: inherit; font-size: clamp(1rem, 1.5vw, 1.3rem); font-weight: 500; overflow-wrap: anywhere; }
 .wedding-film__caption p { max-width: 360px; color: #e1e9e7; font-size: .79rem; line-height: 2; overflow-wrap: anywhere; }
 .wedding-film__video:focus-visible { outline: 3px solid #ffad67; outline-offset: -4px; }
+/* Use the processed film's intrinsic dimensions, including its poster before play. */
+.page-weddings .wedding-film--ready .wedding-film__screen { aspect-ratio: auto; }
+.page-weddings .wedding-film--ready .wedding-film__video { width: 100%; height: auto; max-height: none; }
+.page-weddings .wedding-film--portrait .wedding-film__caption {
+  background: radial-gradient(ellipse at top right, #204b58, transparent 75%), #123747;
+}
+.page-weddings .wedding-film--portrait .wedding-film__caption h3 {
+  line-height: 1.8;
+  text-wrap: balance;
+}
+.page-weddings .wedding-film--portrait .wedding-film__caption p { margin: 0; }
+@media (min-width: 761px) {
+  .page-weddings .wedding-film--portrait {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    max-width: 1000px;
+    margin-inline: auto;
+    direction: ltr;
+  }
+  .page-weddings .wedding-film--portrait .wedding-film__screen {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+  .page-weddings .wedding-film--portrait .wedding-film__caption {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    padding: clamp(32px, 5vw, 72px);
+    direction: rtl;
+    text-align: right;
+  }
+  .page-weddings .wedding-film--portrait .wedding-film__number {
+    display: block;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgb(255 208 160 / 35%);
+    line-height: 1.8;
+  }
+  .page-weddings .wedding-film--portrait .wedding-film__caption h3 {
+    margin: 24px 0 0;
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+  }
+  .page-weddings .wedding-film--portrait .wedding-film__caption p {
+    max-width: 32ch;
+    font-size: .9rem;
+    line-height: 2.2;
+  }
+}
+@media (min-width: 601px) and (max-width: 760px) {
+  .page-weddings .wedding-film--portrait { max-width: 440px; margin-inline: auto; }
+}
 @media (max-width: 600px) {
   .page-weddings .wedding-film { border-radius: 16px; }
   .wedding-film--coming .wedding-film__screen { aspect-ratio: 4 / 5; }

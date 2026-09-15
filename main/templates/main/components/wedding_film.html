@@ -1,8 +1,8 @@
 {% load static %}
-<figure class="wedding-film{% if not wedding_film %} wedding-film--coming{% endif %}" aria-labelledby="wedding-film-title">
+<figure class="wedding-film{% if not wedding_film %} wedding-film--coming{% else %} wedding-film--ready{% if wedding_film.video_height > wedding_film.video_width %} wedding-film--portrait{% endif %}{% endif %}" aria-labelledby="wedding-film-title">
   <div class="wedding-film__screen">
     {% if wedding_film %}
-      <video class="wedding-film__video" controls playsinline preload="none" poster="{{ wedding_film.poster_image.url }}" aria-labelledby="wedding-film-title" data-wedding-film>
+      <video class="wedding-film__video" controls playsinline preload="none" width="{{ wedding_film.video_width }}" height="{{ wedding_film.video_height }}" poster="{{ wedding_film.poster_image.url }}" aria-labelledby="wedding-film-title" data-wedding-film>
         <source src="{{ wedding_film.optimized_video.url }}" type="video/mp4">
         مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند. <a href="{{ wedding_film.optimized_video.url }}">دریافت فیلم</a>
       </video>
