@@ -4,8 +4,10 @@ from django.templatetags.static import static
 
 from . import views
 from .telegram_product_lookup import telegram_product_lookup
+from .telegram_same_day.webhook import telegram_webhook
 
 urlpatterns = [
+    path("api/telegram/webhook/", telegram_webhook, name="telegram_webhook"),
     path(
         "favicon.ico",
         RedirectView.as_view(url=static("main/img/favicon.svg"), permanent=True),

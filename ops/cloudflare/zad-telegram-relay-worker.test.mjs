@@ -261,3 +261,121 @@ test("lookup permission denial is returned as a user-facing message", async () =
   assert.match(calls[1].url, /\/sendMessage$/);
   assert.match(requestPayload(calls[1]).text, /اجازه/);
 });
+
+const sameDayEnv = {
+  ...env,
+  SAME_DAY_WEBHOOK_URL: "https://www.zadconcept.ir/api/telegram/webhook/",
+  TELEGRAM_CHANNEL_ID: "-10012345",
+  TELEGRAM_DISCUSSION_GROUP_ID: "-10054321",
+};
+
+function sameDayRequest(update, secret = "webhook-secret") {
+  return new Request("https://relay.example/telegram-webhook", {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": secret },
+    body: JSON.stringify(update),
+  });
+}
+
+test("same-day channel and edited posts preserve update identity and secret", async () => {
+  for (const kind of ["channel_post", "edited_channel_post", "message", "edited_message"]) {
+    const update = { update_id: 10, [kind]: { message_id: 70, chat: {
+      id: kind.includes("channel") ? -10012345 : -10054321,
+      type: kind.includes("channel") ? "channel" : "supergroup",
+    } } };
+    await withFetch(async (url, options) => {
+      assert.equal(url, sameDayEnv.SAME_DAY_WEBHOOK_URL);
+      assert.equal(options.headers["X-Telegram-Bot-Api-Secret-Token"], "webhook-secret");
+      assert.deepEqual(JSON.parse(options.body), update);
+      return json({ ok: true });
+    }, async () => {
+      assert.equal((await worker.fetch(sameDayRequest(update), sameDayEnv)).status, 200);
+    });
+  }
+});
+
+test("same-day Django failure is not acknowledged to Telegram", async () => {
+  await withFetch(async () => json({ ok: false }, 503), async () => {
+    const update = { update_id: 10, channel_post: { chat: { id: -10012345 } } };
+    assert.equal((await worker.fetch(sameDayRequest(update), sameDayEnv)).status, 503);
+  });
+});
+
+test("direct group works without a channel and preserves photo replies and edits", async () => {
+  const groupEnv = { ...env, SAME_DAY_WEBHOOK_URL: sameDayEnv.SAME_DAY_WEBHOOK_URL,
+    TELEGRAM_SAME_DAY_GROUP_ID: "-10077777" };
+  for (const kind of ["message", "edited_message"]) {
+    const update = { update_id: 42, [kind]: { message_id: 71,
+      chat: { id: -10077777, type: "supergroup" }, text: "2/680 t",
+      reply_to_message: { message_id: 70, photo: [{ file_id: "photo" }] } } };
+    await withFetch(async (url, options) => {
+      assert.equal(url, groupEnv.SAME_DAY_WEBHOOK_URL);
+      assert.deepEqual(JSON.parse(options.body), update);
+      return json({ ok: true });
+    }, async () => {
+      assert.equal((await worker.fetch(sameDayRequest(update), groupEnv)).status, 200);
+    });
+  }
+});
+
+test("same-day network failure remains retryable", async () => {
+  await withFetch(async () => { throw new Error("private URL"); }, async () => {
+    const update = { update_id: 10, channel_post: { chat: { id: -10012345 } } };
+    const response = await worker.fetch(sameDayRequest(update), sameDayEnv);
+    assert.equal(response.status, 503);
+    assert.doesNotMatch(await response.text(), /private URL/);
+  });
+});
+
+test("unknown group is never forwarded to Django", async () => {
+  await withFetch(async () => assert.fail("unexpected request"), async () => {
+    const update = { update_id: 10, message: { chat: { id: -999, type: "supergroup" } } };
+    assert.equal((await worker.fetch(sameDayRequest(update), sameDayEnv)).status, 200);
+  });
+});
+
+function fileRequest(payload, secret = "relay-secret") {
+  return new Request("https://relay.example/same-day-file", {
+    method: "POST", headers: { "Authorization": `Bearer ${secret}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+test("same-day file relay rejects bad secret before network", async () => {
+  await withFetch(async () => assert.fail("unexpected request"), async () => {
+    assert.equal((await worker.fetch(fileRequest({ file_id: "file" }, "wrong"), env)).status, 401);
+  });
+});
+
+test("same-day file relay downloads only Telegram getFile result", async () => {
+  let count = 0;
+  await withFetch(async (url, options) => {
+    count++;
+    if (count === 1) {
+      assert.equal(url, "https://api.telegram.org/botbot-token/getFile");
+      assert.deepEqual(JSON.parse(options.body), { file_id: "file" });
+      return json({ ok: true, result: { file_path: "photos/file_1.jpg" } });
+    }
+    assert.equal(url, "https://api.telegram.org/file/botbot-token/photos/file_1.jpg");
+    return new Response("image bytes");
+  }, async () => {
+    const response = await worker.fetch(fileRequest({ file_id: "file" }), env);
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), "image bytes");
+    assert.equal(count, 2);
+  });
+});
+
+test("file relay rejects malicious paths and oversize responses", async () => {
+  for (const path of ["../x.jpg", "/x.jpg", "https://evil.example/x.jpg"]) {
+    await withFetch(async () => json({ ok: true, result: { file_path: path } }), async () => {
+      assert.equal((await worker.fetch(fileRequest({ file_id: "file" }), env)).status, 502);
+    });
+  }
+  let count = 0;
+  await withFetch(async () => {
+    if (++count === 1) return json({ ok: true, result: { file_path: "photos/x.jpg" } });
+    return new Response("x", { headers: { "Content-Length": "20000001" } });
+  }, async () => {
+    assert.equal((await worker.fetch(fileRequest({ file_id: "file" }), env)).status, 502);
+  });
+});

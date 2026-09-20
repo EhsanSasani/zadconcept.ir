@@ -1,0 +1,40 @@
+<section class="flowers-container same-day-guide" aria-labelledby="same-day-order-heading" dir="rtl">
+  <div class="same-day-guide__columns">
+    <div class="same-day-guide__order">
+      <span class="same-day-guide__eyebrow">همراه شما تا رسیدن گل</span>
+      <h2 id="same-day-order-heading">سفارش گل آماده امروز در مشهد</h2>
+      <p>گل دلخواهتان را انتخاب کنید؛ برای نهایی‌کردن سفارش، با زاد در تماس باشید.</p>
+      <ol>
+        <li><strong>انتخاب گل</strong><span>عکس و قیمت را ببینید و کد محصول را یادداشت کنید.</span></li>
+        <li><strong>اعلام کد محصول</strong><span>کد گل و آدرس مقصد در مشهد را در تماس یا تلگرام بفرستید.</span></li>
+        <li><strong>هماهنگی تحویل</strong><span>موجودی نهایی، هزینه و زمان ارسال را با ما هماهنگ کنید.</span></li>
+      </ol>
+      <div class="same-day-guide__actions">
+        <a href="{{ site_call_href }}" data-cta-position="same_day_guide">تماس برای سفارش</a>
+        <a href="{{ site_telegram_url }}" target="_blank" rel="noopener" data-cta-position="same_day_guide">هماهنگی در تلگرام</a>
+      </div>
+      <p class="same-day-guide__links"><a href="{% url 'service_area' %}">محدوده خدمات در مشهد</a> · <a href="{% url 'delivery_policy' %}">شرایط ارسال</a></p>
+      <p class="same-day-guide__address">فروشگاه زاد: {{ site_address_text }} · <a href="{% url 'contact' %}">اطلاعات تماس و مسیر دسترسی</a></p>
+    </div>
+    <div class="same-day-guide__questions">
+      <span class="same-day-guide__eyebrow">پیش از سفارش</span>
+      <h2>پرسش‌های خرید گل آماده</h2>
+      <details>
+        <summary>چطور از موجودی نهایی گل مطمئن شوم؟</summary>
+        <p>فهرست با تغییر وضعیت محصولات به‌روزرسانی می‌شود. چون ممکن است بین انتخاب و تماس شما محصول فروخته شود، کد آن را برای تأیید موجودی به تیم زاد اعلام کنید.</p>
+      </details>
+      <details>
+        <summary>قیمت گل‌های آماده چقدر است؟</summary>
+        <p>قیمت هر گزینه کنار تصویرش نوشته شده و خلاصه بالای فهرست، بازه قیمت گزینه‌های دارای قیمت مشخص را نشان می‌دهد. برای گزینه‌های «استعلام قیمت» و هزینه ارسال، پیش از نهایی‌کردن سفارش هماهنگ کنید.</p>
+      </details>
+      <details>
+        <summary>آیا ارسال در ساعت مشخص امکان‌پذیر است؟</summary>
+        <p>ساعت موردنظر و آدرس مقصد را اعلام کنید تا امکان تحویل بررسی شود. زمان قطعی ارسال پس از هماهنگی با تیم زاد مشخص می‌شود.</p>
+      </details>
+      <details>
+        <summary>اگر گزینه دلخواهم موجود نبود چه کنم؟</summary>
+        <p>گل‌های دیگر همین فهرست را بررسی کنید یا برای راهنمایی با ما تماس بگیرید. برای دیدن سبک‌های دیگر نیز می‌توانید <a href="{% url 'flowers' %}">مجموعه استودیو گل زاد</a> را ببینید؛ آماده‌سازی سفارش اختصاصی نیازمند هماهنگی جداگانه است.</p>
+      </details>
+    </div>
+  </div>
+</section>

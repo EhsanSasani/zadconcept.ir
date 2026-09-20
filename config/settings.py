@@ -188,6 +188,17 @@ TELEGRAM_LEAD_TIMEOUT_SECONDS = float(
     os.getenv("TELEGRAM_LEAD_TIMEOUT_SECONDS", "5")
 )
 
+# Same-day ingestion is disabled until a channel and secret are configured.
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
+TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID", "").strip()
+TELEGRAM_SAME_DAY_GROUP_ID = os.getenv("TELEGRAM_SAME_DAY_GROUP_ID", "").strip()
+TELEGRAM_DISCUSSION_GROUP_ID = os.getenv("TELEGRAM_DISCUSSION_GROUP_ID", "").strip()
+TELEGRAM_SAME_DAY_CATEGORY_ID = os.getenv("TELEGRAM_SAME_DAY_CATEGORY_ID", "").strip()
+# Optional existing Worker transport, required where VPS -> Telegram is blocked.
+TELEGRAM_SAME_DAY_RELAY_URL = os.getenv("TELEGRAM_SAME_DAY_RELAY_URL", "").strip()
+TELEGRAM_SAME_DAY_TIMEOUT_SECONDS = float(os.getenv("TELEGRAM_SAME_DAY_TIMEOUT_SECONDS", "8"))
+
 # --- اعتبارسنجی رمز عبور ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -354,6 +365,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {
+        "main.telegram_same_day": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "main.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
         "main.indexnow": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "main.story_video": {

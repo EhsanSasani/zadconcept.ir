@@ -1,6 +1,6 @@
-from ..seo import service_node
+from ..seo import service_node, breadcrumbs_node, item_list_node
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, F, IntegerField, Value, When
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 
@@ -21,7 +21,7 @@ from ..category_presentation import _section_category_url
 from ..catalog_selectors import _published_products_for_section
 from ..forms import LeadRequestForm
 from ..managed_heroes import _get_site_hero
-from ..models import Category
+from ..models import Category, Product
 from ..page_context import _default_context, _with_home
 from ..editorial_links import guides_for_category
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
@@ -654,10 +654,15 @@ def gifts(request):
 def flowers_same_day(request):
     products = (
         _published_same_day_products()
+        .filter(stock_status=Product.StockStatus.IN_STOCK)
         .select_related("category")
         .prefetch_related("tags")
-        .order_by("sort_order", "-updated_at")
+        .order_by(F("price").desc(nulls_last=True), "-pk")
     )
+
+    priced_products = [product for product in products if product.has_price]
+    cheapest = min(priced_products, key=lambda product: product.price, default=None)
+    most_expensive = max(priced_products, key=lambda product: product.price, default=None)
 
     breadcrumbs = _with_home(
         [
@@ -669,10 +674,10 @@ def flowers_same_day(request):
         request,
         page_type="catalog",
         active_nav="flowers",
-        meta_title="ارسال گل امروز در مشهد | زاد",
+        meta_title="خرید گل آماده در مشهد | قیمت و ارسال امروز | زاد",
         meta_description=(
-            "سفارش گل‌های آماده برای ارسال همان‌روز در مشهد؛ "
-            "بررسی موجودی و هماهنگی سریع با زاد."
+            "گل‌های آماده زاد در مشهد را با عکس و قیمت ببینید؛ "
+            "مدل دلخواه را انتخاب کنید و برای تأیید موجودی، هزینه و زمان ارسال امروز با ما هماهنگ کنید."
         ),
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
@@ -691,17 +696,32 @@ def flowers_same_day(request):
     context.update(hero_data)
     context.update(
         {
-        "collection_title": "گل‌هایی برای همین امروز",
+        "collection_title": "خرید گل آماده برای ارسال امروز در مشهد",
         "collection_kicker": "SAME DAY SELECTION",
         "collection_intro": (
-            "منتخب‌هایی که آماده‌اند تا با هماهنگی سریع، "
-            "همین امروز در مشهد به دست شما برسند."
+            "عکس و قیمت گل‌های آماده را ببینید و مدل دلخواهتان را انتخاب کنید. "
+            "برای سفارش، کد محصول را هنگام تماس یا پیام در تلگرام بفرستید؛ "
+            "موجودی نهایی، هزینه و زمان ارسال در مشهد با شما هماهنگ می‌شود."
         ),
         "subcategory_label": "ارسال امروز",
         "items": products,
         "is_same_day_page": True,
+        "same_day_count": len(products),
+        "same_day_priced_count": len(priced_products),
+        "same_day_cheapest": cheapest,
+        "same_day_most_expensive": most_expensive,
         }
     )
-    context["structured_data_graph"].append(service_node(context["canonical_url"]))
+    canonical = context["canonical_url"]
+    graph = context["structured_data_graph"]
+    for node in graph:
+        if node.get("@type") == "CollectionPage":
+            node["mainEntity"] = {"@id": f"{canonical}#products"}
+            node["breadcrumb"] = {"@id": f"{canonical}#breadcrumb"}
+    graph.extend([
+        service_node(canonical),
+        breadcrumbs_node(breadcrumbs, request.path),
+        item_list_node(products, canonical),
+    ])
 
     return render(request, "main/pages/catalog/subcategory.html", context)

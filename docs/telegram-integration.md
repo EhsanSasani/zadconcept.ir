@@ -3,7 +3,9 @@
 This document is the repository reference for the Telegram integration
 maintained for ZAD. It intentionally documents variable names and operational
 flows without storing credentials. The immutable v1 baseline is tagged as
-`telegram-integration-v1`; the current implementation is v2.
+`telegram-integration-v1`; the private-chat implementation is v2. The same-day channel extension is
+documented in [telegram-same-day-fa.md](telegram-same-day-fa.md), including
+its migration, optional Worker forwarding/file transport, and deployment commands.
 
 ## Scope
 
@@ -234,7 +236,11 @@ Production smoke tests:
 
 ## Current limitations
 
-Version 2 intentionally supports private chats only. Users are added manually
+The original v2 lookup flow supports private chats only. The same-day extension
+adds channel posts and linked-group comments through a separate Django endpoint. Users are added manually
 in Django Admin; there is no self-registration, audit log, stock reporting, or
 command menu. A future capability should be added as another explicit boolean
 permission with a migration, keeping authorization visible and easy to edit.
+# Direct product group extension
+
+For the existing ready-to-send group, see [the Persian group guide](telegram-group-products-fa.md). `TELEGRAM_SAME_DAY_GROUP_ID` enables authorized direct group photos, caption/reply pricing and WITHDRAWN status without requiring a channel. Keep the existing Worker and private-bot workflows.

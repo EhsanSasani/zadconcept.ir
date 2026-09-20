@@ -704,7 +704,7 @@ class ProductQuerySet(models.QuerySet):
             is_active=True,
             publish_status="published",
             category__is_active=True,
-        )
+        ).exclude(catalog_scope="same_day", status__in=["SOLD", "WITHDRAWN"])
 
     def valid_weddings(self):
         return self.filter(valid_wedding_product_q())
@@ -731,6 +731,16 @@ class ProductQuerySet(models.QuerySet):
 
 
 class Product(TimeStampedModel):
+    class Status(models.TextChoices):
+        AVAILABLE = "AVAILABLE", "موجود برای فروش"
+        SOLD = "SOLD", "فروخته شد"
+        WITHDRAWN = "WITHDRAWN", "کشیده شد / بازیافت شد"
+
+    status = models.CharField(
+        "وضعیت فروش", max_length=12, choices=Status.choices,
+        default=Status.AVAILABLE, db_index=True,
+    )
+
     class CatalogScope(models.TextChoices):
         GENERAL = "general", "کاتالوگ عمومی"
         SAME_DAY = "same_day", "ارسال روز"
@@ -2397,6 +2407,10 @@ class WorkshopGalleryImage(TimeStampedModel):
 
 
 class TelegramBotUser(TimeStampedModel):
+    can_manage_same_day = models.BooleanField(
+        "محصول ارسال روز را فروخته‌شده اعلام کند؟", default=False,
+    )
+
     name = models.CharField(
         "نام کاربر",
         max_length=120,
@@ -2855,3 +2869,44 @@ class PageContentBlock(TimeStampedModel):
 
     def __str__(self):
         return f"{self.get_page_display()} / {self.section_key}"
+
+
+class TelegramSameDayPost(TimeStampedModel):
+    """Transport identity/cursor, not a second product catalog.
+
+    Can precede Product when a discussion forward or SOLD arrives first.
+    """
+    telegram_chat_id = models.BigIntegerField()
+    telegram_message_id = models.PositiveBigIntegerField()
+    product = models.OneToOneField(
+        Product, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="telegram_same_day_post",
+    )
+    telegram_file_id = models.CharField(max_length=512, blank=True)
+    telegram_created_at = models.DateTimeField(null=True, blank=True)
+    revision_date = models.PositiveBigIntegerField(default=0)
+    revision_update_id = models.BigIntegerField(default=-1)
+    sold_at = models.DateTimeField(null=True, blank=True)
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    source_photo = models.JSONField(default=dict, blank=True)
+    last_error = models.CharField(max_length=40, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["telegram_chat_id", "telegram_message_id"],
+            name="telegram_same_day_post_identity",
+        )]
+
+
+class TelegramDiscussionMessage(models.Model):
+    """Map group roots/comments to the exact original channel post."""
+    telegram_chat_id = models.BigIntegerField()
+    telegram_message_id = models.PositiveBigIntegerField()
+    post = models.ForeignKey(TelegramSameDayPost, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(
+            fields=["telegram_chat_id", "telegram_message_id"],
+            name="telegram_discussion_identity",
+        )]

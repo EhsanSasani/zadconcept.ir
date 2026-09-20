@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
-from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -132,3 +132,14 @@ def delete_story_clip_media(sender, instance, using=None, **kwargs):
                 pass
 
     transaction.on_commit(delete_files_after_commit, using=using)
+
+
+@receiver(pre_delete, dispatch_uid="main.remember_deleted_telegram_product")
+def remember_deleted_telegram_product(sender, instance, using, **kwargs):
+    # Includes Product proxies and bulk admin deletion. Keep the message cursor
+    # so Telegram retries or later price edits cannot recreate a deleted item.
+    if isinstance(instance, Product):
+        from .models import TelegramSameDayPost
+        TelegramSameDayPost.objects.using(using).filter(product_id=instance.pk).update(
+            deleted_at=timezone.now(), source_photo={}, last_error="admin_deleted",
+        )

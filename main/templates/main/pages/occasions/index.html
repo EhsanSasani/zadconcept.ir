@@ -20,6 +20,7 @@
       <h1>{{ page_content.intro.title|default:"مناسبت‌های زاد" }}</h1>
       {% if page_content.intro.body %}<p>{{ page_content.intro.body }}</p>{% endif %}
     </header>
+    <p>برای هدیه‌ای که امروز لازم دارید، <a href="{% url 'flowers_same_day' %}">گل‌های آماده امروز در مشهد</a> را با عکس و قیمت ببینید.</p>
     {% if occasion_cards %}
       <section class="occasions-grid" aria-label="مناسبت‌های زاد">
         {% for item in occasion_cards %}

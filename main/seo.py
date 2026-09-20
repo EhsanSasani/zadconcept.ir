@@ -339,3 +339,15 @@ def article_node(post):
     if post.cover_image:
         node["image"] = [absolute_site_url(post.cover_image.url)]
     return node
+
+
+def item_list_node(products, canonical):
+    """Describe exactly the visible selection, preserving its display order."""
+    items = [
+        {"@type": "ListItem", "position": position,
+         "url": absolute_site_url(product.get_absolute_url()), "name": product.seo_name}
+        for position, product in enumerate(products, start=1)
+    ]
+    return {"@type": "ItemList", "@id": f"{canonical}#products",
+            "name": "گل‌های آماده ارسال امروز در مشهد",
+            "numberOfItems": len(items), "itemListElement": items}

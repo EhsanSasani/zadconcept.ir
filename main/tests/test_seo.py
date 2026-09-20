@@ -151,14 +151,14 @@ class SeoContractTests(TestCase):
         graph = graph_for(response)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("ارسال گل امروز در مشهد", parser.title)
+        self.assertIn("خرید گل آماده در مشهد", parser.title)
         self.assertEqual(
             parser.canonical,
             "https://www.zadconcept.ir/flowers/same-day/",
         )
         self.assertContains(response, self.unnamed.display_name)
         self.assertTrue(any(node.get("@type") == "Service" for node in graph))
-        self.assertFalse(any(node.get("@type") == "BreadcrumbList" for node in graph))
+        self.assertTrue(any(node.get("@type") == "BreadcrumbList" for node in graph))
 
     def test_query_policy_separates_filters_partials_and_pagination(self):
         bakery_category = Category.objects.create(

@@ -194,6 +194,12 @@
     </div>
   </section>
 
+  {% if section == "flowers" %}
+  <section class="flowers-container section-block" aria-label="گل‌های آماده امروز">
+    <h2>برای امروز در مشهد گل می‌خواهید؟</h2>
+    <p>عکس و قیمت گزینه‌های موجود را در <a href="{% url 'flowers_same_day' %}">گل‌های آماده ارسال امروز</a> ببینید و برای زمان تحویل هماهنگ کنید.</p>
+  </section>
+  {% endif %}
   </div><!-- .zad-scroll-content -->
 </div>
 {% endblock %}

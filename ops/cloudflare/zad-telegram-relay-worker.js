@@ -180,6 +180,31 @@ async function handleTelegramWebhook(request, env) {
     return jsonResponse({ ok: false, error: "Invalid JSON" }, 400);
   }
 
+  const sameDayMessage = update?.channel_post ?? update?.edited_channel_post ??
+    update?.message ?? update?.edited_message;
+  const sameDayChat = String(sameDayMessage?.chat?.id ?? "");
+  if (env.SAME_DAY_WEBHOOK_URL && sameDayChat &&
+      [String(env.TELEGRAM_CHANNEL_ID ?? ""), String(env.TELEGRAM_DISCUSSION_GROUP_ID ?? ""),
+       String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? "")].includes(sameDayChat)) {
+    try {
+      const target = new URL(env.SAME_DAY_WEBHOOK_URL);
+      if (target.protocol !== "https:") return jsonResponse({ ok: false }, 503);
+      const response = await fetch(target.toString(), {
+        method: "POST", redirect: "error", signal: AbortSignal.timeout(25000),
+        headers: {
+          "Content-Type": "application/json",
+          "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET,
+          "User-Agent": "Mozilla/5.0 (compatible; ZAD-Telegram-Worker/1.0; +https://www.zadconcept.ir/)",
+        },
+        body: JSON.stringify(update),
+      });
+      // Do not acknowledge a failed Django delivery: let Telegram retry it.
+      return jsonResponse({ ok: response.ok }, response.ok ? 200 : response.status);
+    } catch {
+      return jsonResponse({ ok: false }, 503);
+    }
+  }
+
   const message = update?.message;
   const fromId = String(message?.from?.id ?? "");
   const chatId = String(message?.chat?.id ?? "");
@@ -267,6 +292,48 @@ async function handleTelegramWebhook(request, env) {
   return jsonResponse({ ok: true });
 }
 
+// Narrow authenticated file relay; never accepts arbitrary URLs or API methods.
+async function handleSameDayFile(request, env) {
+  if (!env.RELAY_SECRET || request.headers.get("Authorization") !== `Bearer ${env.RELAY_SECRET}`) {
+    return jsonResponse({ ok: false }, 401);
+  }
+  try {
+    const payload = await request.json();
+    if (!payload || typeof payload.file_id !== "string" || !/^[A-Za-z0-9_-]{1,512}$/.test(payload.file_id)) {
+      return jsonResponse({ ok: false }, 400);
+    }
+    const file = await telegramRequest(env, "getFile", { file_id: payload.file_id });
+    const path = file.result?.result?.file_path;
+    if (!file.ok || typeof path !== "string" || !/^[A-Za-z0-9_/-]+\.[A-Za-z0-9]+$/.test(path) || path.startsWith("/") || path.includes("..")) {
+      return jsonResponse({ ok: false }, 502);
+    }
+    const response = await fetch(`${TELEGRAM_API_BASE}/file/bot${env.TELEGRAM_BOT_TOKEN}/${path}`, {
+      redirect: "error", signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok || Number(response.headers.get("Content-Length") || 0) > 20000000) {
+      return jsonResponse({ ok: false }, 502);
+    }
+    const reader = response.body.getReader();
+    const chunks = [];
+    let length = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.length;
+      if (length > 20000000) {
+        await reader.cancel();
+        return jsonResponse({ ok: false }, 502);
+      }
+      chunks.push(value);
+    }
+    return new Response(new Blob(chunks), {
+      headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" },
+    });
+  } catch {
+    return jsonResponse({ ok: false }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -277,6 +344,10 @@ export default {
 
     if (request.method !== "POST") {
       return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
+    }
+
+    if (url.pathname === "/same-day-file") {
+      return handleSameDayFile(request, env);
     }
 
     if (url.pathname === TELEGRAM_WEBHOOK_PATH) {

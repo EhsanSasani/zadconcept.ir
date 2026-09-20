@@ -13,6 +13,9 @@
   }
 
   function currentPageType() {
+    if (document.body && document.body.classList.contains("page-same-day")) {
+      return "same_day";
+    }
     return document.body && document.body.dataset.pageType ? document.body.dataset.pageType : "home";
   }
 

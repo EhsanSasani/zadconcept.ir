@@ -1,0 +1,16 @@
+{% if same_day_count %}
+<div class="same-day-summary" aria-label="خلاصه موجودی فعلی">
+  <p class="same-day-summary__count"><strong>{{ same_day_count }} گل آماده</strong> در فهرست فعلی</p>
+  {% if same_day_priced_count %}
+    <p>{{ same_day_priced_count }} گزینه با قیمت مشخص؛
+      {% if same_day_cheapest.price == same_day_most_expensive.price %}
+        قیمت: <strong>{{ same_day_cheapest.display_price }}</strong>
+      {% else %}
+        از <strong>{{ same_day_cheapest.display_price }}</strong> تا <strong>{{ same_day_most_expensive.display_price }}</strong>
+      {% endif %}
+    </p>
+  {% else %}
+    <p>برای قیمت گزینه‌های موجود، با زاد تماس بگیرید.</p>
+  {% endif %}
+</div>
+{% endif %}

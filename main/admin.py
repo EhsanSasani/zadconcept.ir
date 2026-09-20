@@ -522,6 +522,9 @@ class ProductAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        if "status" in self.fields:
+            self.fields["status"].required = False
+
         if "category" in self.fields:
             section_filter = getattr(self, "section_filter", None)
 
@@ -607,6 +610,10 @@ class ProductAdminForm(forms.ModelForm):
             self.add_error("price_usd", "قیمت دلاری نمی‌تواند منفی باشد.")
 
         return cleaned_data
+
+    def clean_status(self):
+        # Older admin forms/clients omit this newly introduced field.
+        return self.cleaned_data.get("status") or self.instance.status or Product.Status.AVAILABLE
 
     def clean_cover_image(self):
         return validate_admin_image(self.cleaned_data.get("cover_image"))
@@ -2017,6 +2024,7 @@ class SameDayFlowerAdmin(FlowerAdmin):
         "name_display",
         "category_display",
         "stock_badge",
+        "status",
         "tags_summary",
     )
     list_display_links = (
@@ -2027,6 +2035,7 @@ class SameDayFlowerAdmin(FlowerAdmin):
     list_filter = (
         SectionCategoryFilter,
         "stock_status",
+        "status",
         "publish_status",
         "is_active",
     )
@@ -2036,7 +2045,7 @@ class SameDayFlowerAdmin(FlowerAdmin):
         "publish_selected_products",
         "draft_selected_products",
     )
-    fieldsets = FlowerAdmin.fieldsets
+    fieldsets = FlowerAdmin.fieldsets + (("وضعیت فروش ارسال روز", {"fields": ("status",)}),)
 
     @admin.display(description="برچسب‌ها")
     def tags_summary(self, obj):
@@ -2973,6 +2982,7 @@ class TelegramBotUserAdmin(admin.ModelAdmin):
         "telegram_username",
         "can_receive_leads",
         "can_lookup_products",
+        "can_manage_same_day",
         "is_active",
         "updated_at",
     )
@@ -2980,10 +2990,12 @@ class TelegramBotUserAdmin(admin.ModelAdmin):
         "is_active",
         "can_receive_leads",
         "can_lookup_products",
+        "can_manage_same_day",
     )
     list_editable = (
         "can_receive_leads",
         "can_lookup_products",
+        "can_manage_same_day",
         "is_active",
     )
     search_fields = (
@@ -3013,11 +3025,12 @@ class TelegramBotUserAdmin(admin.ModelAdmin):
             "دسترسی‌ها",
             {
                 "description": (
-                    "هر دسترسی مستقل است؛ می‌توان فقط یکی یا هر دو را فعال کرد."
+                    "هر دسترسی مستقل است؛ فقط دسترسی‌های موردنیاز را فعال کنید."
                 ),
                 "fields": (
                     "can_receive_leads",
                     "can_lookup_products",
+                    "can_manage_same_day",
                 ),
             },
         ),

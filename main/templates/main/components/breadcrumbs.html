@@ -1,4 +1,4 @@
-{% if product.is_wedding and breadcrumbs %}
+{% if breadcrumbs %}{% if product.is_wedding or is_same_day_page %}
 <nav class="container breadcrumbs" aria-label="Breadcrumb">
   <ol>
     {% for crumb in breadcrumbs %}
@@ -12,4 +12,6 @@
     {% endfor %}
   </ol>
 </nav>
+{% endif %}
+
 {% endif %}
