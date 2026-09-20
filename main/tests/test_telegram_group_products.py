@@ -113,8 +113,8 @@ class GroupWorkflowTests(TestCase):
     def test_unknown_reply_and_untrusted_photo_never_publish(self):
         target = {"message_id": 999, "chat": {"id": GROUP, "type": "supergroup"}}
         self.assertEqual(self.send(self.reply("2300", target=target)).json()["result"], "unknown_reply_ignored")
-        for mutation in ({"from": {"id": 999}}, {"sender_chat": {"id": GROUP}},
-                         {"forward_origin": {"type": "user"}}):
+        for mutation in ({"from": {"id": 999, "is_bot": True}},
+                         {"sender_chat": {"id": -10099999}}):
             update = photo()
             update["message"].update(mutation)
             self.assertEqual(self.send(update).status_code, 403)
@@ -149,16 +149,34 @@ class GroupWorkflowTests(TestCase):
         self.assertEqual(self.product().status, Product.Status.WITHDRAWN)
         self.assertFalse(Product.objects.for_same_day().published().exists())
 
-    def test_pending_photo_unauthorized_price_and_withdraw_cannot_mutate(self):
-        self.send(photo(""))
-        for text in ("2300", "کشیده شد", "فروخته شد"):
-            update = self.reply(text)
-            update["message"]["from"]["id"] = 999
-            self.assertEqual(self.send(update).status_code, 403)
+    def test_unlisted_members_can_publish_edit_sell_and_withdraw(self):
+        update = photo("")
+        update["message"]["from"]["id"] = 999
+        self.send(update)
+        for index, text in enumerate(("2300", "3000", "فروخته شد", "کشیده شد")):
+            reply = self.reply(text, update_id=20 + index)
+            reply["message"]["from"]["id"] = 998
+            reply["message"]["date"] += index
+            self.assertEqual(self.send(reply).status_code, 200)
+        self.assertEqual(self.product().price, 3000000)
+        self.assertEqual(self.product().status, Product.Status.WITHDRAWN)
+
+    def test_unlisted_original_photo_recovered_from_reply(self):
+        target = photo("")["message"]
+        target["from"]["id"] = 999
+        self.assertEqual(self.send(self.reply("2300", target=target)).json()["result"], "created")
+
+    def test_anonymous_group_admin_and_forwarded_photo_allowed(self):
+        update = photo()
+        update["message"]["sender_chat"] = {"id": GROUP}
+        update["message"]["forward_origin"] = {"type": "user"}
+        self.assertEqual(self.send(update).json()["result"], "created")
+
+    def test_other_group_still_rejected(self):
+        update = photo()
+        update["message"]["chat"]["id"] = -10099999
+        self.assertEqual(self.send(update).status_code, 403)
         self.assertFalse(Product.objects.exists())
-        post = TelegramSameDayPost.objects.get()
-        self.assertIsNone(post.withdrawn_at)
-        self.assertIsNone(post.sold_at)
 
     def test_price_reply_transport_failure_retries_without_consuming(self):
         from main.telegram_same_day.client import TelegramTransportError

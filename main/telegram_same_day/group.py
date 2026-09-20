@@ -1,17 +1,32 @@
 """Direct group products: photo identity persists while waiting for a price reply."""
 import logging
 
+from django.conf import settings
+
 from ..models import TelegramDiscussionMessage, TelegramSameDayPost
 from .price import PriceError, parse_group_price
-from .service import InvalidSource, _can_sell, _is_sold, _is_withdrawn, _link, _post, _sell, _sync_product
+from .service import InvalidSource, _is_sold, _is_withdrawn, _link, _post, _sell, _sync_product
 
 logger = logging.getLogger("main.telegram_same_day")
+
+
+def _group_member(message):
+    """Authenticated updates from the configured group need no user allowlist."""
+    chat = message.get("chat", {})
+    if (chat.get("type") not in {"group", "supergroup"}
+            or str(chat.get("id")) != str(settings.TELEGRAM_SAME_DAY_GROUP_ID)):
+        return False
+    sender_chat = message.get("sender_chat")
+    if sender_chat:
+        return sender_chat.get("id") == chat.get("id")
+    sender = message.get("from", {})
+    return bool(sender.get("id")) and not sender.get("is_bot", False)
 
 
 def sync_group(message, update_id, stored_files):
     if not (message.get("photo") or message.get("reply_to_message")):
         return "ignored"
-    if not _can_sell(message):
+    if not _group_member(message):
         raise InvalidSource("unauthorized_group_operator")
     if message.get("photo"):
         result = _sync_product(message, update_id, stored_files, direct_group=True)
@@ -31,9 +46,9 @@ def sync_group(message, update_id, stored_files):
         ).first()
         if link:
             post = _post(chat_id, link.post.telegram_message_id)
-    # A reply may arrive before the original webhook. Trust only a permitted
-    # original photographer, never a forwarded image or an unrelated member.
-    if post is None and reply.get("photo") and _can_sell(reply):
+    # A reply may arrive before the original webhook. The original photo must
+    # also belong to this configured group; all its members are permitted.
+    if post is None and reply.get("photo") and _group_member(reply):
         post = _post(chat_id, reply["message_id"])
         post.source_photo = {key: reply[key] for key in
                              ("message_id", "chat", "date", "photo", "media_group_id") if key in reply}
