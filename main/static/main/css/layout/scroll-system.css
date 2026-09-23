@@ -125,3 +125,45 @@ body.page-zad-v2 :is(.category-split-hero__copy, .item-detail__grid > *) {
     top: auto !important;
   }
 }
+
+/* ZAD WORKSHOPS LAYERED HERO SCROLL HOTFIX START
+   Match the Home page scroll model:
+   - Hero remains in normal flow and pins below the sticky header.
+   - The existing .zad-scroll-content becomes the opaque foreground layer.
+   - No JS, fixed positioning, spacer, or Hero geometry changes.
+*/
+body.page-workshops-redesign {
+  overflow-x: clip;
+}
+
+body.page-workshops-redesign .site-main,
+body.page-workshops-redesign .wsr-page {
+  overflow: visible !important;
+  isolation: isolate !important;
+}
+
+body.page-workshops-redesign .wsr-page > .wsr-hero {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: var(--zad-header-height, 68px) !important;
+  z-index: 0 !important;
+}
+
+body.page-workshops-redesign .wsr-page > .zad-scroll-content {
+  position: relative !important;
+  z-index: 3 !important;
+  background: #fff !important;
+}
+
+body.page-workshops-redesign .wsr-page > .zad-scroll-content > .wsr-worlds {
+  border-radius: inherit;
+}
+
+@media (max-width: 760px) {
+  body.page-workshops-redesign .wsr-page > .wsr-hero {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: var(--zad-mobile-header-height, 40px) !important;
+  }
+}
+
