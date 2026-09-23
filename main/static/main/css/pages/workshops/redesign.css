@@ -1002,3 +1002,17 @@
     max-width: 280px;
   }
 }
+
+/* ZAD WORKSHOPS IMAGE-ONLY HERO HOTFIX START */
+.page-workshops-redesign .wsr-hero__inner,
+.page-workshops-redesign .wsr-hero__overlay {
+    display: none !important;
+}
+
+.page-workshops-redesign .wsr-hero__media,
+.page-workshops-redesign .wsr-hero__media picture,
+.page-workshops-redesign .wsr-hero__media img {
+    width: 100% !important;
+    height: 100% !important;
+}
+/* ZAD WORKSHOPS IMAGE-ONLY HERO HOTFIX END */
