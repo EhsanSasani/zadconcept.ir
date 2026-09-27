@@ -2,6 +2,7 @@ import uuid
 from pathlib import PurePosixPath
 from urllib.parse import unquote, urlsplit
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import (
     FileExtensionValidator,
@@ -12,6 +13,7 @@ from django.core.validators import (
 )
 from django.db import models, transaction
 from django.db.models import F, Q
+from django.db.models.functions import Lower
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -2891,6 +2893,7 @@ class TelegramSameDayPost(TimeStampedModel):
     deleted_at = models.DateTimeField(null=True, blank=True)
     source_photo = models.JSONField(default=dict, blank=True)
     last_error = models.CharField(max_length=40, blank=True)
+    studio_error = models.CharField(max_length=120, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(
@@ -2910,3 +2913,156 @@ class TelegramDiscussionMessage(models.Model):
             fields=["telegram_chat_id", "telegram_message_id"],
             name="telegram_discussion_identity",
         )]
+
+
+class Florist(TimeStampedModel):
+    name = models.CharField("نام فلوریست", max_length=120)
+    code = models.SlugField("کد کوتاه", max_length=24, unique=True)
+    is_active = models.BooleanField("فعال", default=True, db_index=True)
+    joined_at = models.DateField("تاریخ شروع", null=True, blank=True)
+    left_at = models.DateField("تاریخ پایان", null=True, blank=True)
+    notes = models.TextField("یادداشت", blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "فلوریست"
+        verbose_name_plural = "فلوریست‌ها"
+        constraints = [models.UniqueConstraint(Lower("code"), name="studio_florist_code_ci_unique")]
+
+    def clean(self):
+        super().clean()
+        if self.code:
+            self.code = self.code.strip().lower()
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class StudioProduct(TimeStampedModel):
+    """Complete production ledger; public Product is an optional daily projection."""
+
+    class ProductionType(models.TextChoices):
+        DAILY = "DAILY", "روزانه"
+        CUSTOM = "CUSTOM", "سفارشی"
+
+    class Status(models.TextChoices):
+        AVAILABLE = "AVAILABLE", "موجود"
+        SOLD = "SOLD", "فروخته شده"
+        WITHDRAWN = "WITHDRAWN", "کشیده شده"
+        CANCELLED = "CANCELLED", "لغو شده"
+
+    class Source(models.TextChoices):
+        TELEGRAM_DAILY = "TELEGRAM_DAILY", "تلگرام روزانه"
+        TELEGRAM_CUSTOM = "TELEGRAM_CUSTOM", "تلگرام سفارشی"
+        DASHBOARD = "DASHBOARD", "داشبورد"
+        ADMIN = "ADMIN", "ادمین"
+
+    class ProductType(models.TextChoices):
+        BOX = "box", "باکس گل"
+        BOUQUET = "bouquet", "دسته گل / بوکت"
+        JAR = "jar", "جار گل"
+        STAND = "stand", "استند گل"
+        BASKET = "basket", "سبد گل"
+        BRIDAL = "bridal", "دسته گل عروس"
+        CAR = "car", "ماشین عروس"
+        OTHER = "other", "سایر"
+
+    factor_code = models.CharField("شماره فاکتور", max_length=40, unique=True)
+    florist = models.ForeignKey(Florist, on_delete=models.PROTECT, related_name="studio_products")
+    product_type = models.CharField("نوع محصول", max_length=16, choices=ProductType.choices)
+    production_type = models.CharField("نوع تولید", max_length=8, choices=ProductionType.choices, db_index=True)
+    price = models.DecimalField("قیمت به تومان", max_digits=12, decimal_places=0)
+    status = models.CharField("وضعیت", max_length=12, choices=Status.choices, default=Status.AVAILABLE, db_index=True)
+    image = models.ImageField("تصویر سفارشی / دستی", upload_to="studio/products/", blank=True)
+    product = models.OneToOneField(Product, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="studio_record")
+    source = models.CharField("منبع", max_length=20, choices=Source.choices)
+    telegram_chat_id = models.BigIntegerField(null=True, blank=True)
+    telegram_message_id = models.PositiveBigIntegerField(null=True, blank=True)
+    telegram_sender_id = models.BigIntegerField(null=True, blank=True)
+    telegram_file_id = models.CharField(max_length=512, blank=True)
+    revision_date = models.PositiveBigIntegerField(default=0)
+    revision_update_id = models.BigIntegerField(default=-1)
+    produced_at = models.DateTimeField("زمان تولید", default=timezone.now, db_index=True)
+    sold_at = models.DateTimeField("زمان فروش", null=True, blank=True)
+    withdrawn_at = models.DateTimeField("زمان خروج", null=True, blank=True)
+    notes = models.TextField("یادداشت", blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="studio_entries")
+
+    class Meta:
+        ordering = ["-produced_at", "-pk"]
+        verbose_name = "محصول استودیو"
+        verbose_name_plural = "محصولات استودیو"
+        constraints = [
+            models.UniqueConstraint(fields=["telegram_chat_id", "telegram_message_id"],
+                                    name="studio_telegram_identity"),
+            models.UniqueConstraint(Lower("factor_code"), name="studio_factor_ci_unique"),
+            models.CheckConstraint(condition=Q(price__gt=0), name="studio_price_positive"),
+            models.CheckConstraint(condition=Q(image__gt="") | Q(product__isnull=False),
+                                   name="studio_image_or_public_product"),
+            models.CheckConstraint(condition=~Q(production_type="CUSTOM") | Q(product__isnull=True),
+                                   name="studio_custom_private"),
+            models.CheckConstraint(condition=~Q(status="SOLD") | Q(sold_at__isnull=False),
+                                   name="studio_sold_has_time"),
+            models.CheckConstraint(condition=~Q(status="WITHDRAWN") | Q(withdrawn_at__isnull=False),
+                                   name="studio_withdrawn_has_time"),
+            models.CheckConstraint(condition=(Q(telegram_chat_id__isnull=True, telegram_message_id__isnull=True)
+                                              | Q(telegram_chat_id__isnull=False, telegram_message_id__isnull=False)),
+                                   name="studio_telegram_identity_pair"),
+        ]
+        indexes = [models.Index(fields=["florist", "produced_at"], name="studio_florist_period_idx")]
+
+    @property
+    def photo_url(self):
+        if self.image:
+            return self.image.url
+        if self.product_id and self.product.cover_image:
+            return self.product.cover_image.url
+        return ""
+
+    def clean(self):
+        super().clean()
+        self.factor_code = (self.factor_code or "").strip().upper()
+        errors = {}
+        if not self.image and not (self.product_id and self.product.cover_image):
+            errors["image"] = "تصویر محصول لازم است."
+        if bool(self.telegram_chat_id) != bool(self.telegram_message_id):
+            errors["telegram_chat_id"] = "شناسه پیام تلگرام باید کامل باشد."
+        if self.production_type == self.ProductionType.CUSTOM and self.product_id:
+            errors["product"] = "محصول سفارشی نباید در کاتالوگ عمومی ثبت شود."
+        if self.source == self.Source.TELEGRAM_DAILY and self.production_type != self.ProductionType.DAILY:
+            errors["production_type"] = "منبع تلگرام روزانه فقط برای تولید روزانه است."
+        if self.source == self.Source.TELEGRAM_CUSTOM and self.production_type != self.ProductionType.CUSTOM:
+            errors["production_type"] = "منبع تلگرام سفارشی فقط برای سفارش سفارشی است."
+        if self.status == self.Status.SOLD and not self.sold_at:
+            errors["sold_at"] = "زمان فروش لازم است."
+        if self.status == self.Status.WITHDRAWN and not self.withdrawn_at:
+            errors["withdrawn_at"] = "زمان خروج لازم است."
+        if errors:
+            raise ValidationError(errors)
+
+    def __str__(self):
+        return f"{self.factor_code} · {self.florist}"
+
+
+class StudioIngestionIssue(TimeStampedModel):
+    """Rejected custom photo attempts; never an incomplete production record."""
+
+    telegram_chat_id = models.BigIntegerField()
+    telegram_message_id = models.PositiveBigIntegerField()
+    reason = models.CharField("دلیل رد", max_length=255)
+    resolved_at = models.DateTimeField("زمان رفع", null=True, blank=True)
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        verbose_name = "خطای ثبت استودیو"
+        verbose_name_plural = "خطاهای ثبت استودیو"
+        constraints = [models.UniqueConstraint(
+            fields=["telegram_chat_id", "telegram_message_id"], name="studio_issue_identity",
+        )]
+
+    def __str__(self):
+        return f"{self.telegram_chat_id}/{self.telegram_message_id}: {self.reason}"

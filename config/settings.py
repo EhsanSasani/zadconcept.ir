@@ -195,6 +195,9 @@ TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID", "").strip()
 TELEGRAM_SAME_DAY_GROUP_ID = os.getenv("TELEGRAM_SAME_DAY_GROUP_ID", "").strip()
 TELEGRAM_DISCUSSION_GROUP_ID = os.getenv("TELEGRAM_DISCUSSION_GROUP_ID", "").strip()
 TELEGRAM_SAME_DAY_CATEGORY_ID = os.getenv("TELEGRAM_SAME_DAY_CATEGORY_ID", "").strip()
+TELEGRAM_STUDIO_CUSTOM_GROUP_ID = os.getenv("TELEGRAM_STUDIO_CUSTOM_GROUP_ID", "").strip()
+# Activate after the daily team's caption format and historical backlog are reviewed.
+STUDIO_DAILY_REQUIRE_METADATA = env_bool("STUDIO_DAILY_REQUIRE_METADATA", False)
 # Optional existing Worker transport, required where VPS -> Telegram is blocked.
 TELEGRAM_SAME_DAY_RELAY_URL = os.getenv("TELEGRAM_SAME_DAY_RELAY_URL", "").strip()
 TELEGRAM_SAME_DAY_TIMEOUT_SECONDS = float(os.getenv("TELEGRAM_SAME_DAY_TIMEOUT_SECONDS", "8"))

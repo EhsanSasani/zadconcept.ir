@@ -1,0 +1,1 @@
+{% load studio_ui %}<div class="kpi-foot">{% if delta is not None %}<span class="delta{% if delta < 0 %} negative{% endif %}">{% if delta > 0 %}↑{% elif delta < 0 %}↓{% else %}•{% endif %} {{ delta|fa_number }}٪</span> نسبت به بازه قبل{% else %}دادهٔ مقایسه در بازه قبل موجود نیست{% endif %}</div>

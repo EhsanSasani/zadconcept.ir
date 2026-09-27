@@ -5,8 +5,21 @@ from django.templatetags.static import static
 from . import views
 from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
+from . import studio_views
 
 urlpatterns = [
+    path("studio/", studio_views.dashboard, name="studio_dashboard"),
+    path("studio/products/", studio_views.products, name="studio_products"),
+    path("studio/products/add/", studio_views.product_add, name="studio_product_add"),
+    path("studio/products/<int:pk>/edit/", studio_views.product_edit, name="studio_product_edit"),
+    path("studio/products/<int:pk>/status/", studio_views.product_status, name="studio_product_status"),
+    path("studio/florists/", studio_views.florists, name="studio_florists"),
+    path("studio/florists/add/", studio_views.florist_add, name="studio_florist_add"),
+    path("studio/florists/<int:pk>/edit/", studio_views.florist_edit, name="studio_florist_edit"),
+    path("studio/florists/<int:pk>/", studio_views.florist_profile, name="studio_florist_profile"),
+    path("studio/analytics/", studio_views.analytics, name="studio_analytics"),
+    path("studio/settings/", studio_views.settings_view, name="studio_settings"),
+    path("studio/issues/<int:pk>/resolve/", studio_views.resolve_issue, name="studio_resolve_issue"),
     path("api/telegram/webhook/", telegram_webhook, name="telegram_webhook"),
     path(
         "favicon.ico",

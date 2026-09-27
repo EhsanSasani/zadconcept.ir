@@ -10,6 +10,7 @@ from .image_pipeline import create_responsive_image_variants, normalize_new_mode
 from .models import (
     Product,
     ProductImage,
+    StudioProduct,
     Story,
     StoryClip,
     Tag,
@@ -139,7 +140,34 @@ def remember_deleted_telegram_product(sender, instance, using, **kwargs):
     # Includes Product proxies and bulk admin deletion. Keep the message cursor
     # so Telegram retries or later price edits cannot recreate a deleted item.
     if isinstance(instance, Product):
+        record = StudioProduct.objects.using(using).filter(product_id=instance.pk).first()
+        if record:
+            if not record.image and instance.cover_image:
+                record.image = instance.cover_image.name
+            if record.status == StudioProduct.Status.AVAILABLE:
+                record.status = StudioProduct.Status.CANCELLED
+            record.notes = (record.notes + "\nحذف از کاتالوگ ارسال روز").strip()
+            record.save(update_fields=["image", "status", "notes", "updated_at"])
         from .models import TelegramSameDayPost
         TelegramSameDayPost.objects.using(using).filter(product_id=instance.pk).update(
             deleted_at=timezone.now(), source_photo={}, last_error="admin_deleted",
         )
+
+
+@receiver(post_save, sender=Product, dispatch_uid="main.sync_studio_public_projection")
+def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwargs):
+    if raw:
+        return
+    record = StudioProduct.objects.using(using).filter(product_id=instance.pk).first()
+    if not record:
+        return
+    changes = {"updated_at": timezone.now()}
+    if instance.price is not None and instance.price > 0:
+        changes["price"] = instance.price
+    if instance.cover_image and record.image.name != instance.cover_image.name:
+        changes["image"] = instance.cover_image.name
+    if instance.status == Product.Status.SOLD and record.status == StudioProduct.Status.AVAILABLE:
+        changes.update(status=StudioProduct.Status.SOLD, sold_at=timezone.now())
+    elif instance.status == Product.Status.WITHDRAWN and record.status == StudioProduct.Status.AVAILABLE:
+        changes.update(status=StudioProduct.Status.WITHDRAWN, withdrawn_at=timezone.now())
+    StudioProduct.objects.using(using).filter(pk=record.pk).update(**changes)

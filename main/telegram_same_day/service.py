@@ -7,7 +7,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from ..image_pipeline import ImageUploadError, normalize_admin_image
-from ..models import Category, Product, TelegramBotUser, TelegramDiscussionMessage, TelegramSameDayPost
+from ..models import Category, Product, StudioProduct, TelegramBotUser, TelegramDiscussionMessage, TelegramSameDayPost
 from .client import download_photo
 from .price import PriceError, parse_price, parse_group_price
 
@@ -62,10 +62,23 @@ def _sync_product(message, update_id, stored_files, *, direct_group=False):
     if (revision, update_id) <= (post.revision_date, post.revision_update_id):
         logger.info("duplicate ignored chat_id=%s message_id=%s", post.telegram_chat_id, post.telegram_message_id)
         return "duplicate_ignored"
+    from ..studio_ingestion import StudioInputError, resolve_metadata, sync_daily
+    metadata = None
+    studio_error = ""
+    try:
+        metadata = resolve_metadata(message.get("caption", ""), identity=(post.telegram_chat_id, post.telegram_message_id))
+    except StudioInputError as error:
+        studio_error = str(error)
+        # Existing group messages without ledger metadata remain supported until
+        # the explicit production cutover. New messages can be made strict.
+        if settings.STUDIO_DAILY_REQUIRE_METADATA and not post.product_id:
+            post.studio_error = studio_error
+            post.save(update_fields=["studio_error", "updated_at"])
+            return "studio_metadata_rejected"
     post.revision_date, post.revision_update_id = revision, update_id
     if direct_group and message.get("photo"):
         post.source_photo = {key: message[key] for key in
-                             ("message_id", "chat", "date", "photo", "media_group_id") if key in message}
+                             ("message_id", "chat", "date", "photo", "media_group_id", "caption") if key in message}
     if message.get("date"):
         post.telegram_created_at = datetime.fromtimestamp(message["date"], tz=dt_timezone.utc)
     try:
@@ -111,7 +124,10 @@ def _sync_product(message, update_id, stored_files, *, direct_group=False):
     post.product = product
     post.telegram_file_id = photo["file_id"]
     post.last_error = ""
+    post.studio_error = studio_error
     post.save()
+    if metadata:
+        sync_daily(post, message, metadata=metadata)
     event = "Telegram product created" if created else "product updated"
     logger.info("%s product_id=%s chat_id=%s message_id=%s", event, product.pk,
                 post.telegram_chat_id, post.telegram_message_id)
@@ -197,6 +213,7 @@ def _can_sell(message, *, channel=False):
 
 
 def _sell(post, *, withdrawn=False):
+    from ..studio_ingestion import sync_daily_status
     if withdrawn:
         if post.withdrawn_at:
             return "duplicate_ignored"
@@ -207,6 +224,7 @@ def _sell(post, *, withdrawn=False):
                 status=Product.Status.WITHDRAWN, stock_status=Product.StockStatus.OUT_OF_STOCK,
                 updated_at=timezone.now(),
             )
+        sync_daily_status(post)
         logger.info("product marked WITHDRAWN chat_id=%s message_id=%s", post.telegram_chat_id, post.telegram_message_id)
         return "withdrawn"
     if post.withdrawn_at:
@@ -221,6 +239,7 @@ def _sell(post, *, withdrawn=False):
             status=Product.Status.SOLD, stock_status=Product.StockStatus.OUT_OF_STOCK,
             updated_at=timezone.now(),
         )
+    sync_daily_status(post)
     logger.info("product marked SOLD product_id=%s chat_id=%s message_id=%s",
                 post.product_id, post.telegram_chat_id, post.telegram_message_id)
     return "sold"
@@ -230,6 +249,26 @@ def process_update(kind, message, update_id):
     channel_id = str(settings.TELEGRAM_CHANNEL_ID)
     group_id = str(settings.TELEGRAM_DISCUSSION_GROUP_ID)
     direct_id = str(settings.TELEGRAM_SAME_DAY_GROUP_ID)
+    custom_id = str(settings.TELEGRAM_STUDIO_CUSTOM_GROUP_ID)
+    custom = (kind in {"message", "edited_message"}
+              and message["chat"]["type"] in {"group", "supergroup"}
+              and custom_id and str(message["chat"]["id"]) == custom_id)
+    if custom:
+        if custom_id in {channel_id, group_id, direct_id}:
+            raise SyncConfigurationError("overlapping_source_ids")
+        from ..studio_ingestion import process_custom
+        stored_files = []
+        try:
+            with transaction.atomic():
+                return process_custom(message, update_id, stored_files)
+        except Exception:
+            for storage, name in stored_files:
+                try:
+                    if not StudioProduct.objects.filter(image=name).exists():
+                        storage.delete(name)
+                except Exception:
+                    logger.error("studio image cleanup failed; manual review required")
+            raise
     if not (channel_id or direct_id) or not settings.TELEGRAM_SAME_DAY_CATEGORY_ID:
         raise SyncConfigurationError("same_day_not_configured")
     channel = (kind in {"channel_post", "edited_channel_post"}

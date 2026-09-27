@@ -300,6 +300,26 @@ test("same-day Django failure is not acknowledged to Telegram", async () => {
   });
 });
 
+test("custom group forwards to Django and replies with escaped validation feedback", async () => {
+  const customEnv = { ...sameDayEnv, TELEGRAM_STUDIO_CUSTOM_GROUP_ID: "-10087654" };
+  const update = { update_id: 91, message: { message_id: 73,
+    chat: { id: -10087654, type: "supergroup" }, photo: [{ file_id: "sample" }] } };
+  const calls = [];
+  const response = await withFetch(async (url, options) => {
+    calls.push({ url: String(url), options });
+    if (String(url) === customEnv.SAME_DAY_WEBHOOK_URL) {
+      assert.deepEqual(JSON.parse(options.body), update);
+      return json({ ok: true, result: "rejected", feedback: "فاکتور <تکراری>", reply_to_message_id: 73 });
+    }
+    return json({ ok: true });
+  }, () => worker.fetch(sameDayRequest(update), customEnv));
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 2);
+  assert.match(calls[1].url, /\/sendMessage$/);
+  assert.equal(requestPayload(calls[1]).reply_parameters.message_id, 73);
+  assert.match(requestPayload(calls[1]).text, /&lt;تکراری&gt;/);
+});
+
 test("direct group works without a channel and preserves photo replies and edits", async () => {
   const groupEnv = { ...env, SAME_DAY_WEBHOOK_URL: sameDayEnv.SAME_DAY_WEBHOOK_URL,
     TELEGRAM_SAME_DAY_GROUP_ID: "-10077777" };

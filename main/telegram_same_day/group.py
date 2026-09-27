@@ -51,7 +51,7 @@ def sync_group(message, update_id, stored_files):
     if post is None and reply.get("photo") and _group_member(reply):
         post = _post(chat_id, reply["message_id"])
         post.source_photo = {key: reply[key] for key in
-                             ("message_id", "chat", "date", "photo", "media_group_id") if key in reply}
+                             ("message_id", "chat", "date", "photo", "media_group_id", "caption") if key in reply}
         post.save()
     if post is None:
         logger.info("unknown reply ignored chat_id=%s message_id=%s", chat_id, message["message_id"])
@@ -70,6 +70,14 @@ def sync_group(message, update_id, stored_files):
     if not post.source_photo:
         return "missing_photo_ignored"
     source = dict(post.source_photo)
-    source["caption"] = text
+    try:
+        price = parse_group_price(text)
+    except PriceError:
+        source["caption"] = text
+    else:
+        metadata_lines = [line for line in post.source_photo.get("caption", "").splitlines()
+                          if line.strip().lower().startswith(("florist:", "type:", "factor:",
+                                                               "فلوریست:", "نوع:", "فاکتور:"))]
+        source["caption"] = "\n".join([*metadata_lines, f"قیمت: {price}"])
     source["edit_date"] = message.get("edit_date", message.get("date", 0))
     return _sync_product(source, update_id, stored_files, direct_group=True)

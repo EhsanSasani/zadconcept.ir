@@ -1,0 +1,8 @@
+<form class="period-bar" method="get" aria-label="بازه گزارش">
+  <button name="period" value="today" class="period-chip{% if period.choice == 'today' %} selected{% endif %}">امروز</button>
+  <button name="period" value="7" class="period-chip{% if period.choice == '7' %} selected{% endif %}">۷ روز</button>
+  <button name="period" value="30" class="period-chip{% if period.choice == '30' %} selected{% endif %}">۳۰ روز</button>
+  <button name="period" value="month" class="period-chip{% if period.choice == 'month' %} selected{% endif %}">این ماه</button>
+  <span class="period-range"><svg class="icon"><use href="#i-calendar"/></svg><time data-persian-date="{{ period.start|date:'Y-m-d' }}">{{ period.start|date:"Y/m/d" }}</time><span>تا</span><time data-persian-date="{{ period.end|date:'Y-m-d' }}">{{ period.end|date:"Y/m/d" }}</time></span>
+  <details class="custom-period"><summary>بازه دلخواه</summary><div class="custom-popover"><label>از تاریخ<input type="date" name="start" value="{{ period.start|date:'Y-m-d' }}"></label><label>تا تاریخ<input type="date" name="end" value="{{ period.end|date:'Y-m-d' }}"></label><button name="period" value="custom" class="btn btn-primary">نمایش</button></div></details>
+</form>

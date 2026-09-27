@@ -51,4 +51,4 @@ def telegram_webhook(request):
         logger.error("Telegram sync retry required update_id=%s chat_id=%s message_id=%s",
                      update["update_id"], message["chat"]["id"], message["message_id"])
         return JsonResponse({"ok": False, "error": "Retry required"}, status=503)
-    return JsonResponse({"ok": True, "result": result})
+    return JsonResponse({"ok": True, **result} if isinstance(result, dict) else {"ok": True, "result": result})

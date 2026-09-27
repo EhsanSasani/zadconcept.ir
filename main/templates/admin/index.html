@@ -6,7 +6,7 @@
 {% block content %}
 {% zad_dashboard as panel %}
 <div class="zad-dashboard">
-  <header class="zad-dashboard-heading"><div><p class="zad-eyebrow" lang="en" dir="ltr">ZAD WORKSPACE</p><h1>امروز از کجا شروع کنیم؟</h1><p>کارهای روزمره و محتوای سایت، در یک فضای مرتب.</p></div><div class="zad-quick-actions">{% for action in panel.actions %}<a class="zad-button{% if not forloop.first %} zad-button--quiet{% endif %}" href="{{ action.url }}">{{ action.label }} <span aria-hidden="true">＋</span></a>{% endfor %}</div></header>
+  <header class="zad-dashboard-heading"><div><p class="zad-eyebrow" lang="en" dir="ltr">ZAD WORKSPACE</p><h1>امروز از کجا شروع کنیم؟</h1><p>کارهای روزمره و محتوای سایت، در یک فضای مرتب.</p></div><div class="zad-quick-actions">{% if perms.main.view_studioproduct %}<a class="zad-button" href="{% url 'studio_dashboard' %}">داشبورد استودیو <span aria-hidden="true">←</span></a>{% endif %}{% for action in panel.actions %}<a class="zad-button zad-button--quiet" href="{{ action.url }}">{{ action.label }} <span aria-hidden="true">＋</span></a>{% endfor %}</div></header>
   <div class="zad-dashboard-grid">
     <section class="zad-panel zad-pages"><header><h2>صفحات سایت</h2><a href="#zad-all-sections">همهٔ بخش‌ها</a></header>
       <div class="zad-page-grid">{% for page in panel.pages %}<article class="zad-page-card"><img src="{% static page.image %}" width="640" height="640" alt="" loading="lazy"><div><h3>{{ page.title }}</h3><p>{{ page.note }}</p><a href="{{ page.url }}">مدیریت محتوا ←</a><a class="zad-public-link" href="{{ page.public_url }}" target="_blank" rel="noopener">مشاهده صفحه ↗</a></div></article>{% empty %}<p>بخش‌های قابل مدیریت بر اساس دسترسی شما نمایش داده می‌شوند.</p>{% endfor %}</div>

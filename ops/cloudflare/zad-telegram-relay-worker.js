@@ -40,12 +40,13 @@ async function telegramRequest(env, method, payload) {
   };
 }
 
-async function sendText(env, chatId, text) {
+async function sendText(env, chatId, text, replyToMessageId) {
   return telegramRequest(env, "sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
+    ...(replyToMessageId ? { reply_parameters: { message_id: replyToMessageId, allow_sending_without_reply: true } } : {}),
   });
 }
 
@@ -185,7 +186,8 @@ async function handleTelegramWebhook(request, env) {
   const sameDayChat = String(sameDayMessage?.chat?.id ?? "");
   if (env.SAME_DAY_WEBHOOK_URL && sameDayChat &&
       [String(env.TELEGRAM_CHANNEL_ID ?? ""), String(env.TELEGRAM_DISCUSSION_GROUP_ID ?? ""),
-       String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? "")].includes(sameDayChat)) {
+       String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? ""),
+       String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")].includes(sameDayChat)) {
     try {
       const target = new URL(env.SAME_DAY_WEBHOOK_URL);
       if (target.protocol !== "https:") return jsonResponse({ ok: false }, 503);
@@ -199,6 +201,16 @@ async function handleTelegramWebhook(request, env) {
         body: JSON.stringify(update),
       });
       // Do not acknowledge a failed Django delivery: let Telegram retry it.
+      if (response.ok && sameDayChat === String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")) {
+        const result = await response.json().catch(() => ({}));
+        if (typeof result.feedback === "string" && result.feedback) {
+          try {
+            await sendText(env, sameDayChat, `${result.result === "rejected" ? "❌ ثبت نشد: " : "✅ "}${escapeHtml(result.feedback)}`, result.reply_to_message_id);
+          } catch {
+            // Ledger delivery already succeeded; a feedback outage must not replay it.
+          }
+        }
+      }
       return jsonResponse({ ok: response.ok }, response.ok ? 200 : response.status);
     } catch {
       return jsonResponse({ ok: false }, 503);
