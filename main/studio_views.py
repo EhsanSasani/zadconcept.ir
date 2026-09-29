@@ -7,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, F, Q, Sum
-from django.db.models.functions import TruncDate
+from django.db.models import Avg, Case, CharField, Count, F, Q, Sum, Value, When
+from django.db.models.functions import Coalesce, TruncDate
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -30,6 +30,8 @@ def _period(request):
         start, end = today, today
     elif choice == "7":
         start, end = today - timedelta(days=6), today
+    elif choice == "90":
+        start, end = today - timedelta(days=89), today
     elif choice == "month":
         start, end = today.replace(day=1), today
     elif choice == "custom":
@@ -88,8 +90,50 @@ def _delta(current, previous):
     return round((current - previous) * 100 / previous)
 
 
+def _sort_state(request, allowed, default, prefix=""):
+    key = request.GET.get(prefix + "sort", default)
+    if key not in allowed:
+        key = default
+    direction = request.GET.get(prefix + "dir", "desc" if key == default else "asc")
+    if direction not in {"asc", "desc"}:
+        direction = "desc" if key == default else "asc"
+    return {"key": key, "direction": direction, "prefix": prefix}
+
+
+def _choice_order(field, choices):
+    return Case(*[When(**{field: key}, then=Value(label)) for key, label in choices],
+                default=Value(""), output_field=CharField())
+
+
+def _sort_products(request, qs):
+    fields = {"product": "type_label", "factor": "factor_code", "florist": "florist__name",
+              "production": "production_label", "price": "price", "status": "status_label",
+              "produced": "produced_at", "result": "result_at"}
+    state = _sort_state(request, fields, "produced")
+    qs = qs.annotate(type_label=_choice_order("product_type", StudioProduct.ProductType.choices),
+                     production_label=_choice_order("production_type", StudioProduct.ProductionType.choices),
+                     status_label=_choice_order("status", StudioProduct.Status.choices),
+                     result_at=Coalesce("sold_at", "withdrawn_at"))
+    expression = F(fields[state["key"]])
+    order = expression.desc(nulls_last=True) if state["direction"] == "desc" else expression.asc(nulls_last=True)
+    return qs.order_by(order, "pk"), state
+
+
+def _chart(qs, period):
+    trend = {row["day"].isoformat(): row for row in qs.annotate(
+        day=TruncDate("produced_at", tzinfo=timezone.get_current_timezone())
+    ).values("day").annotate(produced=Count("pk"), sold=Count("pk", filter=Q(status="SOLD")))}
+    days = min((period["end"] - period["start"]).days + 1, 31)
+    start = period["end"] - timedelta(days=days - 1)
+    return [{"label": (start + timedelta(days=i)).isoformat(),
+             "produced": trend.get((start + timedelta(days=i)).isoformat(), {}).get("produced", 0),
+             "sold": trend.get((start + timedelta(days=i)).isoformat(), {}).get("sold", 0)} for i in range(days)]
+
+
 def _base(request, active, period=None):
-    return {"active": active, "period": period, "nav": [
+    keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
+    return {"active": active, "period": period,
+            "period_filters": [(key, value) for key, value in request.GET.items() if key in keep], "nav": [
         ("dashboard", "داشبورد", "studio_dashboard"),
         ("products", "محصولات", "studio_products"),
         ("florists", "فلوریست‌ها", "studio_florists"),
@@ -111,15 +155,8 @@ def dashboard(request):
     breakdown = dict(qs.values_list("production_type").annotate(count=Count("pk")))
     daily = breakdown.get(StudioProduct.ProductionType.DAILY, 0)
     custom = breakdown.get(StudioProduct.ProductionType.CUSTOM, 0)
-    trend = {row["day"].isoformat(): row for row in qs.annotate(
-        day=TruncDate("produced_at", tzinfo=timezone.get_current_timezone())
-    ).values("day").annotate(produced=Count("pk"), sold=Count("pk", filter=Q(status="SOLD")))}
-    days = min((period["end"] - period["start"]).days + 1, 31)
-    offset = (period["end"] - period["start"]).days + 1 - days
-    chart = [{"label": (period["start"] + timedelta(days=offset + i)).isoformat(),
-              "produced": trend.get((period["start"] + timedelta(days=offset + i)).isoformat(), {}).get("produced", 0),
-              "sold": trend.get((period["start"] + timedelta(days=offset + i)).isoformat(), {}).get("sold", 0)}
-             for i in range(days)]
+    chart = _chart(qs, period)
+    latest, table_sort = _sort_products(request, qs)
     florist_rows = []
     for florist in Florist.objects.filter(is_active=True):
         florist_rows.append({"florist": florist, "stats": _stats(qs.filter(florist=florist))})
@@ -127,7 +164,7 @@ def dashboard(request):
     issue_count = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).count()
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
                "daily": daily, "custom": custom, "chart": chart, "florists": florist_rows,
-               "latest": StudioProduct.objects.select_related("florist", "product")[:5],
+               "latest": latest[:5], "table_sort": table_sort,
                "missing_count": missing_count, "issue_count": issue_count}
     return render(request, "main/studio/dashboard.html", context)
 
@@ -153,9 +190,10 @@ def products(request):
     if florist_id.isdecimal():
         qs = qs.filter(florist_id=int(florist_id))
     summary = _stats(qs)
+    qs, table_sort = _sort_products(request, qs)
     page = Paginator(qs, 20).get_page(request.GET.get("page"))
     return render(request, "main/studio/products.html", {
-        **_base(request, "products", period), "page": page, "summary": summary,
+        **_base(request, "products", period), "page": page, "summary": summary, "table_sort": table_sort,
         "florists": Florist.objects.all(),
         "status_choices": StudioProduct.Status.choices, "type_choices": StudioProduct.ProductType.choices,
         "production_choices": StudioProduct.ProductionType.choices, "source_choices": StudioProduct.Source.choices})
@@ -180,8 +218,11 @@ def florist_profile(request, pk):
     qs = _cohort(period, florist=florist, production_type=production_type)
     breakdown = list(qs.values("product_type").annotate(count=Count("pk")).order_by("-count"))
     split = dict(qs.values_list("production_type").annotate(count=Count("pk")))
+    chart = _chart(qs, period)
+    qs, table_sort = _sort_products(request, qs)
     return render(request, "main/studio/profile.html", {
         **_base(request, "florists", period), "florist": florist, "stats": _stats(qs),
+        "chart": chart, "table_sort": table_sort,
         "breakdown": breakdown, "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0),
         "page": Paginator(qs, 15).get_page(request.GET.get("page"))})
 
@@ -197,16 +238,32 @@ def analytics(request):
         sold_value=Sum("price", filter=Q(status="SOLD"))).order_by("-produced"))
     for row in by_type:
         row["sell_through"] = round(row["sold"] / row["produced"] * 100) if row["produced"] else 0
+    fields = {"type": "product_type", "produced": "produced", "sold": "sold", "withdrawn": "withdrawn",
+              "rate": "sell_through", "value": "sold_value"}
+    table_sort = _sort_state(request, fields, "produced")
+    labels = dict(StudioProduct.ProductType.choices)
+    by_type.sort(key=lambda row: labels[row["product_type"]] if table_sort["key"] == "type"
+                 else (row[fields[table_sort["key"]]] or 0), reverse=table_sort["direction"] == "desc")
     split = dict(qs.values_list("production_type").annotate(count=Count("pk")))
     return render(request, "main/studio/analytics.html", {
-        **_base(request, "analytics", period), "stats": _stats(qs), "by_type": by_type,
+        **_base(request, "analytics", period), "stats": _stats(qs), "by_type": by_type, "table_sort": table_sort,
         "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0)})
 
 
 class FloristForm(forms.ModelForm):
+    photo = forms.FileField(label="عکس پروفایل", required=False,
+                            help_text="اختیاری · JPG، PNG، WebP یا HEIC؛ حداکثر ۲۰ مگابایت",
+                            widget=forms.ClearableFileInput(attrs={"accept": "image/*,.heic,.heif"}))
+
+    def clean_photo(self):
+        try:
+            return normalize_admin_image(self.cleaned_data.get("photo"), max_dimension=800)
+        except ImageUploadError as error:
+            raise forms.ValidationError(str(error)) from error
+
     class Meta:
         model = Florist
-        fields = ("name", "code", "is_active", "joined_at", "left_at", "notes")
+        fields = ("photo", "name", "code", "is_active", "joined_at", "left_at", "notes")
         widgets = {"joined_at": forms.DateInput(attrs={"type": "date"}),
                    "left_at": forms.DateInput(attrs={"type": "date"})}
 
@@ -215,13 +272,13 @@ class FloristForm(forms.ModelForm):
 @require_http_methods(["GET", "POST"])
 def florist_add(request):
     _access(request, "add_florist")
-    form = FloristForm(request.POST or None)
+    form = FloristForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         florist = form.save()
         messages.success(request, "فلوریست ثبت شد.")
         return redirect("studio_florist_profile", pk=florist.pk)
     return render(request, "main/studio/form.html", {
-        **_base(request, "florists"), "form": form, "title": "افزودن فلوریست", "submit_label": "ثبت فلوریست"})
+        **_base(request, "florists"), "form": form, "title": "افزودن فلوریست", "submit_label": "ثبت فلوریست", "is_florist_form": True})
 
 
 @login_required(login_url="/admin/login/")
@@ -229,13 +286,14 @@ def florist_add(request):
 def florist_edit(request, pk):
     _access(request, "change_florist")
     florist = get_object_or_404(Florist, pk=pk)
-    form = FloristForm(request.POST or None, instance=florist)
+    form = FloristForm(request.POST or None, request.FILES or None, instance=florist)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "اطلاعات فلوریست به‌روزرسانی شد.")
         return redirect("studio_florist_profile", pk=florist.pk)
     return render(request, "main/studio/form.html", {
-        **_base(request, "florists"), "form": form, "title": "ویرایش فلوریست", "submit_label": "ذخیره تغییرات"})
+        **_base(request, "florists"), "form": form, "title": "ویرایش فلوریست", "submit_label": "ذخیره تغییرات", "is_florist_form": True,
+        "preview_url": florist.photo.url if florist.photo else ""})
 
 
 class ProductForm(forms.ModelForm):
@@ -367,8 +425,15 @@ def settings_view(request):
     ).select_related("product").order_by("-telegram_created_at")
     missing = missing_qs.count()
     issues = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).order_by("-updated_at")
+    issue_fields = {"message": "telegram_message_id", "reason": "reason", "date": "updated_at"}
+    issue_sort = _sort_state(request, issue_fields, "date", "issues_")
+    issues = issues.order_by(("-" if issue_sort["direction"] == "desc" else "") + issue_fields[issue_sort["key"]], "pk")
+    missing_fields = {"product": "product__name", "message": "telegram_message_id", "date": "telegram_created_at", "error": "studio_error"}
+    missing_sort = _sort_state(request, missing_fields, "date", "missing_")
+    missing_qs = missing_qs.order_by(("-" if missing_sort["direction"] == "desc" else "") + missing_fields[missing_sort["key"]], "pk")
     return render(request, "main/studio/settings.html", {
         **_base(request, "settings"), "missing_count": missing,
+        "issue_sort": issue_sort, "missing_sort": missing_sort,
         "missing_posts": missing_qs[:50],
         "issue_count": issues.count(), "issues": issues[:50],
         "daily_strict": settings.STUDIO_DAILY_REQUIRE_METADATA,

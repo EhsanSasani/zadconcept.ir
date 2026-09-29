@@ -2918,6 +2918,7 @@ class TelegramDiscussionMessage(models.Model):
 class Florist(TimeStampedModel):
     name = models.CharField("نام فلوریست", max_length=120)
     code = models.SlugField("کد کوتاه", max_length=24, unique=True)
+    photo = models.ImageField("عکس پروفایل", upload_to="studio/florists/", blank=True)
     is_active = models.BooleanField("فعال", default=True, db_index=True)
     joined_at = models.DateField("تاریخ شروع", null=True, blank=True)
     left_at = models.DateField("تاریخ پایان", null=True, blank=True)

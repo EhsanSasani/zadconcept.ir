@@ -1,13 +1,21 @@
 {% extends 'main/studio/base.html' %}{% block title %}{{ title }}{% endblock %}{% block crumb %}{{ title }}{% endblock %}{% block content %}
-<div class="page-heading"><div><p class="eyebrow">STUDIO RECORDS</p><h1>{{ title }}</h1><p>اطلاعات تولید را کامل و دقیق وارد کنید.</p></div></div>
-<div class="editor-layout"><section class="panel form-panel"><form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}<div class="form-grid">{% for field in form %}<div class="form-field{% if field.name == 'notes' %} form-wide{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-label="الزامی">*</span>{% endif %}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endfor %}</div>{% if help_text %}<p class="form-hint">{{ help_text }}</p>{% endif %}<div class="form-actions"><button class="btn btn-primary" type="submit">{{ submit_label }}</button><a class="btn btn-outline" href="{% url 'studio_dashboard' %}">انصراف</a></div></form></section>
-{% if active == 'add' or active == 'products' %}<aside class="panel record-preview" aria-label="پیش نمایش محصول">
-  <p class="eyebrow">LIVE PREVIEW</p><h2>پیش‌نمایش رکورد</h2>
-  <div class="preview-photo" data-preview-photo>{% if preview_url %}<img src="{{ preview_url }}" alt="تصویر فعلی محصول">{% else %}<span>تصویر محصول اینجا نمایش داده می‌شود</span>{% endif %}</div>
-  <div class="preview-details"><span>شماره فاکتور</span><strong dir="ltr" data-preview-factor>—</strong></div>
-  <div class="preview-details"><span>فلوریست</span><strong data-preview-florist>—</strong></div>
-  <div class="preview-details"><span>نوع محصول</span><strong data-preview-type>—</strong></div>
-  <div class="preview-details"><span>قیمت · تومان</span><strong data-preview-price>—</strong></div>
-  <p class="preview-note">پیش‌نمایش فقط داده‌های واردشده در همین فرم را نشان می‌دهد. ثبت نهایی پس از ذخیره انجام می‌شود.</p>
-</aside>{% endif %}</div>
+<div class="page-heading"><div><p class="eyebrow">{% if is_florist_form %}STUDIO TEAM{% else %}STUDIO RECORDS{% endif %}</p><h1>{{ title }}</h1><p>{% if is_florist_form %}نام، کد کوتاه و عکس همکار استودیو را ثبت کنید.{% else %}هر محصول، یک رکورد روشن از تولید تا فروش.{% endif %}</p></div></div>
+<div class="editor-layout"><section class="panel form-panel"><form method="post" enctype="multipart/form-data" data-editor-form>{% csrf_token %}
+  <div class="form-heading"><h2>{% if is_florist_form %}اطلاعات فلوریست{% else %}اطلاعات محصول{% endif %}</h2><p>فیلدهای دارای * الزامی هستند.</p></div>
+  {% if form.non_field_errors %}<div class="form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="form-grid">{% for field in form %}<div class="form-field{% if field.name == 'notes' or field.name == 'image' or field.name == 'photo' %} form-wide{% endif %}{% if field.errors %} has-error{% endif %}{% if field.name == 'image' or field.name == 'photo' %} upload-field{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-label="الزامی">*</span>{% endif %}</label>
+    {{ field }}{% if field.help_text %}<small id="{{ field.auto_id }}_helptext">{{ field.help_text }}</small>{% endif %}
+    {% if field.errors %}<div id="{{ field.auto_id }}_error" role="alert">{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}
+  </div>{% endfor %}</div>
+  {% if help_text %}<p class="form-hint">{{ help_text }}</p>{% endif %}
+  <div class="form-actions"><button class="btn btn-primary" type="submit">{{ submit_label }}</button><a class="btn btn-outline" href="{% if is_florist_form %}{% url 'studio_florists' %}{% else %}{% url 'studio_products' %}{% endif %}">انصراف</a></div>
+</form></section>
+<aside class="panel record-preview{% if is_florist_form %} florist-preview{% endif %}" aria-label="پیش‌نمایش" data-preview-kind="{% if is_florist_form %}florist{% else %}product{% endif %}">
+  <p class="eyebrow">LIVE PREVIEW</p><h2>پیش‌نمایش {% if is_florist_form %}پروفایل{% else %}رکورد{% endif %}</h2>
+  <div class="preview-photo" data-preview-photo>{% if preview_url %}<img src="{{ preview_url }}" alt="تصویر فعلی">{% else %}<svg class="icon" aria-hidden="true"><use href="#i-{% if is_florist_form %}users{% else %}camera{% endif %}"/></svg><span>انتخاب تصویر</span>{% endif %}</div><p class="upload-feedback" data-upload-feedback role="status"></p>
+  {% if is_florist_form %}<h3 data-preview-name>نام فلوریست</h3><p dir="ltr" data-preview-code>—</p><span class="badge badge-custom" data-preview-active>فعال</span>
+  {% else %}<div class="preview-details"><span>شماره فاکتور</span><strong dir="ltr" data-preview-factor>—</strong></div><div class="preview-details"><span>فلوریست</span><strong data-preview-florist>—</strong></div><div class="preview-details"><span>نوع محصول</span><strong data-preview-type>—</strong></div><div class="preview-details"><span>قیمت · تومان</span><strong data-preview-price>—</strong></div>{% endif %}
+  <p class="preview-note">تغییرات پس از زدن دکمهٔ ذخیره ثبت می‌شوند.</p>
+</aside></div>
 {% endblock %}
