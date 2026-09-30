@@ -13,7 +13,7 @@ from django.utils import timezone
 from main.models import Category, Florist, Product, StudioDelivery, StudioProduct, TelegramSameDayPost
 from main.studio_delivery import (
     claim_delivery, delivery_summary, process_next_delivery, product_caption,
-    reconcile_delivery, retry_delivery, retry_uncertain_delivery, set_portal_status,
+    reconcile_delivery, retry_delivery, retry_uncertain_delivery, set_portal_status, soft_delete_product,
 )
 from main.studio_publishing import create_portal_record, save_dashboard_record
 from main.studio_transport import TelegramDeliveryError
@@ -97,6 +97,29 @@ class StudioPublishingTests(TestCase):
         record.refresh_from_db()
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
         self.assertEqual(process_next_delivery().outcome, "deleted")
+        self.delete.assert_called_once_with(GROUP, 812)
+
+    def test_soft_delete_daily_product_hides_site_retires_telegram_and_keeps_ledger(self):
+        record = StudioProduct(
+            florist=self.florist, created_by=self.manager, factor_code="DASH-DELETE-1",
+            product_type=StudioProduct.ProductType.BOUQUET,
+            production_type=StudioProduct.ProductionType.DAILY,
+            price=2500000, image=image_file(), source=StudioProduct.Source.DASHBOARD,
+        )
+        save_dashboard_record(record)
+        process_next_delivery()
+        record.refresh_from_db()
+        product_id = record.product_id
+        soft_delete_product(record, actor=self.manager, reason="ثبت اشتباه")
+        record.refresh_from_db()
+        self.assertEqual(record.status, StudioProduct.Status.DELETED)
+        self.assertEqual(record.deletion_reason, "ثبت اشتباه")
+        self.assertEqual(record.deleted_by, self.manager)
+        self.assertFalse(Product.objects.for_same_day().published().filter(pk=product_id).exists())
+        self.assertTrue(record.image.storage.exists(record.image.name))
+        job = process_next_delivery()
+        self.assertEqual(job.action, StudioDelivery.Action.RETIRE)
+        self.assertEqual(job.outcome, "deleted")
         self.delete.assert_called_once_with(GROUP, 812)
 
     def test_non_available_dashboard_daily_product_stays_in_ledger_only(self):

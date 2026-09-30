@@ -51,9 +51,11 @@ def _period(request):
     return {"choice": choice, "start": start, "end": end, "lower": lower, "upper": upper}
 
 
-def _cohort(period, *, florist=None, production_type=None):
+def _cohort(period, *, florist=None, production_type=None, include_deleted=False):
     qs = StudioProduct.objects.select_related("florist", "product").filter(
         produced_at__gte=period["lower"], produced_at__lt=period["upper"])
+    if not include_deleted:
+        qs = qs.exclude(status=StudioProduct.Status.DELETED)
     if florist:
         qs = qs.filter(florist=florist)
     if production_type in StudioProduct.ProductionType.values:
@@ -176,7 +178,7 @@ def dashboard(request):
 def products(request):
     _access(request)
     period = _period(request)
-    qs = _cohort(period)
+    qs = _cohort(period, include_deleted=True)
     q = request.GET.get("q", "").strip()[:80]
     if q:
         matching_types = [key for key, label in StudioProduct.ProductType.choices
@@ -192,7 +194,7 @@ def products(request):
     florist_id = request.GET.get("florist", "")
     if florist_id.isdecimal():
         qs = qs.filter(florist_id=int(florist_id))
-    summary = _stats(qs)
+    summary = _stats(qs.exclude(status=StudioProduct.Status.DELETED))
     qs, table_sort = _sort_products(request, qs)
     page = Paginator(qs, 20).get_page(request.GET.get("page"))
     return render(request, "main/studio/products.html", {
@@ -444,6 +446,26 @@ def product_status(request, pk):
                 record.withdrawn_at = timezone.now()
             record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
             messages.success(request, "وضعیت محصول ثبت شد.")
+    return redirect("studio_products")
+
+
+@never_cache
+@login_required(login_url="studio_login")
+@require_POST
+def product_delete(request, pk):
+    _access(request, "delete_studioproduct")
+    record = get_object_or_404(StudioProduct, pk=pk)
+    from .studio_delivery import soft_delete_product
+    try:
+        soft_delete_product(
+            record,
+            actor=request.user,
+            reason=request.POST.get("reason", ""),
+        )
+    except ValidationError as error:
+        messages.error(request, " ".join(error.messages))
+    else:
+        messages.success(request, "محصول از عملکرد فلوریست حذف شد؛ سابقهٔ مدیریتی آن محفوظ است.")
     return redirect("studio_products")
 
 

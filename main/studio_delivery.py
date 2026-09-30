@@ -111,6 +111,45 @@ def set_portal_status(record, status, *, actor):
         return record
 
 
+def soft_delete_product(record, *, actor, reason):
+    """Soft-delete a ledger row while retiring any public/Telegram projection."""
+    if not getattr(actor, "is_active", False) or not actor.has_perm("main.delete_studioproduct"):
+        raise PermissionDenied
+    reason = (reason or "").strip()
+    if not reason:
+        raise ValidationError("علت حذف را وارد کنید.")
+    if len(reason) > 500:
+        raise ValidationError("علت حذف نباید بیشتر از ۵۰۰ کاراکتر باشد.")
+
+    with transaction.atomic():
+        record = _lock_record(record.pk)
+        if record.status == StudioProduct.Status.DELETED:
+            return record
+
+        now = timezone.now()
+        record.status = StudioProduct.Status.DELETED
+        record.deleted_at = now
+        record.deleted_by = actor
+        record.deletion_reason = reason
+        record.save(update_fields=[
+            "status", "deleted_at", "deleted_by", "deletion_reason", "updated_at",
+        ])
+
+        if record.product_id:
+            Product.objects.filter(pk=record.product_id).update(
+                status=Product.Status.WITHDRAWN,
+                stock_status=Product.StockStatus.OUT_OF_STOCK,
+                publish_status=Product.PublishStatus.DRAFT,
+                updated_at=now,
+            )
+            TelegramSameDayPost.objects.filter(product_id=record.product_id).update(
+                withdrawn_at=now, updated_at=now,
+            )
+
+        queue_retirement(record)
+        return record
+
+
 def retry_delivery(delivery_id):
     with transaction.atomic():
         job = StudioDelivery.objects.select_for_update().get(pk=delivery_id)
@@ -306,7 +345,12 @@ def _retire(job):
         else:
             _finish(job, "deleted")
             return
-    label = "فروخته شد" if record.status == StudioProduct.Status.SOLD else "کشیده شد"
+    if record.status == StudioProduct.Status.SOLD:
+        label = "فروخته شد"
+    elif record.status == StudioProduct.Status.DELETED:
+        label = "حذف شد"
+    else:
+        label = "کشیده شد"
     try:
         studio_transport.edit_caption(job.chat_id, job.message_id, f"{label}\n{product_caption(record)}")
     except studio_transport.TelegramDeliveryError as error:

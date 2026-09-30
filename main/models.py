@@ -2956,6 +2956,7 @@ class StudioProduct(TimeStampedModel):
         SOLD = "SOLD", "فروخته شده"
         WITHDRAWN = "WITHDRAWN", "کشیده شده"
         CANCELLED = "CANCELLED", "لغو شده"
+        DELETED = "DELETED", "حذف مدیریتی"
 
     class Source(models.TextChoices):
         PORTAL = "PORTAL", "پنل فلوریست"
@@ -2997,6 +2998,12 @@ class StudioProduct(TimeStampedModel):
     notes = models.TextField("یادداشت", blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name="studio_entries")
+    deleted_at = models.DateTimeField("زمان حذف مدیریتی", null=True, blank=True, db_index=True)
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="studio_deleted_entries", verbose_name="حذف‌شده توسط",
+    )
+    deletion_reason = models.TextField("علت حذف مدیریتی", blank=True)
 
     class Meta:
         ordering = ["-produced_at", "-pk"]
