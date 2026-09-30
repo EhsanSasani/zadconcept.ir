@@ -171,7 +171,8 @@ def process_custom(message, update_id, stored_files):
             return {"result": "ignored"}
         record = StudioProduct.objects.select_for_update().filter(
             telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
-            source=StudioProduct.Source.TELEGRAM_CUSTOM,
+            production_type=StudioProduct.ProductionType.CUSTOM,
+            source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
         ).first()
         if not record:
             return {"result": "unknown_reply_ignored"}
@@ -182,11 +183,17 @@ def process_custom(message, update_id, stored_files):
         else:
             record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, timezone.now()
         record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
+        from .studio_delivery import queue_retirement
+        queue_retirement(record)
         return {"result": "status_updated", "feedback": f"فاکتور {record.factor_code}: وضعیت ثبت شد.",
                 "reply_to_message_id": message_id}
     if not message.get("photo") or message.get("media_group_id"):
         return _reject_custom(chat_id, message_id, "یک عکس تکی همراه کپشن کامل ارسال کنید.")
     identity = chat_id, message_id
+    # A portal message has a deliberately minimal caption; never re-import it.
+    if StudioProduct.objects.filter(telegram_chat_id=chat_id, telegram_message_id=message_id,
+                                    source=StudioProduct.Source.PORTAL).exists():
+        return {"result": "portal_message_ignored"}
     try:
         metadata = resolve_metadata(message.get("caption", ""), identity=identity)
     except StudioInputError as error:

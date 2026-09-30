@@ -31,7 +31,7 @@ class TeamPortalTests(TestCase):
         self.addCleanup(media.cleanup)
         self.category = Category.objects.create(name="روزانه", slug="team-daily", section=Category.Section.FLOWERS)
         config = override_settings(MEDIA_ROOT=media.name, TELEGRAM_SAME_DAY_CATEGORY_ID=str(self.category.pk),
-                                   TELEGRAM_SAME_DAY_GROUP_ID="-100899", TELEGRAM_BOT_TOKEN="",
+                                   TELEGRAM_SAME_DAY_GROUP_ID="-100899", TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-5182713369", TELEGRAM_BOT_TOKEN="",
                                    TELEGRAM_SAME_DAY_RELAY_URL="")
         config.enable()
         self.addCleanup(config.disable)
@@ -242,7 +242,7 @@ class TeamPortalTests(TestCase):
         self.assertEqual(response.status_code, 302)
         record = StudioProduct.objects.get()
         self.assertIsNone(record.product_id)
-        self.assertFalse(record.deliveries.exists())
+        self.assertEqual(record.deliveries.get().chat_id, -5182713369)
         self.assertTrue(response.url.startswith(reverse("team_product_detail", args=[record.pk])))
 
     def test_invalid_upload_and_csrf_are_rejected_without_writes(self):

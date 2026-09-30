@@ -464,7 +464,7 @@ test("studio JPEG validation and declared/streamed request limits block network"
 test("studio photo becomes a bounded multipart upload to Telegram fixed host", async () => {
   await withFetch(async (url, options) => {
     assert.equal(url, "https://api.telegram.org/botbot-token/sendPhoto");
-    assert.equal(options.redirect, "error");
+    assert.equal(options.redirect, "manual");
     assert.equal(options.method, "POST");
     assert.ok(options.signal);
     assert.ok(options.body instanceof FormData);
@@ -480,6 +480,59 @@ test("studio photo becomes a bounded multipart upload to Telegram fixed host", a
     const response = await worker.fetch(studioRequest(), studioEnv);
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { ok: true, result: studioMessage });
+  });
+});
+
+test("studio getChat checks only configured group and omits private invite links", async () => {
+  const payload = { method: "getChat", chat_id: "-10077777" };
+  await withFetch(async (url, options) => {
+    assert.equal(url, "https://api.telegram.org/botbot-token/getChat");
+    assert.equal(options.method, "POST");
+    assert.equal(options.redirect, "manual");
+    assert.deepEqual(JSON.parse(options.body), { chat_id: "-10077777" });
+    return json({ ok: true, result: { id: -10077777, type: "supergroup", title: "Ready",
+      invite_link: "https://t.me/+PRIVATE", description: "PRIVATE DESCRIPTION" } });
+  }, async () => {
+    assert.deepEqual(await (await worker.fetch(studioRequest(payload), studioEnv)).json(), {
+      ok: true, result: { id: -10077777, type: "supergroup", title: "Ready" },
+    });
+  });
+});
+
+test("studio getChat rejects unauthorized, foreign or expanded requests before network", async () => {
+  const payload = { method: "getChat", chat_id: "-10077777" };
+  await withFetch(async () => assert.fail("Unexpected Telegram call"), async () => {
+    assert.equal((await worker.fetch(studioRequest(payload, { Authorization: "Bearer wrong" }), studioEnv)).status, 401);
+    for (const invalid of [{ ...payload, chat_id: "-999" }, { ...payload, url: "https://attacker.example" },
+      { ...payload, user_id: 123 }, { ...payload, photo_base64: studioPayload.photo_base64 }]) {
+      assert.equal((await worker.fetch(studioRequest(invalid), studioEnv)).status, 400);
+    }
+  });
+});
+
+test("studio getChat rejects mismatched or nongroup Telegram identities", async () => {
+  const payload = { method: "getChat", chat_id: "-10077777" };
+  for (const result of [true, { id: -999, type: "group" }, { id: -10077777, type: "private" }]) {
+    await withFetch(async () => json({ ok: true, result }), async () => {
+      const response = await worker.fetch(studioRequest(payload), studioEnv);
+      assert.equal(response.status, 502);
+      assert.equal((await response.json()).uncertain, false);
+    });
+  }
+});
+
+test("studio getChat reports network failure without ambiguous send or credentials", async () => {
+  await withFetch(async () => { throw new Error("bot-token relay-secret"); }, async () => {
+    const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }), studioEnv);
+    assert.equal(response.status, 503);
+    const result = await response.json();
+    assert.equal(result.error, "transport_unavailable");
+    assert.equal(result.uncertain, false);
+    assert.equal(result.retryable, true);
+    assert.equal(result.diagnostic.kind, "network_failure");
+    assert.equal(result.diagnostic.exception, "Error");
+    assert.ok(result.diagnostic.elapsed_ms >= 0);
+    assert.doesNotMatch(JSON.stringify(result), /bot-token|relay-secret/);
   });
 });
 
@@ -554,4 +607,94 @@ test("studio undeletable older message signals permanent caption fallback", asyn
     const response = await worker.fetch(studioRequest({ method: "deleteMessage", chat_id: "-10077777", message_id: 42 }), studioEnv);
     assert.deepEqual(await response.json(), { ok: false, error: "message_cannot_be_deleted", retryable: false, uncertain: false });
   });
+});
+
+test("studio remains compatible when AbortSignal.timeout is unavailable", async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(AbortSignal, "timeout");
+  Object.defineProperty(AbortSignal, "timeout", { configurable: true, value: undefined });
+  try {
+    await withFetch(async (url, options) => {
+      assert.equal(options.redirect, "manual");
+      assert.ok(options.signal instanceof AbortSignal);
+      return json({ ok: true, result: { id: -10077777, type: "group", title: "Ready" } });
+    }, async () => {
+      const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }), studioEnv);
+      assert.equal(response.status, 200);
+    });
+  } finally {
+    Object.defineProperty(AbortSignal, "timeout", descriptor);
+  }
+});
+
+test("studio deadline aborts a stalled request and reports a safe timeout", async () => {
+  const originalTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (callback, ms, ...args) => originalTimeout(callback, ms === 25000 ? 2 : ms, ...args);
+  try {
+    await withFetch(async (_url, options) => new Promise((_resolve, reject) => {
+      options.signal.addEventListener("abort", () => reject(new DOMException("bot-token relay-secret", "AbortError")), { once: true });
+    }), async () => {
+      const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }), studioEnv);
+      assert.equal(response.status, 503);
+      const result = await response.json();
+      assert.equal(result.diagnostic.kind, "timeout");
+      assert.equal(result.uncertain, false);
+      assert.doesNotMatch(JSON.stringify(result), /bot-token|relay-secret/);
+    });
+  } finally {
+    globalThis.setTimeout = originalTimeout;
+  }
+});
+
+test("studio deadline remains active while the response body is stalled", async () => {
+  const originalTimeout = globalThis.setTimeout;
+  globalThis.setTimeout = (callback, ms, ...args) => originalTimeout(callback, ms === 25000 ? 2 : ms, ...args);
+  try {
+    await withFetch(async (_url, options) => new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"ok":'));
+        options.signal.addEventListener("abort", () => controller.error(new DOMException("Stopped", "AbortError")), { once: true });
+      },
+    })), async () => {
+      const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }), studioEnv);
+      assert.equal(response.status, 502);
+      assert.equal((await response.json()).uncertain, false);
+    });
+  } finally {
+    globalThis.setTimeout = originalTimeout;
+  }
+});
+
+
+test("studio sends custom photo only to the configured custom group", async () => {
+  const customEnv = { ...studioEnv, TELEGRAM_STUDIO_CUSTOM_GROUP_ID: "-5182713369" };
+  const payload = { ...studioPayload, chat_id: "-5182713369" };
+  await withFetch(async (url, options) => {
+    assert.equal(options.body.get("chat_id"), "-5182713369");
+    assert.equal(options.body.get("caption"), payload.caption);
+    return json({ ok: true, result: { ...studioMessage, chat: { id: -5182713369, type: "group" } } });
+  }, async () => {
+    const response = await worker.fetch(studioRequest(payload), customEnv);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).result.chat.id, -5182713369);
+  });
+  await withFetch(async () => assert.fail("unexpected network call"), async () => {
+    assert.equal((await worker.fetch(studioRequest(payload), studioEnv)).status, 400);
+    assert.equal((await worker.fetch(studioRequest({ ...payload, chat_id: "-999" }), customEnv)).status, 400);
+  });
+});
+
+test("studio permits custom getChat and retirement without a daily destination", async () => {
+  const customEnv = { ...studioEnv, TELEGRAM_SAME_DAY_GROUP_ID: "", TELEGRAM_STUDIO_CUSTOM_GROUP_ID: "-5182713369" };
+  for (const payload of [
+    { method: "getChat", chat_id: "-5182713369" },
+    { method: "deleteMessage", chat_id: "-5182713369", message_id: 42 },
+    { method: "editMessageCaption", chat_id: "-5182713369", message_id: 42, caption: "فروخته شد" },
+  ]) {
+    await withFetch(async (url, options) => {
+      assert.equal(JSON.parse(options.body).chat_id, "-5182713369");
+      return json({ ok: true, result: payload.method === "getChat" ? { id: -5182713369, type: "group" } : true });
+    }, async () => {
+      assert.equal((await worker.fetch(studioRequest(payload), customEnv)).status, 200);
+    });
+  }
 });

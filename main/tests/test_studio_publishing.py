@@ -24,7 +24,7 @@ GROUP = -100887711
 
 
 @override_settings(TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_CHANNEL_ID="",
-                   TELEGRAM_DISCUSSION_GROUP_ID="", TELEGRAM_STUDIO_CUSTOM_GROUP_ID="")
+                   TELEGRAM_DISCUSSION_GROUP_ID="", TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-5182713369")
 class StudioPublishingTests(TestCase):
     def setUp(self):
         self.media = tempfile.TemporaryDirectory()
@@ -43,7 +43,7 @@ class StudioPublishingTests(TestCase):
         self.addCleanup(patch.stopall)
 
     def telegram_message(self, *args):
-        return {"message_id": 812, "chat": {"id": GROUP, "type": "supergroup"},
+        return {"message_id": 812, "chat": {"id": args[0] if args else GROUP, "type": "supergroup"},
                 "date": int(timezone.now().timestamp()), "from": {"id": 99, "is_bot": True},
                 "photo": [{"file_id": "uploaded", "width": 500, "height": 500}]}
 
@@ -80,13 +80,67 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(record.deliveries.get().status, "PENDING")
         self.send.assert_not_called()
 
-    def test_custom_is_internal_even_without_daily_configuration(self):
+    def test_custom_queues_its_own_group_without_daily_configuration(self):
         with override_settings(TELEGRAM_SAME_DAY_CATEGORY_ID="", TELEGRAM_SAME_DAY_GROUP_ID=""):
             record, _ = self.create(production_type="CUSTOM")
         self.assertIsNone(record.product_id)
         self.assertFalse(Product.objects.exists())
-        self.assertFalse(record.deliveries.exists())
-        self.assertEqual(delivery_summary(record)["state"], "internal")
+        self.assertEqual(record.deliveries.get().chat_id, -5182713369)
+        self.assertEqual(delivery_summary(record)["state"], "pending")
+        self.assertIn("سفارشی‌ها", delivery_summary(record)["label"])
+        self.send.assert_not_called()
+        job = process_next_delivery()
+        self.assertEqual(job.status, StudioDelivery.Status.SENT)
+        record.refresh_from_db()
+        self.assertEqual(record.telegram_chat_id, -5182713369)
+        self.assertFalse(TelegramSameDayPost.objects.exists())
+        self.assertIn("سفارشی‌ها", delivery_summary(record)["label"])
+        self.assertEqual(self.send.call_args.args[2], product_caption(record))
+
+    def test_custom_configuration_failure_leaves_no_upload_or_record(self):
+        for group in ("", "123", str(GROUP)):
+            with self.subTest(group=group), override_settings(TELEGRAM_STUDIO_CUSTOM_GROUP_ID=group):
+                with patch("main.studio_publishing.normalize_admin_image") as normalize:
+                    with self.assertRaises(ValidationError):
+                        self.create(production_type="CUSTOM")
+                    normalize.assert_not_called()
+        self.assertFalse(StudioProduct.objects.exists())
+        self.assertFalse(StudioDelivery.objects.exists())
+
+    def test_custom_repeated_submission_does_not_duplicate_delivery(self):
+        key = uuid.uuid4()
+        record, _ = self.create(production_type="CUSTOM", submission_key=key)
+        second, created = self.create(production_type="CUSTOM", submission_key=key, image=None)
+        self.assertEqual(record.pk, second.pk)
+        self.assertFalse(created)
+        self.assertEqual(StudioDelivery.objects.count(), 1)
+        self.assertFalse(Product.objects.exists())
+
+    def test_custom_portal_reply_retires_message_without_public_product(self):
+        record, _ = self.create(production_type="CUSTOM")
+        process_next_delivery()
+        record.refresh_from_db()
+        message = self.sold_reply(record)
+        message["chat"]["id"] = -5182713369
+        message["reply_to_message"]["chat"]["id"] = -5182713369
+        self.assertEqual(process_update("message", message, 901)["result"], "status_updated")
+        record.refresh_from_db()
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
+        job = process_next_delivery()
+        self.assertEqual(job.action, StudioDelivery.Action.RETIRE)
+        self.assertEqual(job.status, StudioDelivery.Status.SENT)
+        self.delete.assert_called_once_with(-5182713369, 812)
+        self.assertFalse(Product.objects.exists())
+
+    def test_custom_portal_photo_edits_do_not_reimport_minimal_caption(self):
+        record, _ = self.create(production_type="CUSTOM")
+        process_next_delivery()
+        message = self.telegram_message(-5182713369)
+        message["caption"] = product_caption(record)
+        message["from"] = {"id": 702, "is_bot": False}
+        result = process_update("edited_message", message, 902)
+        self.assertEqual(result["result"], "portal_message_ignored")
+        self.assertEqual(StudioProduct.objects.count(), 1)
 
     def test_same_key_retries_return_existing_without_new_image_or_send(self):
         key = uuid.uuid4()
@@ -121,7 +175,7 @@ class StudioPublishingTests(TestCase):
         record, _ = self.create(florist=maker, production_type="CUSTOM")
         self.assertEqual(record.florist, maker)
         self.assertEqual(record.created_by, self.user)
-        self.assertFalse(record.deliveries.exists())
+        self.assertEqual(record.deliveries.get().chat_id, -5182713369)
 
     def test_selected_florist_deactivated_after_form_read_is_rejected(self):
         maker = Florist.objects.create(name="همکار", code="maker")

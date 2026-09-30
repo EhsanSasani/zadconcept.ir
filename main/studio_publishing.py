@@ -37,6 +37,15 @@ def _daily_configuration():
     return category, int(group_id)
 
 
+def _custom_configuration():
+    group_id = str(getattr(settings, "TELEGRAM_STUDIO_CUSTOM_GROUP_ID", "")).strip()
+    if (not re.fullmatch(r"-[1-9][0-9]{0,18}", group_id)
+            or group_id in {str(getattr(settings, name, "")).strip() for name in (
+                "TELEGRAM_SAME_DAY_GROUP_ID", "TELEGRAM_CHANNEL_ID", "TELEGRAM_DISCUSSION_GROUP_ID")}):
+        raise ValidationError("گروه سفارشی‌ها تنظیم نشده یا با گروه دیگری مشترک است؛ با مدیر هماهنگ کنید.")
+    return int(group_id)
+
+
 def _clean_failed_file(record):
     image = record.image
     if not image or not image._committed:
@@ -89,7 +98,7 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
     if len(notes or "") > 2000:
         raise ValidationError({"notes": "یادداشت باید حداکثر ۲۰۰۰ نویسه باشد."})
     daily = production_type == StudioProduct.ProductionType.DAILY
-    category, group_id = _daily_configuration() if daily else (None, None)
+    category, group_id = _daily_configuration() if daily else (None, _custom_configuration())
     try:
         normalized = normalize_admin_image(image)
     except ImageUploadError as error:
@@ -129,10 +138,10 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
                 )
                 record.product = product
                 record.save(update_fields=["product", "updated_at"])
-                StudioDelivery.objects.create(record=record, action=StudioDelivery.Action.PUBLISH,
-                                              chat_id=group_id)
                 storage, name = record.image.storage, record.image.name
                 transaction.on_commit(lambda: create_responsive_image_variants(storage, name))
+            StudioDelivery.objects.create(record=record, action=StudioDelivery.Action.PUBLISH,
+                                          chat_id=group_id)
     except IntegrityError:
         _clean_failed_file(record)
         # A concurrent retry may win the unique key while this request waited.

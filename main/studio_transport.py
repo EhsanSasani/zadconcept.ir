@@ -55,10 +55,12 @@ def _chat_id(value):
     value = str(value).strip()
     if not re.fullmatch(r"-[1-9][0-9]{0,19}", value):
         raise TelegramDeliveryError("invalid_payload")
-    configured = str(getattr(settings, "TELEGRAM_SAME_DAY_GROUP_ID", "")).strip()
-    if not re.fullmatch(r"-[1-9][0-9]{0,19}", configured):
+    configured = {str(getattr(settings, name, "")).strip() for name in (
+        "TELEGRAM_SAME_DAY_GROUP_ID", "TELEGRAM_STUDIO_CUSTOM_GROUP_ID")}
+    configured = {item for item in configured if re.fullmatch(r"-[1-9][0-9]{0,19}", item)}
+    if not configured:
         raise TelegramDeliveryError("configuration_error")
-    if value != configured:
+    if value not in configured:
         raise TelegramDeliveryError("invalid_payload")
     return value
 

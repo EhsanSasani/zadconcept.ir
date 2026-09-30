@@ -3,6 +3,16 @@ const PRODUCT_LOOKUP_URL =
   "https://www.zadconcept.ir/internal/telegram/product-lookup/";
 const TELEGRAM_WEBHOOK_PATH = "/telegram-webhook";
 
+async function withDeadline(milliseconds, callback) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), milliseconds);
+  try {
+    return await callback(controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function jsonResponse(payload, status = 200) {
   return Response.json(payload, { status });
 }
@@ -191,27 +201,29 @@ async function handleTelegramWebhook(request, env) {
     try {
       const target = new URL(env.SAME_DAY_WEBHOOK_URL);
       if (target.protocol !== "https:") return jsonResponse({ ok: false }, 503);
-      const response = await fetch(target.toString(), {
-        method: "POST", redirect: "error", signal: AbortSignal.timeout(25000),
-        headers: {
-          "Content-Type": "application/json",
-          "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET,
-          "User-Agent": "Mozilla/5.0 (compatible; ZAD-Telegram-Worker/1.0; +https://www.zadconcept.ir/)",
-        },
-        body: JSON.stringify(update),
-      });
-      // Do not acknowledge a failed Django delivery: let Telegram retry it.
-      if (response.ok && sameDayChat === String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")) {
-        const result = await response.json().catch(() => ({}));
-        if (typeof result.feedback === "string" && result.feedback) {
-          try {
-            await sendText(env, sameDayChat, `${result.result === "rejected" ? "❌ ثبت نشد: " : "✅ "}${escapeHtml(result.feedback)}`, result.reply_to_message_id);
-          } catch {
-            // Ledger delivery already succeeded; a feedback outage must not replay it.
+      return await withDeadline(25000, async (signal) => {
+        const response = await fetch(target.toString(), {
+          method: "POST", redirect: "manual", signal,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Telegram-Bot-Api-Secret-Token": env.TELEGRAM_WEBHOOK_SECRET,
+            "User-Agent": "Mozilla/5.0 (compatible; ZAD-Telegram-Worker/1.0; +https://www.zadconcept.ir/)",
+          },
+          body: JSON.stringify(update),
+        });
+        // Do not acknowledge a failed Django delivery: let Telegram retry it.
+        if (response.ok && sameDayChat === String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")) {
+          const result = await response.json().catch(() => ({}));
+          if (typeof result.feedback === "string" && result.feedback) {
+            try {
+              await sendText(env, sameDayChat, `${result.result === "rejected" ? "❌ ثبت نشد: " : "✅ "}${escapeHtml(result.feedback)}`, result.reply_to_message_id);
+            } catch {
+              // Ledger delivery already succeeded; a feedback outage must not replay it.
+            }
           }
         }
-      }
-      return jsonResponse({ ok: response.ok }, response.ok ? 200 : response.status);
+        return jsonResponse({ ok: response.ok }, response.ok ? 200 : response.status);
+      });
     } catch {
       return jsonResponse({ ok: false }, 503);
     }
@@ -319,27 +331,29 @@ async function handleSameDayFile(request, env) {
     if (!file.ok || typeof path !== "string" || !/^[A-Za-z0-9_/-]+\.[A-Za-z0-9]+$/.test(path) || path.startsWith("/") || path.includes("..")) {
       return jsonResponse({ ok: false }, 502);
     }
-    const response = await fetch(`${TELEGRAM_API_BASE}/file/bot${env.TELEGRAM_BOT_TOKEN}/${path}`, {
-      redirect: "error", signal: AbortSignal.timeout(15000),
-    });
-    if (!response.ok || Number(response.headers.get("Content-Length") || 0) > 20000000) {
-      return jsonResponse({ ok: false }, 502);
-    }
-    const reader = response.body.getReader();
-    const chunks = [];
-    let length = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      length += value.length;
-      if (length > 20000000) {
-        await reader.cancel();
+    return await withDeadline(15000, async (signal) => {
+      const response = await fetch(`${TELEGRAM_API_BASE}/file/bot${env.TELEGRAM_BOT_TOKEN}/${path}`, {
+        redirect: "manual", signal,
+      });
+      if (!response.ok || Number(response.headers.get("Content-Length") || 0) > 20000000) {
         return jsonResponse({ ok: false }, 502);
       }
-      chunks.push(value);
-    }
-    return new Response(new Blob(chunks), {
-      headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" },
+      const reader = response.body.getReader();
+      const chunks = [];
+      let length = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        length += value.length;
+        if (length > 20000000) {
+          await reader.cancel();
+          return jsonResponse({ ok: false }, 502);
+        }
+        chunks.push(value);
+      }
+      return new Response(new Blob(chunks), {
+        headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" },
+      });
     });
   } catch {
     return jsonResponse({ ok: false }, 502);
@@ -352,6 +366,7 @@ const STUDIO_PHOTO_LIMIT = 10000000;
 const STUDIO_REQUEST_LIMIT = Math.ceil(STUDIO_PHOTO_LIMIT / 3) * 4 + 8192;
 const STUDIO_RESPONSE_LIMIT = 65536;
 const STUDIO_METHOD_FIELDS = {
+  getChat: ["method", "chat_id"],
   sendPhoto: ["method", "chat_id", "caption", "photo_base64"],
   deleteMessage: ["method", "chat_id", "message_id"],
   editMessageCaption: ["method", "chat_id", "message_id", "caption"],
@@ -436,8 +451,9 @@ async function handleStudioDelivery(request, env) {
   if (!env.RELAY_SECRET || request.headers.get("Authorization") !== `Bearer ${env.RELAY_SECRET}`) {
     return studioFailure("relay_unauthorized", 401);
   }
-  const group = String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? "").trim();
-  if (!/^-?[1-9][0-9]{0,19}$/.test(group) || !group.startsWith("-") ||
+  const groups = [env.TELEGRAM_SAME_DAY_GROUP_ID, env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID]
+    .map((value) => String(value ?? "").trim()).filter((value) => /^-[1-9][0-9]{0,19}$/.test(value));
+  if (!groups.length ||
       typeof env.TELEGRAM_BOT_TOKEN !== "string" || !/^[A-Za-z0-9:_-]{1,256}$/.test(env.TELEGRAM_BOT_TOKEN)) {
     return studioFailure("configuration_error", 503);
   }
@@ -455,10 +471,11 @@ async function handleStudioDelivery(request, env) {
       !Object.prototype.hasOwnProperty.call(STUDIO_METHOD_FIELDS, payload.method)) {
     return studioFailure("invalid_payload", 400);
   }
+  const group = String(payload.chat_id);
   const fields = STUDIO_METHOD_FIELDS[payload.method];
   if (Object.keys(payload).length !== fields.length || Object.keys(payload).some((key) => !fields.includes(key)) ||
       !(typeof payload.chat_id === "string" || Number.isSafeInteger(payload.chat_id)) ||
-      String(payload.chat_id) !== group ||
+      !groups.includes(group) ||
       (fields.includes("message_id") && (!Number.isSafeInteger(payload.message_id) || payload.message_id < 1)) ||
       (fields.includes("caption") && (typeof payload.caption !== "string" || !payload.caption.trim() || payload.caption.length > 1024))) {
     return studioFailure("invalid_payload", 400);
@@ -479,40 +496,60 @@ async function handleStudioDelivery(request, env) {
     body = JSON.stringify(apiPayload);
     headers["Content-Type"] = "application/json";
   }
-  let response;
-  try {
-    response = await fetch(`${TELEGRAM_API_BASE}/bot${env.TELEGRAM_BOT_TOKEN}/${payload.method}`, {
-      method: "POST", redirect: "error", signal: AbortSignal.timeout(25000), headers, body,
-    });
-  } catch {
-    return studioFailure(sendingPhoto ? "transport_uncertain" : "transport_unavailable", 503, {
-      uncertain: sendingPhoto, retryable: !sendingPhoto,
-    });
-  }
-  let result;
-  try {
-    result = await boundedJson(response, STUDIO_RESPONSE_LIMIT);
-  } catch {
-    if (response.status === 429) {
-      return studioFailure("rate_limited", 429, { retryable: true, retryAfter: Number(response.headers.get("Retry-After") ?? undefined) });
+  const started = Date.now();
+  return await withDeadline(25000, async (signal) => {
+    let response;
+    try {
+      response = await fetch(`${TELEGRAM_API_BASE}/bot${env.TELEGRAM_BOT_TOKEN}/${payload.method}`, {
+        method: "POST", redirect: "manual", signal, headers, body,
+      });
+    } catch (error) {
+      if (payload.method === "getChat") {
+        const message = typeof error?.message === "string" ? error.message : "";
+        const name = ["Error", "TypeError", "AbortError", "TimeoutError"].includes(error?.name) ? error.name : "Error";
+        const kind = ["AbortError", "TimeoutError"].includes(name) ? "timeout"
+          : /redirect/i.test(message) ? "redirect_rejected"
+          : /AbortSignal|timeout.*function/i.test(message) ? "timeout_api_unavailable"
+          : name === "TypeError" ? "request_type_error" : "network_failure";
+        return jsonResponse({ ok: false, error: "transport_unavailable", retryable: true, uncertain: false,
+          diagnostic: { kind, exception: name, elapsed_ms: Date.now() - started } }, 503);
+      }
+      return studioFailure(sendingPhoto ? "transport_uncertain" : "transport_unavailable", 503, {
+        uncertain: sendingPhoto, retryable: !sendingPhoto,
+      });
     }
-    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
-  }
-  if (result && typeof result === "object" && result.ok === true && response.ok) {
-    const value = result.result;
-    const valid = sendingPhoto
-      ? value && Number.isSafeInteger(value.message_id) && value.message_id > 0 && String(value.chat?.id) === group
-      : payload.method === "deleteMessage" ? value === true : value === true || (value && typeof value === "object" && !Array.isArray(value));
-    if (!valid) return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
-    return jsonResponse({ ok: true, result: value });
-  }
-  if (!result || typeof result !== "object" || result.ok !== false) {
-    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
-  }
-  if (response.status !== 429 && (!Number.isInteger(result.error_code) || result.error_code < 400 || result.error_code > 599)) {
-    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
-  }
-  return studioApiFailure(result, response.status, payload.method);
+    let result;
+    try {
+      result = await boundedJson(response, STUDIO_RESPONSE_LIMIT);
+    } catch {
+      if (response.status === 429) {
+        return studioFailure("rate_limited", 429, { retryable: true, retryAfter: Number(response.headers.get("Retry-After") ?? undefined) });
+      }
+      return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+    }
+    if (result && typeof result === "object" && result.ok === true && response.ok) {
+      const value = result.result;
+      const checkingChat = payload.method === "getChat";
+      const valid = checkingChat
+        ? value && String(value.id) === group && ["group", "supergroup"].includes(value.type)
+        : sendingPhoto
+        ? value && Number.isSafeInteger(value.message_id) && value.message_id > 0 && String(value.chat?.id) === group
+        : payload.method === "deleteMessage" ? value === true : value === true || (value && typeof value === "object" && !Array.isArray(value));
+      if (!valid) return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+      // Diagnostics expose only the configured destination, never private invite links.
+      if (checkingChat) {
+        return jsonResponse({ ok: true, result: { id: value.id, type: value.type, title: value.title } });
+      }
+      return jsonResponse({ ok: true, result: value });
+    }
+    if (!result || typeof result !== "object" || result.ok !== false) {
+      return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+    }
+    if (response.status !== 429 && (!Number.isInteger(result.error_code) || result.error_code < 400 || result.error_code > 599)) {
+      return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+    }
+    return studioApiFailure(result, response.status, payload.method);
+  });
 }
 
 export default {

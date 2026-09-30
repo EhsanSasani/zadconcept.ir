@@ -43,6 +43,19 @@ class StudioTransportTests(SimpleTestCase):
             }).encode()),
         )
 
+    @override_settings(TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-5182713369")
+    def test_custom_destination_is_allowed_in_direct_and_relay_transport(self):
+        message = {**MESSAGE, "chat": {"id": -5182713369, "type": "group"}}
+        for relay in ("", "https://relay.example/"):
+            with self.subTest(relay=relay), override_settings(TELEGRAM_SAME_DAY_RELAY_URL=relay):
+                self.opener.open.return_value = Response({"ok": True, "result": message})
+                self.assertEqual(transport.send_photo(-5182713369, JPEG, "قیمت\nفاکتور"), message)
+                request = self.opener.open.call_args.args[0]
+                if relay:
+                    self.assertEqual(json.loads(request.data)["chat_id"], "-5182713369")
+                else:
+                    self.assertIn(b"-5182713369", request.data)
+
     def test_direct_photo_uses_multipart_bytes_and_plain_caption(self):
         result = transport.send_photo(int(GROUP), JPEG, "قیمت: ۲۵۰٬۰۰۰ تومان\nفاکتور: A23")
         self.assertEqual(result, MESSAGE)

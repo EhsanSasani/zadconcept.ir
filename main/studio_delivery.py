@@ -33,8 +33,7 @@ def product_caption(record):
 
 
 def delivery_summary(record):
-    if record.production_type == StudioProduct.ProductionType.CUSTOM:
-        return {"state": "internal", "label": "ثبت داخلی", "detail": "این سفارش در سایت عمومی و گروه آماده‌ها منتشر نمی‌شود."}
+    group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
     job = next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None)
     job = job or next((item for item in jobs if item.action == StudioDelivery.Action.PUBLISH), None)
@@ -45,15 +44,15 @@ def delivery_summary(record):
     if job.status == StudioDelivery.Status.FAILED:
         return {"state": "failed", "label": "تلگرام نیازمند رسیدگی", "detail": "محصول ذخیره شده است؛ مدیر مشکل ارسال تلگرام را بررسی می‌کند."}
     if job.status != StudioDelivery.Status.SENT:
-        label = "در صف خروج از گروه" if job.action == StudioDelivery.Action.RETIRE else "در صف ارسال به گروه آماده‌ها"
+        label = "در صف خروج از گروه" if job.action == StudioDelivery.Action.RETIRE else f"در صف ارسال به {group_label}"
         return {"state": "pending", "label": label, "detail": "ثبت محصول کامل است؛ ارسال به‌صورت خودکار پیگیری می‌شود."}
     if job.outcome == "caption_marked":
         return {"state": "sent", "label": "وضعیت در گروه درج شد", "detail": "حذف پیام ممکن نبود؛ کپشن پیام با وضعیت خروج به‌روز شد."}
     if job.action == StudioDelivery.Action.RETIRE:
-        return {"state": "sent", "label": "از گروه آماده‌ها خارج شد", "detail": "سابقهٔ محصول در پنل محفوظ است."}
+        return {"state": "sent", "label": f"از {group_label} خارج شد", "detail": "سابقهٔ محصول در پنل محفوظ است."}
     if job.outcome == "not_available":
         return {"state": "sent", "label": "ارسال لازم نبود", "detail": "پیش از ارسال به تلگرام، محصول از موجودی خارج شد."}
-    return {"state": "sent", "label": "به گروه آماده‌ها ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
+    return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
 
 
 def queue_retirement(record):
@@ -164,16 +163,17 @@ def _map_message(record, job, message_id, created_at, file_id=""):
     ).first() if record.product_id else None
     if other:
         raise ValidationError("این محصول قبلاً به پیام دیگری متصل است.")
-    post, _ = TelegramSameDayPost.objects.get_or_create(
-        telegram_chat_id=job.chat_id, telegram_message_id=message_id,
-    )
-    post.product_id, post.telegram_created_at = record.product_id, created_at
-    post.telegram_file_id, post.last_error = file_id, ""
-    post.sold_at, post.withdrawn_at = record.sold_at, record.withdrawn_at
-    # Portal metadata remains in the ledger; its two-line outbound caption must
-    # never go through the legacy four-field ingestion parser.
-    post.source_photo = {}
-    post.save()
+    if record.production_type == StudioProduct.ProductionType.DAILY:
+        post, _ = TelegramSameDayPost.objects.get_or_create(
+            telegram_chat_id=job.chat_id, telegram_message_id=message_id,
+        )
+        post.product_id, post.telegram_created_at = record.product_id, created_at
+        post.telegram_file_id, post.last_error = file_id, ""
+        post.sold_at, post.withdrawn_at = record.sold_at, record.withdrawn_at
+        # Portal metadata remains in the ledger; its two-line outbound caption must
+        # never go through the legacy four-field ingestion parser.
+        post.source_photo = {}
+        post.save()
     record.telegram_chat_id, record.telegram_message_id = job.chat_id, message_id
     record.telegram_file_id = file_id
     record.save(update_fields=["telegram_chat_id", "telegram_message_id", "telegram_file_id", "updated_at"])

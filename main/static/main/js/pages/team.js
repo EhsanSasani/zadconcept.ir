@@ -206,7 +206,7 @@
   function updateCopy() {
     const custom = form.elements.production_type.value === "CUSTOM";
     $("[data-publish-copy]").textContent = custom
-      ? "این سفارش در کارنامه فلوریست انتخاب‌شده می‌ماند و در سایت منتشر نمی‌شود."
+      ? "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود."
       : "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
     if (!submitting)
       submitLabel.textContent = custom
