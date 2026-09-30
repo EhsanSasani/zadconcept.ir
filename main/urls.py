@@ -14,6 +14,7 @@ urlpatterns = [
     path("studio/products/add/", studio_views.product_add, name="studio_product_add"),
     path("studio/products/<int:pk>/edit/", studio_views.product_edit, name="studio_product_edit"),
     path("studio/products/<int:pk>/status/", studio_views.product_status, name="studio_product_status"),
+    path("studio/products/<int:pk>/delete/", studio_views.product_delete, name="studio_product_delete"),
     path("studio/florists/", studio_views.florists, name="studio_florists"),
     path("studio/florists/add/", studio_views.florist_add, name="studio_florist_add"),
     path("studio/florists/<int:pk>/edit/", studio_views.florist_edit, name="studio_florist_edit"),

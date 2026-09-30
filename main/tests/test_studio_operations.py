@@ -274,6 +274,44 @@ class StudioIntegrationTests(TestCase):
         self.assertIsNotNone(record.sold_at)
         self.assertEqual(self.client.get(reverse("studio_product_edit", args=[record.pk])).status_code, 403)
 
+    def test_manager_soft_delete_preserves_audit_and_removes_florist_performance(self):
+        manager = get_user_model().objects.create_superuser(username="delete-manager", password="pass")
+        self.client.force_login(manager)
+        record = StudioProduct.objects.create(
+            florist=self.florist, created_by=manager, factor_code="DELETE-1",
+            product_type=StudioProduct.ProductType.BOX,
+            production_type=StudioProduct.ProductionType.CUSTOM,
+            price=2400000, image=image_file(), source=StudioProduct.Source.DASHBOARD,
+            produced_at=timezone.now(),
+        )
+        self.client.get(reverse("studio_products"))
+        csrf = {"HTTP_X_CSRFTOKEN": self.client.cookies["csrftoken"].value}
+        response = self.client.post(
+            reverse("studio_product_delete", args=[record.pk]),
+            {"reason": "ثبت اشتباه محصول"}, **csrf,
+        )
+        self.assertEqual(response.status_code, 302)
+        record.refresh_from_db()
+        self.assertEqual(record.status, StudioProduct.Status.DELETED)
+        self.assertEqual(record.deleted_by, manager)
+        self.assertIsNotNone(record.deleted_at)
+        self.assertEqual(record.deletion_reason, "ثبت اشتباه محصول")
+        self.assertTrue(StudioProduct.objects.filter(pk=record.pk).exists())
+        profile = self.client.get(reverse("studio_florist_profile", args=[self.florist.pk]))
+        self.assertEqual(profile.context["stats"]["produced"], 0)
+        self.assertNotContains(profile, "DELETE-1")
+        ledger = self.client.get(reverse("studio_products"), {"q": "DELETE-1"})
+        self.assertEqual(ledger.context["page"].paginator.count, 1)
+        self.assertContains(ledger, "ثبت اشتباه محصول")
+
+    def test_soft_delete_requires_delete_permission(self):
+        user = get_user_model().objects.create_user(username="florist-delete-denied", password="pass")
+        self.client.force_login(user)
+        self.assertEqual(
+            self.client.post(reverse("studio_product_delete", args=[999]), {"reason": "اشتباه"}).status_code,
+            403,
+        )
+
     def test_available_daily_dashboard_product_is_public_and_queued_for_ready_group(self):
         user = get_user_model().objects.create_superuser(username="daily-manager", password="pass")
         self.client.force_login(user)
