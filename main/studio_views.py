@@ -376,13 +376,21 @@ def product_add(request):
             record.withdrawn_at = timezone.now()
         elif record.status == StudioProduct.Status.CANCELLED:
             record.notes = (record.notes + "\nلغو در زمان ثبت دستی").strip()
-        record.full_clean()
-        record.save()
-        messages.success(request, "محصول در دفتر تولید ثبت شد.")
-        return redirect("studio_products")
+        from .studio_publishing import save_dashboard_record
+        try:
+            save_dashboard_record(record)
+        except ValidationError as error:
+            form.add_error(None, " ".join(error.messages))
+        else:
+            if (record.production_type == StudioProduct.ProductionType.DAILY
+                    and record.status == StudioProduct.Status.AVAILABLE):
+                messages.success(request, "محصول ثبت شد و در صف انتشار سایت و گروه آماده‌ها قرار گرفت.")
+            else:
+                messages.success(request, "محصول در دفتر تولید ثبت شد.")
+            return redirect("studio_products")
     return render(request, "main/studio/form.html", {
         **_base(request, "add"), "form": form, "title": "ثبت محصول", "submit_label": "ثبت محصول",
-        "help_text": "ثبت دستی فقط در دفتر تولید انجام می‌شود؛ محصول سفارشی در سایت منتشر نمی‌شود."})
+        "help_text": "محصول روزانهٔ موجود در سایت و گروه آماده‌ها منتشر می‌شود؛ محصول سفارشی فقط در دفتر تولید می‌ماند."})
 
 
 @never_cache
@@ -410,7 +418,7 @@ def product_edit(request, pk):
 def product_status(request, pk):
     _access(request, "change_studioproduct")
     record = get_object_or_404(StudioProduct, pk=pk)
-    if record.source == StudioProduct.Source.PORTAL:
+    if record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists():
         from .studio_delivery import set_portal_status
         try:
             set_portal_status(record, request.POST.get("status"), actor=request.user)

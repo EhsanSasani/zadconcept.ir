@@ -58,6 +58,45 @@ def _clean_failed_file(record):
         logger.error("portal image rollback cleanup needs review")
 
 
+def _create_daily_projection(record, category, group_id, *, slug):
+    """Create the public same-day row and one durable Telegram outbox job."""
+    product = Product.objects.create(
+        name=record.get_product_type_display(), slug=slug,
+        category=category, catalog_scope=Product.CatalogScope.SAME_DAY,
+        pricing_type=Product.PricingType.FIXED, price=record.price,
+        cover_image=record.image.name, publish_status=Product.PublishStatus.PUBLISHED,
+        status=Product.Status.AVAILABLE, stock_status=Product.StockStatus.IN_STOCK,
+    )
+    record.product = product
+    record.save(update_fields=["product", "updated_at"])
+    storage, name = record.image.storage, record.image.name
+    transaction.on_commit(lambda: create_responsive_image_variants(storage, name))
+    StudioDelivery.objects.create(
+        record=record, action=StudioDelivery.Action.PUBLISH, chat_id=group_id,
+    )
+
+
+def save_dashboard_record(record):
+    """Persist a manager entry; available daily stock follows the portal pipeline."""
+    if record.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}:
+        raise ValidationError("منبع ثبت مدیریتی معتبر نیست.")
+    publish_daily = (record.production_type == StudioProduct.ProductionType.DAILY
+                     and record.status == StudioProduct.Status.AVAILABLE)
+    category, group_id = _daily_configuration() if publish_daily else (None, None)
+    try:
+        with transaction.atomic():
+            record.full_clean()
+            record.save()
+            if publish_daily:
+                _create_daily_projection(
+                    record, category, group_id, slug=f"studio-dashboard-{record.pk}",
+                )
+    except Exception:
+        _clean_failed_file(record)
+        raise
+    return record
+
+
 def create_portal_record(*, user, florist, image, factor_code, product_type,
                          production_type, price, submission_key, notes=""):
     """Return (record, created); a repeated key never republishes or reuploads."""
@@ -129,19 +168,10 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
             if daily:
                 # The public projection shares the normalized stored file. Neither
                 # the invoice, author, nor private notes enter its public fields.
-                product = Product.objects.create(
-                    name=record.get_product_type_display(), slug=f"studio-{key.hex}",
-                    category=category, catalog_scope=Product.CatalogScope.SAME_DAY,
-                    pricing_type=Product.PricingType.FIXED, price=amount,
-                    cover_image=record.image.name, publish_status=Product.PublishStatus.PUBLISHED,
-                    status=Product.Status.AVAILABLE, stock_status=Product.StockStatus.IN_STOCK,
-                )
-                record.product = product
-                record.save(update_fields=["product", "updated_at"])
-                storage, name = record.image.storage, record.image.name
-                transaction.on_commit(lambda: create_responsive_image_variants(storage, name))
-            StudioDelivery.objects.create(record=record, action=StudioDelivery.Action.PUBLISH,
-                                          chat_id=group_id)
+                _create_daily_projection(record, category, group_id, slug=f"studio-{key.hex}")
+            else:
+                StudioDelivery.objects.create(record=record, action=StudioDelivery.Action.PUBLISH,
+                                              chat_id=group_id)
     except IntegrityError:
         _clean_failed_file(record)
         # A concurrent retry may win the unique key while this request waited.

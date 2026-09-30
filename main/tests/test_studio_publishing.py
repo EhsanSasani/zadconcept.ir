@@ -15,7 +15,7 @@ from main.studio_delivery import (
     claim_delivery, delivery_summary, process_next_delivery, product_caption,
     reconcile_delivery, retry_delivery, retry_uncertain_delivery, set_portal_status,
 )
-from main.studio_publishing import create_portal_record
+from main.studio_publishing import create_portal_record, save_dashboard_record
 from main.studio_transport import TelegramDeliveryError
 from main.telegram_same_day.service import SyncConfigurationError, process_update
 from .test_telegram_same_day import image_file
@@ -79,6 +79,37 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(record.created_by, self.user)
         self.assertEqual(record.deliveries.get().status, "PENDING")
         self.send.assert_not_called()
+
+    def test_dashboard_daily_product_uses_same_publish_and_retirement_pipeline(self):
+        record = StudioProduct(
+            florist=self.florist, created_by=self.manager, factor_code="DASH-100",
+            product_type=StudioProduct.ProductType.BOUQUET,
+            production_type=StudioProduct.ProductionType.DAILY,
+            price=2500000, image=image_file(), source=StudioProduct.Source.DASHBOARD,
+        )
+        save_dashboard_record(record)
+        self.assertTrue(Product.objects.for_same_day().published().filter(pk=record.product_id).exists())
+        self.assertEqual(record.deliveries.get(action="PUBLISH").chat_id, GROUP)
+        self.assertEqual(process_next_delivery().outcome, "published")
+        record.refresh_from_db()
+        result = process_update("message", self.sold_reply(record), 930)
+        self.assertEqual(result["result"], "sold")
+        record.refresh_from_db()
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
+        self.assertEqual(process_next_delivery().outcome, "deleted")
+        self.delete.assert_called_once_with(GROUP, 812)
+
+    def test_non_available_dashboard_daily_product_stays_in_ledger_only(self):
+        record = StudioProduct(
+            florist=self.florist, created_by=self.manager, factor_code="DASH-HISTORY-1",
+            product_type=StudioProduct.ProductType.BOX,
+            production_type=StudioProduct.ProductionType.DAILY,
+            price=2500000, image=image_file(), source=StudioProduct.Source.DASHBOARD,
+            status=StudioProduct.Status.SOLD, sold_at=timezone.now(),
+        )
+        save_dashboard_record(record)
+        self.assertIsNone(record.product_id)
+        self.assertFalse(record.deliveries.exists())
 
     def test_custom_queues_its_own_group_without_daily_configuration(self):
         with override_settings(TELEGRAM_SAME_DAY_CATEGORY_ID="", TELEGRAM_SAME_DAY_GROUP_ID=""):

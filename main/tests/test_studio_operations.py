@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
-from main.models import Category, Florist, Product, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
+from main.models import Category, Florist, Product, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 from main.studio_ingestion import StudioInputError, parse_caption
 from .test_telegram_same_day import GROUP, channel_post, image_file, sold_comment
 
@@ -273,3 +273,23 @@ class StudioIntegrationTests(TestCase):
         self.assertEqual(record.status, "SOLD")
         self.assertIsNotNone(record.sold_at)
         self.assertEqual(self.client.get(reverse("studio_product_edit", args=[record.pk])).status_code, 403)
+
+    def test_available_daily_dashboard_product_is_public_and_queued_for_ready_group(self):
+        user = get_user_model().objects.create_superuser(username="daily-manager", password="pass")
+        self.client.force_login(user)
+        self.client.get(reverse("studio_product_add"))
+        csrf = {"HTTP_X_CSRFTOKEN": self.client.cookies["csrftoken"].value}
+        response = self.client.post(reverse("studio_product_add"), {
+            "image": image_file(), "florist": self.florist.pk, "factor_code": "DASH-DAILY-1",
+            "product_type": "bouquet", "production_type": "DAILY", "price": "2500000",
+            "status": "AVAILABLE", "notes": "ثبت مدیر",
+        }, **csrf)
+        self.assertEqual(response.status_code, 302)
+        record = StudioProduct.objects.select_related("product").get(factor_code="DASH-DAILY-1")
+        self.assertEqual(record.source, StudioProduct.Source.DASHBOARD)
+        self.assertEqual(record.product.catalog_scope, Product.CatalogScope.SAME_DAY)
+        self.assertEqual(record.product.status, Product.Status.AVAILABLE)
+        self.assertEqual(record.product.price, 2500000)
+        delivery = record.deliveries.get(action=StudioDelivery.Action.PUBLISH)
+        self.assertEqual(delivery.status, StudioDelivery.Status.PENDING)
+        self.assertEqual(delivery.chat_id, GROUP)

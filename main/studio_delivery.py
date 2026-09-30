@@ -56,11 +56,13 @@ def delivery_summary(record):
 
 
 def queue_retirement(record):
-    """Call in the status transaction. Only messages emitted by this portal retire."""
-    if (record.source != StudioProduct.Source.PORTAL or record.status == StudioProduct.Status.AVAILABLE
+    """Call in the status transaction. Only messages emitted by our outbox retire."""
+    if (record.status == StudioProduct.Status.AVAILABLE
             or not record.telegram_chat_id or not record.telegram_message_id):
         return None
     published = record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).first()
+    if not published:
+        return None
     job, created = StudioDelivery.objects.get_or_create(
         record=record, action=StudioDelivery.Action.RETIRE,
         defaults={"chat_id": record.telegram_chat_id, "message_id": record.telegram_message_id,
@@ -82,8 +84,8 @@ def set_portal_status(record, status, *, actor):
         raise ValidationError("وضعیت خروج معتبر نیست.")
     with transaction.atomic():
         record = _lock_record(record.pk)
-        if record.source != StudioProduct.Source.PORTAL:
-            raise ValidationError("این عملیات مخصوص محصول ثبت‌شده در پنل است.")
+        if not record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists():
+            raise ValidationError("برای این محصول پیام خروجی تلگرام ثبت نشده است.")
         if record.status == status:
             queue_retirement(record)
             return record

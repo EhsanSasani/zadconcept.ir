@@ -33,7 +33,8 @@ def _lock_post(post):
     # Portal completions and manager/admin status changes serialize on Product
     # before locking their ledger/post rows. Preserve that order for replies.
     if post.product_id and StudioProduct.objects.filter(
-        product_id=post.product_id, source=StudioProduct.Source.PORTAL,
+        product_id=post.product_id,
+        source__in=[StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN],
     ).exists():
         Product.objects.select_for_update().filter(pk=post.product_id).first()
     # Do not join the nullable Product FK: PostgreSQL cannot lock its outer join.
@@ -65,7 +66,8 @@ def _record_failure(post, reason, event="price parsing failed"):
 def _sync_product(message, update_id, stored_files, *, direct_group=False):
     post = _post(message["chat"]["id"], message["message_id"])
     if post.product_id and StudioProduct.objects.filter(
-        product_id=post.product_id, source=StudioProduct.Source.PORTAL,
+        product_id=post.product_id,
+        source__in=[StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN],
     ).exists():
         return "portal_echo_ignored"
     if post.deleted_at:

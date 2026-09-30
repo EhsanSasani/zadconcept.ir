@@ -119,7 +119,9 @@ def sync_group(message, update_id, stored_files):
         return {"result": "price_updated",
                 "feedback": f"قیمت به‌روزرسانی شد{factor}\nقیمت جدید: {price:,.0f} تومان",
                 "reply_to_message_id": message["message_id"]}
-    if record and record.source == StudioProduct.Source.PORTAL:
+    if record and record.source in {
+        StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN,
+    }:
         return "portal_reply_ignored"
     text = message.get("text", "")
     try:
