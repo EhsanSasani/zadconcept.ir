@@ -40,6 +40,8 @@ class TelegramLeadNotificationTests(TestCase):
     @override_settings(
         TELEGRAM_LEAD_BOT_TOKEN="test-token",
         TELEGRAM_LEAD_CHAT_ID="6675854773",
+        TELEGRAM_LEAD_RELAY_URL="",
+        TELEGRAM_LEAD_RELAY_SECRET="",
         TELEGRAM_LEAD_TIMEOUT_SECONDS=2,
     )
     @patch("main.telegram_notifications.urlopen")
@@ -59,6 +61,8 @@ class TelegramLeadNotificationTests(TestCase):
     @override_settings(
         TELEGRAM_LEAD_BOT_TOKEN="test-token",
         TELEGRAM_LEAD_CHAT_ID="6675854773",
+        TELEGRAM_LEAD_RELAY_URL="",
+        TELEGRAM_LEAD_RELAY_SECRET="",
         TELEGRAM_LEAD_TIMEOUT_SECONDS=2,
     )
     @patch("main.telegram_notifications.urlopen", side_effect=URLError("offline"))

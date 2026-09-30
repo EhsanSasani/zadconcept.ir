@@ -33,6 +33,9 @@ class Command(BaseCommand):
                 raise CommandError("TELEGRAM_DISCUSSION_GROUP_ID must be a distinct negative group ID.")
             if direct and direct in (channel, group):
                 raise CommandError("Direct product group must be distinct from channel/discussion IDs.")
+            custom = str(settings.TELEGRAM_STUDIO_CUSTOM_GROUP_ID)
+            if custom and (not re.fullmatch(r"-[0-9]+", custom) or custom in (channel, group, direct)):
+                raise CommandError("TELEGRAM_STUDIO_CUSTOM_GROUP_ID must be a distinct negative group ID.")
         if action == "check":
             try:
                 category = _category()

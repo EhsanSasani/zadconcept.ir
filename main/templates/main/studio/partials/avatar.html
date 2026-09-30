@@ -1,0 +1,1 @@
+<span class="avatar {{ avatar_class }}">{% if florist.photo %}<img src="{{ florist.photo.url }}" alt="" width="80" height="80" loading="lazy">{% else %}<span>{{ florist.name|slice:':1' }}</span>{% endif %}</span>

@@ -1,0 +1,6 @@
+{% load studio_ui %}
+{% if page.paginator.num_pages > 1 %}<nav class="pagination" aria-label="صفحه‌بندی">
+  {% if page.has_previous %}<a class="btn btn-outline" data-page-link href="{% studio_query page=page.previous_page_number %}">صفحه قبل</a>{% endif %}
+  <span>صفحه <b>{{ page.number|fa_number }}</b> از {{ page.paginator.num_pages|fa_number }} <small>· {{ page.paginator.count|fa_number }} محصول</small></span>
+  {% if page.has_next %}<a class="btn btn-outline" data-page-link href="{% studio_query page=page.next_page_number %}">صفحه بعد</a>{% endif %}
+</nav>{% endif %}

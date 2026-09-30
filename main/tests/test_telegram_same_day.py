@@ -13,7 +13,7 @@ from PIL import Image
 
 from main.models import Category, Product, SameDayFlower, TelegramBotUser, TelegramDiscussionMessage, TelegramSameDayPost
 from main.telegram_same_day.client import TelegramTransportError, download_photo
-from main.telegram_same_day.price import PriceError, parse_price
+from main.telegram_same_day.price import PriceError, parse_price, parse_price_command
 
 CHANNEL = -10012345
 GROUP = -10054321
@@ -61,6 +61,14 @@ def image_file(*args):
 
 
 class PriceParserTests(SimpleTestCase):
+    def test_price_command_requires_explicit_label(self):
+        for text in ("قیمت: 2500000", "قیمت : ۲٬۵۰۰٬۰۰۰", "قیمت=2.5 میلیون"):
+            with self.subTest(text=text):
+                self.assertEqual(parse_price_command(text), 2500000)
+        for text in ("2500000", "مبلغ: 2500000", "فاکتور 2500000"):
+            with self.subTest(text=text), self.assertRaises(PriceError):
+                parse_price_command(text)
+
     def test_supported_prices(self):
         for caption in ("۲,۸۵۰,۰۰۰", "2,850,000", "۲/۸۵۰/۰۰۰", "قیمت ۲۸۵۰۰۰۰",
                         "قیمت: ۲,۸۵۰,۰۰۰ تومان", "قیمت: ٢٬٨٥٠٬٠٠٠ تومان",

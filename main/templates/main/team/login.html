@@ -1,0 +1,17 @@
+{% extends 'main/team/base.html' %}
+{% block title %}ورود به فضای تیم{% endblock %}
+{% block content %}
+<div class="login-layout">
+  <section class="login-story" aria-label="فضای تیم زاد"><a class="brand" href="{% url 'studio_login' %}" aria-label="زاد"><span class="brand-word" dir="ltr">ZAD<span class="brand-dot"></span></span><span class="brand-caption">FLOWER STUDIO</span></a><div class="login-story-main"><span class="eyebrow">یک فضای کوچک برای کارهای بزرگ</span><h1>گل از شما.<br>ادامه‌اش با زاد.</h1><p>عکس بگیرید، محصولتان را ثبت کنید<br>و کارهای روزتان را یک‌جا ببینید.</p><svg class="login-flower" aria-hidden="true"><use href="#t-flower"/></svg></div><small>فضای اختصاصی تیم و مدیریت زاد</small></section>
+  <section class="login-panel"><div class="login-mobile-brand" dir="ltr">ZAD<span></span></div><span class="eyebrow">خوش آمدید</span><h2>وارد فضای خودتان شوید</h2><p class="muted">با نام کاربری و رمزی که دریافت کرده‌اید.</p>
+    <form method="post" class="stack-form" data-login-form>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+      {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="field"><label for="{{ form.username.id_for_label }}">نام کاربری</label>{{ form.username }}{% include 'main/team/partials/field_errors.html' with field=form.username %}</div>
+      <div class="field"><label for="{{ form.password.id_for_label }}">رمز عبور</label><div class="password-wrap">{{ form.password }}<button class="icon-button password-toggle js-only" type="button" data-password-toggle aria-label="نمایش رمز عبور" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#t-eye"/></svg></button></div>{% include 'main/team/partials/field_errors.html' with field=form.password %}</div>
+      <label class="checkbox-line"><input type="checkbox" name="remember" value="1"{% if request.POST.remember %} checked{% endif %}> در این دستگاه وارد بمانم</label>
+      <button class="button button-primary button-full" type="submit">ورود <svg class="icon" aria-hidden="true"><use href="#t-arrow"/></svg></button>
+    </form>
+    <p class="login-help">حساب یا رمز عبور ندارید؟<br>از مدیر استودیو بخواهید آن را برایتان آماده کند.</p>
+  </section>
+</div>
+{% endblock %}
