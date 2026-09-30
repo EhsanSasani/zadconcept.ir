@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="ZAD Studio">
+  <rect width="512" height="512" rx="112" fill="#f5f4f0"/>
+  <rect x="24" y="24" width="464" height="464" rx="94" fill="none" stroke="#d4decd" stroke-width="3"/>
+  <g fill="none" stroke="#6e8b70" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M256 210v-52m0 41c-28 0-49-20-49-43 26 0 49 14 49 43m0-18c23 0 40-15 40-34-23 0-40 13-40 34"/>
+  </g>
+  <g fill="#d4a18e">
+    <ellipse cx="256" cy="119" rx="13" ry="24"/>
+    <ellipse cx="256" cy="119" rx="13" ry="24" transform="rotate(60 256 139)"/>
+    <ellipse cx="256" cy="119" rx="13" ry="24" transform="rotate(120 256 139)"/>
+    <ellipse cx="256" cy="119" rx="13" ry="24" transform="rotate(180 256 139)"/>
+    <ellipse cx="256" cy="119" rx="13" ry="24" transform="rotate(240 256 139)"/>
+    <ellipse cx="256" cy="119" rx="13" ry="24" transform="rotate(300 256 139)"/>
+  </g>
+  <circle cx="256" cy="139" r="10" fill="#f5f4f0"/>
+  <g fill="#355847"><path d="M92 0V72L1022 1370H250V1147H127V1493H1307V1421L377 123H1221V332H1343V0Z" transform="translate(122.438 336) scale(0.060547 -0.060547)"/><path d="M410 541H958L684 1251ZM-12 0V106H119L651 1493H819L1352 106H1499V0H956V106H1122L997 434H369L244 106H408V0Z" transform="translate(204.596 336) scale(0.060547 -0.060547)"/><path d="M506 106H692Q983 106 1138.5 272.0Q1294 438 1294 748Q1294 1058 1139.0 1222.0Q984 1386 692 1386H506ZM113 0V106H303V1386H113V1493H707Q1093 1493 1308.5 1296.0Q1524 1099 1524 748Q1524 396 1308.0 198.0Q1092 0 707 0Z" transform="translate(290.145 336) scale(0.060547 -0.060547)"/></g>
+  <circle cx="256" cy="387" r="7" fill="#b5806e"/>
+</svg>

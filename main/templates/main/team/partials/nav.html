@@ -1,0 +1,5 @@
+<a href="{% url 'team_home' %}"{% if active == 'home' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#t-home"/></svg><span>خانه</span></a>
+<a href="{% url 'team_products' %}"{% if active == 'products' or active == 'detail' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#t-grid"/></svg><span>کارهای من</span></a>
+<a href="{% url 'team_product_add' %}" class="nav-add{% if active == 'add' %} active{% endif %}"{% if active == 'add' %} aria-current="page"{% endif %}><span class="nav-add-icon"><svg class="icon" aria-hidden="true"><use href="#t-plus"/></svg></span><span>ثبت محصول</span></a>
+<a href="{% url 'team_colleagues' %}"{% if active == 'colleagues' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#t-users"/></svg><span>تیم زاد</span></a>
+<a href="{% url 'team_profile' %}"{% if active == 'profile' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#t-user"/></svg><span>پروفایل</span></a>

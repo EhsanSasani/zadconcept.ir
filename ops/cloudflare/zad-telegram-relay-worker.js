@@ -346,9 +346,182 @@ async function handleSameDayFile(request, env) {
   }
 }
 
+// Studio delivery has a separate, deliberately narrow envelope. It never
+// accepts a URL, file_id, bot token, arbitrary API method or arbitrary group.
+const STUDIO_PHOTO_LIMIT = 10000000;
+const STUDIO_REQUEST_LIMIT = Math.ceil(STUDIO_PHOTO_LIMIT / 3) * 4 + 8192;
+const STUDIO_RESPONSE_LIMIT = 65536;
+const STUDIO_METHOD_FIELDS = {
+  sendPhoto: ["method", "chat_id", "caption", "photo_base64"],
+  deleteMessage: ["method", "chat_id", "message_id"],
+  editMessageCaption: ["method", "chat_id", "message_id", "caption"],
+};
+
+function studioFailure(error, status, { retryable = false, uncertain = false, retryAfter } = {}) {
+  const payload = { ok: false, error, retryable: retryable && !uncertain, uncertain };
+  if (Number.isFinite(retryAfter)) payload.retry_after = Math.min(Math.max(Math.floor(retryAfter), 1), 86400);
+  return jsonResponse(payload, status);
+}
+
+async function boundedJson(body, limit) {
+  const declared = Number(body.headers.get("Content-Length"));
+  if (Number.isFinite(declared) && declared > limit) throw new Error("body_too_large");
+  if (!body.body) throw new Error("invalid_body");
+  const reader = body.body.getReader();
+  const chunks = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > limit) {
+        await reader.cancel();
+        throw new Error("body_too_large");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const data = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    data.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data));
+}
+
+function studioPhoto(encoded) {
+  if (typeof encoded !== "string" || !encoded.length || encoded.length % 4 !== 0 ||
+      encoded.length > Math.ceil(STUDIO_PHOTO_LIMIT / 3) * 4 || /[^A-Za-z0-9+/=]/.test(encoded)) return null;
+  const padding = encoded.indexOf("=");
+  if (padding !== -1 && (padding < encoded.length - 2 || !/^={1,2}$/.test(encoded.slice(padding)))) return null;
+  let binary;
+  try { binary = atob(encoded); } catch { return null; }
+  if (binary.length < 5 || binary.length > STUDIO_PHOTO_LIMIT ||
+      binary.charCodeAt(0) !== 255 || binary.charCodeAt(1) !== 216 || binary.charCodeAt(2) !== 255 ||
+      binary.charCodeAt(binary.length - 2) !== 255 || binary.charCodeAt(binary.length - 1) !== 217) return null;
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+function studioApiFailure(result, status, method) {
+  const code = Number.isInteger(result.error_code) ? result.error_code : status;
+  const description = typeof result.description === "string" ? result.description.toLowerCase() : "";
+  if (code === 429 || status === 429) {
+    return studioFailure("rate_limited", 429, { retryable: true, retryAfter: Number(result.parameters?.retry_after) });
+  }
+  if (code === 401) return studioFailure("telegram_unauthorized", 502);
+  if (code === 403) return studioFailure("telegram_forbidden", 403);
+  if (code === 400) {
+    if (description.includes("message to delete not found") || description.includes("message to edit not found")) {
+      return method === "deleteMessage" ? jsonResponse({ ok: true, result: true }) : studioFailure("message_not_found", 400);
+    }
+    if (description.includes("message is not modified")) {
+      return method === "editMessageCaption" ? jsonResponse({ ok: true, result: true }) : studioFailure("message_not_modified", 400);
+    }
+    if (description.includes("message can't be deleted") || description.includes("message cannot be deleted")) {
+      return studioFailure("message_cannot_be_deleted", 400);
+    }
+    return studioFailure("telegram_bad_request", 400);
+  }
+  if (code >= 500 && code <= 599) return studioFailure("telegram_server_error", 502, { retryable: true });
+  return studioFailure("telegram_bad_request", 400);
+}
+
+async function handleStudioDelivery(request, env) {
+  if (!env.RELAY_SECRET || request.headers.get("Authorization") !== `Bearer ${env.RELAY_SECRET}`) {
+    return studioFailure("relay_unauthorized", 401);
+  }
+  const group = String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? "").trim();
+  if (!/^-?[1-9][0-9]{0,19}$/.test(group) || !group.startsWith("-") ||
+      typeof env.TELEGRAM_BOT_TOKEN !== "string" || !/^[A-Za-z0-9:_-]{1,256}$/.test(env.TELEGRAM_BOT_TOKEN)) {
+    return studioFailure("configuration_error", 503);
+  }
+  if (!(request.headers.get("Content-Type") ?? "").toLowerCase().startsWith("application/json")) {
+    return studioFailure("invalid_payload", 400);
+  }
+  let payload;
+  try {
+    payload = await boundedJson(request, STUDIO_REQUEST_LIMIT);
+  } catch (error) {
+    return studioFailure("invalid_payload", error?.message === "body_too_large" ? 413 : 400);
+  }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+      typeof payload.method !== "string" ||
+      !Object.prototype.hasOwnProperty.call(STUDIO_METHOD_FIELDS, payload.method)) {
+    return studioFailure("invalid_payload", 400);
+  }
+  const fields = STUDIO_METHOD_FIELDS[payload.method];
+  if (Object.keys(payload).length !== fields.length || Object.keys(payload).some((key) => !fields.includes(key)) ||
+      !(typeof payload.chat_id === "string" || Number.isSafeInteger(payload.chat_id)) ||
+      String(payload.chat_id) !== group ||
+      (fields.includes("message_id") && (!Number.isSafeInteger(payload.message_id) || payload.message_id < 1)) ||
+      (fields.includes("caption") && (typeof payload.caption !== "string" || !payload.caption.trim() || payload.caption.length > 1024))) {
+    return studioFailure("invalid_payload", 400);
+  }
+  const sendingPhoto = payload.method === "sendPhoto";
+  let body;
+  const headers = {};
+  if (sendingPhoto) {
+    const photo = studioPhoto(payload.photo_base64);
+    if (!photo) return studioFailure("invalid_payload", 400);
+    body = new FormData();
+    body.set("chat_id", group);
+    body.set("caption", payload.caption);
+    body.set("photo", new Blob([photo], { type: "image/jpeg" }), "product.jpg");
+  } else {
+    const { method, ...apiPayload } = payload;
+    apiPayload.chat_id = group;
+    body = JSON.stringify(apiPayload);
+    headers["Content-Type"] = "application/json";
+  }
+  let response;
+  try {
+    response = await fetch(`${TELEGRAM_API_BASE}/bot${env.TELEGRAM_BOT_TOKEN}/${payload.method}`, {
+      method: "POST", redirect: "error", signal: AbortSignal.timeout(25000), headers, body,
+    });
+  } catch {
+    return studioFailure(sendingPhoto ? "transport_uncertain" : "transport_unavailable", 503, {
+      uncertain: sendingPhoto, retryable: !sendingPhoto,
+    });
+  }
+  let result;
+  try {
+    result = await boundedJson(response, STUDIO_RESPONSE_LIMIT);
+  } catch {
+    if (response.status === 429) {
+      return studioFailure("rate_limited", 429, { retryable: true, retryAfter: Number(response.headers.get("Retry-After") ?? undefined) });
+    }
+    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+  }
+  if (result && typeof result === "object" && result.ok === true && response.ok) {
+    const value = result.result;
+    const valid = sendingPhoto
+      ? value && Number.isSafeInteger(value.message_id) && value.message_id > 0 && String(value.chat?.id) === group
+      : payload.method === "deleteMessage" ? value === true : value === true || (value && typeof value === "object" && !Array.isArray(value));
+    if (!valid) return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+    return jsonResponse({ ok: true, result: value });
+  }
+  if (!result || typeof result !== "object" || result.ok !== false) {
+    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+  }
+  if (response.status !== 429 && (!Number.isInteger(result.error_code) || result.error_code < 400 || result.error_code > 599)) {
+    return studioFailure("invalid_response", 502, { uncertain: sendingPhoto, retryable: !sendingPhoto });
+  }
+  return studioApiFailure(result, response.status, payload.method);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/studio-delivery") {
+      return request.method === "POST" ? handleStudioDelivery(request, env) : studioFailure("invalid_payload", 405);
+    }
 
     if (request.method === "GET") {
       return jsonResponse({ ok: true, service: "zad-telegram-relay" });

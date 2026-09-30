@@ -148,6 +148,9 @@ def remember_deleted_telegram_product(sender, instance, using, **kwargs):
                 record.status = StudioProduct.Status.CANCELLED
             record.notes = (record.notes + "\nحذف از کاتالوگ ارسال روز").strip()
             record.save(update_fields=["image", "status", "notes", "updated_at"])
+            if record.source == StudioProduct.Source.PORTAL:
+                from .studio_delivery import queue_retirement
+                queue_retirement(record)
         from .models import TelegramSameDayPost
         TelegramSameDayPost.objects.using(using).filter(product_id=instance.pk).update(
             deleted_at=timezone.now(), source_photo={}, last_error="admin_deleted",
@@ -171,3 +174,7 @@ def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwa
     elif instance.status == Product.Status.WITHDRAWN and record.status == StudioProduct.Status.AVAILABLE:
         changes.update(status=StudioProduct.Status.WITHDRAWN, withdrawn_at=timezone.now())
     StudioProduct.objects.using(using).filter(pk=record.pk).update(**changes)
+    if record.source == StudioProduct.Source.PORTAL and "status" in changes:
+        from .studio_delivery import queue_retirement
+        record.refresh_from_db(using=using)
+        queue_retirement(record)

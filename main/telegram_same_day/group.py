@@ -3,9 +3,9 @@ import logging
 
 from django.conf import settings
 
-from ..models import TelegramDiscussionMessage, TelegramSameDayPost
+from ..models import StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
 from .price import PriceError, parse_group_price
-from .service import InvalidSource, _is_sold, _is_withdrawn, _link, _post, _sell, _sync_product
+from .service import InvalidSource, SyncConfigurationError, _is_sold, _is_withdrawn, _link, _lock_post, _post, _sell, _sync_product
 
 logger = logging.getLogger("main.telegram_same_day")
 
@@ -26,6 +26,10 @@ def _group_member(message):
 def sync_group(message, update_id, stored_files):
     if not (message.get("photo") or message.get("reply_to_message")):
         return "ignored"
+    if (message.get("from", {}).get("is_bot") and StudioProduct.objects.filter(
+            source=StudioProduct.Source.PORTAL, telegram_chat_id=message["chat"]["id"],
+            telegram_message_id=message["message_id"]).exists()):
+        return "portal_echo_ignored"
     if not _group_member(message):
         raise InvalidSource("unauthorized_group_operator")
     if message.get("photo"):
@@ -36,9 +40,11 @@ def sync_group(message, update_id, stored_files):
     chat_id = message["chat"]["id"]
     if reply["chat"]["id"] != chat_id:
         raise InvalidSource("foreign_reply")
-    post = TelegramSameDayPost.objects.select_for_update().filter(
+    post = TelegramSameDayPost.objects.filter(
         telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
     ).first()
+    if post is not None:
+        post = _lock_post(post)
     if post is None:
         link = TelegramDiscussionMessage.objects.filter(
             telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
@@ -46,6 +52,24 @@ def sync_group(message, update_id, stored_files):
         ).first()
         if link:
             post = _post(chat_id, link.post.telegram_message_id)
+    if post is None and reply.get("photo") and reply.get("from", {}).get("is_bot"):
+        # A human can reply immediately while the sending worker is committing
+        # the returned message identity. Do not acknowledge-and-lose that sale.
+        # Matching text is used ONLY to defer, never to trust a bot's identity.
+        from ..studio_delivery import product_caption
+        pending = StudioDelivery.objects.filter(
+            chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
+            status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
+        ).select_related("record")
+        if any(reply.get("caption", "") == product_caption(job.record) for job in pending):
+            raise SyncConfigurationError("portal_message_identity_pending")
+        # The worker can commit between our first identity lookup and the
+        # pending-job query. Re-read before acknowledging an unknown reply.
+        mapped = TelegramSameDayPost.objects.filter(
+            telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
+        ).first()
+        if mapped is not None:
+            post = _lock_post(mapped)
     # A reply may arrive before the original webhook. The original photo must
     # also belong to this configured group; all its members are permitted.
     if post is None and reply.get("photo") and _group_member(reply):
@@ -59,6 +83,10 @@ def sync_group(message, update_id, stored_files):
     _link(message, post)
     if _is_sold(message) or _is_withdrawn(message):
         return _sell(post, withdrawn=_is_withdrawn(message))
+    if post.product_id and StudioProduct.objects.filter(
+        product_id=post.product_id, source=StudioProduct.Source.PORTAL,
+    ).exists():
+        return "portal_reply_ignored"
     text = message.get("text", "")
     try:
         parse_group_price(text)

@@ -136,6 +136,8 @@ def sync_daily_status(post):
     elif post.sold_at and record.status != StudioProduct.Status.WITHDRAWN:
         record.status, record.sold_at = StudioProduct.Status.SOLD, post.sold_at
     record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
+    from .studio_delivery import queue_retirement
+    queue_retirement(record)
 
 
 def _trusted_custom_member(message):

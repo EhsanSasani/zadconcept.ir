@@ -1,0 +1,30 @@
+{% extends 'main/studio/base.html' %}{% load studio_ui %}
+{% block title %}ارسال به گروه آماده‌ها{% endblock %}{% block crumb %}وضعیت ارسال{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">DELIVERY STATUS</p><h1>ارسال به گروه آماده‌ها</h1><p>ثبت محصول در سایت مستقل از نتیجهٔ ارسال تلگرام است.</p></div><a class="btn btn-outline" href="{% url 'studio_settings' %}">وضعیت استودیو</a></div>
+<div class="settings-grid" aria-label="خلاصهٔ ارسال‌ها">
+  <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف، در حال ارسال یا منتظر تلاش مجدد.</p></section>
+  <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>ارسال ناموفق یا نتیجه‌ای که تأیید آن نرسیده است.</p></section>
+  <section class="panel settings-card"><h2>انجام شده</h2><strong class="settings-number">{{ delivered|fa_number }}</strong><p>ارسال عکس یا رسیدگی به پیام محصول خارج‌شده.</p></section>
+</div>
+<section class="panel filter-panel"><form method="get" class="product-filters">
+  <label>شمارهٔ فاکتور<input name="q" type="search" value="{{ request.GET.q|default:'' }}" maxlength="40" dir="ltr"></label>
+  <label>وضعیت<select name="status"><option value="">همه</option>{% for key,label in status_choices %}<option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <button type="submit" class="btn btn-outline">نمایش</button><a class="filter-reset" href="{% url 'studio_deliveries' %}">تازه‌سازی</a>
+</form></section>
+<section class="panel latest-panel" id="deliveries-table" data-table-region>
+<div class="table-scroll" tabindex="0" role="region" aria-label="جدول ارسال‌ها"><table class="studio-table">
+<thead><tr>{% sort_header 'factor' 'فاکتور' %}{% sort_header 'action' 'اقدام' %}{% sort_header 'status' 'وضعیت' %}{% sort_header 'attempts' 'تلاش' %}{% sort_header 'date' 'زمان ثبت' %}<th scope="col">پیگیری</th></tr></thead>
+<tbody>{% for item in page %}<tr>
+<td><strong dir="ltr">#{{ item.record.factor_code }}</strong><br><span class="muted">{{ item.record.florist.name }}</span></td>
+<td>{{ item.get_action_display }}</td><td><span class="badge">{{ item.get_status_display }}</span>{% if item.outcome == 'caption_marked' %}<p class="muted">حذف ممکن نبود؛ کپشن با وضعیت محصول به‌روز شد.</p>{% elif item.outcome == 'deleted' %}<p class="muted">پیام محصول حذف شد.</p>{% elif item.outcome == 'already_absent' %}<p class="muted">پیام قبلاً از گروه حذف شده بود.</p>{% endif %}</td>
+<td>{{ item.attempts|fa_number }}</td><td><time dir="ltr" data-persian-time="{{ item.created_at|date:'c' }}">{{ item.created_at|date:'Y/m/d H:i' }}</time></td>
+<td class="delivery-actions">{% if item.status == 'UNCERTAIN' %}
+<details><summary>بررسی پیام در گروه</summary><p>ممکن است عکس ارسال شده باشد. ابتدا گروه آماده‌ها را بررسی کنید؛ برای جلوگیری از پیام تکراری، ارسال خودکار متوقف است.</p>
+{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="delivery_id" value="{{ item.pk }}"><input type="hidden" name="action" value="reconcile"><label>شناسهٔ پیام همین محصول<input type="text" name="message_id" inputmode="numeric" pattern="[0-9]+" required dir="ltr"></label><label class="delivery-verify"><input type="checkbox" name="verified" value="yes" required> تصویر و فاکتور پیام را در گروه آماده‌ها بررسی کردم.</label><button class="btn btn-outline" type="submit">اتصال پیام موجود</button></form><details><summary>پیام را در گروه پیدا نکردم</summary><p>ابتدا شماره فاکتور را در گروه جستجو کنید. اگر پیام قبلی با تأخیر برسد، ارسال دوباره ممکن است پیام تکراری بسازد.</p><form method="post">{% csrf_token %}<input type="hidden" name="delivery_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry_absent"><label class="delivery-verify"><input type="checkbox" name="verified_absent" value="yes" required> گروه و شماره فاکتور را بررسی کردم؛ پیامی وجود ندارد و ارسال دوباره را تأیید می‌کنم.</label><button class="btn btn-outline" type="submit">تأیید ارسال دوباره</button></form></details>{% endif %}</details>
+{% elif item.status == 'FAILED' or item.status == 'RETRY' %}
+<p class="muted">اتصال یا دسترسی ربات را بررسی کنید.</p>{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="delivery_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry"><button class="btn btn-outline" type="submit">تلاش دوباره</button></form>{% endif %}
+{% elif item.message_id %}<span class="muted">شناسهٔ پیام: <bdi>{{ item.message_id }}</bdi></span>{% else %}<span class="muted">در انتظار پردازش</span>{% endif %}</td>
+</tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><strong>ارسالی در این فهرست نیست</strong><p>محصول روزانه پس از ثبت در پنل تیم به صف ارسال اضافه می‌شود.</p></div></td></tr>{% endfor %}</tbody>
+</table></div>{% include 'main/studio/partials/pagination.html' %}</section>
+{% endblock %}

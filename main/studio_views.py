@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Avg, Case, CharField, Count, F, Q, Sum, Value, When
@@ -13,14 +13,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.cache import never_cache
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
-from .models import Florist, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
+from .studio_access import require_studio_permission
+from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 
 
 def _access(request, permission="view_studioproduct"):
-    if not request.user.is_staff or not request.user.has_perm(f"main.{permission}"):
-        raise PermissionDenied
+    require_studio_permission(request, permission)
 
 
 def _period(request):
@@ -143,7 +144,8 @@ def _base(request, active, period=None):
     ]}
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def dashboard(request):
     _access(request)
     period = _period(request)
@@ -169,7 +171,8 @@ def dashboard(request):
     return render(request, "main/studio/dashboard.html", context)
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def products(request):
     _access(request)
     period = _period(request)
@@ -199,7 +202,8 @@ def products(request):
         "production_choices": StudioProduct.ProductionType.choices, "source_choices": StudioProduct.Source.choices})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def florists(request):
     _access(request)
     period = _period(request)
@@ -209,7 +213,8 @@ def florists(request):
         **_base(request, "florists", period), "rows": rows})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def florist_profile(request, pk):
     _access(request)
     florist = get_object_or_404(Florist, pk=pk)
@@ -227,7 +232,8 @@ def florist_profile(request, pk):
         "page": Paginator(qs, 15).get_page(request.GET.get("page"))})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def analytics(request):
     _access(request)
     period = _period(request)
@@ -268,7 +274,8 @@ class FloristForm(forms.ModelForm):
                    "left_at": forms.DateInput(attrs={"type": "date"})}
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 @require_http_methods(["GET", "POST"])
 def florist_add(request):
     _access(request, "add_florist")
@@ -281,7 +288,8 @@ def florist_add(request):
         **_base(request, "florists"), "form": form, "title": "افزودن فلوریست", "submit_label": "ثبت فلوریست", "is_florist_form": True})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 @require_http_methods(["GET", "POST"])
 def florist_edit(request, pk):
     _access(request, "change_florist")
@@ -307,6 +315,8 @@ class ProductForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["florist"].queryset = Florist.objects.filter(is_active=True)
+        self.fields["florist"].label = "فلوریست سازنده"
+        self.fields["florist"].empty_label = "فلوریست را انتخاب کنید"
         self.fields["image"].required = True
 
     def clean_price(self):
@@ -349,7 +359,8 @@ class ProductEditForm(ProductForm):
         self.fields["image"].required = False
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 @require_http_methods(["GET", "POST"])
 def product_add(request):
     _access(request, "add_studioproduct")
@@ -374,7 +385,8 @@ def product_add(request):
         "help_text": "ثبت دستی فقط در دفتر تولید انجام می‌شود؛ محصول سفارشی در سایت منتشر نمی‌شود."})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 @require_http_methods(["GET", "POST"])
 def product_edit(request, pk):
     _access(request, "change_studioproduct")
@@ -392,10 +404,21 @@ def product_edit(request, pk):
         "help_text": "این فرم فقط رکوردهای دستیِ موجود را اصلاح می‌کند."})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 @require_POST
 def product_status(request, pk):
     _access(request, "change_studioproduct")
+    record = get_object_or_404(StudioProduct, pk=pk)
+    if record.source == StudioProduct.Source.PORTAL:
+        from .studio_delivery import set_portal_status
+        try:
+            set_portal_status(record, request.POST.get("status"), actor=request.user)
+        except ValidationError as error:
+            messages.error(request, " ".join(error.messages))
+        else:
+            messages.success(request, "وضعیت محصول ثبت شد و رسیدگی به پیام گروه پیگیری می‌شود.")
+        return redirect("studio_products")
     with transaction.atomic():
         record = get_object_or_404(StudioProduct.objects.select_for_update(), pk=pk)
         value = request.POST.get("status")
@@ -416,7 +439,8 @@ def product_status(request, pk):
     return redirect("studio_products")
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
 def settings_view(request):
     _access(request)
     from django.conf import settings
@@ -437,10 +461,67 @@ def settings_view(request):
         "missing_posts": missing_qs[:50],
         "issue_count": issues.count(), "issues": issues[:50],
         "daily_strict": settings.STUDIO_DAILY_REQUIRE_METADATA,
-        "custom_connected": bool(settings.TELEGRAM_STUDIO_CUSTOM_GROUP_ID)})
+        "custom_connected": bool(settings.TELEGRAM_STUDIO_CUSTOM_GROUP_ID),
+        "delivery_waiting": StudioDelivery.objects.exclude(status=StudioDelivery.Status.SENT).count(),
+        "daily_connected": bool(settings.TELEGRAM_SAME_DAY_GROUP_ID and settings.TELEGRAM_SAME_DAY_CATEGORY_ID)})
 
 
-@login_required(login_url="/admin/login/")
+@never_cache
+@login_required(login_url="studio_login")
+@require_http_methods(["GET", "POST"])
+def deliveries(request):
+    """A separate operations view keeps the everyday dashboard uncluttered."""
+    _access(request)
+    if request.method == "POST":
+        _access(request, "change_studioproduct")
+        from .studio_delivery import reconcile_delivery, retry_delivery, retry_uncertain_delivery
+        pk = request.POST.get("delivery_id", "")
+        if not pk.isdecimal():
+            raise PermissionDenied
+        delivery = get_object_or_404(StudioDelivery, pk=int(pk))
+        try:
+            if request.POST.get("action") == "retry":
+                retry_delivery(delivery.pk)
+                messages.success(request, "درخواست برای تلاش مجدد در صف قرار گرفت.")
+            elif request.POST.get("action") == "reconcile":
+                message_id = request.POST.get("message_id", "").strip()
+                if not message_id.isdecimal() or int(message_id) <= 0 or request.POST.get("verified") != "yes":
+                    raise ValidationError("پیام همین محصول را در گروه آماده‌ها بررسی کنید و شناسهٔ عددی آن را وارد کنید.")
+                reconcile_delivery(delivery.pk, int(message_id))
+                messages.success(request, "پیام تأییدشده به محصول متصل شد؛ پیام تازه‌ای ارسال نشد.")
+            elif request.POST.get("action") == "retry_absent":
+                retry_uncertain_delivery(delivery.pk, actor=request.user,
+                    confirmed_absent=request.POST.get("verified_absent") == "yes")
+                messages.success(request, "با تأیید شما، ارسال دوباره در صف قرار گرفت.")
+            else:
+                raise PermissionDenied
+        except (ValidationError, ValueError) as error:
+            detail = " ".join(error.messages) if isinstance(error, ValidationError) else "این اقدام برای وضعیت فعلی مجاز نیست."
+            messages.error(request, detail)
+        return redirect("studio_deliveries")
+
+    qs = StudioDelivery.objects.select_related("record", "record__florist")
+    counts = dict(qs.values_list("status").annotate(total=Count("pk")))
+    state = request.GET.get("status", "")
+    if state in StudioDelivery.Status.values:
+        qs = qs.filter(status=state)
+    q = request.GET.get("q", "").strip()[:40]
+    if q:
+        qs = qs.filter(record__factor_code__icontains=q)
+    fields = {"factor": "record__factor_code", "action": "action", "status": "status", "attempts": "attempts", "date": "created_at"}
+    table_sort = _sort_state(request, fields, "date")
+    qs = qs.order_by(("-" if table_sort["direction"] == "desc" else "") + fields[table_sort["key"]], "-pk")
+    return render(request, "main/studio/deliveries.html", {
+        **_base(request, "settings"), "page": Paginator(qs, 20).get_page(request.GET.get("page")),
+        "status_choices": StudioDelivery.Status.choices, "table_sort": table_sort,
+        "waiting": sum(counts.get(key, 0) for key in ("PENDING", "SENDING", "RETRY")),
+        "needs_review": sum(counts.get(key, 0) for key in ("UNCERTAIN", "FAILED")),
+        "delivered": counts.get("SENT", 0),
+    })
+
+
+@never_cache
+@login_required(login_url="studio_login")
 @require_POST
 def resolve_issue(request, pk):
     _access(request, "change_studioingestionissue")

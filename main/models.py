@@ -2916,6 +2916,10 @@ class TelegramDiscussionMessage(models.Model):
 
 
 class Florist(TimeStampedModel):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="studio_florist", verbose_name="حساب ورود",
+    )
     name = models.CharField("نام فلوریست", max_length=120)
     code = models.SlugField("کد کوتاه", max_length=24, unique=True)
     photo = models.ImageField("عکس پروفایل", upload_to="studio/florists/", blank=True)
@@ -2928,6 +2932,7 @@ class Florist(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "فلوریست"
         verbose_name_plural = "فلوریست‌ها"
+        permissions = [("manage_studio_accounts", "مدیریت حساب‌های تیم استودیو")]
         constraints = [models.UniqueConstraint(Lower("code"), name="studio_florist_code_ci_unique")]
 
     def clean(self):
@@ -2953,6 +2958,7 @@ class StudioProduct(TimeStampedModel):
         CANCELLED = "CANCELLED", "لغو شده"
 
     class Source(models.TextChoices):
+        PORTAL = "PORTAL", "پنل فلوریست"
         TELEGRAM_DAILY = "TELEGRAM_DAILY", "تلگرام روزانه"
         TELEGRAM_CUSTOM = "TELEGRAM_CUSTOM", "تلگرام سفارشی"
         DASHBOARD = "DASHBOARD", "داشبورد"
@@ -2978,6 +2984,7 @@ class StudioProduct(TimeStampedModel):
     product = models.OneToOneField(Product, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name="studio_record")
     source = models.CharField("منبع", max_length=20, choices=Source.choices)
+    submission_key = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     telegram_chat_id = models.BigIntegerField(null=True, blank=True)
     telegram_message_id = models.PositiveBigIntegerField(null=True, blank=True)
     telegram_sender_id = models.BigIntegerField(null=True, blank=True)
@@ -3045,6 +3052,53 @@ class StudioProduct(TimeStampedModel):
 
     def __str__(self):
         return f"{self.factor_code} · {self.florist}"
+
+
+class StudioDelivery(TimeStampedModel):
+    """Durable, bounded outbox; an ambiguous photo send is never blindly repeated."""
+
+    class Action(models.TextChoices):
+        PUBLISH = "PUBLISH", "انتشار در تلگرام"
+        RETIRE = "RETIRE", "خروج از گروه آماده‌ها"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "در صف"
+        SENDING = "SENDING", "در حال ارسال"
+        RETRY = "RETRY", "تلاش مجدد زمان‌بندی شده"
+        SENT = "SENT", "انجام شد"
+        UNCERTAIN = "UNCERTAIN", "نیازمند بررسی پیام در گروه"
+        FAILED = "FAILED", "نیازمند رسیدگی"
+
+    record = models.ForeignKey(StudioProduct, on_delete=models.CASCADE, related_name="deliveries")
+    action = models.CharField(max_length=8, choices=Action.choices)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
+    attempts = models.PositiveIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    locked_at = models.DateTimeField(null=True, blank=True)
+    # Lease token fences completion from a worker whose network call outlived its lease.
+    lock_token = models.UUIDField(null=True, blank=True, editable=False)
+    chat_id = models.BigIntegerField()
+    message_id = models.PositiveBigIntegerField(null=True, blank=True)
+    telegram_created_at = models.DateTimeField(null=True, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    manual_retry_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="studio_delivery_manual_retries",
+    )
+    manual_retry_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField(max_length=64, blank=True)
+    outcome = models.CharField(max_length=32, blank=True)
+
+    class Meta:
+        ordering = ["next_attempt_at", "pk"]
+        verbose_name = "ارسال استودیو"
+        verbose_name_plural = "صف ارسال استودیو"
+        constraints = [models.UniqueConstraint(
+            fields=["record", "action"], name="studio_delivery_record_action_unique",
+        )]
+        indexes = [models.Index(
+            fields=["status", "next_attempt_at"], name="studio_delivery_due_idx",
+        )]
 
 
 class StudioIngestionIssue(TimeStampedModel):

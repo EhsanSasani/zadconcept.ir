@@ -48,6 +48,15 @@ class StudioUITests(TestCase):
         self.assertEqual(response.context['page'][0].factor_code, 'UI-000')
         self.assertEqual(self.client.get(url, {'sort':'florist__password', 'dir':'nonsense'}).status_code, 200)
 
+    def test_product_florist_picker_is_empty_and_excludes_inactive_people(self):
+        Florist.objects.create(name='غیرفعال', code='inactive', is_active=False)
+        response = self.client.get(reverse('studio_product_add'))
+        field = response.context['form']['florist']
+        self.assertIsNone(field.value())
+        self.assertEqual(field.field.label, 'فلوریست سازنده')
+        self.assertEqual(list(field.field.queryset), [self.florist])
+        self.assertContains(response, '<option value="" selected>فلوریست را انتخاب کنید</option>', html=True)
+
     def test_florist_photo_create_edit_preserve_and_clear(self):
         response = self.client.post(reverse('studio_florist_add'), {
             'name':'مهدی', 'code':'mz', 'is_active':'on', 'photo':portrait()})

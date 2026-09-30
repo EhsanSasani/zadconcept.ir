@@ -202,6 +202,11 @@ STUDIO_DAILY_REQUIRE_METADATA = env_bool("STUDIO_DAILY_REQUIRE_METADATA", False)
 TELEGRAM_SAME_DAY_RELAY_URL = os.getenv("TELEGRAM_SAME_DAY_RELAY_URL", "").strip()
 TELEGRAM_SAME_DAY_TIMEOUT_SECONDS = float(os.getenv("TELEGRAM_SAME_DAY_TIMEOUT_SECONDS", "8"))
 
+# Independent studio delivery worker: never block the florist upload request.
+STUDIO_TELEGRAM_TIMEOUT_SECONDS = float(os.getenv("STUDIO_TELEGRAM_TIMEOUT_SECONDS", "35"))
+STUDIO_DELIVERY_LOCK_SECONDS = int(os.getenv("STUDIO_DELIVERY_LOCK_SECONDS", "120"))
+STUDIO_DELIVERY_MAX_ATTEMPTS = int(os.getenv("STUDIO_DELIVERY_MAX_ATTEMPTS", "6"))
+
 # --- اعتبارسنجی رمز عبور ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -346,7 +351,7 @@ _csp_policy = {
     "form-action": [CSP.SELF],
     "frame-ancestors": [CSP.NONE],
     "frame-src": [CSP.NONE],
-    "img-src": [CSP.SELF, "data:", "https://*.google-analytics.com"],
+    "img-src": [CSP.SELF, "data:", "blob:", "https://*.google-analytics.com"],
     "object-src": [CSP.NONE],
     "script-src": [CSP.SELF, CSP.NONCE, "https://www.googletagmanager.com"],
     "style-src": [CSP.SELF],

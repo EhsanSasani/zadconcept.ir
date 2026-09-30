@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 from django.templatetags.static import static
 
@@ -8,6 +8,7 @@ from .telegram_same_day.webhook import telegram_webhook
 from . import studio_views
 
 urlpatterns = [
+    path("", include("main.team_urls")),
     path("studio/", studio_views.dashboard, name="studio_dashboard"),
     path("studio/products/", studio_views.products, name="studio_products"),
     path("studio/products/add/", studio_views.product_add, name="studio_product_add"),
@@ -19,6 +20,7 @@ urlpatterns = [
     path("studio/florists/<int:pk>/", studio_views.florist_profile, name="studio_florist_profile"),
     path("studio/analytics/", studio_views.analytics, name="studio_analytics"),
     path("studio/settings/", studio_views.settings_view, name="studio_settings"),
+    path("studio/deliveries/", studio_views.deliveries, name="studio_deliveries"),
     path("studio/issues/<int:pk>/resolve/", studio_views.resolve_issue, name="studio_resolve_issue"),
     path("api/telegram/webhook/", telegram_webhook, name="telegram_webhook"),
     path(
