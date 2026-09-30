@@ -105,3 +105,14 @@ def parse_group_price(text):
     if len(candidates) != 1:
         raise PriceError("missing_or_multiple_prices")
     return candidates[0]
+
+
+def parse_price_command(text):
+    """Parse an explicit `price:` reply; ordinary group numbers are not commands."""
+    if not isinstance(text, str):
+        raise PriceError("invalid_caption")
+    normalized = text.translate(DIGITS).translate(str.maketrans("يك", "یک")).replace("\u200c", " ")
+    normalized = re.sub(r"[\u200e\u200f\u202a-\u202e\u2066-\u2069]", "", normalized).strip()
+    if not re.match(r"^قیمت\s*[:：=]", normalized):
+        raise PriceError("not_price_command")
+    return parse_group_price(text)

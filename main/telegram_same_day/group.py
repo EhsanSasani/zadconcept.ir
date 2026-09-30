@@ -3,11 +3,26 @@ import logging
 
 from django.conf import settings
 
-from ..models import StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
-from .price import PriceError, parse_group_price
+from ..models import Product, StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
+from .price import PriceError, parse_group_price, parse_price_command
 from .service import InvalidSource, SyncConfigurationError, _is_sold, _is_withdrawn, _link, _lock_post, _post, _sell, _sync_product
 
 logger = logging.getLogger("main.telegram_same_day")
+
+
+def _record_for(post):
+    if post.product_id:
+        return StudioProduct.objects.select_for_update().filter(product_id=post.product_id).first()
+    return StudioProduct.objects.select_for_update().filter(
+        telegram_chat_id=post.telegram_chat_id, telegram_message_id=post.telegram_message_id,
+    ).first()
+
+
+def _status_feedback(record, result):
+    action = "فروش ثبت شد" if result == "sold" else "خروج از فروش ثبت شد"
+    status = "فروخته‌شده" if result == "sold" else "جمع‌آوری‌شده"
+    factor = f"\nفاکتور: {record.factor_code}" if record else ""
+    return f"{action}{factor}\nوضعیت: {status}"
 
 
 def _group_member(message):
@@ -81,11 +96,30 @@ def sync_group(message, update_id, stored_files):
         logger.info("unknown reply ignored chat_id=%s message_id=%s", chat_id, message["message_id"])
         return "unknown_reply_ignored"
     _link(message, post)
+    record = _record_for(post)
     if _is_sold(message) or _is_withdrawn(message):
-        return _sell(post, withdrawn=_is_withdrawn(message))
-    if post.product_id and StudioProduct.objects.filter(
-        product_id=post.product_id, source=StudioProduct.Source.PORTAL,
-    ).exists():
+        result = _sell(post, withdrawn=_is_withdrawn(message))
+        if result in {"sold", "withdrawn"}:
+            return {"result": result, "feedback": _status_feedback(record, result),
+                    "reply_to_message_id": message["message_id"]}
+        return result
+    try:
+        price = parse_price_command(message.get("text", ""))
+    except PriceError as error:
+        if error.args and error.args[0] != "not_price_command":
+            return {"result": "rejected", "feedback": "قیمت معتبر نیست. نمونه: قیمت: 2500000",
+                    "reply_to_message_id": message["message_id"]}
+        price = None
+    if price is not None and post.product_id:
+        Product.objects.filter(pk=post.product_id).update(price=price)
+        if record:
+            record.price = price
+            record.save(update_fields=["price", "updated_at"])
+        factor = f"\nفاکتور: {record.factor_code}" if record else ""
+        return {"result": "price_updated",
+                "feedback": f"قیمت به‌روزرسانی شد{factor}\nقیمت جدید: {price:,.0f} تومان",
+                "reply_to_message_id": message["message_id"]}
+    if record and record.source == StudioProduct.Source.PORTAL:
         return "portal_reply_ignored"
     text = message.get("text", "")
     try:

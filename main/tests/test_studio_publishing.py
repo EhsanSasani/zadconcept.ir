@@ -236,7 +236,9 @@ class StudioPublishingTests(TestCase):
     def test_any_human_group_member_sale_retires_message_and_keeps_history_media(self):
         record, _ = self.publish()
         result = process_update("message", self.sold_reply(record), 911)
-        self.assertEqual(result, "sold")
+        self.assertEqual(result["result"], "sold")
+        self.assertIn("فروش ثبت شد", result["feedback"])
+        self.assertIn("PORTAL-123", result["feedback"])
         record.refresh_from_db()
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
         self.assertFalse(Product.objects.for_same_day().published().filter(pk=record.product_id).exists())
@@ -249,7 +251,9 @@ class StudioPublishingTests(TestCase):
 
     def test_withdrawal_also_hides_site_and_enqueues_retirement(self):
         record, _ = self.publish()
-        self.assertEqual(process_update("message", self.sold_reply(record, text="کشیده شد"), 914), "withdrawn")
+        result = process_update("message", self.sold_reply(record, text="کشیده شد"), 914)
+        self.assertEqual(result["result"], "withdrawn")
+        self.assertIn("خروج از فروش ثبت شد", result["feedback"])
         record.refresh_from_db()
         self.assertEqual(record.status, "WITHDRAWN")
         self.assertEqual(record.product.status, "WITHDRAWN")
@@ -435,7 +439,7 @@ class StudioPublishingTests(TestCase):
                 return TelegramSameDayPost.objects.none()
             return original_filter(*args, **kwargs)
         with patch.object(TelegramSameDayPost.objects, "filter", side_effect=miss_first_identity_lookup):
-            self.assertEqual(process_update("message", self.sold_reply(record), 922), "sold")
+            self.assertEqual(process_update("message", self.sold_reply(record), 922)["result"], "sold")
         record.refresh_from_db()
         self.assertEqual(record.status, "SOLD")
 
@@ -444,7 +448,10 @@ class StudioPublishingTests(TestCase):
         record.deliveries.update(telegram_created_at=timezone.now() - timedelta(hours=49))
         set_portal_status(record, "SOLD", actor=self.manager)
         def withdraw_during_caption(*args):
-            self.assertEqual(process_update("message", self.sold_reply(record, text="کشیده شد"), 924), "withdrawn")
+            self.assertEqual(
+                process_update("message", self.sold_reply(record, text="کشیده شد"), 924)["result"],
+                "withdrawn",
+            )
             return True
         self.edit.side_effect = withdraw_during_caption
         self.assertEqual(process_next_delivery().status, "RETRY")
@@ -452,14 +459,18 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(process_next_delivery().outcome, "caption_marked")
         self.assertTrue(self.edit.call_args.args[2].startswith("کشیده شد\n"))
 
-    def test_portal_photo_echo_and_unrelated_reply_never_enter_legacy_parser(self):
+    def test_portal_photo_echo_and_explicit_price_reply_update_both_projections(self):
         record, _ = self.publish()
         echo = self.telegram_message()
         echo["caption"] = product_caption(record)
         self.assertEqual(process_update("message", echo, 919), "portal_echo_ignored")
-        self.assertEqual(process_update("message", self.sold_reply(record, text="قیمت: 999"), 920), "portal_reply_ignored")
+        result = process_update("message", self.sold_reply(record, text="قیمت: 2500000"), 920)
+        self.assertEqual(result["result"], "price_updated")
+        self.assertIn("2,500,000 تومان", result["feedback"])
+        record.refresh_from_db()
         record.product.refresh_from_db()
-        self.assertEqual(record.product.price, 2400000)
+        self.assertEqual(record.price, 2500000)
+        self.assertEqual(record.product.price, 2500000)
         self.assertEqual(record.product.publish_status, "published")
 
     def test_status_requires_manager_permission_and_preserves_terminal_history(self):

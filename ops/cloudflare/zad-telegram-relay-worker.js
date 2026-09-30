@@ -212,7 +212,9 @@ async function handleTelegramWebhook(request, env) {
           body: JSON.stringify(update),
         });
         // Do not acknowledge a failed Django delivery: let Telegram retry it.
-        if (response.ok && sameDayChat === String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")) {
+        const feedbackChats = [String(env.TELEGRAM_SAME_DAY_GROUP_ID ?? ""),
+          String(env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID ?? "")];
+        if (response.ok && feedbackChats.includes(sameDayChat)) {
           const result = await response.json().catch(() => ({}));
           if (typeof result.feedback === "string" && result.feedback) {
             try {

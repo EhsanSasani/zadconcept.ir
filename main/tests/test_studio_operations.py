@@ -125,6 +125,20 @@ class StudioIntegrationTests(TestCase):
         self.assertEqual(record.status, "SOLD")
         self.assertIsNotNone(record.sold_at)
 
+    def test_custom_price_reply_updates_ledger_and_returns_confirmation(self):
+        self.send(custom_photo())
+        reply = {"update_id": 113, "message": {"message_id": 742,
+                 "chat": {"id": CUSTOM_GROUP, "type": "supergroup"},
+                 "from": {"id": 666, "is_bot": False}, "date": 1700000003,
+                 "text": "قیمت : 2500000", "reply_to_message": custom_photo()["message"]}}
+        result = self.send(reply).json()
+        self.assertEqual(result["result"], "price_updated")
+        self.assertEqual(result["reply_to_message_id"], 742)
+        self.assertIn("2,500,000 تومان", result["feedback"])
+        record = StudioProduct.objects.get()
+        self.assertEqual(record.price, 2500000)
+        self.assertFalse(Product.objects.exists())
+
     def test_custom_edit_updates_price_without_duplicate(self):
         self.send(custom_photo())
         update = custom_photo("florist: mz\ntype: jar\nfactor: 1234\nprice: 3500000", update_id=109)

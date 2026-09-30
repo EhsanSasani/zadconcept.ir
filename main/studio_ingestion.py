@@ -8,7 +8,7 @@ from django.utils import timezone
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .models import Florist, StudioIngestionIssue, StudioProduct
 from .telegram_same_day.client import download_photo
-from .telegram_same_day.price import DIGITS
+from .telegram_same_day.price import DIGITS, PriceError, parse_price_command
 
 
 class StudioInputError(ValueError):
@@ -156,6 +156,12 @@ def _reject_custom(chat_id, message_id, reason):
     return {"result": "rejected", "feedback": reason, "reply_to_message_id": message_id}
 
 
+def _status_feedback(record, *, sold):
+    action = "فروش ثبت شد" if sold else "خروج از فروش ثبت شد"
+    status = "فروخته‌شده" if sold else "جمع‌آوری‌شده"
+    return f"{action}\nفاکتور: {record.factor_code}\nوضعیت: {status}"
+
+
 def process_custom(message, update_id, stored_files):
     from .telegram_same_day.service import InvalidSource, _is_sold, _is_withdrawn
     if not _trusted_custom_member(message):
@@ -167,8 +173,16 @@ def process_custom(message, update_id, stored_files):
     if reply and not message.get("photo"):
         if reply["chat"]["id"] != chat_id:
             raise InvalidSource("foreign_custom_reply")
-        if not (_is_sold(message) or _is_withdrawn(message)):
-            return {"result": "ignored"}
+        sold, withdrawn = _is_sold(message), _is_withdrawn(message)
+        price = None
+        if not (sold or withdrawn):
+            try:
+                price = parse_price_command(message.get("text", ""))
+            except PriceError as error:
+                if error.args and error.args[0] != "not_price_command":
+                    return {"result": "rejected", "feedback": "قیمت معتبر نیست. نمونه: قیمت: 2500000",
+                            "reply_to_message_id": message_id}
+                return {"result": "ignored"}
         record = StudioProduct.objects.select_for_update().filter(
             telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
             production_type=StudioProduct.ProductionType.CUSTOM,
@@ -176,16 +190,22 @@ def process_custom(message, update_id, stored_files):
         ).first()
         if not record:
             return {"result": "unknown_reply_ignored"}
+        if price is not None:
+            record.price = price
+            record.save(update_fields=["price", "updated_at"])
+            return {"result": "price_updated",
+                    "feedback": f"قیمت به‌روزرسانی شد\nفاکتور: {record.factor_code}\nقیمت جدید: {record.price:,.0f} تومان",
+                    "reply_to_message_id": message_id}
         if record.status != StudioProduct.Status.AVAILABLE:
             return {"result": "duplicate_ignored"}
-        if _is_sold(message):
+        if sold:
             record.status, record.sold_at = StudioProduct.Status.SOLD, timezone.now()
         else:
             record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, timezone.now()
         record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
         from .studio_delivery import queue_retirement
         queue_retirement(record)
-        return {"result": "status_updated", "feedback": f"فاکتور {record.factor_code}: وضعیت ثبت شد.",
+        return {"result": "status_updated", "feedback": _status_feedback(record, sold=sold),
                 "reply_to_message_id": message_id}
     if not message.get("photo") or message.get("media_group_id"):
         return _reject_custom(chat_id, message_id, "یک عکس تکی همراه کپشن کامل ارسال کنید.")

@@ -320,6 +320,30 @@ test("custom group forwards to Django and replies with escaped validation feedba
   assert.match(requestPayload(calls[1]).text, /&lt;تکراری&gt;/);
 });
 
+test("ready group forwards professional status and price confirmations", async () => {
+  const groupEnv = { ...env, SAME_DAY_WEBHOOK_URL: sameDayEnv.SAME_DAY_WEBHOOK_URL,
+    TELEGRAM_SAME_DAY_GROUP_ID: "-10077777" };
+  for (const feedback of [
+    "فروش ثبت شد\nفاکتور: A-42\nوضعیت: فروخته‌شده",
+    "قیمت به‌روزرسانی شد\nفاکتور: A-42\nقیمت جدید: 2,500,000 تومان",
+  ]) {
+    const update = { update_id: 92, message: { message_id: 74,
+      chat: { id: -10077777, type: "supergroup" }, text: "command" } };
+    const calls = [];
+    const response = await withFetch(async (url, options) => {
+      calls.push({ url: String(url), options });
+      if (String(url) === groupEnv.SAME_DAY_WEBHOOK_URL) {
+        return json({ ok: true, result: "updated", feedback, reply_to_message_id: 74 });
+      }
+      return json({ ok: true });
+    }, () => worker.fetch(sameDayRequest(update), groupEnv));
+    assert.equal(response.status, 200);
+    assert.equal(calls.length, 2);
+    assert.equal(requestPayload(calls[1]).reply_parameters.message_id, 74);
+    assert.equal(requestPayload(calls[1]).text, `✅ ${feedback}`);
+  }
+});
+
 test("direct group works without a channel and preserves photo replies and edits", async () => {
   const groupEnv = { ...env, SAME_DAY_WEBHOOK_URL: sameDayEnv.SAME_DAY_WEBHOOK_URL,
     TELEGRAM_SAME_DAY_GROUP_ID: "-10077777" };
