@@ -80,6 +80,44 @@ class TeamPortalTests(TestCase):
         self.assertFalse(self.manager.is_staff)
         self.assertEqual(self.client.get(reverse("studio_dashboard")).status_code, 200)
 
+    def test_florist_login_discards_manager_next_without_granting_access(self):
+        for target in ("/studio/", "/studio/products/?page=2", "http://testserver/studio/",
+                       "/%73tudio/", "/team/../studio/"):
+            with self.subTest(target=target):
+                self.client.logout()
+                response = self.client.post(reverse("studio_login"), {
+                    "username": self.owner.username, "password": self.password, "next": target})
+                self.assertRedirects(response, reverse("team_home"))
+                self.assertEqual(self.client.get(reverse("studio_dashboard")).status_code, 403)
+
+    def test_authenticated_florist_discards_manager_next(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse("studio_login"), {"next": "/studio/"})
+        self.assertRedirects(response, reverse("team_home"))
+
+    def test_manager_without_florist_discards_team_next(self):
+        response = self.client.post(reverse("studio_login"), {
+            "username": self.manager.username, "password": self.password, "next": "/team/"})
+        self.assertRedirects(response, reverse("studio_dashboard"))
+        response = self.client.get(reverse("studio_login"), {"next": "/team/products/"})
+        self.assertRedirects(response, reverse("studio_dashboard"))
+
+    def test_login_preserves_allowed_workspace_next(self):
+        response = self.client.post(reverse("studio_login"), {
+            "username": self.owner.username, "password": self.password, "next": "/team/products/?page=1"})
+        self.assertRedirects(response, "/team/products/?page=1")
+        self.client.logout()
+        response = self.client.post(reverse("studio_login"), {
+            "username": self.manager.username, "password": self.password, "next": reverse("studio_accounts")})
+        self.assertRedirects(response, reverse("studio_accounts"))
+
+    def test_authenticated_login_rejects_absolute_login_redirect_cycle(self):
+        self.client.force_login(self.owner)
+        for target in ("http://testserver/studio/login/", "http://testserver/studio/logout/"):
+            with self.subTest(target=target):
+                response = self.client.get(reverse("studio_login"), {"next": target})
+                self.assertRedirects(response, reverse("team_home"))
+
     def test_unlinked_and_inactive_florists_cannot_enter_portal(self):
         self.florist.is_active = False
         self.florist.save(update_fields=["is_active"])

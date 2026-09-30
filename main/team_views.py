@@ -1,6 +1,8 @@
 """Authenticated florist workspace and minimal account administration."""
 import hashlib
+import posixpath
 import uuid
+from urllib.parse import unquote, urlsplit
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout, update_session_auth_hash
@@ -40,9 +42,18 @@ def _safe_next(request, fallback):
     target = request.POST.get("next") or request.GET.get("next")
     if target and url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()},
                                                   require_https=request.is_secure()):
-        # Avoid redirect cycles after login.
-        if target.split("?", 1)[0] not in {reverse("studio_login"), reverse("studio_logout")}:
-            return target
+        path = posixpath.normpath(unquote(urlsplit(target).path))
+        # Check the destination against the signed-in user's workspace access.
+        if path in {reverse("studio_login").rstrip("/"), reverse("studio_logout").rstrip("/")}:
+            return fallback
+        if request.user.is_authenticated:
+            studio = reverse("studio_dashboard").rstrip("/")
+            team = reverse("team_home").rstrip("/")
+            if (path == studio or path.startswith(studio + "/")) and not can_manage_studio(request.user):
+                return fallback
+            if (path == team or path.startswith(team + "/")) and not get_active_florist(request.user):
+                return fallback
+        return target
     return fallback
 
 
