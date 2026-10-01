@@ -455,7 +455,9 @@ async function handleStudioDelivery(request, env) {
   }
   const groups = [env.TELEGRAM_SAME_DAY_GROUP_ID, env.TELEGRAM_STUDIO_CUSTOM_GROUP_ID]
     .map((value) => String(value ?? "").trim()).filter((value) => /^-[1-9][0-9]{0,19}$/.test(value));
-  if (!groups.length ||
+  const admin = String(env.TELEGRAM_STUDIO_ADMIN_CHAT_ID ?? "").trim();
+  const destinations = /^[1-9][0-9]{0,19}$/.test(admin) ? [...groups, admin] : groups;
+  if (!destinations.length ||
       typeof env.TELEGRAM_BOT_TOKEN !== "string" || !/^[A-Za-z0-9:_-]{1,256}$/.test(env.TELEGRAM_BOT_TOKEN)) {
     return studioFailure("configuration_error", 503);
   }
@@ -477,7 +479,7 @@ async function handleStudioDelivery(request, env) {
   const fields = STUDIO_METHOD_FIELDS[payload.method];
   if (Object.keys(payload).length !== fields.length || Object.keys(payload).some((key) => !fields.includes(key)) ||
       !(typeof payload.chat_id === "string" || Number.isSafeInteger(payload.chat_id)) ||
-      !groups.includes(group) ||
+      !destinations.includes(group) ||
       (fields.includes("message_id") && (!Number.isSafeInteger(payload.message_id) || payload.message_id < 1)) ||
       (fields.includes("caption") && (typeof payload.caption !== "string" || !payload.caption.trim() || payload.caption.length > 1024))) {
     return studioFailure("invalid_payload", 400);
@@ -533,7 +535,8 @@ async function handleStudioDelivery(request, env) {
       const value = result.result;
       const checkingChat = payload.method === "getChat";
       const valid = checkingChat
-        ? value && String(value.id) === group && ["group", "supergroup"].includes(value.type)
+        ? value && String(value.id) === group &&
+          (["group", "supergroup"].includes(value.type) || (group === admin && value.type === "private"))
         : sendingPhoto
         ? value && Number.isSafeInteger(value.message_id) && value.message_id > 0 && String(value.chat?.id) === group
         : payload.method === "deleteMessage" ? value === true : value === true || (value && typeof value === "object" && !Array.isArray(value));

@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
 
 from main.studio_delivery import process_next_delivery
+from main.studio_admin_notifications import process_next_admin_notification
 
 
 class Command(BaseCommand):
@@ -24,12 +25,27 @@ class Command(BaseCommand):
         try:
             while True:
                 close_old_connections()
-                job = process_next_delivery()
-                if job:
+                processed = False
+                delivery = process_next_delivery()
+                if delivery:
+                    processed = True
                     count += 1
-                    self.stdout.write(f"delivery={job.pk} action={job.action} status={job.status}")
+                    self.stdout.write(
+                        f"delivery={delivery.pk} action={delivery.action} status={delivery.status}"
+                    )
                     if not options["watch"] and count >= options["limit"]:
                         break
+                notification = process_next_admin_notification()
+                if notification:
+                    processed = True
+                    count += 1
+                    self.stdout.write(
+                        f"admin_notification={notification.pk} "
+                        f"event={notification.event} status={notification.status}"
+                    )
+                    if not options["watch"] and count >= options["limit"]:
+                        break
+                if processed:
                     continue
                 if not options["watch"]:
                     break
