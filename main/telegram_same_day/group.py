@@ -2,6 +2,7 @@
 import logging
 
 from django.conf import settings
+from django.utils import timezone
 
 from ..models import Product, StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
 from .price import PriceError, parse_group_price, parse_price_command
@@ -71,12 +72,12 @@ def sync_group(message, update_id, stored_files):
         # A human can reply immediately while the sending worker is committing
         # the returned message identity. Do not acknowledge-and-lose that sale.
         # Matching text is used ONLY to defer, never to trust a bot's identity.
-        from ..studio_delivery import product_caption
+        from ..studio_delivery import pending_caption_matches
         pending = StudioDelivery.objects.filter(
             chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
             status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
         ).select_related("record")
-        if any(reply.get("caption", "") == product_caption(job.record) for job in pending):
+        if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
             raise SyncConfigurationError("portal_message_identity_pending")
         # The worker can commit between our first identity lookup and the
         # pending-job query. Re-read before acknowledging an unknown reply.
@@ -97,6 +98,8 @@ def sync_group(message, update_id, stored_files):
         return "unknown_reply_ignored"
     _link(message, post)
     record = _record_for(post)
+    if post.deleted_at or (record and record.status == StudioProduct.Status.DELETED):
+        return "admin_deleted_ignored"
     if _is_sold(message) or _is_withdrawn(message):
         result = _sell(post, withdrawn=_is_withdrawn(message))
         if result in {"sold", "withdrawn"}:
@@ -111,10 +114,16 @@ def sync_group(message, update_id, stored_files):
                     "reply_to_message_id": message["message_id"]}
         price = None
     if price is not None and post.product_id:
-        Product.objects.filter(pk=post.product_id).update(price=price)
+        revision = message.get("edit_date", message.get("date", 0))
+        if not revision or (revision, update_id) <= (post.revision_date, post.revision_update_id):
+            return "duplicate_ignored"
+        Product.objects.filter(pk=post.product_id).update(price=price, updated_at=timezone.now())
+        post.revision_date, post.revision_update_id = revision, update_id
+        post.save(update_fields=["revision_date", "revision_update_id", "updated_at"])
         if record:
             record.price = price
-            record.save(update_fields=["price", "updated_at"])
+            record.revision_date, record.revision_update_id = revision, update_id
+            record.save(update_fields=["price", "revision_date", "revision_update_id", "updated_at"])
         factor = f"\nفاکتور: {record.factor_code}" if record else ""
         return {"result": "price_updated",
                 "feedback": f"قیمت به‌روزرسانی شد{factor}\nقیمت جدید: {price:,.0f} تومان",

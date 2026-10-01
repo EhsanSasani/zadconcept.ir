@@ -5,8 +5,8 @@
   <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f7f4f0">
   <title>{% block title %}داشبورد{% endblock %} | ZAD Studio Operations</title>
   <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=3">
-  <script src="{% static 'main/js/pages/studio.js' %}?v=3" defer></script>
+  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=4">
+  <script src="{% static 'main/js/pages/studio.js' %}?v=4" defer></script>
   <script src="{% static 'main/js/pages/team.js' %}?v=1" defer></script>
 </head>
 <body data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
@@ -59,5 +59,5 @@
 </nav>
 <div class="sr-only" aria-live="polite" data-announcer></div>
 <dialog class="photo-dialog" id="photo-dialog" aria-label="تصویر محصول"><button class="icon-button" type="button" data-close-dialog aria-label="بستن تصویر"><svg class="icon"><use href="#i-close"/></svg></button><img alt="" data-dialog-photo><p data-dialog-caption></p></dialog>
-<dialog class="confirm-dialog" id="status-dialog" aria-labelledby="status-title"><span class="dialog-symbol"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg></span><h2 id="status-title">ثبت وضعیت محصول</h2><p data-status-description></p><p class="muted">این محصول از فهرست موجودها خارج می‌شود.</p><div class="dialog-actions"><button class="btn btn-primary" type="button" data-confirm-status>تأیید و ثبت</button><button class="btn btn-outline" type="button" data-close-dialog>انصراف</button></div></dialog>
+<dialog class="confirm-dialog" id="status-dialog" aria-labelledby="status-title" aria-describedby="status-description"><span class="dialog-symbol"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg></span><h2 id="status-title">ثبت وضعیت محصول</h2><p id="status-description" data-status-description></p><p class="muted">این محصول از فهرست موجودها خارج می‌شود.</p><div class="dialog-actions"><button class="btn btn-primary" type="button" data-confirm-status>تأیید و ثبت</button><button class="btn btn-outline" type="button" data-close-dialog>انصراف</button></div></dialog>
 </body></html>

@@ -98,6 +98,8 @@ def sync_daily(post, message, *, metadata=None):
     record = StudioProduct.objects.select_for_update().filter(
         telegram_chat_id=identity[0], telegram_message_id=identity[1],
     ).first()
+    if record and record.status == StudioProduct.Status.DELETED:
+        return
     if record and record.factor_code != metadata["factor_code"]:
         raise StudioInputError("شماره فاکتور پس از ثبت اولیه قابل تغییر نیست.")
     if record is None:
@@ -129,7 +131,7 @@ def sync_daily_status(post):
     record = StudioProduct.objects.select_for_update().filter(
         telegram_chat_id=post.telegram_chat_id, telegram_message_id=post.telegram_message_id,
     ).first()
-    if not record:
+    if not record or record.status == StudioProduct.Status.DELETED:
         return
     if post.withdrawn_at:
         record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, post.withdrawn_at
@@ -188,11 +190,36 @@ def process_custom(message, update_id, stored_files):
             production_type=StudioProduct.ProductionType.CUSTOM,
             source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
         ).first()
+        if not record and reply.get("photo") and reply.get("from", {}).get("is_bot"):
+            # A sale can arrive before the publishing worker commits its message
+            # identity. Like the ready-group path, defer instead of losing it.
+            from .models import StudioDelivery
+            from .studio_delivery import pending_caption_matches
+            from .telegram_same_day.service import SyncConfigurationError
+            pending = StudioDelivery.objects.filter(
+                chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
+                record__production_type=StudioProduct.ProductionType.CUSTOM,
+                status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
+            ).select_related("record")
+            if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
+                raise SyncConfigurationError("portal_message_identity_pending")
+            # The worker may commit between the first lookup and pending query.
+            record = StudioProduct.objects.select_for_update().filter(
+                telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
+                production_type=StudioProduct.ProductionType.CUSTOM,
+                source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
+            ).first()
         if not record:
             return {"result": "unknown_reply_ignored"}
+        if record.status == StudioProduct.Status.DELETED:
+            return {"result": "admin_deleted_ignored"}
         if price is not None:
+            revision = message.get("edit_date", message.get("date", 0))
+            if not revision or (revision, update_id) <= (record.revision_date, record.revision_update_id):
+                return {"result": "duplicate_ignored"}
             record.price = price
-            record.save(update_fields=["price", "updated_at"])
+            record.revision_date, record.revision_update_id = revision, update_id
+            record.save(update_fields=["price", "revision_date", "revision_update_id", "updated_at"])
             return {"result": "price_updated",
                     "feedback": f"قیمت به‌روزرسانی شد\nفاکتور: {record.factor_code}\nقیمت جدید: {record.price:,.0f} تومان",
                     "reply_to_message_id": message_id}
@@ -222,6 +249,8 @@ def process_custom(message, update_id, stored_files):
     record = StudioProduct.objects.select_for_update().filter(
         telegram_chat_id=chat_id, telegram_message_id=message_id,
     ).first()
+    if record and record.status == StudioProduct.Status.DELETED:
+        return {"result": "admin_deleted_ignored"}
     if record and (revision, update_id) <= (record.revision_date, record.revision_update_id):
         return {"result": "duplicate_ignored"}
     if record and record.factor_code != metadata["factor_code"]:

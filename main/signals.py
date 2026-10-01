@@ -161,16 +161,22 @@ def snapshot_studio_admin_notification(sender, instance, raw=False, using=None, 
     if raw or not instance.pk:
         instance._studio_notify_previous = None
         return
-    instance._studio_notify_previous = StudioProduct.objects.using(using).filter(
-        pk=instance.pk,
-    ).values("price", "status", "source").first()
+    previous = StudioProduct.objects.using(using).filter(pk=instance.pk)
+    # Service/admin callers already hold the transaction. Keep concurrent
+    # ledger updates serialized without requiring a lock in autocommit saves.
+    if transaction.get_connection(using).in_atomic_block:
+        previous = previous.select_for_update()
+    instance._studio_notify_previous = previous.values("price", "status", "source").first()
 
 
 @receiver(post_save, sender=StudioProduct, dispatch_uid="main.queue_studio_admin_notification")
-def queue_studio_admin_notification(sender, instance, created=False, raw=False, **kwargs):
+def queue_studio_admin_notification(sender, instance, created=False, raw=False, using=None, **kwargs):
     if raw:
         return
-    if instance.source not in {
+    # update_fields may leave unsaved price/status values on the instance. A
+    # notification must describe the persisted row, never those dirty values.
+    persisted = StudioProduct.objects.using(using).filter(pk=instance.pk).first()
+    if persisted is None or persisted.source not in {
         StudioProduct.Source.PORTAL,
         StudioProduct.Source.DASHBOARD,
         StudioProduct.Source.ADMIN,
@@ -181,41 +187,67 @@ def queue_studio_admin_notification(sender, instance, created=False, raw=False, 
     from .studio_admin_notifications import queue_admin_notification
 
     if created:
-        queue_admin_notification(instance, StudioAdminNotification.Event.CREATED)
+        queue_admin_notification(persisted, StudioAdminNotification.Event.CREATED)
         return
 
     previous = getattr(instance, "_studio_notify_previous", None)
     if not previous:
         return
-    if previous["status"] != instance.status:
+    if previous["status"] != persisted.status:
         event = (
             StudioAdminNotification.Event.DELETED
-            if instance.status == StudioProduct.Status.DELETED
+            if persisted.status == StudioProduct.Status.DELETED
             else StudioAdminNotification.Event.STATUS
         )
-        queue_admin_notification(instance, event)
-    elif previous["price"] != instance.price:
-        queue_admin_notification(instance, StudioAdminNotification.Event.PRICE)
+        queue_admin_notification(persisted, event)
+    elif previous["price"] != persisted.price:
+        queue_admin_notification(persisted, StudioAdminNotification.Event.PRICE)
 
 
-@receiver(post_save, sender=Product, dispatch_uid="main.sync_studio_public_projection")
+@receiver(post_save, dispatch_uid="main.sync_studio_public_projection")
 def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwargs):
-    if raw:
+    # SameDayFlower is the Django Admin proxy: Django sends its model as sender,
+    # so listening only to Product silently misses actual catalog edits.
+    if raw or sender._meta.concrete_model is not Product:
         return
-    record = StudioProduct.objects.using(using).filter(product_id=instance.pk).first()
-    if not record:
+    if not StudioProduct.objects.using(using).filter(product_id=instance.pk).exists():
         return
-    changes = {"updated_at": timezone.now()}
-    if instance.price is not None and instance.price > 0:
-        changes["price"] = instance.price
-    if instance.cover_image and record.image.name != instance.cover_image.name:
-        changes["image"] = instance.cover_image.name
-    if instance.status == Product.Status.SOLD and record.status == StudioProduct.Status.AVAILABLE:
-        changes.update(status=StudioProduct.Status.SOLD, sold_at=timezone.now())
-    elif instance.status == Product.Status.WITHDRAWN and record.status == StudioProduct.Status.AVAILABLE:
-        changes.update(status=StudioProduct.Status.WITHDRAWN, withdrawn_at=timezone.now())
-    StudioProduct.objects.using(using).filter(pk=record.pk).update(**changes)
-    if "status" in changes:
-        from .studio_delivery import queue_retirement
-        record.refresh_from_db(using=using)
-        queue_retirement(record)
+    with transaction.atomic(using=using):
+        # Match the public-row-before-ledger lock order used by delivery/status
+        # services. Read stored values, including for partial/proxy saves.
+        public = Product.objects.using(using).select_for_update().filter(pk=instance.pk).first()
+        if public is None:
+            return
+        record = StudioProduct.objects.using(using).select_for_update().filter(product_id=public.pk).first()
+        if record is None:
+            return
+        if record.status == StudioProduct.Status.DELETED:
+            # A catalog save cannot restore a deleted ledger entry or mutate
+            # its retained photo, price and deletion audit.
+            Product.objects.using(using).filter(pk=public.pk).update(
+                status=Product.Status.WITHDRAWN,
+                stock_status=Product.StockStatus.OUT_OF_STOCK,
+                publish_status=Product.PublishStatus.DRAFT,
+            )
+            return
+        changes = []
+        if public.price is not None and public.price > 0 and record.price != public.price:
+            record.price = public.price
+            changes.append("price")
+        if public.cover_image and record.image.name != public.cover_image.name:
+            record.image = public.cover_image.name
+            changes.append("image")
+        if record.status == StudioProduct.Status.AVAILABLE:
+            if public.status == Product.Status.SOLD:
+                record.status, record.sold_at = StudioProduct.Status.SOLD, timezone.now()
+                changes.extend(("status", "sold_at"))
+            elif public.status == Product.Status.WITHDRAWN:
+                record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, timezone.now()
+                changes.extend(("status", "withdrawn_at"))
+        if changes:
+            # save() emits one persisted-state notification (status wins over
+            # price), preserves the source, and never creates a publish job.
+            record.save(using=using, update_fields=[*changes, "updated_at"])
+        if "status" in changes:
+            from .studio_delivery import queue_retirement
+            queue_retirement(record)

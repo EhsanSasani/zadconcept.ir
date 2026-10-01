@@ -1,0 +1,2625 @@
+diff --git a/docs/studio-safety-rollout-fa.md b/docs/studio-safety-rollout-fa.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..86e81084be69fa42617908d065bf71accc1901ce
+--- /dev/null
++++ b/docs/studio-safety-rollout-fa.md
+@@ -0,0 +1,139 @@
++# اصلاحات ایمنی Studio — ۱ اکتبر ۲۰۲۶
++
++این patch برای شاخهٔ `feature/studio-team-portal` و نسخهٔ مبنای
++`6ad0f7d4b3f0f6a95f67ab7b67be541ea63d42d3` تهیه شده است.
++بررسی و تست روی کپی مستقل پروژه با دیتابیس و رسانهٔ آزمایشی انجام شده است.
++سرور عملیاتی، پیام‌های واقعی تلگرام و تنظیمات محیطی تغییر نکرده‌اند.
++
++## تغییرات کاربردی
++
++- ویرایش محصول مدیریتی، قیمت و عکس همان محصول را در دفتر استودیو و کاتالوگ
++  عمومی هماهنگ می‌کند؛ ویرایش به‌تنهایی انتشار دوباره در گروه ایجاد نمی‌کند.
++- ویرایش فقط فیلدهای تغییرکردهٔ فرم را ذخیره می‌کند. وضعیت تازهٔ محصول در
++  دیتابیس دوباره بررسی می‌شود تا فرم بازمانده، فروش یا حذف جدید را برنگرداند.
++- تغییر نوع تولیدِ رکورد ثبت‌شده و تغییر شمارهٔ فاکتورِ محصول دارای ارسال
++  تلگرام مسدود است؛ این موارد نیازمند مسیر تبدیل مستقل هستند.
++- تغییر قیمت یا وضعیت از مدیریت کاتالوگ، از جمله مدل واسط `SameDayFlower`،
++  به دفتر و اعلان خصوصی منتقل می‌شود. مقدار ذخیره‌نشدهٔ یک فرم وارد اعلان نمی‌شود.
++- محصول حذف‌شده از کارنامه، آمار و جزئیات قابل‌مشاهدهٔ فلوریست خارج می‌شود؛
++  عکس، علت حذف و سابقهٔ مدیریتی نگه داشته می‌شوند.
++- ریپلای یا ویرایش قدیمی تلگرام، محصول حذف‌شده را زنده نمی‌کند. اصلاح قیمت
++  قدیمی‌تر، قیمت جدیدترِ ثبت‌شده از همان مسیر را برنمی‌گرداند.
++- عکس خراب یا مفقود در صف اعلان خصوصی، به خطای قابل‌پیگیری تبدیل می‌شود و
++  پردازش ارسال‌های گروه را متوقف نمی‌کند.
++- اعلان‌های خصوصی هر محصول به ترتیب پردازش می‌شوند. نتیجهٔ نامشخص، بدون
++  بررسی دستی دوباره ارسال نمی‌شود؛ توقف یا دیررسیدن پاسخ نیز مالکیت تلاش را حفظ می‌کند.
++- صفحهٔ `/studio/admin-notifications/` برای پیگیری اعلان خصوصی اضافه شده است.
++  دسترسی فلوریست به این صفحه مجاز نیست و اقدامات بازیابی در سابقهٔ مدیریت ثبت می‌شوند.
++- تأیید حذف با JavaScript خارجی و سازگار با CSP انجام می‌شود؛ لغو، دلیل خالی،
++  دوبارکلیک و جایگزینی جدول هنگام بازبودن تأیید پوشش داده شده‌اند.
++- با بازکردن عملیات جدول روی موبایل، محتوای کمکی داخل همان ناحیهٔ اسکرول
++  نگه داشته می‌شود تا صفحه و پنجرهٔ تأیید از عرض نمایشگر بیرون نروند.
++- وابستگی موجودِ پردازش HEIF به `requirements.txt` اضافه شده است تا نصب تازه
++  و CI با خطای `main.E102` متوقف نشوند.
++
++فایل اجرایی `ops/cloudflare/zad-telegram-relay-worker.js` تغییر نکرده است.
++این patch نیازمند جایگزینی Worker، تغییر شناسهٔ گروه‌ها یا ثبت دوبارهٔ webhook نیست.
++مدل و migration تازه ندارد؛ فایل `.env`، دیتابیس و رسانهٔ عملیاتی جزو patch نیستند.
++
++## بررسی روی local
++
++فایل patch را در ریشهٔ پروژه قرار دهید. ابتدا وضعیت فعلی را ببینید:
++
++```powershell
++git status --short
++git log -1 --oneline
++git apply --check .\zad-studio-safety-6ad0f7d.patch
++```
++
++اگر فایل‌های پروژه تغییرات ثبت‌نشده دارند، ابتدا همان تغییرات را جداگانه حفظ کنید.
++خود فایل دانلودشدهٔ patch می‌تواند untracked باشد. اگر بررسی اعمال patch خطا داد،
++اعمال را ادامه ندهید؛ خروجی و تفاوت فایل‌های درگیر باید بررسی شوند. از `--reject`،
++بازنویسی فایل‌های سرور با نسخهٔ local، یا reset اجباری استفاده نکنید.
++
++پس از موفقیت بررسی، روی شاخهٔ مستقل اعمال و آزمایش کنید:
++
++```powershell
++git switch -c fix/studio-safety
++git apply .\zad-studio-safety-6ad0f7d.patch
++python -m pip install -r requirements.txt
++python manage.py check
++python manage.py makemigrations --check --dry-run
++python manage.py test --noinput
++node --test ops/cloudflare/zad-telegram-relay-worker.test.mjs ops/tests/studio-actions.test.cjs
++git diff --check
++```
++
++خروجی migration باید `No changes detected` باشد. ثبت محصول آزمایشی را روی local
++انجام دهید؛ اجرای `seed_studio_demo`، `flush` یا واردکردن دیتابیس local روی VPS
++بخشی از استقرار نیست.
++
++## استقرار کنترل‌شدهٔ VPS
++
++به‌دلیل تفاوت تاریخچهٔ Git و اصلاحات دستی قبلی سرور، موفقیت patch روی local
++به‌تنهایی اثبات سازگاری با VPS نیست. پیش از هر تغییرِ سرور، از ریشهٔ پروژه فقط
++وضعیت و بررسی سازگاری را اجرا کنید:
++
++```bash
++git status --short
++git log -1 --oneline
++git apply --check /home/cloud-admin/zad-studio-safety-6ad0f7d.patch
++sudo systemctl is-active zad.service zad-studio-deliveries.service
++```
++
++در صورت ناسازگاری، اصلاحات موجود سرور باید حفظ و patch بر همان محتوا تطبیق داده
++شود. به‌ویژه قالب حذف مدیریتیِ اصلاح‌شدهٔ قبلی را بدون بررسی بازنویسی نکنید.
++قبل از استقرار، نسخهٔ کد قابل‌بازگشت را نگه دارید؛ استقرار کد نباید دیتابیس یا
++رسانه را جایگزین یا بازگردانی کند.
++
++اجرای نهایی را در یک زمان کوتاه و هماهنگ با تیم انجام دهید. هنگام توقف پردازشگر،
++ارسال در حال اجرا ممکن است نتیجهٔ نامشخص داشته باشد؛ آن را خودکار به صف برنگردانید.
++پس از اعمال سازگارِ کد، نصب وابستگی لازم، اجرای `check` و `collectstatic`، هر دو
++سرویس `zad.service` و `zad-studio-deliveries.service` باید نسخهٔ جدید را بارگذاری
++کنند. فقط restart وب‌سرویس، پردازشگر مقیم را به‌روز نمی‌کند.
++
++این تغییر به تنظیم Nginx یا استقرار Worker نیاز ندارد. `migrate --plan` می‌تواند
++برای اثبات نبودِ migration جدید اجرا شود؛ migration ناشناختهٔ نسخه‌ای دیگر را
++همراه این patch اعمال نکنید.
++
++## عیب‌یابی و بازیابی صف خصوصی
++
++بررسی پیش‌فرض فقط تنظیم و شمارش صف‌ها را می‌خواند؛ هیچ درخواست شبکه‌ای ندارد:
++
++```bash
++/var/www/zad/venv/bin/python manage.py studio_delivery_check
++```
++
++برای خواندن هویت مقصد از تلگرام، بدون ارسال عکس یا تغییر صف:
++
++```bash
++/var/www/zad/venv/bin/python manage.py studio_delivery_check --network
++/var/www/zad/venv/bin/python manage.py studio_delivery_check --network --destination admin
++```
++
++توکن یا relay secret در خروجی چاپ نمی‌شود. خطای `invalid_payload` در مقصد خصوصی
++می‌تواند از ناسازگاری Worker فعال، آدرس relay یا تنظیم مقصد باشد؛ صرفاً با این
++خطا نمی‌توان یکی از آن‌ها را علت قطعی دانست. نسخهٔ فعال را پیش از تغییر بررسی کنید.
++
++در صفحهٔ پیگیری اعلان خصوصی:
++
++- `FAILED` یا `RETRY`: پس از رفع علت، «تلاش دوباره» را بزنید. این اقدام صف را
++  به‌روز می‌کند؛ ارسال واقعی را پردازشگر انجام می‌دهد.
++- `UNCERTAIN`: نخست پیامِ همین فاکتور، قیمت و وضعیت را در گفت‌وگوی خصوصی پیدا
++  کنید. اگر موجود است، شناسهٔ آن را با تأیید بررسی متصل کنید.
++- اگر پیام واقعاً وجود ندارد، گزینهٔ تأیید نبودن پیام و ارسال دوباره را انتخاب
++  کنید. تا پایان مهلت تلاش قبلی، درخواست پذیرفته نمی‌شود.
++- اگر اعلان جدیدتری ارسال شده یا نتیجهٔ ارسال آن نامشخص است، پیام قدیمی را
++  دوباره ارسال نکنید؛ صفحه این اقدام را مسدود می‌کند.
++
++## شواهد و محدودیت بررسی
++
++تست‌های Django، Worker و عملیات فرم، بررسی سیستم و نبود تغییر migration انجام
++شده‌اند. مسیرهای ویرایش، مرتب‌سازی، تأیید و لغو حذف، پنهان‌شدن رکورد حذف‌شده از
++پرتال و دسترسی صف خصوصی در Chromium و اندازه‌های دسکتاپ، تبلت و موبایل بررسی شدند.
++محیط مرورگر سیاست CSP سخت‌گیرانه داشت و هیچ پردازشگر ارسال واقعی در آن اجرا نشد.
++
++آزمایش backend روی SQLite مستقل انجام شده است؛ قفل‌گذاری PostgreSQL زیر بار واقعی
++و ارسال زنده از تنظیمات VPS در این بررسی اجرا نشده‌اند. بررسی اولیهٔ صف‌ها و
++سلامت هر دو سرویس بعد از استقرار همچنان لازم است. پیام‌های قبلاً نامشخص یا
++failed به‌صورت دسته‌جمعی بازفرستاده نمی‌شوند.
+diff --git a/main/management/commands/studio_delivery_check.py b/main/management/commands/studio_delivery_check.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..a21c9db46bfea98c6c620fe50b3290a9e199002d
+--- /dev/null
++++ b/main/management/commands/studio_delivery_check.py
+@@ -0,0 +1,62 @@
++"""Safe diagnostics: no sends, retries, webhook registration or data changes."""
++from urllib.parse import urlsplit
++
++from django.conf import settings
++from django.core.management.base import BaseCommand, CommandError
++from django.db.models import Count
++
++from main.models import StudioAdminNotification, StudioDelivery
++from main.studio_admin_notifications import _admin_chat_id
++from main.studio_transport import TelegramDeliveryError, _chat_id, get_chat
++
++
++class Command(BaseCommand):
++    help = "Read-only Studio configuration/queue report; --network checks Telegram getChat only."
++
++    def add_arguments(self, parser):
++        parser.add_argument("--network", action="store_true", help="Check configured destinations using getChat; never send messages.")
++        parser.add_argument("--destination", choices=["all", "ready", "custom", "admin"], default="all")
++
++    def handle(self, *args, **options):
++        relay = str(getattr(settings, "TELEGRAM_SAME_DAY_RELAY_URL", "")).strip()
++        self.stdout.write("transport=" + ("relay" if relay else "direct"))
++        if relay:
++            try:
++                self.stdout.write("relay_host=" + (urlsplit(relay).hostname or "invalid"))
++            except ValueError:
++                self.stdout.write("relay_host=invalid")
++        for label, model in (("group_queue", StudioDelivery), ("private_queue", StudioAdminNotification)):
++            counts = dict(model.objects.values_list("status").annotate(total=Count("pk")))
++            self.stdout.write(label + " " + " ".join(f"{state}={counts.get(state, 0)}" for state in model.Status.values))
++        destinations = {
++            "ready": "TELEGRAM_SAME_DAY_GROUP_ID",
++            "custom": "TELEGRAM_STUDIO_CUSTOM_GROUP_ID",
++            "admin": "TELEGRAM_STUDIO_ADMIN_CHAT_ID",
++        }
++        failures = []
++        for label, name in destinations.items():
++            if options["destination"] not in {"all", label}:
++                continue
++            value = str(getattr(settings, name, "")).strip()
++            if not value:
++                self.stdout.write(f"{label}=not_configured")
++                if options["destination"] == label:
++                    failures.append(label)
++                continue
++            try:
++                if label == "admin" and _admin_chat_id() is None:
++                    raise TelegramDeliveryError("configuration_error")
++                valid = _chat_id(value)
++                self.stdout.write(f"{label}_chat_id={valid}")
++                if options["network"]:
++                    result = get_chat(valid)
++                    self.stdout.write(f"{label}_getChat=OK type={result['type']}")
++            except TelegramDeliveryError as error:
++                failures.append(label)
++                self.stdout.write(f"{label}_check=ERROR code={error.code} retryable={error.retryable}")
++                if label == "admin" and error.code == "invalid_payload":
++                    self.stdout.write("admin_hint=compare deployed Worker version, relay host and TELEGRAM_STUDIO_ADMIN_CHAT_ID allowlist; no resend performed")
++        if failures:
++            raise CommandError("Destination checks failed: " + ", ".join(failures) + ". No messages sent or queue rows changed.")
++        if not options["network"]:
++            self.stdout.write("No network call made. Add --network for read-only getChat checks.")
+diff --git a/main/signals.py b/main/signals.py
+index dc813e4ca87cd64d1e767ce172a71698e14376dd..4371b4abca911921de5458a08d1f5621f5e0950c 100644
+--- a/main/signals.py
++++ b/main/signals.py
+@@ -161,16 +161,22 @@ def snapshot_studio_admin_notification(sender, instance, raw=False, using=None,
+     if raw or not instance.pk:
+         instance._studio_notify_previous = None
+         return
+-    instance._studio_notify_previous = StudioProduct.objects.using(using).filter(
+-        pk=instance.pk,
+-    ).values("price", "status", "source").first()
++    previous = StudioProduct.objects.using(using).filter(pk=instance.pk)
++    # Service/admin callers already hold the transaction. Keep concurrent
++    # ledger updates serialized without requiring a lock in autocommit saves.
++    if transaction.get_connection(using).in_atomic_block:
++        previous = previous.select_for_update()
++    instance._studio_notify_previous = previous.values("price", "status", "source").first()
+ 
+ 
+ @receiver(post_save, sender=StudioProduct, dispatch_uid="main.queue_studio_admin_notification")
+-def queue_studio_admin_notification(sender, instance, created=False, raw=False, **kwargs):
++def queue_studio_admin_notification(sender, instance, created=False, raw=False, using=None, **kwargs):
+     if raw:
+         return
+-    if instance.source not in {
++    # update_fields may leave unsaved price/status values on the instance. A
++    # notification must describe the persisted row, never those dirty values.
++    persisted = StudioProduct.objects.using(using).filter(pk=instance.pk).first()
++    if persisted is None or persisted.source not in {
+         StudioProduct.Source.PORTAL,
+         StudioProduct.Source.DASHBOARD,
+         StudioProduct.Source.ADMIN,
+@@ -181,41 +187,67 @@ def queue_studio_admin_notification(sender, instance, created=False, raw=False,
+     from .studio_admin_notifications import queue_admin_notification
+ 
+     if created:
+-        queue_admin_notification(instance, StudioAdminNotification.Event.CREATED)
++        queue_admin_notification(persisted, StudioAdminNotification.Event.CREATED)
+         return
+ 
+     previous = getattr(instance, "_studio_notify_previous", None)
+     if not previous:
+         return
+-    if previous["status"] != instance.status:
++    if previous["status"] != persisted.status:
+         event = (
+             StudioAdminNotification.Event.DELETED
+-            if instance.status == StudioProduct.Status.DELETED
++            if persisted.status == StudioProduct.Status.DELETED
+             else StudioAdminNotification.Event.STATUS
+         )
+-        queue_admin_notification(instance, event)
+-    elif previous["price"] != instance.price:
+-        queue_admin_notification(instance, StudioAdminNotification.Event.PRICE)
++        queue_admin_notification(persisted, event)
++    elif previous["price"] != persisted.price:
++        queue_admin_notification(persisted, StudioAdminNotification.Event.PRICE)
+ 
+ 
+-@receiver(post_save, sender=Product, dispatch_uid="main.sync_studio_public_projection")
++@receiver(post_save, dispatch_uid="main.sync_studio_public_projection")
+ def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwargs):
+-    if raw:
++    # SameDayFlower is the Django Admin proxy: Django sends its model as sender,
++    # so listening only to Product silently misses actual catalog edits.
++    if raw or sender._meta.concrete_model is not Product:
+         return
+-    record = StudioProduct.objects.using(using).filter(product_id=instance.pk).first()
+-    if not record:
++    if not StudioProduct.objects.using(using).filter(product_id=instance.pk).exists():
+         return
+-    changes = {"updated_at": timezone.now()}
+-    if instance.price is not None and instance.price > 0:
+-        changes["price"] = instance.price
+-    if instance.cover_image and record.image.name != instance.cover_image.name:
+-        changes["image"] = instance.cover_image.name
+-    if instance.status == Product.Status.SOLD and record.status == StudioProduct.Status.AVAILABLE:
+-        changes.update(status=StudioProduct.Status.SOLD, sold_at=timezone.now())
+-    elif instance.status == Product.Status.WITHDRAWN and record.status == StudioProduct.Status.AVAILABLE:
+-        changes.update(status=StudioProduct.Status.WITHDRAWN, withdrawn_at=timezone.now())
+-    StudioProduct.objects.using(using).filter(pk=record.pk).update(**changes)
+-    if "status" in changes:
+-        from .studio_delivery import queue_retirement
+-        record.refresh_from_db(using=using)
+-        queue_retirement(record)
++    with transaction.atomic(using=using):
++        # Match the public-row-before-ledger lock order used by delivery/status
++        # services. Read stored values, including for partial/proxy saves.
++        public = Product.objects.using(using).select_for_update().filter(pk=instance.pk).first()
++        if public is None:
++            return
++        record = StudioProduct.objects.using(using).select_for_update().filter(product_id=public.pk).first()
++        if record is None:
++            return
++        if record.status == StudioProduct.Status.DELETED:
++            # A catalog save cannot restore a deleted ledger entry or mutate
++            # its retained photo, price and deletion audit.
++            Product.objects.using(using).filter(pk=public.pk).update(
++                status=Product.Status.WITHDRAWN,
++                stock_status=Product.StockStatus.OUT_OF_STOCK,
++                publish_status=Product.PublishStatus.DRAFT,
++            )
++            return
++        changes = []
++        if public.price is not None and public.price > 0 and record.price != public.price:
++            record.price = public.price
++            changes.append("price")
++        if public.cover_image and record.image.name != public.cover_image.name:
++            record.image = public.cover_image.name
++            changes.append("image")
++        if record.status == StudioProduct.Status.AVAILABLE:
++            if public.status == Product.Status.SOLD:
++                record.status, record.sold_at = StudioProduct.Status.SOLD, timezone.now()
++                changes.extend(("status", "sold_at"))
++            elif public.status == Product.Status.WITHDRAWN:
++                record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, timezone.now()
++                changes.extend(("status", "withdrawn_at"))
++        if changes:
++            # save() emits one persisted-state notification (status wins over
++            # price), preserves the source, and never creates a publish job.
++            record.save(using=using, update_fields=[*changes, "updated_at"])
++        if "status" in changes:
++            from .studio_delivery import queue_retirement
++            queue_retirement(record)
+diff --git a/main/static/main/css/pages/studio.css b/main/static/main/css/pages/studio.css
+index 29682364dab7bb2927daadfa2fd34f23152f8f96..bfa0039d2499cf0ec92a3249caecb4bbe87aebe1 100644
+--- a/main/static/main/css/pages/studio.css
++++ b/main/static/main/css/pages/studio.css
+@@ -1254,6 +1254,7 @@ progress.gray-bar::-moz-progress-bar {
+   height: 16px;
+ }
+ .table-scroll {
++  position: relative;
+   overflow: auto;
+   overscroll-behavior-x: contain;
+   border-radius: 12px;
+@@ -1435,18 +1436,26 @@ progress.gray-bar::-moz-progress-bar {
+   gap: 8px;
+   padding-bottom: 8px;
+ }
+-.status-form {
++.status-form,
++.product-delete-form {
+   display: grid;
+   gap: 8px;
+ }
+-.status-form select {
++.status-form select,
++.product-delete-form input {
+   min-height: 44px;
+   border: 1px solid var(--line);
+   border-radius: 10px;
+   background: #fff;
+   padding: 6px;
+ }
+-.status-form .btn {
++.product-delete-form input {
++  width: 100%;
++  min-width: 0;
++  font-size: 16px;
++}
++.status-form .btn,
++.product-delete-form .btn {
+   font-size: 12px;
+ }
+ .pagination {
+@@ -2577,4 +2586,5 @@ dialog[open] {
+ .delivery-actions input[type="text"] { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 16px; }
+ .delivery-actions .delivery-verify { display: flex; align-items: flex-start; gap: 8px; }
+ .delivery-actions input[type="checkbox"] { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--sage-deep); }
++.notification-caption { white-space: pre-line; min-width: 180px; }
+ .sidebar-bottom form { margin-block-start: 14px; }
+diff --git a/main/static/main/js/pages/studio.js b/main/static/main/js/pages/studio.js
+index d2aa8e5a18df4fa2d6d591d5f4ff0d742c68501a..880a8e76eb745d56ac01518d7b9ad0f84b664baa 100644
+--- a/main/static/main/js/pages/studio.js
++++ b/main/static/main/js/pages/studio.js
+@@ -165,7 +165,37 @@
+ 
+   const photoDialog = $("#photo-dialog"),
+     statusDialog = $("#status-dialog");
+-  let pendingStatus;
++  const confirmButton = $("[data-confirm-status]");
++  const submittedActions = new WeakSet();
++  let pendingAction;
++  function submitAction(form) {
++    if (submittedActions.has(form)) return;
++    // A sorting request can replace the table while confirmation is open.
++    if (!form.isConnected || !form.reportValidity()) {
++      statusDialog?.close();
++      announce("جدول تغییر کرده یا اطلاعات کامل نیست؛ محصول را دوباره بررسی کنید.");
++      return;
++    }
++    submittedActions.add(form);
++    pendingAction = undefined;
++    if (confirmButton) {
++      confirmButton.disabled = true;
++      confirmButton.textContent = "در حال ثبت…";
++    }
++    form.querySelectorAll("button[type=submit]").forEach((button) => {
++      button.disabled = true;
++    });
++    HTMLFormElement.prototype.submit.call(form);
++  }
++  statusDialog?.addEventListener("close", () => {
++    // Native close events are queued; ignore a prior close after reopening.
++    if (statusDialog.open) return;
++    pendingAction = undefined;
++    if (confirmButton) {
++      confirmButton.disabled = false;
++      confirmButton.textContent = "تأیید و ثبت";
++    }
++  });
+   document.addEventListener("click", (event) => {
+     const photo = event.target.closest("[data-photo]");
+     if (photo && photoDialog) {
+@@ -195,14 +225,32 @@
+   );
+   document.addEventListener("submit", (event) => {
+     const form = event.target;
+-    if (form.matches(".status-form") && statusDialog) {
++    if (form.matches(".status-form,.product-delete-form")) {
+       event.preventDefault();
+-      const selected = $("select", form)?.selectedOptions[0];
+-      if (!selected?.value) return;
+-      pendingStatus = form;
+-      $("[data-status-description]").textContent =
+-        `فاکتور ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
++      if (submittedActions.has(form) || (pendingAction && statusDialog?.open)) return;
++      const deleting = form.matches(".product-delete-form");
++      const reason = deleting ? $("input[name=reason]", form) : null;
++      if (reason) reason.value = reason.value.trim();
++      if (!form.reportValidity()) return;
++      const selected = deleting ? null : $("select[name=status]", form)?.selectedOptions[0];
++      if (!deleting && !selected?.value) return;
++      const description = deleting
++        ? `فاکتور ${form.dataset.factor} با علت «${reason?.value || ""}» حذف مدیریتی شود؟`
++        : `فاکتور ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
++      if (!statusDialog?.showModal || !confirmButton) {
++        if (window.confirm(description)) submitAction(form);
++        return;
++      }
++      pendingAction = form;
++      $("#status-title", statusDialog).textContent = deleting ? "حذف مدیریتی محصول" : "ثبت وضعیت محصول";
++      $("[data-status-description]", statusDialog).textContent = description;
++      $("p.muted", statusDialog).textContent = deleting
++        ? "محصول از سایت، کارنامه و آمار فلوریست خارج می‌شود؛ تصویر و سابقهٔ مدیریتی محفوظ می‌ماند."
++        : "این محصول از فهرست موجودها خارج می‌شود.";
++      confirmButton.disabled = false;
++      confirmButton.textContent = deleting ? "تأیید حذف مدیریتی" : "تأیید و ثبت";
+       statusDialog.showModal();
++      if (deleting) $("[data-close-dialog]", statusDialog)?.focus();
+     } else if (form.matches("[data-editor-form]")) {
+       const button = $("button[type=submit]", form);
+       if (button) {
+@@ -211,11 +259,8 @@
+       }
+     }
+   });
+-  $("[data-confirm-status]")?.addEventListener("click", (event) => {
+-    if (!pendingStatus) return;
+-    event.currentTarget.disabled = true;
+-    event.currentTarget.textContent = "در حال ثبت…";
+-    HTMLFormElement.prototype.submit.call(pendingStatus);
++  confirmButton?.addEventListener("click", () => {
++    if (pendingAction && statusDialog?.open) submitAction(pendingAction);
+   });
+   window.addEventListener("pageshow", (event) => {
+     if (event.persisted) window.location.reload();
+diff --git a/main/studio_admin_notifications.py b/main/studio_admin_notifications.py
+index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a559ef9c8e6 100644
+--- a/main/studio_admin_notifications.py
++++ b/main/studio_admin_notifications.py
+@@ -1,11 +1,15 @@
+ """Durable customer-safe Telegram photo notifications for Studio records."""
+ import re
+ import uuid
++import logging
+ from datetime import timedelta
+ from io import BytesIO
+ 
+ from django.conf import settings
+-from django.db.models import F
++from django.contrib.admin.models import CHANGE, LogEntry
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.db import transaction
++from django.db.models import Exists, F, OuterRef
+ from django.utils import timezone
+ from PIL import Image
+ 
+@@ -22,13 +26,26 @@ NOTIFIED_SOURCES = {
+     StudioProduct.Source.DASHBOARD,
+     StudioProduct.Source.ADMIN,
+ }
++logger = logging.getLogger(__name__)
++
++
++def _database(record):
++    return record._state.db or "default"
++
++
++def _lease_cutoff(now=None):
++    return (now or timezone.now()) - timedelta(
++        seconds=max(90, int(getattr(settings, "STUDIO_DELIVERY_LOCK_SECONDS", 120)))
++    )
+ 
+ 
+ def _admin_chat_id():
+     value = str(getattr(settings, "TELEGRAM_STUDIO_ADMIN_CHAT_ID", "")).strip()
+     if not re.fullmatch(r"[1-9][0-9]{0,19}", value):
+         return None
+-    return int(value)
++    number = int(value)
++    # Invalid runtime configuration must not overflow the DB while saving a product.
++    return number if number <= 2**63 - 1 else None
+ 
+ 
+ def customer_caption(record):
+@@ -46,7 +63,7 @@ def queue_admin_notification(record, event):
+     chat_id = _admin_chat_id()
+     if chat_id is None:
+         return None
+-    return StudioAdminNotification.objects.create(
++    return StudioAdminNotification.objects.using(_database(record)).create(
+         record=record,
+         event=event,
+         chat_id=chat_id,
+@@ -55,9 +72,7 @@ def queue_admin_notification(record, event):
+ 
+ 
+ def _recover_stale(now):
+-    cutoff = now - timedelta(
+-        seconds=max(90, int(getattr(settings, "STUDIO_DELIVERY_LOCK_SECONDS", 120)))
+-    )
++    cutoff = _lease_cutoff(now)
+     StudioAdminNotification.objects.filter(
+         status=StudioAdminNotification.Status.SENDING,
+         locked_at__lt=cutoff,
+@@ -71,16 +86,28 @@ def _recover_stale(now):
+ def claim_admin_notification():
+     now = timezone.now()
+     _recover_stale(now)
+-    due = StudioAdminNotification.objects.filter(
++    older_unresolved = StudioAdminNotification.objects.filter(
++        record_id=OuterRef("record_id"), pk__lt=OuterRef("pk"),
++        status__in=[*READY, StudioAdminNotification.Status.SENDING, StudioAdminNotification.Status.UNCERTAIN],
++    )
++    due = StudioAdminNotification.objects.annotate(
++        has_older_unresolved=Exists(older_unresolved),
++    ).filter(
+         status__in=READY,
+         next_attempt_at__lte=now,
++        has_older_unresolved=False,
+     ).values_list("pk", flat=True)[:20]
+     for pk in due:
+         token = uuid.uuid4()
+-        changed = StudioAdminNotification.objects.filter(
++        # Recovery can requeue an older event after the candidate query ran.
++        # Recheck ordering in the same statement that acquires the lease.
++        changed = StudioAdminNotification.objects.annotate(
++            has_older_unresolved=Exists(older_unresolved),
++        ).filter(
+             pk=pk,
+             status__in=READY,
+             next_attempt_at__lte=now,
++            has_older_unresolved=False,
+         ).update(
+             status=StudioAdminNotification.Status.SENDING,
+             locked_at=now,
+@@ -102,21 +129,27 @@ def _jpeg_bytes(record):
+         image = record.product.cover_image
+     if not image:
+         raise studio_transport.TelegramDeliveryError("invalid_payload")
+-    with image.open("rb") as source, Image.open(source) as opened:
+-        opened.load()
+-        rgb = opened.convert("RGB")
+-        try:
+-            rgb.thumbnail((2560, 2560), Image.Resampling.LANCZOS)
+-            output = BytesIO()
+-            rgb.save(output, format="JPEG", quality=90, optimize=True)
+-            return output.getvalue()
+-        finally:
+-            rgb.close()
++    try:
++        with image.open("rb") as source, Image.open(source) as opened:
++            opened.load()
++            rgb = opened.convert("RGB")
++            try:
++                rgb.thumbnail((2560, 2560), Image.Resampling.LANCZOS)
++                output = BytesIO()
++                rgb.save(output, format="JPEG", quality=90, optimize=True)
++                return output.getvalue()
++            finally:
++                rgb.close()
++    except (OSError, ValueError, Image.DecompressionBombError):
++        # One bad private-notification image must never stop the group delivery loop.
++        # Do not log a storage exception: remote storage URLs may carry credentials.
++        raise studio_transport.TelegramDeliveryError("invalid_payload") from None
+ 
+ 
+ def _finish(job, message_id):
+     StudioAdminNotification.objects.filter(
+         pk=job.pk, lock_token=job.lock_token,
++        status__in=[StudioAdminNotification.Status.SENDING, StudioAdminNotification.Status.UNCERTAIN],
+     ).update(
+         status=StudioAdminNotification.Status.SENT,
+         telegram_message_id=message_id,
+@@ -150,8 +183,75 @@ def _record_error(job, error):
+     if status != StudioAdminNotification.Status.UNCERTAIN:
+         updates.update(locked_at=None, lock_token=None)
+     StudioAdminNotification.objects.filter(
+-        pk=job.pk, lock_token=job.lock_token,
++        pk=job.pk, lock_token=job.lock_token, status=StudioAdminNotification.Status.SENDING,
+     ).update(**updates)
++    logger.warning("studio private notification requires follow-up notification_id=%s code=%s", job.pk, error.code)
++
++
++def _can_manage(actor):
++    if not getattr(actor, "is_active", False) or not actor.has_perm("main.change_studioproduct"):
++        raise PermissionDenied
++
++
++def _audit_recovery(job, actor, action):
++    LogEntry.objects.db_manager(job._state.db or "default").log_actions(
++        user_id=actor.pk,
++        queryset=StudioAdminNotification.objects.using(job._state.db or "default").filter(pk=job.pk),
++        action_flag=CHANGE,
++        change_message=[{"changed": {"name": "private notification", "object": str(job.pk), "fields": [action]}}],
++    )
++
++
++def retry_admin_notification(notification_id, *, actor, confirmed_absent=False):
++    """Explicit recovery; ambiguous sends need a human check and an expired lease."""
++    _can_manage(actor)
++    with transaction.atomic():
++        job = StudioAdminNotification.objects.select_for_update().get(pk=notification_id)
++        if job.chat_id != _admin_chat_id():
++            raise ValidationError("مقصد این اعلان با تنظیم فعلی یکسان نیست؛ تنظیم مقصد را بررسی کنید.")
++        if job.status == StudioAdminNotification.Status.UNCERTAIN:
++            if confirmed_absent is not True:
++                raise ValidationError("ابتدا نبودن پیام همین فاکتور و وضعیت را در گفت‌وگوی خصوصی تأیید کنید.")
++            if job.locked_at and job.locked_at > _lease_cutoff():
++                raise ValidationError("مهلت ارسال قبلی هنوز تمام نشده است؛ کمی بعد دوباره بررسی کنید.")
++        elif job.status not in {StudioAdminNotification.Status.FAILED, StudioAdminNotification.Status.RETRY}:
++            raise ValidationError("این اعلان قابل ارسال دوباره نیست.")
++        if job.telegram_message_id:
++            raise ValidationError("پیام این اعلان قبلاً ثبت شده است.")
++        if StudioAdminNotification.objects.filter(
++            record_id=job.record_id, pk__gt=job.pk,
++            status__in=[StudioAdminNotification.Status.SENT, StudioAdminNotification.Status.SENDING,
++                        StudioAdminNotification.Status.UNCERTAIN],
++        ).exists():
++            raise ValidationError("اعلان جدیدتری ارسال شده یا نتیجهٔ ارسال آن در حال بررسی است؛ پیام قدیمی را دوباره ارسال نکنید.")
++        job.status = StudioAdminNotification.Status.PENDING
++        job.next_attempt_at = timezone.now()
++        job.attempts, job.last_error = 0, ""
++        job.locked_at = job.lock_token = None
++        job.save(update_fields=["status", "next_attempt_at", "attempts", "last_error", "locked_at", "lock_token", "updated_at"])
++        _audit_recovery(job, actor, "retry after verified absence" if confirmed_absent else "retry failed notification")
++        return job
++
++
++def reconcile_admin_notification(notification_id, message_id, *, actor, verified):
++    """Attach a human-verified existing private photo; never send another message."""
++    _can_manage(actor)
++    if verified is not True or isinstance(message_id, bool) or not isinstance(message_id, int) or not 0 < message_id <= 2**53 - 1:
++        raise ValidationError("پیام همین فاکتور و وضعیت را بررسی و شناسهٔ عددی معتبر وارد کنید.")
++    with transaction.atomic():
++        job = StudioAdminNotification.objects.select_for_update().get(pk=notification_id)
++        if job.status != StudioAdminNotification.Status.UNCERTAIN or job.telegram_message_id:
++            raise ValidationError("فقط اعلان نامشخص و بدون پیام قابل اتصال است.")
++        if job.chat_id != _admin_chat_id():
++            raise ValidationError("مقصد این اعلان با تنظیم فعلی یکسان نیست؛ تنظیم مقصد را بررسی کنید.")
++        if StudioAdminNotification.objects.exclude(pk=job.pk).filter(chat_id=job.chat_id, telegram_message_id=message_id).exists():
++            raise ValidationError("این پیام قبلاً به اعلان دیگری متصل شده است.")
++        job.status, job.telegram_message_id = StudioAdminNotification.Status.SENT, message_id
++        job.sent_at, job.last_error = timezone.now(), ""
++        job.locked_at = job.lock_token = None
++        job.save(update_fields=["status", "telegram_message_id", "sent_at", "last_error", "locked_at", "lock_token", "updated_at"])
++        _audit_recovery(job, actor, "reconciled verified existing private message")
++        return job
+ 
+ 
+ def process_next_admin_notification():
+@@ -159,13 +259,19 @@ def process_next_admin_notification():
+     if job is None:
+         return None
+     try:
++        photo = _jpeg_bytes(job.record)
++        if not StudioAdminNotification.objects.filter(
++            pk=job.pk, status=StudioAdminNotification.Status.SENDING,
++            lock_token=job.lock_token, locked_at__gte=_lease_cutoff(),
++        ).exists():
++            return StudioAdminNotification.objects.get(pk=job.pk)
+         response = studio_transport.send_photo(
+             job.chat_id,
+-            _jpeg_bytes(job.record),
++            photo,
+             job.caption,
+         )
+-        message_id = response["message_id"]
+-        if isinstance(message_id, bool) or not isinstance(message_id, int) or message_id <= 0:
++        message_id = response.get("message_id") if isinstance(response, dict) else None
++        if isinstance(message_id, bool) or not isinstance(message_id, int) or not 0 < message_id <= 2**53 - 1:
+             raise studio_transport.TelegramDeliveryError(
+                 "invalid_response", uncertain=True,
+             )
+diff --git a/main/studio_delivery.py b/main/studio_delivery.py
+index 01d05dfb9db0ab013f68251ccbe0f7c9ebba5cfc..137136885b06ac8b87cbbf7a2b8ef68e82f2db19 100644
+--- a/main/studio_delivery.py
++++ b/main/studio_delivery.py
+@@ -32,6 +32,19 @@ def product_caption(record):
+     return f"قیمت: {record.price:,.0f} تومان\nفاکتور: {record.factor_code}"
+ 
+ 
++def pending_caption_matches(record, caption):
++    """Only defer an in-flight reply; a caption never establishes message ownership.
++
++    The invoice is immutable, while a manager can correct the price during send.
++    Accept only our narrow outbound shape, so that correction cannot lose a sale.
++    """
++    if not isinstance(caption, str) or len(caption) > 1024:
++        return False
++    return bool(re.fullmatch(
++        rf"قیمت: [0-9,]+ تومان\nفاکتور: {re.escape(record.factor_code)}", caption,
++    ))
++
++
+ def delivery_summary(record):
+     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
+     jobs = list(record.deliveries.all())
+@@ -143,7 +156,7 @@ def soft_delete_product(record, *, actor, reason):
+                 updated_at=now,
+             )
+             TelegramSameDayPost.objects.filter(product_id=record.product_id).update(
+-                withdrawn_at=now, updated_at=now,
++                withdrawn_at=now, deleted_at=now, updated_at=now,
+             )
+ 
+         queue_retirement(record)
+diff --git a/main/studio_ingestion.py b/main/studio_ingestion.py
+index 5cacb1e020b0bb7cd925a08c029bafa17e303de3..cf8f9b59ffdcd001876edc361c52b33723ca823d 100644
+--- a/main/studio_ingestion.py
++++ b/main/studio_ingestion.py
+@@ -98,6 +98,8 @@ def sync_daily(post, message, *, metadata=None):
+     record = StudioProduct.objects.select_for_update().filter(
+         telegram_chat_id=identity[0], telegram_message_id=identity[1],
+     ).first()
++    if record and record.status == StudioProduct.Status.DELETED:
++        return
+     if record and record.factor_code != metadata["factor_code"]:
+         raise StudioInputError("شماره فاکتور پس از ثبت اولیه قابل تغییر نیست.")
+     if record is None:
+@@ -129,7 +131,7 @@ def sync_daily_status(post):
+     record = StudioProduct.objects.select_for_update().filter(
+         telegram_chat_id=post.telegram_chat_id, telegram_message_id=post.telegram_message_id,
+     ).first()
+-    if not record:
++    if not record or record.status == StudioProduct.Status.DELETED:
+         return
+     if post.withdrawn_at:
+         record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, post.withdrawn_at
+@@ -188,11 +190,36 @@ def process_custom(message, update_id, stored_files):
+             production_type=StudioProduct.ProductionType.CUSTOM,
+             source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
+         ).first()
++        if not record and reply.get("photo") and reply.get("from", {}).get("is_bot"):
++            # A sale can arrive before the publishing worker commits its message
++            # identity. Like the ready-group path, defer instead of losing it.
++            from .models import StudioDelivery
++            from .studio_delivery import pending_caption_matches
++            from .telegram_same_day.service import SyncConfigurationError
++            pending = StudioDelivery.objects.filter(
++                chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
++                record__production_type=StudioProduct.ProductionType.CUSTOM,
++                status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
++            ).select_related("record")
++            if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
++                raise SyncConfigurationError("portal_message_identity_pending")
++            # The worker may commit between the first lookup and pending query.
++            record = StudioProduct.objects.select_for_update().filter(
++                telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
++                production_type=StudioProduct.ProductionType.CUSTOM,
++                source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
++            ).first()
+         if not record:
+             return {"result": "unknown_reply_ignored"}
++        if record.status == StudioProduct.Status.DELETED:
++            return {"result": "admin_deleted_ignored"}
+         if price is not None:
++            revision = message.get("edit_date", message.get("date", 0))
++            if not revision or (revision, update_id) <= (record.revision_date, record.revision_update_id):
++                return {"result": "duplicate_ignored"}
+             record.price = price
+-            record.save(update_fields=["price", "updated_at"])
++            record.revision_date, record.revision_update_id = revision, update_id
++            record.save(update_fields=["price", "revision_date", "revision_update_id", "updated_at"])
+             return {"result": "price_updated",
+                     "feedback": f"قیمت به‌روزرسانی شد\nفاکتور: {record.factor_code}\nقیمت جدید: {record.price:,.0f} تومان",
+                     "reply_to_message_id": message_id}
+@@ -222,6 +249,8 @@ def process_custom(message, update_id, stored_files):
+     record = StudioProduct.objects.select_for_update().filter(
+         telegram_chat_id=chat_id, telegram_message_id=message_id,
+     ).first()
++    if record and record.status == StudioProduct.Status.DELETED:
++        return {"result": "admin_deleted_ignored"}
+     if record and (revision, update_id) <= (record.revision_date, record.revision_update_id):
+         return {"result": "duplicate_ignored"}
+     if record and record.factor_code != metadata["factor_code"]:
+diff --git a/main/studio_notification_views.py b/main/studio_notification_views.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..043c01474ea408e4d534b5e08e1f3b57ffbd8127
+--- /dev/null
++++ b/main/studio_notification_views.py
+@@ -0,0 +1,86 @@
++"""Manager-only recovery of private notifications, separate from group jobs."""
++from django.contrib import messages
++from django.contrib.auth.decorators import login_required
++from django.core.exceptions import ValidationError
++from django.core.paginator import Paginator
++from django.db.models import Count
++from django.http import HttpResponseBadRequest
++from django.shortcuts import get_object_or_404, redirect, render
++from django.views.decorators.cache import never_cache
++from django.views.decorators.http import require_http_methods
++
++from .models import StudioAdminNotification
++from .studio_access import require_studio_permission
++from .studio_admin_notifications import reconcile_admin_notification, retry_admin_notification
++from .studio_views import _base, _sort_state
++
++
++ERROR_LABELS = {
++    "invalid_payload": "تصویر یا مقصد معتبر نیست؛ تصویر محصول و تنظیم مقصد را بررسی کنید.",
++    "configuration_error": "تنظیم اتصال یا مقصد کامل نیست.",
++    "relay_unauthorized": "تنظیم دسترسی به رابط تلگرام نیازمند بررسی است.",
++    "telegram_forbidden": "ربات به این گفت‌وگو دسترسی ندارد؛ شروع گفت‌وگو و مسدودنبودن ربات را بررسی کنید.",
++    "telegram_unauthorized": "دسترسی ربات نیازمند بررسی است.",
++    "telegram_bad_request": "تلگرام درخواست را نپذیرفت؛ تصویر و مقصد را بررسی کنید.",
++    "rate_limited": "تلگرام درخواست کرده است ارسال کمی بعد انجام شود.",
++    "telegram_server_error": "تلگرام موقتاً در دسترس نیست.",
++    "transport_unavailable": "اتصال برقرار نشد؛ ارسال بعداً پیگیری می‌شود.",
++    "transport_uncertain": "تأیید ارسال دریافت نشد؛ ابتدا وجود پیام را بررسی کنید.",
++    "invalid_response": "تأیید معتبر دریافت نشد؛ ابتدا وجود پیام را بررسی کنید.",
++    "worker_interrupted": "پردازشگر پیش از دریافت تأیید متوقف شد؛ ابتدا وجود پیام را بررسی کنید.",
++}
++
++
++@never_cache
++@login_required(login_url="studio_login")
++@require_http_methods(["GET", "POST"])
++def admin_notifications(request):
++    require_studio_permission(request)
++    if request.method == "POST":
++        require_studio_permission(request, "change_studioproduct")
++        pk = request.POST.get("notification_id", "")
++        if not pk.isascii() or not pk.isdecimal() or len(pk) > 19 or not 0 < int(pk) <= 2**63 - 1:
++            return HttpResponseBadRequest("شناسهٔ اعلان معتبر نیست.")
++        item = get_object_or_404(StudioAdminNotification, pk=int(pk))
++        try:
++            action = request.POST.get("action")
++            if action == "retry":
++                retry_admin_notification(item.pk, actor=request.user)
++            elif action == "retry_absent":
++                retry_admin_notification(item.pk, actor=request.user,
++                                         confirmed_absent=request.POST.get("verified_absent") == "yes")
++            elif action == "reconcile":
++                message_id = request.POST.get("message_id", "")
++                if not message_id.isascii() or not message_id.isdecimal() or len(message_id) > 16:
++                    raise ValidationError("شناسهٔ عددی پیام را وارد کنید.")
++                reconcile_admin_notification(item.pk, int(message_id), actor=request.user,
++                                             verified=request.POST.get("verified") == "yes")
++            else:
++                raise ValidationError("اقدام معتبر نیست.")
++        except ValidationError as error:
++            messages.error(request, " ".join(error.messages))
++        else:
++            messages.success(request, "پیگیری اعلان ثبت شد؛ هیچ ارسال مستقیمی از این صفحه انجام نمی‌شود.")
++        return redirect("studio_admin_notifications")
++
++    qs = StudioAdminNotification.objects.select_related("record", "record__florist")
++    counts = dict(qs.values_list("status").annotate(total=Count("pk")))
++    state = request.GET.get("status", "")
++    if state in StudioAdminNotification.Status.values:
++        qs = qs.filter(status=state)
++    query = request.GET.get("q", "").strip()[:40]
++    if query:
++        qs = qs.filter(record__factor_code__icontains=query)
++    fields = {"factor": "record__factor_code", "event": "event", "status": "status", "attempts": "attempts", "date": "created_at"}
++    table_sort = _sort_state(request, fields, "date")
++    qs = qs.order_by(("-" if table_sort["direction"] == "desc" else "") + fields[table_sort["key"]], "-pk")
++    page = Paginator(qs, 20).get_page(request.GET.get("page"))
++    for item in page:
++        item.error_label = ERROR_LABELS.get(item.last_error, "این اعلان نیازمند بررسی است.") if item.last_error else ""
++    return render(request, "main/studio/admin_notifications.html", {
++        **_base(request, "deliveries"), "page": page, "table_sort": table_sort,
++        "status_choices": StudioAdminNotification.Status.choices,
++        "waiting": sum(counts.get(key, 0) for key in ("PENDING", "SENDING", "RETRY")),
++        "needs_review": sum(counts.get(key, 0) for key in ("FAILED", "UNCERTAIN")),
++        "delivered": counts.get("SENT", 0),
++    })
+diff --git a/main/studio_publishing.py b/main/studio_publishing.py
+index 6dd2d69cb37543c4104980dc1b23825a4ea9994d..e833979a588a012173f4e1cd054e9a430e94621e 100644
+--- a/main/studio_publishing.py
++++ b/main/studio_publishing.py
+@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
+ from django.conf import settings
+ from django.core.exceptions import PermissionDenied, ValidationError
+ from django.db import IntegrityError, transaction
++from django.utils import timezone
+ 
+ from .image_pipeline import ImageUploadError, create_responsive_image_variants, normalize_admin_image
+ from .models import Category, Florist, Product, StudioDelivery, StudioProduct
+@@ -78,6 +79,8 @@ def _create_daily_projection(record, category, group_id, *, slug):
+ 
+ def save_dashboard_record(record):
+     """Persist a manager entry; available daily stock follows the portal pipeline."""
++    if record.pk:
++        raise ValidationError("برای اصلاح محصول ثبت‌شده از فرم ویرایش استفاده کنید.")
+     if record.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}:
+         raise ValidationError("منبع ثبت مدیریتی معتبر نیست.")
+     publish_daily = (record.production_type == StudioProduct.ProductionType.DAILY
+@@ -97,6 +100,63 @@ def save_dashboard_record(record):
+     return record
+ 
+ 
++def update_dashboard_record(record, *, changed_fields):
++    """Edit stored manager fields and their existing public row in one transaction.
++
++    Only fields actually changed by the form are copied onto the locked row.
++    Delivery identity, source, status and audit fields always come from the DB;
++    this path never creates or retries a Telegram publication.
++    """
++    editable = {"image", "florist", "factor_code", "product_type", "production_type", "price", "notes"}
++    changed = editable.intersection(changed_fields)
++    using = record._state.db or "default"
++    try:
++        with transaction.atomic(using=using):
++            # Keep the same lock order as catalog signals and status/delivery
++            # services, even if the request loaded an older ledger instance.
++            product_id = StudioProduct.objects.using(using).values_list("product_id", flat=True).get(pk=record.pk)
++            public = (Product.objects.using(using).select_for_update().filter(pk=product_id).first()
++                      if product_id else None)
++            current = StudioProduct.objects.using(using).select_for_update().get(pk=record.pk)
++            if current.product_id != product_id:
++                raise ValidationError("پیوند کاتالوگ محصول تغییر کرده است؛ فرم را دوباره باز کنید.")
++            if (current.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}
++                    or current.status != StudioProduct.Status.AVAILABLE):
++                raise PermissionDenied
++            # Reclassification needs an explicit conversion workflow; it must
++            # not leave public stock/custom group identities out of sync.
++            if ("production_type" in changed
++                    and record.production_type != current.production_type):
++                raise ValidationError({"production_type": "نوع تولید پس از ثبت قابل تغییر نیست؛ برای اصلاح با مدیر هماهنگ کنید."})
++            if ("factor_code" in changed and record.factor_code != current.factor_code
++                    and current.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists()):
++                raise ValidationError({"factor_code": "شماره فاکتور محصول دارای ارسال تلگرام قابل تغییر نیست."})
++            if public and public.status != Product.Status.AVAILABLE:
++                raise ValidationError("وضعیت نهایی محصول در کاتالوگ ثبت شده است؛ این محصول قابل ویرایش نیست.")
++            if "image" in changed and not record.image:
++                raise ValidationError({"image": "تصویر محصول لازم است؛ برای تغییر، عکس جایگزین انتخاب کنید."})
++            for field in changed:
++                setattr(current, field, getattr(record, field))
++            current.full_clean()
++            if changed:
++                current.save(using=using, update_fields=[*sorted(changed), "updated_at"])
++            projection = {}
++            if public:
++                if "price" in changed:
++                    projection.update(price=current.price, pricing_type=Product.PricingType.FIXED)
++                if "image" in changed:
++                    projection["cover_image"] = current.image.name
++            if projection:
++                Product.objects.using(using).filter(pk=public.pk).update(**projection, updated_at=timezone.now())
++            if public and "image" in changed:
++                storage, name = current.image.storage, current.image.name
++                transaction.on_commit(lambda: create_responsive_image_variants(storage, name), using=using)
++            return current
++    except Exception:
++        _clean_failed_file(record)
++        raise
++
++
+ def create_portal_record(*, user, florist, image, factor_code, product_type,
+                          production_type, price, submission_key, notes=""):
+     """Return (record, created); a repeated key never republishes or reuploads."""
+diff --git a/main/studio_transport.py b/main/studio_transport.py
+index 25608db296fad758e1adae8ba7028ae76965e985..5d5e0eddce053f00b8b0d9babd5b3b0127365990 100644
+--- a/main/studio_transport.py
++++ b/main/studio_transport.py
+@@ -256,6 +256,17 @@ def send_photo(chat_id, photo_bytes, caption):
+     return _request("sendPhoto", {"chat_id": _chat_id(chat_id), "caption": _caption(caption)}, _photo(photo_bytes))
+ 
+ 
++def get_chat(chat_id):
++    """Read-only identity check through the exact configured delivery transport."""
++    destination = _chat_id(chat_id)
++    result = _request("getChat", {"chat_id": destination})
++    allowed_types = {"private"} if not destination.startswith("-") else {"group", "supergroup"}
++    if (not isinstance(result, dict) or str(result.get("id")) != destination
++            or result.get("type") not in allowed_types):
++        raise TelegramDeliveryError("invalid_response", retryable=True)
++    return {"id": result["id"], "type": result["type"]}
++
++
+ def delete_message(chat_id, message_id):
+     return _request("deleteMessage", {"chat_id": _chat_id(chat_id), "message_id": _message_id(message_id)})
+ 
+diff --git a/main/studio_views.py b/main/studio_views.py
+index d8aedda0ace5812721629d61883d007233db087b..0692de0bff698accb39af48e8804272b71a9182d 100644
+--- a/main/studio_views.py
++++ b/main/studio_views.py
+@@ -359,6 +359,28 @@ class ProductEditForm(ProductForm):
+     def __init__(self, *args, **kwargs):
+         super().__init__(*args, **kwargs)
+         self.fields["image"].required = False
++        # An existing maker remains selectable after leaving the team; editing
++        # the price must not require reassigning their historical production.
++        self.fields["florist"].queryset = Florist.objects.filter(
++            Q(is_active=True) | Q(pk=self.instance.florist_id))
++
++    def clean_production_type(self):
++        value = self.cleaned_data["production_type"]
++        if value != self.instance.production_type:
++            raise forms.ValidationError("نوع تولید پس از ثبت قابل تغییر نیست؛ برای اصلاح با مدیر هماهنگ کنید.")
++        return value
++
++    def clean_image(self):
++        if self.cleaned_data.get("image") is False:
++            raise forms.ValidationError("تصویر محصول لازم است؛ برای تغییر، عکس جایگزین انتخاب کنید.")
++        return super().clean_image()
++
++    def clean_factor_code(self):
++        value = super().clean_factor_code()
++        if (value != self.instance.factor_code
++                and self.instance.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists()):
++            raise forms.ValidationError("شماره فاکتور محصول دارای ارسال تلگرام قابل تغییر نیست.")
++        return value
+ 
+ 
+ @never_cache
+@@ -405,9 +427,18 @@ def product_edit(request, pk):
+         raise PermissionDenied
+     form = ProductEditForm(request.POST or None, request.FILES or None, instance=record)
+     if request.method == "POST" and form.is_valid():
+-        form.save()
+-        messages.success(request, "اطلاعات محصول اصلاح شد.")
+-        return redirect("studio_products")
++        from .studio_publishing import update_dashboard_record
++        try:
++            record = update_dashboard_record(form.save(commit=False), changed_fields=form.changed_data)
++        except ValidationError as error:
++            if hasattr(error, "message_dict"):
++                for field, errors in error.message_dict.items():
++                    form.add_error(field if field in form.fields else None, errors)
++            else:
++                form.add_error(None, error)
++        else:
++            messages.success(request, "اطلاعات محصول اصلاح شد.")
++            return redirect("studio_products")
+     return render(request, "main/studio/form.html", {
+         **_base(request, "products"), "form": form, "title": f"ویرایش فاکتور {record.factor_code}",
+         "submit_label": "ذخیره تغییرات", "preview_url": record.photo_url,
+diff --git a/main/team_views.py b/main/team_views.py
+index b1b9a703e46f44fa11b11dd1ad4c072e9f1ac710..b4cee9e7b28196d010a7cbca5c78ba9c3ead0a12 100644
+--- a/main/team_views.py
++++ b/main/team_views.py
+@@ -104,13 +104,15 @@ def studio_logout(request):
+ 
+ 
+ def _own_products(request):
+-    return StudioProduct.objects.filter(florist=request.florist).select_related("product", "florist")
++    return StudioProduct.objects.filter(florist=request.florist).exclude(
++        status=StudioProduct.Status.DELETED
++    ).select_related("product", "florist")
+ 
+ 
+ def _visible_products(request):
+     return StudioProduct.objects.filter(
+         Q(florist=request.florist) | Q(created_by=request.user)
+-    ).select_related("product", "florist")
++    ).exclude(status=StudioProduct.Status.DELETED).select_related("product", "florist")
+ 
+ 
+ @team_required
+@@ -163,6 +165,12 @@ def team_product_add(request):
+                         return JsonResponse({"ok": False, "errors": {"submission_key": [
+                             "شناسه پیش‌نویس معتبر نیست؛ یک ثبت تازه باز کنید."]}}, status=400)
+                     raise PermissionDenied
++                if existing.status == StudioProduct.Status.DELETED:
++                    text = "این ثبت با تصمیم مدیر حذف شده است؛ برای بررسی با مدیر استودیو تماس بگیرید."
++                    if wants_json(request):
++                        return JsonResponse({"ok": False, "errors": {"submission_key": [text]}}, status=409)
++                    messages.error(request, text)
++                    return redirect("team_products")
+                 return _success_response(request, existing, created=False)
+     form = TeamProductForm(request.POST if request.method == "POST" else None, request.FILES or None)
+     if request.method == "POST" and form.is_valid():
+@@ -190,7 +198,9 @@ def team_products(request):
+     status = request.GET.get("status", "")
+     production = request.GET.get("production", "")
+     q = request.GET.get("q", "").strip()[:80]
+-    if status in StudioProduct.Status.values:
++    status_choices = [(value, label) for value, label in StudioProduct.Status.choices
++                      if value != StudioProduct.Status.DELETED]
++    if status in dict(status_choices):
+         products = products.filter(status=status)
+     else:
+         status = ""
+@@ -204,7 +214,7 @@ def team_products(request):
+     return render(request, "main/team/products.html", {
+         **portal_context(request, "products"), "page_obj": Paginator(products, 18).get_page(request.GET.get("page")),
+         "status_filter": status, "production_filter": production, "q": q,
+-        "status_choices": StudioProduct.Status.choices, "production_choices": StudioProduct.ProductionType.choices})
++        "status_choices": status_choices, "production_choices": StudioProduct.ProductionType.choices})
+ 
+ 
+ @team_required
+@@ -230,7 +240,7 @@ def _peer_card(florist):
+ @require_GET
+ def team_colleagues(request):
+     colleagues = Florist.objects.filter(is_active=True).exclude(pk=request.florist.pk).annotate(
+-        product_count=Count("studio_products"))
++        product_count=Count("studio_products", filter=~Q(studio_products__status=StudioProduct.Status.DELETED)))
+     return render(request, "main/team/colleagues.html", {
+         **portal_context(request, "colleagues"), "colleagues": [_peer_card(peer) for peer in colleagues]})
+ 
+@@ -238,10 +248,12 @@ def team_colleagues(request):
+ @team_required
+ @require_GET
+ def team_colleague_profile(request, pk):
+-    peer = get_object_or_404(Florist.objects.filter(is_active=True).annotate(product_count=Count("studio_products")), pk=pk)
++    peer = get_object_or_404(Florist.objects.filter(is_active=True).annotate(
++        product_count=Count("studio_products", filter=~Q(studio_products__status=StudioProduct.Status.DELETED))), pk=pk)
+     gallery = [{"image_url": record.photo_url, "product_type": record.get_product_type_display(),
+                 "production_type": record.get_production_type_display(), "produced_at": record.produced_at}
+-               for record in peer.studio_products.select_related("product").exclude(status=StudioProduct.Status.CANCELLED)[:24]]
++               for record in peer.studio_products.select_related("product").exclude(
++                   status__in=[StudioProduct.Status.CANCELLED, StudioProduct.Status.DELETED])[:24]]
+     return render(request, "main/team/colleague_profile.html", {
+         **portal_context(request, "colleagues"), "colleague": _peer_card(peer), "work_gallery": gallery})
+ 
+diff --git a/main/telegram_same_day/group.py b/main/telegram_same_day/group.py
+index 18b84a0ce131831fb17689e9ca1732ef400b6042..3a89d00711ca79f869d453e5489dd25de4e1f3b1 100644
+--- a/main/telegram_same_day/group.py
++++ b/main/telegram_same_day/group.py
+@@ -2,6 +2,7 @@
+ import logging
+ 
+ from django.conf import settings
++from django.utils import timezone
+ 
+ from ..models import Product, StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
+ from .price import PriceError, parse_group_price, parse_price_command
+@@ -71,12 +72,12 @@ def sync_group(message, update_id, stored_files):
+         # A human can reply immediately while the sending worker is committing
+         # the returned message identity. Do not acknowledge-and-lose that sale.
+         # Matching text is used ONLY to defer, never to trust a bot's identity.
+-        from ..studio_delivery import product_caption
++        from ..studio_delivery import pending_caption_matches
+         pending = StudioDelivery.objects.filter(
+             chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
+             status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
+         ).select_related("record")
+-        if any(reply.get("caption", "") == product_caption(job.record) for job in pending):
++        if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
+             raise SyncConfigurationError("portal_message_identity_pending")
+         # The worker can commit between our first identity lookup and the
+         # pending-job query. Re-read before acknowledging an unknown reply.
+@@ -97,6 +98,8 @@ def sync_group(message, update_id, stored_files):
+         return "unknown_reply_ignored"
+     _link(message, post)
+     record = _record_for(post)
++    if post.deleted_at or (record and record.status == StudioProduct.Status.DELETED):
++        return "admin_deleted_ignored"
+     if _is_sold(message) or _is_withdrawn(message):
+         result = _sell(post, withdrawn=_is_withdrawn(message))
+         if result in {"sold", "withdrawn"}:
+@@ -111,10 +114,16 @@ def sync_group(message, update_id, stored_files):
+                     "reply_to_message_id": message["message_id"]}
+         price = None
+     if price is not None and post.product_id:
+-        Product.objects.filter(pk=post.product_id).update(price=price)
++        revision = message.get("edit_date", message.get("date", 0))
++        if not revision or (revision, update_id) <= (post.revision_date, post.revision_update_id):
++            return "duplicate_ignored"
++        Product.objects.filter(pk=post.product_id).update(price=price, updated_at=timezone.now())
++        post.revision_date, post.revision_update_id = revision, update_id
++        post.save(update_fields=["revision_date", "revision_update_id", "updated_at"])
+         if record:
+             record.price = price
+-            record.save(update_fields=["price", "updated_at"])
++            record.revision_date, record.revision_update_id = revision, update_id
++            record.save(update_fields=["price", "revision_date", "revision_update_id", "updated_at"])
+         factor = f"\nفاکتور: {record.factor_code}" if record else ""
+         return {"result": "price_updated",
+                 "feedback": f"قیمت به‌روزرسانی شد{factor}\nقیمت جدید: {price:,.0f} تومان",
+diff --git a/main/telegram_same_day/service.py b/main/telegram_same_day/service.py
+index 2d2c5e1f8e1766089baefa3d5da4424e4a97b372..d6a5a1b81ff7ca107148a5cf1a93951750f0f3d3 100644
+--- a/main/telegram_same_day/service.py
++++ b/main/telegram_same_day/service.py
+@@ -65,6 +65,10 @@ def _record_failure(post, reason, event="price parsing failed"):
+ 
+ def _sync_product(message, update_id, stored_files, *, direct_group=False):
+     post = _post(message["chat"]["id"], message["message_id"])
++    if post.product_id and StudioProduct.objects.filter(
++        product_id=post.product_id, status=StudioProduct.Status.DELETED,
++    ).exists():
++        return "admin_deleted_ignored"
+     if post.product_id and StudioProduct.objects.filter(
+         product_id=post.product_id,
+         source__in=[StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN],
+diff --git a/main/templates/main/studio/admin_notifications.html b/main/templates/main/studio/admin_notifications.html
+new file mode 100644
+index 0000000000000000000000000000000000000000..bdb6723ae002c8bbb14513c24cd12a8e07735ed3
+--- /dev/null
++++ b/main/templates/main/studio/admin_notifications.html
+@@ -0,0 +1,17 @@
++{% extends 'main/studio/base.html' %}{% load studio_ui %}
++{% block title %}اعلان خصوصی ادمین{% endblock %}{% block crumb %}پیگیری اعلان خصوصی{% endblock %}
++{% block content %}
++<div class="page-heading"><div><p class="eyebrow">PRIVATE NOTIFICATIONS</p><h1>اعلان خصوصی ادمین</h1><p>تصویر محصول همراه کد، قیمت و وضعیت؛ ارسال این صف مستقل از صف گروه‌ها پیگیری می‌شود.</p></div><a class="btn btn-outline" href="{% url 'studio_deliveries' %}">ارسال به گروه‌ها</a></div>
++<div class="settings-grid" aria-label="خلاصه اعلان‌های خصوصی">
++  <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف یا منتظر تلاش مجدد؛ پیام‌های هر محصول به ترتیب پردازش می‌شوند.</p></section>
++  <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>نتیجهٔ نامشخص بدون بررسی دوباره ارسال نمی‌شود.</p></section>
++  <section class="panel settings-card"><h2>ارسال شده</h2><strong class="settings-number">{{ delivered|fa_number }}</strong><p>شناسهٔ پیام خصوصی ثبت شده است.</p></section>
++</div>
++<section class="panel filter-panel"><form method="get" class="product-filters"><label>شمارهٔ فاکتور<input name="q" type="search" value="{{ request.GET.q|default:'' }}" maxlength="40" dir="ltr"></label><label>وضعیت<select name="status"><option value="">همه</option>{% for key,label in status_choices %}<option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><button type="submit" class="btn btn-outline">نمایش</button><a class="filter-reset" href="{% url 'studio_admin_notifications' %}">تازه‌سازی</a></form></section>
++<section class="panel latest-panel" id="notifications-table" data-table-region><div class="table-scroll" tabindex="0" role="region" aria-label="جدول اعلان‌های خصوصی"><table class="studio-table">
++<thead><tr>{% sort_header 'factor' 'فاکتور' %}{% sort_header 'event' 'رویداد' %}{% sort_header 'status' 'وضعیت' %}{% sort_header 'attempts' 'تلاش' %}{% sort_header 'date' 'زمان ثبت' %}<th scope="col">پیگیری</th></tr></thead>
++<tbody>{% for item in page %}<tr><td><strong dir="ltr">#{{ item.record.factor_code }}</strong><br><span class="muted">{{ item.record.florist.name }}</span></td><td>{{ item.get_event_display }}<details><summary>متن همین اعلان</summary><p class="notification-caption">{{ item.caption }}</p></details></td><td><span class="badge">{{ item.get_status_display }}</span>{% if item.error_label %}<p class="muted">{{ item.error_label }}</p>{% endif %}</td><td>{{ item.attempts|fa_number }}</td><td><time dir="ltr" data-persian-time="{{ item.created_at|date:'c' }}">{{ item.created_at|date:'Y/m/d H:i' }}</time></td><td class="delivery-actions">
++{% if item.status == 'UNCERTAIN' %}<details><summary>بررسی پیام خصوصی</summary><p>شمارهٔ فاکتور، قیمت و وضعیت همین اعلان را در گفت‌وگوی خصوصی بررسی کنید.</p>{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="reconcile"><label>شناسهٔ پیام همین اعلان<input type="text" name="message_id" inputmode="numeric" pattern="[0-9]+" required dir="ltr"></label><label class="delivery-verify"><input type="checkbox" name="verified" value="yes" required> تصویر، فاکتور، قیمت و وضعیت را در گفت‌وگوی خصوصی بررسی کردم.</label><button type="submit" class="btn btn-outline">اتصال پیام موجود</button></form><details><summary>پیامی از این اعلان پیدا نکردم</summary><form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry_absent"><label class="delivery-verify"><input type="checkbox" name="verified_absent" value="yes" required> گفت‌وگو را بررسی کردم؛ پیام همین اعلان وجود ندارد و ارسال دوباره را تأیید می‌کنم.</label><button type="submit" class="btn btn-outline">تأیید ارسال دوباره</button></form></details>{% endif %}</details>
++{% elif item.status == 'FAILED' or item.status == 'RETRY' %}{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry"><button type="submit" class="btn btn-outline">تلاش دوباره</button></form>{% endif %}
++{% elif item.telegram_message_id %}<span class="muted">شناسهٔ پیام: <bdi>{{ item.telegram_message_id }}</bdi></span>{% else %}<span class="muted">در انتظار پردازش؛ اگر اعلان قبلی این محصول نامشخص است، ابتدا آن را بررسی کنید.</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><strong>اعلانی در این فهرست نیست</strong><p>ثبت یا تغییر محصول، با تنظیم مقصد خصوصی، در این فهرست دیده می‌شود.</p></div></td></tr>{% endfor %}</tbody></table></div>{% include 'main/studio/partials/pagination.html' %}</section>
++{% endblock %}
+diff --git a/main/templates/main/studio/base.html b/main/templates/main/studio/base.html
+index c6be77226d546eb4217f41b3f720b06e1588f337..4fe3e631a7fcc5b3dafa42389afea12bac0e0661 100644
+--- a/main/templates/main/studio/base.html
++++ b/main/templates/main/studio/base.html
+@@ -5,8 +5,8 @@
+   <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f7f4f0">
+   <title>{% block title %}داشبورد{% endblock %} | ZAD Studio Operations</title>
+   <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+-  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=3">
+-  <script src="{% static 'main/js/pages/studio.js' %}?v=3" defer></script>
++  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=4">
++  <script src="{% static 'main/js/pages/studio.js' %}?v=4" defer></script>
+   <script src="{% static 'main/js/pages/team.js' %}?v=1" defer></script>
+ </head>
+ <body data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
+@@ -59,5 +59,5 @@
+ </nav>
+ <div class="sr-only" aria-live="polite" data-announcer></div>
+ <dialog class="photo-dialog" id="photo-dialog" aria-label="تصویر محصول"><button class="icon-button" type="button" data-close-dialog aria-label="بستن تصویر"><svg class="icon"><use href="#i-close"/></svg></button><img alt="" data-dialog-photo><p data-dialog-caption></p></dialog>
+-<dialog class="confirm-dialog" id="status-dialog" aria-labelledby="status-title"><span class="dialog-symbol"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg></span><h2 id="status-title">ثبت وضعیت محصول</h2><p data-status-description></p><p class="muted">این محصول از فهرست موجودها خارج می‌شود.</p><div class="dialog-actions"><button class="btn btn-primary" type="button" data-confirm-status>تأیید و ثبت</button><button class="btn btn-outline" type="button" data-close-dialog>انصراف</button></div></dialog>
++<dialog class="confirm-dialog" id="status-dialog" aria-labelledby="status-title" aria-describedby="status-description"><span class="dialog-symbol"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg></span><h2 id="status-title">ثبت وضعیت محصول</h2><p id="status-description" data-status-description></p><p class="muted">این محصول از فهرست موجودها خارج می‌شود.</p><div class="dialog-actions"><button class="btn btn-primary" type="button" data-confirm-status>تأیید و ثبت</button><button class="btn btn-outline" type="button" data-close-dialog>انصراف</button></div></dialog>
+ </body></html>
+diff --git a/main/templates/main/studio/deliveries.html b/main/templates/main/studio/deliveries.html
+index c8cfc94974e58ee8fbc5ef7fbb4b099bde28bcdd..179f4563d0534a0ecfac3a3f8604fda2401ef541 100644
+--- a/main/templates/main/studio/deliveries.html
++++ b/main/templates/main/studio/deliveries.html
+@@ -2,6 +2,7 @@
+ {% block title %}ارسال به گروه آماده‌ها{% endblock %}{% block crumb %}وضعیت ارسال{% endblock %}
+ {% block content %}
+ <div class="page-heading"><div><p class="eyebrow">DELIVERY STATUS</p><h1>ارسال به گروه آماده‌ها</h1><p>ثبت محصول در سایت مستقل از نتیجهٔ ارسال تلگرام است.</p></div><a class="btn btn-outline" href="{% url 'studio_settings' %}">وضعیت استودیو</a></div>
++<p><a class="btn btn-outline" href="{% url 'studio_admin_notifications' %}">پیگیری اعلان خصوصی ادمین</a></p>
+ <div class="settings-grid" aria-label="خلاصهٔ ارسال‌ها">
+   <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف، در حال ارسال یا منتظر تلاش مجدد.</p></section>
+   <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>ارسال ناموفق یا نتیجه‌ای که تأیید آن نرسیده است.</p></section>
+diff --git a/main/templates/main/studio/partials/products_table.html b/main/templates/main/studio/partials/products_table.html
+index 4ab7e0d82384d60651371656d15a4b6d548c04cb..0e26ca2d29e52158a361c8f981644ede018e342f 100644
+--- a/main/templates/main/studio/partials/products_table.html
++++ b/main/templates/main/studio/partials/products_table.html
+@@ -21,7 +21,7 @@
+               <form method="post" action="{% url 'studio_product_status' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label class="sr-only" for="status-{{ row.pk }}">وضعیت جدید</label><select id="status-{{ row.pk }}" name="status" required><option value="">وضعیت جدید</option><option value="SOLD">فروخته شد</option><option value="WITHDRAWN">کشیده شد</option><option value="CANCELLED">لغو شد</option></select><button class="btn btn-outline" type="submit">ثبت وضعیت</button></form>
+             {% endif %}
+             {% if perms.main.delete_studioproduct %}
+-              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}" onsubmit="return confirm('این محصول از آمار فلوریست حذف می‌شود اما سابقهٔ مدیریتی آن باقی می‌ماند. ادامه می‌دهید؟');">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
++              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="product-delete-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
+             {% endif %}
+           </div></details>
+         {% else %}<span class="muted">—</span>{% endif %}
+diff --git a/main/tests/test_studio_notification_safety.py b/main/tests/test_studio_notification_safety.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..bff9ff98fe82c981443c411ef1650b3307193b7b
+--- /dev/null
++++ b/main/tests/test_studio_notification_safety.py
+@@ -0,0 +1,273 @@
++import tempfile
++import uuid
++from datetime import timedelta
++from io import StringIO
++from unittest.mock import patch
++
++from django.contrib.admin.models import LogEntry
++from django.contrib.auth import get_user_model
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.core.management import call_command, CommandError
++from django.test import TestCase, override_settings
++from django.urls import reverse
++from django.utils import timezone
++
++from main.models import Florist, StudioAdminNotification, StudioProduct
++from main.studio_admin_notifications import (
++    claim_admin_notification, process_next_admin_notification,
++    reconcile_admin_notification, retry_admin_notification,
++)
++from main.studio_transport import TelegramDeliveryError, get_chat
++from .test_telegram_same_day import image_file
++
++
++@override_settings(
++    TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276", TELEGRAM_SAME_DAY_GROUP_ID="-5595039112",
++    TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-5182713369", TELEGRAM_BOT_TOKEN="test-token",
++    TELEGRAM_SAME_DAY_RELAY_URL="", STUDIO_DELIVERY_LOCK_SECONDS=120,
++    PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
++)
++class NotificationSafetyTests(TestCase):
++    def setUp(self):
++        media = tempfile.TemporaryDirectory()
++        self.addCleanup(media.cleanup)
++        config = override_settings(MEDIA_ROOT=media.name)
++        config.enable()
++        self.addCleanup(config.disable)
++        self.manager = get_user_model().objects.create_superuser("notification-manager")
++        self.user = get_user_model().objects.create_user("notification-maker")
++        self.florist = Florist.objects.create(name="آزمایش", code="n-test", user=self.user)
++        mocker = patch("main.studio_transport.send_photo", return_value={"message_id": 77, "chat": {"id": 212832276}})
++        self.send = mocker.start()
++        self.addCleanup(mocker.stop)
++
++    def create(self, factor="N-123"):
++        return StudioProduct.objects.create(florist=self.florist, created_by=self.manager,
++            factor_code=factor, product_type="box", production_type="CUSTOM", price=2500000,
++            image=image_file(), source="DASHBOARD")
++
++    def uncertain(self, row):
++        job = row.admin_notifications.get()
++        job.status = "UNCERTAIN"
++        job.locked_at = timezone.now() - timedelta(minutes=3)
++        job.lock_token = uuid.uuid4()
++        job.last_error = "transport_uncertain"
++        job.save()
++        return job
++
++    def test_missing_image_does_not_stop_group_processing(self):
++        bad = self.create()
++        good = self.create("N-124")
++        bad.image.storage.delete(bad.image.name)
++        stdout = StringIO()
++        with patch("main.management.commands.process_studio_deliveries.process_next_delivery", return_value=None) as group:
++            call_command("process_studio_deliveries", once=True, limit=5, stdout=stdout)
++        self.assertGreaterEqual(group.call_count, 3)
++        self.assertEqual(bad.admin_notifications.get().status, "FAILED")
++        self.assertEqual(good.admin_notifications.get().status, "SENT")
++        self.send.assert_called_once()
++
++    def test_corrupt_image_is_known_failure_before_network(self):
++        row = self.create()
++        with row.image.storage.open(row.image.name, "wb") as file:
++            file.write(b"not an image")
++        self.assertEqual(process_next_admin_notification().status, "FAILED")
++        self.send.assert_not_called()
++
++    def test_malformed_success_is_uncertain_not_retried(self):
++        self.create()
++        self.send.return_value = {}
++        self.assertEqual(process_next_admin_notification().status, "UNCERTAIN")
++        self.assertIsNone(process_next_admin_notification())
++        self.send.assert_called_once()
++
++    def test_stale_lease_cannot_send_after_photo_processing(self):
++        row = self.create()
++        def photo(record):
++            row.admin_notifications.update(locked_at=timezone.now() - timedelta(minutes=3))
++            return b"jpeg"
++        with patch("main.studio_admin_notifications._jpeg_bytes", side_effect=photo):
++            process_next_admin_notification()
++        self.send.assert_not_called()
++        self.assertIsNone(claim_admin_notification())
++        self.assertEqual(row.admin_notifications.get().status, "UNCERTAIN")
++
++    def test_revoked_lease_cannot_send_or_finish(self):
++        row = self.create()
++        def photo(record):
++            row.admin_notifications.update(status="PENDING", lock_token=None, locked_at=None)
++            return b"jpeg"
++        with patch("main.studio_admin_notifications._jpeg_bytes", side_effect=photo):
++            job = process_next_admin_notification()
++        self.assertEqual(job.status, "PENDING")
++        self.send.assert_not_called()
++
++    def test_retry_waits_before_later_price_for_same_product(self):
++        row = self.create()
++        first = row.admin_notifications.get()
++        first.status, first.next_attempt_at = "RETRY", timezone.now() + timedelta(hours=1)
++        first.save()
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        self.assertIsNone(claim_admin_notification())
++        # Another product's messages still progress independently.
++        other = self.create("N-125")
++        self.assertEqual(process_next_admin_notification().record_id, other.pk)
++
++    def test_uncertain_prior_event_blocks_later_event(self):
++        row = self.create()
++        self.uncertain(row)
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        self.assertIsNone(claim_admin_notification())
++
++    def test_failed_known_event_does_not_block_current_notification(self):
++        row = self.create()
++        row.admin_notifications.update(status="FAILED")
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        self.assertEqual(process_next_admin_notification().event, "PRICE")
++
++    def test_manual_retry_is_audited_and_double_click_cannot_duplicate(self):
++        row = self.create()
++        row.admin_notifications.update(status="FAILED", last_error="invalid_payload")
++        job = row.admin_notifications.get()
++        retry_admin_notification(job.pk, actor=self.manager)
++        self.assertEqual(LogEntry.objects.filter(user=self.manager, object_id=str(job.pk)).count(), 1)
++        with self.assertRaises(ValidationError):
++            retry_admin_notification(job.pk, actor=self.manager)
++        self.send.assert_not_called()
++
++    def test_uncertain_retry_requires_check_and_expired_lease(self):
++        job = self.uncertain(self.create())
++        with self.assertRaises(ValidationError):
++            retry_admin_notification(job.pk, actor=self.manager)
++        job.locked_at = timezone.now()
++        job.save()
++        with self.assertRaises(ValidationError):
++            retry_admin_notification(job.pk, actor=self.manager, confirmed_absent=True)
++        job.locked_at = timezone.now() - timedelta(minutes=3)
++        job.save()
++        self.assertEqual(retry_admin_notification(job.pk, actor=self.manager, confirmed_absent=True).status, "PENDING")
++
++    def test_foreign_destination_and_unauthorized_actor_cannot_retry(self):
++        job = self.uncertain(self.create())
++        with self.assertRaises(PermissionDenied):
++            retry_admin_notification(job.pk, actor=self.user, confirmed_absent=True)
++        with override_settings(TELEGRAM_STUDIO_ADMIN_CHAT_ID="12345"), self.assertRaises(ValidationError):
++            retry_admin_notification(job.pk, actor=self.manager, confirmed_absent=True)
++
++    def test_old_failed_message_cannot_follow_newer_sent_state(self):
++        row = self.create()
++        first = row.admin_notifications.get()
++        first.status = "FAILED"
++        first.save()
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        process_next_admin_notification()
++        with self.assertRaises(ValidationError):
++            retry_admin_notification(first.pk, actor=self.manager)
++
++    def test_old_retry_cannot_overtake_newer_inflight_or_uncertain_event(self):
++        row = self.create()
++        first = row.admin_notifications.get()
++        first.status = "FAILED"
++        first.save()
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        newer = row.admin_notifications.exclude(pk=first.pk).get()
++        for state in ("SENDING", "UNCERTAIN"):
++            with self.subTest(state=state):
++                newer.status = state
++                newer.save()
++                with self.assertRaises(ValidationError):
++                    retry_admin_notification(first.pk, actor=self.manager)
++        self.send.assert_not_called()
++
++    def test_claim_rechecks_order_when_older_event_was_just_requeued(self):
++        row = self.create()
++        first = row.admin_notifications.get()
++        first.status = "FAILED"
++        first.save()
++        row.price = 2800000
++        row.save(update_fields=["price", "updated_at"])
++        token = uuid.uuid4()
++        def concurrent_recovery():
++            StudioAdminNotification.objects.filter(pk=first.pk).update(status="PENDING")
++            return token
++        with patch("main.studio_admin_notifications.uuid.uuid4", side_effect=concurrent_recovery):
++            self.assertIsNone(claim_admin_notification())
++        self.assertEqual(row.admin_notifications.filter(status="PENDING").count(), 2)
++        self.send.assert_not_called()
++
++    def test_existing_private_message_can_be_reconciled_without_network(self):
++        job = self.uncertain(self.create())
++        with self.assertRaises(ValidationError):
++            reconcile_admin_notification(job.pk, 90, actor=self.manager, verified=False)
++        found = reconcile_admin_notification(job.pk, 90, actor=self.manager, verified=True)
++        self.assertEqual((found.status, found.telegram_message_id), ("SENT", 90))
++        self.assertEqual(LogEntry.objects.filter(user=self.manager, object_id=str(job.pk)).count(), 1)
++        self.send.assert_not_called()
++
++    def test_same_private_message_cannot_be_attached_twice(self):
++        first = self.uncertain(self.create())
++        reconcile_admin_notification(first.pk, 90, actor=self.manager, verified=True)
++        second = self.uncertain(self.create("N-124"))
++        with self.assertRaises(ValidationError):
++            reconcile_admin_notification(second.pk, 90, actor=self.manager, verified=True)
++
++    @override_settings(TELEGRAM_STUDIO_ADMIN_CHAT_ID="99999999999999999999")
++    def test_oversize_admin_config_does_not_break_product_save(self):
++        self.create()
++        self.assertFalse(StudioAdminNotification.objects.exists())
++
++    def test_private_queue_is_manager_only_and_validates_actions(self):
++        row = self.create()
++        url = reverse("studio_admin_notifications")
++        self.client.force_login(self.user)
++        self.assertEqual(self.client.get(url).status_code, 403)
++        self.client.force_login(self.manager)
++        self.assertEqual(self.client.get(url).status_code, 200)
++        self.assertEqual(self.client.post(url, {"notification_id": "9" * 100, "action": "retry"}).status_code, 400)
++        self.assertEqual(self.client.post(url, {"notification_id": row.admin_notifications.get().pk, "action": "retry"}).status_code, 302)
++        self.assertEqual(row.admin_notifications.get().status, "PENDING")
++        self.send.assert_not_called()
++
++    @patch("main.management.commands.studio_delivery_check.get_chat")
++    def test_configuration_check_default_never_calls_network(self, check):
++        self.create()
++        stdout = StringIO()
++        call_command("studio_delivery_check", stdout=stdout)
++        check.assert_not_called()
++        self.send.assert_not_called()
++        self.assertIn("No network call made", stdout.getvalue())
++
++    @patch("main.management.commands.studio_delivery_check.get_chat")
++    def test_network_diagnostic_only_reads_three_destinations(self, check):
++        check.side_effect = [{"id": -5595039112, "type": "group"}, {"id": -5182713369, "type": "group"}, {"id": 212832276, "type": "private"}]
++        self.create()
++        before = list(StudioAdminNotification.objects.values())
++        call_command("studio_delivery_check", network=True, stdout=StringIO())
++        self.assertEqual(check.call_count, 3)
++        self.assertEqual(before, list(StudioAdminNotification.objects.values()))
++        self.send.assert_not_called()
++
++    @patch("main.management.commands.studio_delivery_check.get_chat", side_effect=TelegramDeliveryError("invalid_payload"))
++    def test_failed_private_check_reports_safe_hint_without_secrets(self, check):
++        stdout = StringIO()
++        with self.assertRaises(CommandError):
++            call_command("studio_delivery_check", network=True, destination="admin", stdout=stdout)
++        self.assertIn("compare deployed Worker version", stdout.getvalue())
++        self.assertNotIn("test-token", stdout.getvalue())
++
++    @patch("main.studio_transport._request")
++    def test_get_chat_checks_identity_type_and_projects_safe_fields(self, request):
++        request.return_value = {"id": 212832276, "type": "private", "invite_link": "private-secret"}
++        self.assertEqual(get_chat(212832276), {"id": 212832276, "type": "private"})
++        request.assert_called_with("getChat", {"chat_id": "212832276"})
++        request.return_value = {"id": 212832276, "type": "group"}
++        with self.assertRaises(TelegramDeliveryError):
++            get_chat(212832276)
++        request.return_value = {"id": -5595039112, "type": "private"}
++        with self.assertRaises(TelegramDeliveryError):
++            get_chat(-5595039112)
+diff --git a/main/tests/test_studio_portal_safety.py b/main/tests/test_studio_portal_safety.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..34504addc3342143935cfbebd2f34f3df6ae5625
+--- /dev/null
++++ b/main/tests/test_studio_portal_safety.py
+@@ -0,0 +1,133 @@
++"""Deleted entries remain in the audit ledger, outside florist workspaces."""
++from uuid import uuid4
++
++from django.contrib.auth import get_user_model
++from django.test import TestCase, override_settings
++from django.urls import reverse
++from django.utils import timezone
++
++from main.models import Florist, StudioProduct
++
++
++@override_settings(TELEGRAM_STUDIO_ADMIN_CHAT_ID="")
++class StudioPortalDeletionSafetyTests(TestCase):
++    @classmethod
++    def setUpTestData(cls):
++        User = get_user_model()
++        cls.owner = User.objects.create_user(username="safety-owner")
++        cls.peer_user = User.objects.create_user(username="safety-peer")
++        cls.manager = User.objects.create_superuser(username="safety-manager", password="test-password")
++        cls.florist = Florist.objects.create(name="فلوریست من", code="safety-owner", user=cls.owner)
++        cls.peer = Florist.objects.create(name="همکار", code="safety-peer", user=cls.peer_user)
++        cls.empty_peer = Florist.objects.create(name="همکار تازه", code="safety-empty")
++
++    def setUp(self):
++        self.client.force_login(self.owner)
++
++    def record(self, florist=None, **kwargs):
++        florist = florist or self.florist
++        data = {
++            "florist": florist, "created_by": florist.user,
++            "factor_code": "SAFETY-" + uuid4().hex[:8], "image": "studio/safety.webp",
++            "product_type": StudioProduct.ProductType.BOX,
++            "production_type": StudioProduct.ProductionType.CUSTOM,
++            "price": 1250000, "source": StudioProduct.Source.PORTAL,
++            "submission_key": uuid4(),
++        }
++        data.update(kwargs)
++        if data.get("status") == StudioProduct.Status.SOLD:
++            data["sold_at"] = timezone.now()
++        elif data.get("status") == StudioProduct.Status.WITHDRAWN:
++            data["withdrawn_at"] = timezone.now()
++        elif data.get("status") == StudioProduct.Status.DELETED:
++            data.update(deleted_at=timezone.now(), deleted_by=self.manager,
++                        deletion_reason="ثبت اشتباه محصول")
++        return StudioProduct.objects.create(**data)
++
++    def test_deleted_entries_are_removed_from_all_home_counts_and_recent_items(self):
++        live = [self.record(status=status) for status in (
++            StudioProduct.Status.AVAILABLE, StudioProduct.Status.SOLD,
++            StudioProduct.Status.WITHDRAWN, StudioProduct.Status.CANCELLED)]
++        delegated = self.record(self.peer, created_by=self.owner)
++        deleted = self.record(status=StudioProduct.Status.DELETED)
++        deleted_peer = self.record(self.peer, created_by=self.owner, status=StudioProduct.Status.DELETED)
++        response = self.client.get(reverse("team_home"))
++        self.assertEqual(response.context["summary"], {
++            "total_count": 4, "today_count": 4, "available_count": 1, "sold_count": 1})
++        self.assertCountEqual(response.context["recent_products"], [*live, delegated])
++        self.assertNotContains(response, deleted.factor_code)
++        self.assertNotContains(response, deleted_peer.factor_code)
++
++    def test_products_filters_and_detail_cannot_expose_deleted_entries(self):
++        live = self.record(factor_code="VISIBLE-FACTOR")
++        deleted = self.record(factor_code="DELETED-FACTOR", status=StudioProduct.Status.DELETED)
++        delegated_deleted = self.record(self.peer, created_by=self.owner, status=StudioProduct.Status.DELETED)
++        for params in ({}, {"status": "DELETED"}):
++            with self.subTest(params=params):
++                response = self.client.get(reverse("team_products"), params)
++                self.assertEqual(list(response.context["page_obj"]), [live])
++                self.assertNotIn("DELETED", dict(response.context["status_choices"]))
++                self.assertNotContains(response, deleted.factor_code)
++        response = self.client.get(reverse("team_products"), {"q": "DELETED-FACTOR"})
++        self.assertEqual(response.context["page_obj"].paginator.count, 0)
++        for record in (deleted, delegated_deleted):
++            with self.subTest(record=record.pk):
++                self.assertEqual(self.client.get(reverse("team_product_detail", args=[record.pk])).status_code, 404)
++        self.assertEqual(self.client.get(reverse("team_product_detail", args=[live.pk])).status_code, 200)
++
++    def test_pagination_counts_only_visible_records(self):
++        visible = [self.record() for _ in range(19)]
++        for _ in range(20):
++            self.record(status=StudioProduct.Status.DELETED)
++        first = self.client.get(reverse("team_products"))
++        second = self.client.get(reverse("team_products"), {"page": 2})
++        self.assertEqual(first.context["page_obj"].paginator.count, 19)
++        self.assertEqual(first.context["page_obj"].paginator.num_pages, 2)
++        self.assertCountEqual([*first.context["page_obj"], *second.context["page_obj"]], visible)
++
++    def test_colleague_card_and_gallery_exclude_deleted_work(self):
++        live = self.record(self.peer, image="studio/visible-peer.webp")
++        self.record(self.peer, status=StudioProduct.Status.DELETED, image="studio/deleted-peer.webp")
++        cards = self.client.get(reverse("team_colleagues")).context["colleagues"]
++        counts = {card["pk"]: card["product_count"] for card in cards}
++        self.assertEqual(counts[self.peer.pk], 1)
++        self.assertEqual(counts[self.empty_peer.pk], 0)
++        response = self.client.get(reverse("team_colleague_profile", args=[self.peer.pk]))
++        self.assertEqual(response.context["colleague"]["product_count"], 1)
++        self.assertEqual(len(response.context["work_gallery"]), 1)
++        self.assertEqual(response.context["work_gallery"][0]["image_url"], live.photo_url)
++        self.assertNotContains(response, "deleted-peer.webp")
++        self.assertNotContains(response, live.factor_code)
++
++    def test_deleted_original_upload_retry_does_not_resurrect_or_claim_success(self):
++        record = self.record(status=StudioProduct.Status.DELETED)
++        payload = {"submission_key": str(record.submission_key), "florist": record.florist_id}
++        response = self.client.post(reverse("team_product_add"), payload, HTTP_ACCEPT="application/json")
++        self.assertEqual(response.status_code, 409)
++        self.assertFalse(response.json()["ok"])
++        self.assertIn("submission_key", response.json()["errors"])
++        self.assertNotIn("redirect_url", response.json())
++        fallback = self.client.post(reverse("team_product_add"), payload)
++        self.assertRedirects(fallback, reverse("team_products"))
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.DELETED)
++        self.assertEqual(StudioProduct.objects.count(), 1)
++
++    def test_deleted_upload_retry_still_rejects_another_actor(self):
++        record = self.record(status=StudioProduct.Status.DELETED)
++        self.client.force_login(self.peer_user)
++        response = self.client.post(reverse("team_product_add"), {
++            "submission_key": str(record.submission_key)}, HTTP_ACCEPT="application/json")
++        self.assertEqual(response.status_code, 400)
++        self.assertNotIn("record_id", response.json())
++
++    def test_manager_history_and_forms_keep_distinct_csp_safe_actions(self):
++        live = self.record()
++        deleted = self.record(status=StudioProduct.Status.DELETED)
++        self.client.force_login(self.manager)
++        response = self.client.get(reverse("studio_products"))
++        self.assertCountEqual(response.context["page"], [live, deleted])
++        self.assertContains(response, deleted.deletion_reason)
++        self.assertContains(response, 'action="%s" class="status-form"' % reverse("studio_product_status", args=[live.pk]))
++        self.assertContains(response, 'action="%s" class="product-delete-form"' % reverse("studio_product_delete", args=[live.pk]))
++        self.assertNotContains(response, "onsubmit=")
+diff --git a/main/tests/test_studio_projection_sync.py b/main/tests/test_studio_projection_sync.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4be59740ccf6847c2a2177a5fa5c39992485983e
+--- /dev/null
++++ b/main/tests/test_studio_projection_sync.py
+@@ -0,0 +1,253 @@
++"""Catalog/ledger changes stay consistent without republishing group messages."""
++import tempfile
++from unittest.mock import patch
++
++from django.contrib.auth import get_user_model
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.db import transaction
++from django.db.models.query import QuerySet
++from django.test import TestCase, override_settings
++from django.urls import reverse
++from django.utils import timezone
++
++from main.models import (
++    Category, Florist, Product, SameDayFlower, StudioAdminNotification,
++    StudioDelivery, StudioProduct,
++)
++from main.studio_delivery import soft_delete_product
++from main.studio_publishing import save_dashboard_record, update_dashboard_record
++from .test_telegram_same_day import image_file
++
++
++GROUP = -5595039112
++
++
++@override_settings(TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276")
++class StudioProjectionSyncTests(TestCase):
++    def setUp(self):
++        self.media = tempfile.TemporaryDirectory()
++        self.addCleanup(self.media.cleanup)
++        category = Category.objects.create(name="گل", slug="projection-flowers", section="flowers")
++        config = override_settings(MEDIA_ROOT=self.media.name, TELEGRAM_SAME_DAY_CATEGORY_ID=str(category.pk))
++        config.enable()
++        self.addCleanup(config.disable)
++        self.manager = get_user_model().objects.create_superuser("projection-manager", password="test-pass")
++        self.florist = Florist.objects.create(name="سازنده", code="projection")
++        self.record = StudioProduct(
++            florist=self.florist, created_by=self.manager, factor_code="PROJ-100",
++            product_type=StudioProduct.ProductType.BOX, production_type=StudioProduct.ProductionType.DAILY,
++            price=2500000, image=image_file(), source=StudioProduct.Source.DASHBOARD,
++        )
++        # Mock every outbound operation, even though these paths only queue DB
++        # jobs. Image variants use isolated test media and a mocked callback.
++        for target in ("main.studio_transport.send_photo", "main.studio_transport.delete_message",
++                       "main.studio_transport.edit_caption", "main.studio_publishing.create_responsive_image_variants"):
++            mock = patch(target).start()
++            self.addCleanup(patch.stopall)
++            if target.endswith("send_photo"):
++                self.send = mock
++        save_dashboard_record(self.record)
++        StudioAdminNotification.objects.all().delete()
++
++    def notifications(self):
++        return StudioAdminNotification.objects.filter(record=self.record)
++
++    def edit_values(self, **overrides):
++        values = {
++            "florist": self.florist.pk, "factor_code": self.record.factor_code,
++            "product_type": "box", "production_type": "DAILY", "price": "2500000", "notes": "",
++        }
++        values.update(overrides)
++        return values
++
++    def post_edit(self, **overrides):
++        self.client.force_login(self.manager)
++        self.client.get(reverse("studio_product_edit", args=[self.record.pk]))
++        return self.client.post(reverse("studio_product_edit", args=[self.record.pk]),
++                                self.edit_values(**overrides),
++                                HTTP_X_CSRFTOKEN=self.client.cookies["csrftoken"].value)
++
++    def mark_existing_group_identity(self):
++        self.record.telegram_chat_id, self.record.telegram_message_id = GROUP, 812
++        self.record.save(update_fields=["telegram_chat_id", "telegram_message_id"])
++        self.record.deliveries.update(status=StudioDelivery.Status.SENT, message_id=812,
++                                      telegram_created_at=timezone.now())
++
++    def test_manager_price_and_photo_edit_updates_existing_public_row_without_publish(self):
++        product_id = self.record.product_id
++        old_image = self.record.image.name
++        response = self.post_edit(price="3100000", image=image_file())
++        self.assertEqual(response.status_code, 302)
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 3100000)
++        self.assertEqual(self.record.product_id, product_id)
++        self.assertEqual(self.record.product.price, self.record.price)
++        self.assertEqual(self.record.product.cover_image.name, self.record.image.name)
++        self.assertNotEqual(self.record.image.name, old_image)
++        self.assertEqual(self.record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).count(), 1)
++        self.assertEqual(self.notifications().count(), 1)
++        self.assertEqual(self.notifications().get().event, StudioAdminNotification.Event.PRICE)
++        self.assertIn("3,100,000", self.notifications().get().caption)
++        self.send.assert_not_called()
++
++    def test_price_projection_and_outbox_roll_back_if_public_update_fails(self):
++        self.record.price = 3100000
++        original = QuerySet.update
++
++        def fail_public_update(queryset, **kwargs):
++            if queryset.model is Product:
++                raise RuntimeError("simulated projection write failure")
++            return original(queryset, **kwargs)
++
++        with patch.object(QuerySet, "update", fail_public_update), self.assertRaises(RuntimeError):
++            update_dashboard_record(self.record, changed_fields={"price"})
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 2500000)
++        self.assertEqual(self.record.product.price, 2500000)
++        self.assertFalse(self.notifications().exists())
++
++    def test_edit_reloads_locked_status_and_cannot_overwrite_later_deletion(self):
++        stale = StudioProduct.objects.get(pk=self.record.pk)
++        soft_delete_product(self.record, actor=self.manager, reason="ثبت اشتباه")
++        stale.price, stale.notes = 3100000, "ویرایش قدیمی"
++        with self.assertRaises(PermissionDenied):
++            update_dashboard_record(stale, changed_fields={"price", "notes"})
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.status, StudioProduct.Status.DELETED)
++        self.assertEqual(self.record.price, 2500000)
++        self.assertEqual(self.record.deletion_reason, "ثبت اشتباه")
++        self.assertEqual(self.record.deleted_by, self.manager)
++
++    def test_edit_copies_only_changed_fields_and_preserves_source(self):
++        stale = StudioProduct.objects.get(pk=self.record.pk)
++        self.record.price = 2900000
++        update_dashboard_record(self.record, changed_fields={"price"})
++        stale.notes = "اصلاح یادداشت"
++        result = update_dashboard_record(stale, changed_fields={"notes"})
++        self.assertEqual(result.price, 2900000)
++        self.assertEqual(result.product.price, 2900000)
++        self.assertEqual(result.source, StudioProduct.Source.DASHBOARD)
++        self.assertEqual(result.notes, "اصلاح یادداشت")
++        self.assertEqual(self.notifications().count(), 1)
++
++    def test_published_factor_and_production_type_changes_are_form_errors(self):
++        for values, field in (({"factor_code": "CHANGED-1"}, "factor_code"),
++                              ({"production_type": "CUSTOM"}, "production_type")):
++            with self.subTest(field=field):
++                response = self.post_edit(**values)
++                self.assertEqual(response.status_code, 200)
++                self.assertIn(field, response.context["form"].errors)
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.factor_code, "PROJ-100")
++        self.assertEqual(self.record.production_type, StudioProduct.ProductionType.DAILY)
++        self.assertEqual(self.record.deliveries.count(), 1)
++
++    def test_existing_inactive_florist_does_not_block_price_edit(self):
++        self.florist.is_active = False
++        self.florist.save(update_fields=["is_active"])
++        self.assertEqual(self.post_edit(price="3100000").status_code, 302)
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.florist_id, self.florist.pk)
++        self.assertEqual(self.record.product.price, 3100000)
++
++    def test_clear_image_cannot_remove_the_stored_photos(self):
++        original = self.record.image.name
++        # The edit widget does not offer clearing the required product photo;
++        # a forged checkbox is ignored, and the service rejects an empty edit.
++        response = self.post_edit(**{"image-clear": "on"})
++        self.assertEqual(response.status_code, 302)
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.image.name, original)
++        self.assertEqual(self.record.product.cover_image.name, original)
++        self.record.image = ""
++        with self.assertRaises(ValidationError):
++            update_dashboard_record(self.record, changed_fields={"image"})
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.image.name, original)
++        self.assertEqual(self.record.product.cover_image.name, original)
++
++    def test_existing_record_cannot_be_passed_to_creation_service(self):
++        with self.assertRaises(ValidationError):
++            save_dashboard_record(self.record)
++        self.assertEqual(Product.objects.count(), 1)
++        self.assertEqual(self.record.deliveries.count(), 1)
++
++    def test_concrete_price_edit_syncs_ledger_and_emits_one_price_snapshot(self):
++        public = Product.objects.get(pk=self.record.product_id)
++        public.price = 3100000
++        public.save(update_fields=["price"])
++        public.save(update_fields=["price"])
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 3100000)
++        self.assertEqual(self.notifications().count(), 1)
++        self.assertEqual(self.notifications().get().event, StudioAdminNotification.Event.PRICE)
++        self.assertEqual(self.record.source, StudioProduct.Source.DASHBOARD)
++
++    def test_same_day_proxy_price_and_photo_edit_syncs_without_republication(self):
++        public = SameDayFlower.objects.get(pk=self.record.product_id)
++        public.price, public.cover_image = 3100000, image_file()
++        public.save(update_fields=["price", "cover_image"])
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 3100000)
++        self.assertEqual(self.record.image.name, public.cover_image.name)
++        self.assertEqual(self.record.deliveries.count(), 1)
++        self.assertEqual(self.notifications().count(), 1)
++        self.send.assert_not_called()
++
++    def test_proxy_status_and_price_change_queues_one_status_snapshot_and_existing_retirement(self):
++        self.mark_existing_group_identity()
++        public = SameDayFlower.objects.get(pk=self.record.product_id)
++        public.status, public.price = Product.Status.SOLD, 3100000
++        public.stock_status = Product.StockStatus.OUT_OF_STOCK
++        with transaction.atomic():
++            public.save(update_fields=["status", "price", "stock_status"])
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.status, StudioProduct.Status.SOLD)
++        self.assertIsNotNone(self.record.sold_at)
++        self.assertEqual(self.record.price, 3100000)
++        notification = self.notifications().get()
++        self.assertEqual(notification.event, StudioAdminNotification.Event.STATUS)
++        self.assertIn("3,100,000", notification.caption)
++        self.assertIn(self.record.get_status_display(), notification.caption)
++        self.assertEqual(self.record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).count(), 1)
++        self.assertEqual(self.record.deliveries.filter(action=StudioDelivery.Action.RETIRE).count(), 1)
++
++    def test_product_partial_save_ignores_dirty_unsaved_price_and_status(self):
++        public = SameDayFlower.objects.get(pk=self.record.product_id)
++        public.price, public.status, public.description = 3100000, Product.Status.SOLD, "توضیح"
++        public.save(update_fields=["description"])
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 2500000)
++        self.assertEqual(self.record.status, StudioProduct.Status.AVAILABLE)
++        self.assertFalse(self.notifications().exists())
++        self.assertEqual(self.record.deliveries.count(), 1)
++
++    def test_ledger_partial_save_does_not_notify_unsaved_price_or_status(self):
++        self.record.price, self.record.status, self.record.notes = 3100000, StudioProduct.Status.SOLD, "یادداشت"
++        self.record.save(update_fields=["notes"])
++        self.record.refresh_from_db()
++        self.assertEqual(self.record.price, 2500000)
++        self.assertEqual(self.record.status, StudioProduct.Status.AVAILABLE)
++        self.assertFalse(self.notifications().exists())
++
++    def test_catalog_edit_cannot_reopen_or_rewrite_deleted_ledger_audit(self):
++        soft_delete_product(self.record, actor=self.manager, reason="حذف اشتباه ثبت")
++        self.record.refresh_from_db()
++        audit = (self.record.image.name, self.record.price, self.record.deleted_at,
++                 self.record.deleted_by_id, self.record.deletion_reason)
++        StudioAdminNotification.objects.all().delete()
++        public = SameDayFlower.objects.get(pk=self.record.product_id)
++        public.price, public.cover_image = 3100000, image_file()
++        public.status = Product.Status.AVAILABLE
++        public.publish_status = Product.PublishStatus.PUBLISHED
++        public.stock_status = Product.StockStatus.IN_STOCK
++        public.save()
++        self.record.refresh_from_db()
++        public.refresh_from_db()
++        self.assertEqual(self.record.status, StudioProduct.Status.DELETED)
++        self.assertEqual((self.record.image.name, self.record.price, self.record.deleted_at,
++                          self.record.deleted_by_id, self.record.deletion_reason), audit)
++        self.assertEqual(public.publish_status, Product.PublishStatus.DRAFT)
++        self.assertEqual(public.status, Product.Status.WITHDRAWN)
++        self.assertEqual(public.stock_status, Product.StockStatus.OUT_OF_STOCK)
++        self.assertFalse(self.notifications().exists())
+diff --git a/main/tests/test_studio_reply_safety.py b/main/tests/test_studio_reply_safety.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9bcb2544fd6fd920212fb6dded75800688357b6
+--- /dev/null
++++ b/main/tests/test_studio_reply_safety.py
+@@ -0,0 +1,378 @@
++"""Regression coverage for live replies, deletion history and delayed updates."""
++import copy
++import tempfile
++import uuid
++from unittest.mock import patch
++
++from django.contrib.auth import get_user_model
++from django.db.models.query import QuerySet
++from django.test import TestCase, override_settings
++from django.utils import timezone
++
++from main.models import (
++    Category, Florist, Product, StudioDelivery, StudioProduct, TelegramSameDayPost,
++)
++from main.studio_delivery import (
++    claim_delivery, process_next_delivery, product_caption, soft_delete_product,
++)
++from main.studio_ingestion import sync_daily_status
++from main.studio_publishing import create_portal_record
++from main.telegram_same_day.service import SyncConfigurationError, process_update
++from .test_telegram_same_day import image_file
++
++
++DAILY_GROUP = -100775501
++CUSTOM_GROUP = -100775502
++
++
++@override_settings(
++    TELEGRAM_CHANNEL_ID="", TELEGRAM_DISCUSSION_GROUP_ID="",
++    TELEGRAM_SAME_DAY_GROUP_ID=str(DAILY_GROUP),
++    TELEGRAM_STUDIO_CUSTOM_GROUP_ID=str(CUSTOM_GROUP),
++    TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276",
++    PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
++)
++class StudioReplySafetyTests(TestCase):
++    def setUp(self):
++        media = tempfile.TemporaryDirectory()
++        self.addCleanup(media.cleanup)
++        self.category = Category.objects.create(
++            name="گل", slug="reply-safety", section=Category.Section.FLOWERS,
++        )
++        config = override_settings(
++            MEDIA_ROOT=media.name,
++            TELEGRAM_SAME_DAY_CATEGORY_ID=str(self.category.pk),
++        )
++        config.enable()
++        self.addCleanup(config.disable)
++        self.user = get_user_model().objects.create_user("reply-florist")
++        self.manager = get_user_model().objects.create_superuser("reply-manager")
++        self.florist = Florist.objects.create(
++            name="آزمایش", code="rs", user=self.user,
++        )
++        self.clock = int(timezone.now().timestamp())
++        self.message_count = 0
++        self.record_count = 0
++        # All outbound and download boundaries stay local. These tests must
++        # remain safe even if real Telegram credentials exist in the environment.
++        self.send = self._patch("main.studio_transport.send_photo", side_effect=self._sent_photo)
++        self.delete = self._patch("main.studio_transport.delete_message", return_value=True)
++        self.edit = self._patch("main.studio_transport.edit_caption", return_value=True)
++        self.daily_download = self._patch(
++            "main.telegram_same_day.service.download_photo", side_effect=image_file,
++        )
++        self.custom_download = self._patch(
++            "main.studio_ingestion.download_photo", side_effect=image_file,
++        )
++
++    def _patch(self, path, **kwargs):
++        mocker = patch(path, **kwargs)
++        result = mocker.start()
++        self.addCleanup(mocker.stop)
++        return result
++
++    def _sent_photo(self, chat_id, *args):
++        self.message_count += 1
++        return {
++            "message_id": 1000 + self.message_count,
++            "chat": {"id": chat_id, "type": "supergroup"},
++            "date": self.clock,
++            "from": {"id": 99, "is_bot": True},
++            "photo": [{"file_id": "sent-photo", "width": 100, "height": 100}],
++        }
++
++    def _portal_record(self, production_type="DAILY", *, publish=True):
++        self.record_count += 1
++        record, _ = create_portal_record(
++            user=self.user, florist=self.florist, image=image_file(),
++            factor_code=f"RS-{self.record_count}", product_type="box",
++            production_type=production_type, price=2400000,
++            submission_key=uuid.uuid4(),
++        )
++        if publish:
++            for _ in range(10):
++                job = process_next_delivery()
++                self.assertIsNotNone(job)
++                if job.record_id == record.pk and job.action == StudioDelivery.Action.PUBLISH:
++                    break
++            else:
++                self.fail("The new record's publish job was not processed.")
++            self.assertEqual(job.status, StudioDelivery.Status.SENT)
++            record.refresh_from_db()
++        return record
++
++    def _reply(self, record, text, *, seconds=10, message_id=None):
++        chat_id = DAILY_GROUP if record.production_type == "DAILY" else CUSTOM_GROUP
++        original = {
++            "message_id": record.telegram_message_id or 1001,
++            "chat": {"id": chat_id, "type": "supergroup"},
++            "date": self.clock, "caption": product_caption(record),
++            "from": {"id": 99, "is_bot": True},
++            "photo": [{"file_id": "sent-photo", "width": 100, "height": 100}],
++        }
++        return {
++            "message_id": message_id or 2000 + record.pk * 100 + seconds,
++            "date": self.clock + seconds,
++            "chat": {"id": chat_id, "type": "supergroup"},
++            "from": {"id": 702, "is_bot": False}, "text": text,
++            "reply_to_message": original,
++        }
++
++    def _legacy_photo(self, production_type):
++        chat_id = DAILY_GROUP if production_type == "DAILY" else CUSTOM_GROUP
++        message = {
++            "message_id": 3000, "date": self.clock,
++            "chat": {"id": chat_id, "type": "supergroup"},
++            "from": {"id": 702, "is_bot": False},
++            "caption": "florist: rs\ntype: box\nfactor: LEGACY-1\nقیمت: 2400000",
++            "photo": [{"file_id": "legacy-photo", "width": 100, "height": 100}],
++        }
++        process_update("message", message, 100)
++        return StudioProduct.objects.get(
++            telegram_chat_id=chat_id, telegram_message_id=3000,
++        ), message
++
++    def _deleted_snapshot(self, record):
++        record = soft_delete_product(record, actor=self.manager, reason="ثبت آزمایشی اشتباه")
++        self.assertEqual(record.status, StudioProduct.Status.DELETED)
++        self.assertEqual(record.deleted_by_id, self.manager.pk)
++        self.assertIsNotNone(record.deleted_at)
++        return self._snapshot(record)
++
++    @staticmethod
++    def _snapshot(record):
++        record.refresh_from_db()
++        return {
++            name: getattr(record, name)
++            for name in (
++                "status", "price", "factor_code", "florist_id", "product_type",
++                "telegram_file_id", "revision_date", "revision_update_id",
++                "sold_at", "withdrawn_at", "deleted_at", "deleted_by_id",
++                "deletion_reason",
++            )
++        } | {"image": record.image.name}
++
++    def test_deleted_daily_portal_replies_preserve_audit_and_catalog(self):
++        record = self._portal_record()
++        snapshot = self._deleted_snapshot(record)
++        notifications = record.admin_notifications.count()
++        for index, text in enumerate(("قیمت: 3500000", "فروخته شد", "کشیده شد")):
++            with self.subTest(text=text):
++                process_update("message", self._reply(record, text, seconds=10 + index), 200 + index)
++                self.assertEqual(self._snapshot(record), snapshot)
++                self.assertEqual(record.admin_notifications.count(), notifications)
++                product = Product.objects.get(pk=record.product_id)
++                self.assertEqual(product.price, snapshot["price"])
++                self.assertFalse(Product.objects.published().filter(pk=product.pk).exists())
++
++    def test_deleted_custom_portal_replies_preserve_audit(self):
++        record = self._portal_record("CUSTOM")
++        snapshot = self._deleted_snapshot(record)
++        notifications = record.admin_notifications.count()
++        for index, text in enumerate(("قیمت: 3500000", "فروخته شد", "کشیده شد")):
++            with self.subTest(text=text):
++                process_update("message", self._reply(record, text, seconds=10 + index), 200 + index)
++                self.assertEqual(self._snapshot(record), snapshot)
++                self.assertEqual(record.admin_notifications.count(), notifications)
++
++    def test_deleted_legacy_daily_photo_edit_cannot_change_retained_history(self):
++        record, photo = self._legacy_photo("DAILY")
++        snapshot = self._deleted_snapshot(record)
++        photo["edit_date"] = self.clock + 20
++        photo["caption"] = photo["caption"].replace("2400000", "3500000")
++        photo["photo"][0]["file_id"] = "replacement-photo"
++        downloads = self.daily_download.call_count
++        process_update("edited_message", photo, 200)
++        self.assertEqual(self._snapshot(record), snapshot)
++        self.assertEqual(self.daily_download.call_count, downloads)
++        product = Product.objects.get(pk=record.product_id)
++        self.assertEqual(product.price, snapshot["price"])
++        self.assertFalse(Product.objects.published().filter(pk=product.pk).exists())
++
++    def test_deleted_legacy_custom_photo_edit_and_price_preserve_history(self):
++        record, photo = self._legacy_photo("CUSTOM")
++        snapshot = self._deleted_snapshot(record)
++        photo["edit_date"] = self.clock + 20
++        photo["caption"] = photo["caption"].replace("2400000", "3500000")
++        photo["photo"][0]["file_id"] = "replacement-photo"
++        downloads = self.custom_download.call_count
++        process_update("edited_message", photo, 200)
++        process_update("message", self._reply(record, "قیمت: 4500000", seconds=30), 201)
++        self.assertEqual(self._snapshot(record), snapshot)
++        self.assertEqual(self.custom_download.call_count, downloads)
++
++    def test_prepatch_deleted_daily_row_without_post_tombstone_stays_immutable(self):
++        record, photo = self._legacy_photo("DAILY")
++        snapshot = self._deleted_snapshot(record)
++        # The previous deployed soft-delete service only wrote withdrawn_at.
++        # Preserve protection for those rows without requiring a data rewrite.
++        TelegramSameDayPost.objects.filter(product_id=record.product_id).update(deleted_at=None)
++        product = Product.objects.get(pk=record.product_id)
++        public_snapshot = (product.price, product.cover_image.name)
++        photo["edit_date"] = self.clock + 20
++        photo["caption"] = photo["caption"].replace("2400000", "3500000")
++        photo["photo"][0]["file_id"] = "replacement-photo"
++        downloads = self.daily_download.call_count
++        process_update("edited_message", photo, 200)
++        self.assertEqual(self._snapshot(record), snapshot)
++        self.assertEqual(self.daily_download.call_count, downloads)
++        product.refresh_from_db()
++        self.assertEqual((product.price, product.cover_image.name), public_snapshot)
++
++    def test_daily_status_sync_cannot_replace_deleted_with_withdrawn(self):
++        record = self._portal_record()
++        snapshot = self._deleted_snapshot(record)
++        post = TelegramSameDayPost.objects.get(product_id=record.product_id)
++        sync_daily_status(post)
++        self.assertEqual(self._snapshot(record), snapshot)
++
++    def test_custom_immediate_reply_is_retryable_until_identity_is_mapped(self):
++        record = self._portal_record("CUSTOM", publish=False)
++        job = claim_delivery()
++        for status in (StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN):
++            StudioDelivery.objects.filter(pk=job.pk).update(status=status)
++            for text in ("فروخته شد", "کشیده شد", "قیمت: 3500000"):
++                with self.subTest(status=status, text=text), self.assertRaises(SyncConfigurationError):
++                    process_update("message", self._reply(record, text), 200)
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
++        self.assertEqual(record.price, 2400000)
++
++    def test_unknown_custom_bot_photo_is_not_matched_by_an_unrelated_caption(self):
++        record = self._portal_record("CUSTOM", publish=False)
++        claim_delivery()
++        reply = self._reply(record, "فروخته شد")
++        reply["reply_to_message"]["caption"] = "قیمت: 999999\nفاکتور: unrelated"
++        result = process_update("message", reply, 200)
++        self.assertEqual(result["result"], "unknown_reply_ignored")
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
++
++    def _assert_old_caption_during_pending_price_change_is_retryable(self, production_type):
++        record = self._portal_record(production_type, publish=False)
++        claim_delivery()
++        # The outgoing request already captured its original legitimate caption.
++        reply = self._reply(record, "فروخته شد")
++        record.price = 3500000
++        record.save(update_fields=["price", "updated_at"])
++        with self.assertRaises(SyncConfigurationError):
++            process_update("message", reply, 200)
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
++        self.assertEqual(record.price, 3500000)
++        self.assertIsNone(record.telegram_message_id)
++
++    def test_pending_daily_sale_with_old_caption_defers_after_price_change(self):
++        self._assert_old_caption_during_pending_price_change_is_retryable("DAILY")
++
++    def test_pending_custom_sale_with_old_caption_defers_after_price_change(self):
++        self._assert_old_caption_during_pending_price_change_is_retryable("CUSTOM")
++
++    def test_pending_custom_same_factor_in_non_outbound_caption_is_not_matched(self):
++        record = self._portal_record("CUSTOM", publish=False)
++        claim_delivery()
++        for caption in (
++            f"پیام دیگر\nفاکتور: {record.factor_code}",
++            f"{product_caption(record)}\nمتن اضافی",
++            f"قیمت: نامعتبر تومان\nفاکتور: {record.factor_code}",
++        ):
++            with self.subTest(caption=caption):
++                reply = self._reply(record, "فروخته شد")
++                reply["reply_to_message"]["caption"] = caption
++                result = process_update("message", reply, 200)
++                self.assertEqual(result["result"], "unknown_reply_ignored")
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
++        self.assertIsNone(record.telegram_message_id)
++
++    def test_custom_reply_rereads_mapping_when_initial_lookup_misses_commit(self):
++        record = self._portal_record("CUSTOM")
++        original_filter = QuerySet.filter
++        missed = False
++
++        def miss_first_identity_lookup(queryset, *args, **kwargs):
++            nonlocal missed
++            if (not missed and queryset.model is StudioProduct
++                    and kwargs.get("telegram_chat_id") == CUSTOM_GROUP
++                    and kwargs.get("telegram_message_id") == record.telegram_message_id):
++                missed = True
++                return original_filter(queryset, pk__in=[])
++            return original_filter(queryset, *args, **kwargs)
++
++        with patch.object(QuerySet, "filter", new=miss_first_identity_lookup):
++            result = process_update("message", self._reply(record, "فروخته شد"), 200)
++        self.assertTrue(missed)
++        self.assertEqual(result["result"], "status_updated")
++        record.refresh_from_db()
++        self.assertEqual(record.status, StudioProduct.Status.SOLD)
++        self.assertTrue(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists())
++
++    def _assert_price_ordering(self, production_type):
++        record = self._portal_record(production_type)
++        fresh = self._reply(record, "قیمت: 3500000", seconds=20, message_id=2010)
++        older = self._reply(record, "قیمت: 2800000", seconds=10, message_id=2005)
++        process_update("message", fresh, 200)
++        notifications = record.admin_notifications.count()
++        process_update("message", older, 150)
++        record.refresh_from_db()
++        self.assertEqual(record.price, 3500000)
++        process_update("message", fresh, 200)
++        record.refresh_from_db()
++        self.assertEqual(record.price, 3500000)
++        self.assertEqual(record.admin_notifications.count(), notifications)
++        if record.product_id:
++            self.assertEqual(Product.objects.get(pk=record.product_id).price, 3500000)
++        edited = copy.deepcopy(older)
++        edited["edit_date"] = self.clock + 30
++        edited["text"] = "قیمت: 3900000"
++        process_update("edited_message", edited, 220)
++        # A delayed retry of the previously fresh command must not undo an edit.
++        process_update("message", fresh, 200)
++        record.refresh_from_db()
++        self.assertEqual(record.price, 3900000)
++        if record.product_id:
++            self.assertEqual(Product.objects.get(pk=record.product_id).price, 3900000)
++
++    def test_daily_explicit_price_reply_and_edit_reject_older_replays(self):
++        self._assert_price_ordering("DAILY")
++
++    def test_custom_explicit_price_reply_and_edit_reject_older_replays(self):
++        self._assert_price_ordering("CUSTOM")
++
++    def test_legacy_daily_old_photo_cannot_undo_a_later_explicit_price_reply(self):
++        record, photo = self._legacy_photo("DAILY")
++        reply = self._reply(record, "قیمت: 3500000", seconds=20)
++        process_update("message", reply, 200)
++        photo["edit_date"] = self.clock + 10
++        photo["caption"] = photo["caption"].replace("2400000", "2800000")
++        process_update("edited_message", photo, 150)
++        record.refresh_from_db()
++        self.assertEqual(record.price, 3500000)
++        self.assertEqual(Product.objects.get(pk=record.product_id).price, 3500000)
++
++    def test_legacy_custom_old_photo_cannot_undo_a_later_explicit_price_reply(self):
++        record, photo = self._legacy_photo("CUSTOM")
++        reply = self._reply(record, "قیمت: 3500000", seconds=20)
++        process_update("message", reply, 200)
++        photo["edit_date"] = self.clock + 10
++        photo["caption"] = photo["caption"].replace("2400000", "2800000")
++        process_update("edited_message", photo, 150)
++        record.refresh_from_db()
++        self.assertEqual(record.price, 3500000)
++
++    def test_normal_daily_and_custom_price_then_sale_or_withdrawal_still_work(self):
++        for production_type in ("DAILY", "CUSTOM"):
++            for text, status in (("فروخته شد", "SOLD"), ("کشیده شد", "WITHDRAWN")):
++                with self.subTest(production_type=production_type, status=status):
++                    record = self._portal_record(production_type)
++                    result = process_update("message", self._reply(record, "قیمت: 3500000"), 200)
++                    self.assertEqual(result["result"], "price_updated")
++                    process_update("message", self._reply(record, text, seconds=20), 220)
++                    record.refresh_from_db()
++                    self.assertEqual(record.price, 3500000)
++                    self.assertEqual(record.status, status)
++                    self.assertTrue(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists())
++                    if record.product_id:
++                        product = Product.objects.get(pk=record.product_id)
++                        self.assertEqual(product.price, 3500000)
++                        self.assertEqual(product.stock_status, Product.StockStatus.OUT_OF_STOCK)
+diff --git a/main/urls.py b/main/urls.py
+index cc01ab33030d04a9b4301cf50e7d250a39fef7aa..02f817eabdfdc21f7e36d442d2e1721cc9412b78 100644
+--- a/main/urls.py
++++ b/main/urls.py
+@@ -6,6 +6,7 @@ from . import views
+ from .telegram_product_lookup import telegram_product_lookup
+ from .telegram_same_day.webhook import telegram_webhook
+ from . import studio_views
++from .studio_notification_views import admin_notifications
+ 
+ urlpatterns = [
+     path("", include("main.team_urls")),
+@@ -22,6 +23,7 @@ urlpatterns = [
+     path("studio/analytics/", studio_views.analytics, name="studio_analytics"),
+     path("studio/settings/", studio_views.settings_view, name="studio_settings"),
+     path("studio/deliveries/", studio_views.deliveries, name="studio_deliveries"),
++    path("studio/admin-notifications/", admin_notifications, name="studio_admin_notifications"),
+     path("studio/issues/<int:pk>/resolve/", studio_views.resolve_issue, name="studio_resolve_issue"),
+     path("api/telegram/webhook/", telegram_webhook, name="telegram_webhook"),
+     path(
+diff --git a/ops/cloudflare/zad-telegram-relay-worker.test.mjs b/ops/cloudflare/zad-telegram-relay-worker.test.mjs
+index 2bcf62d7d703067f88e50c756b68141272ec1de9..a0435760df7b594608e07d228b0feddcbbeb8ce5 100644
+--- a/ops/cloudflare/zad-telegram-relay-worker.test.mjs
++++ b/ops/cloudflare/zad-telegram-relay-worker.test.mjs
+@@ -722,3 +722,34 @@ test("studio permits custom getChat and retirement without a daily destination",
+     });
+   }
+ });
++
++test("studio private getChat only accepts the configured admin and strips private metadata", async () => {
++  const adminEnv = { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" };
++  await withFetch(async () => json({ ok: true, result: { id: 212832276, type: "private", first_name: "private", invite_link: "secret" } }), async () => {
++    const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832276" }), adminEnv);
++    assert.equal(response.status, 200);
++    assert.deepEqual(await response.json(), { ok: true, result: { id: 212832276, type: "private" } });
++  });
++  await withFetch(async () => assert.fail("unexpected network call"), async () => {
++    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832276" }), studioEnv)).status, 400);
++    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832277" }), adminEnv)).status, 400);
++  });
++});
++
++test("studio private photo preserves the existing exact photo envelope", async () => {
++  const adminEnv = { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" };
++  await withFetch(async (_url, options) => {
++    assert.equal(options.body.get("chat_id"), "212832276");
++    assert.deepEqual(Buffer.from(await options.body.get("photo").arrayBuffer()), studioPhoto);
++    return json({ ok: true, result: { message_id: 43, chat: { id: 212832276, type: "private" } } });
++  }, async () => {
++    assert.equal((await worker.fetch(studioRequest({ ...studioPayload, chat_id: "212832276" }), adminEnv)).status, 200);
++  });
++});
++
++test("studio still rejects a private response for a configured group after admin is enabled", async () => {
++  await withFetch(async () => json({ ok: true, result: { id: -10077777, type: "private" } }), async () => {
++    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }),
++      { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" })).status, 502);
++  });
++});
+diff --git a/ops/tests/studio-actions.test.cjs b/ops/tests/studio-actions.test.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5f1d0279ce8784f401454a4284522e48389fea4c
+--- /dev/null
++++ b/ops/tests/studio-actions.test.cjs
+@@ -0,0 +1,194 @@
++const test = require('node:test');
++const assert = require('node:assert/strict');
++const vm = require('node:vm');
++const fs = require('node:fs');
++const path = require('node:path');
++const source = fs.readFileSync(path.join(__dirname, '../../main/static/main/js/pages/studio.js'), 'utf8');
++
++function fixture({ dialogAvailable = true, fallbackConfirmed = true, delayedClose = false } = {}) {
++  const events = {};
++  let document;
++  function node(textContent = '') {
++    const handlers = {};
++    return {
++      textContent, disabled: false,
++      addEventListener(type, handler) { (handlers[type] ??= []).push(handler); },
++      dispatch(type, extra = {}) {
++        const event = { target: this, currentTarget: this, ...extra };
++        for (const handler of handlers[type] ?? []) handler(event);
++      },
++      focus() { document.activeElement = this; },
++    };
++  }
++  const title = node('ثبت وضعیت محصول');
++  const description = node();
++  const help = node();
++  const confirm = node('تأیید و ثبت');
++  const cancel = node('انصراف');
++  const announcer = node();
++  const dialog = Object.assign(node(), {
++    open: false, opened: 0,
++    querySelector(selector) {
++      return { '#status-title': title, '[data-status-description]': description,
++        'p.muted': help, '[data-close-dialog]': cancel }[selector] ?? null;
++    },
++    showModal() { this.open = true; this.opened++; },
++    close() { this.open = false; if (!delayedClose) this.dispatch('close'); },
++  });
++  cancel.closest = selector => ({ '[data-close-dialog]': cancel, dialog }[selector] ?? null);
++  document = {
++    body: { classList: { toggle() {} } },
++    querySelector(selector) {
++      return { '#status-dialog': dialogAvailable ? dialog : null,
++        '[data-confirm-status]': dialogAvailable ? confirm : null,
++        '[data-announcer]': announcer }[selector] ?? null;
++    },
++    querySelectorAll(selector) { return selector === 'dialog' && dialogAvailable ? [dialog] : []; },
++    addEventListener(type, callback) { (events[type] ??= []).push(callback); },
++  };
++  const submissions = [];
++  const confirmations = [];
++  const window = {
++    matchMedia() { return { matches: false, addEventListener() {} }; },
++    addEventListener() {},
++    confirm(text) { confirmations.push(text); return fallbackConfirmed; },
++  };
++  vm.runInNewContext(source, { document, window,
++    HTMLFormElement: { prototype: { submit() { submissions.push(this); } } } });
++  function form(kind, { reason = 'ثبت اشتباه', status = 'SOLD', factor = 'A-123' } = {}) {
++    const reasonInput = { value: reason };
++    const select = { selectedOptions: [{ value: status, textContent: 'فروخته شد' }] };
++    const button = node();
++    return {
++      isConnected: true, dataset: { factor }, button, reasonInput, select,
++      matches(selector) { return selector.split(',').some(part => part === `.${kind}`); },
++      querySelector(selector) {
++        return { 'input[name=reason]': kind === 'product-delete-form' ? reasonInput : null,
++          'select[name=status]': kind === 'status-form' ? select : null }[selector] ?? null;
++      },
++      querySelectorAll(selector) { return selector === 'button[type=submit]' ? [button] : []; },
++      reportValidity() { return kind === 'product-delete-form' ? Boolean(reasonInput.value) : Boolean(status); },
++    };
++  }
++  function fire(type, target) {
++    const event = { target, prevented: false, preventDefault() { this.prevented = true; } };
++    for (const handler of events[type] ?? []) handler(event);
++    return event;
++  }
++  return { form, fire, dialog, title, description, help, confirm, cancel,
++    announcer, document, submissions, confirmations };
++}
++
++test('deletion confirms without a status select, safely displays text and focuses cancellation', () => {
++  const f = fixture();
++  const form = f.form('product-delete-form', { factor: '<script>alert(1)</script>', reason: '<img src=x>' });
++  assert.equal(f.fire('submit', form).prevented, true);
++  assert.equal(f.dialog.open, true);
++  assert.match(f.description.textContent, /<script>alert\(1\)<\/script>/);
++  assert.match(f.description.textContent, /<img src=x>/);
++  assert.match(f.title.textContent, /حذف مدیریتی/);
++  assert.match(f.help.textContent, /سابقهٔ مدیریتی محفوظ/);
++  assert.equal(f.document.activeElement, f.cancel);
++  assert.equal(f.submissions.length, 0);
++});
++
++test('confirmation and repeated submit events send a deletion only once', () => {
++  const f = fixture();
++  const form = f.form('product-delete-form');
++  f.fire('submit', form);
++  f.fire('submit', form);
++  f.confirm.dispatch('click');
++  f.confirm.dispatch('click');
++  f.fire('submit', form);
++  assert.deepEqual(f.submissions, [form]);
++  assert.equal(f.dialog.opened, 1);
++  assert.equal(f.confirm.disabled, true);
++  assert.equal(form.button.disabled, true);
++});
++
++test('cancellation clears deletion so the existing status action can be confirmed', () => {
++  const f = fixture();
++  const deleted = f.form('product-delete-form');
++  f.fire('submit', deleted);
++  f.fire('click', f.cancel);
++  assert.equal(f.dialog.open, false);
++  assert.equal(f.submissions.length, 0);
++  const status = f.form('status-form');
++  f.fire('submit', status);
++  assert.equal(f.title.textContent, 'ثبت وضعیت محصول');
++  assert.match(f.description.textContent, /فروخته شد/);
++  assert.equal(f.help.textContent, 'این محصول از فهرست موجودها خارج می‌شود.');
++  f.confirm.dispatch('click');
++  assert.deepEqual(f.submissions, [status]);
++});
++
++test('native dialog dismissal clears pending deletion before reopening', () => {
++  const f = fixture();
++  const first = f.form('product-delete-form', { factor: 'FIRST' });
++  const second = f.form('product-delete-form', { factor: 'SECOND' });
++  f.fire('submit', first);
++  f.dialog.close();
++  f.confirm.dispatch('click');
++  assert.equal(f.submissions.length, 0);
++  f.fire('submit', second);
++  f.confirm.dispatch('click');
++  assert.deepEqual(f.submissions, [second]);
++});
++
++test('a queued previous close cannot clear the new confirmation', () => {
++  const f = fixture({ delayedClose: true });
++  const first = f.form('product-delete-form', { factor: 'FIRST' });
++  const second = f.form('product-delete-form', { factor: 'SECOND' });
++  f.fire('submit', first);
++  f.dialog.close();
++  f.confirm.dispatch('click');
++  assert.equal(f.submissions.length, 0);
++  f.fire('submit', second);
++  f.dialog.dispatch('close');
++  f.confirm.dispatch('click');
++  assert.deepEqual(f.submissions, [second]);
++});
++
++test('blank deletion reason and unselected status never open a confirmation or submit', () => {
++  const f = fixture();
++  const deletion = f.form('product-delete-form', { reason: '  \t ' });
++  const status = f.form('status-form', { status: '' });
++  assert.equal(f.fire('submit', deletion).prevented, true);
++  assert.equal(f.fire('submit', status).prevented, true);
++  assert.equal(deletion.reasonInput.value, '');
++  assert.equal(f.dialog.opened, 0);
++  assert.equal(f.submissions.length, 0);
++});
++
++test('a table replaced by sorting cannot submit its detached pending form', () => {
++  const f = fixture();
++  const form = f.form('product-delete-form');
++  f.fire('submit', form);
++  form.isConnected = false;
++  f.confirm.dispatch('click');
++  assert.equal(f.submissions.length, 0);
++  assert.equal(f.dialog.open, false);
++  assert.ok(f.announcer.textContent);
++});
++
++test('confirmation rechecks validation if data becomes invalid while modal is open', () => {
++  const f = fixture();
++  const form = f.form('product-delete-form');
++  f.fire('submit', form);
++  form.reasonInput.value = '';
++  f.confirm.dispatch('click');
++  assert.equal(f.submissions.length, 0);
++  assert.equal(form.button.disabled, false);
++  assert.equal(f.confirm.disabled, false);
++});
++
++for (const confirmed of [true, false]) {
++  test(`without dialog support native confirmation stays safe (confirmed=${confirmed})`, () => {
++    const f = fixture({ dialogAvailable: false, fallbackConfirmed: confirmed });
++    const form = f.form('product-delete-form');
++    assert.equal(f.fire('submit', form).prevented, true);
++    if (confirmed) f.fire('submit', form);
++    assert.equal(f.confirmations.length, 1);
++    assert.equal(f.submissions.length, confirmed ? 1 : 0);
++  });
++}
+diff --git a/requirements.txt b/requirements.txt
+index e957f585c1802c84914dea3c65862102fcf46c62..4eb8e3d4c1950069ddeca75f3739934e529e9892 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -2,5 +2,6 @@ Django==6.0.2
+ django-jazzmin==3.0.5
+ gunicorn==26.0.0
+ Pillow==12.3.0
++pillow-heif==1.5.0
+ psycopg[binary]==3.3.4
+ python-dotenv==1.2.2

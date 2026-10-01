@@ -21,7 +21,7 @@
               <form method="post" action="{% url 'studio_product_status' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label class="sr-only" for="status-{{ row.pk }}">وضعیت جدید</label><select id="status-{{ row.pk }}" name="status" required><option value="">وضعیت جدید</option><option value="SOLD">فروخته شد</option><option value="WITHDRAWN">کشیده شد</option><option value="CANCELLED">لغو شد</option></select><button class="btn btn-outline" type="submit">ثبت وضعیت</button></form>
             {% endif %}
             {% if perms.main.delete_studioproduct %}
-              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}" onsubmit="return confirm('این محصول از آمار فلوریست حذف می‌شود اما سابقهٔ مدیریتی آن باقی می‌ماند. ادامه می‌دهید؟');">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
+              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="product-delete-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
             {% endif %}
           </div></details>
         {% else %}<span class="muted">—</span>{% endif %}

@@ -32,6 +32,19 @@ def product_caption(record):
     return f"قیمت: {record.price:,.0f} تومان\nفاکتور: {record.factor_code}"
 
 
+def pending_caption_matches(record, caption):
+    """Only defer an in-flight reply; a caption never establishes message ownership.
+
+    The invoice is immutable, while a manager can correct the price during send.
+    Accept only our narrow outbound shape, so that correction cannot lose a sale.
+    """
+    if not isinstance(caption, str) or len(caption) > 1024:
+        return False
+    return bool(re.fullmatch(
+        rf"قیمت: [0-9,]+ تومان\nفاکتور: {re.escape(record.factor_code)}", caption,
+    ))
+
+
 def delivery_summary(record):
     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
@@ -143,7 +156,7 @@ def soft_delete_product(record, *, actor, reason):
                 updated_at=now,
             )
             TelegramSameDayPost.objects.filter(product_id=record.product_id).update(
-                withdrawn_at=now, updated_at=now,
+                withdrawn_at=now, deleted_at=now, updated_at=now,
             )
 
         queue_retirement(record)

@@ -722,3 +722,34 @@ test("studio permits custom getChat and retirement without a daily destination",
     });
   }
 });
+
+test("studio private getChat only accepts the configured admin and strips private metadata", async () => {
+  const adminEnv = { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" };
+  await withFetch(async () => json({ ok: true, result: { id: 212832276, type: "private", first_name: "private", invite_link: "secret" } }), async () => {
+    const response = await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832276" }), adminEnv);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, result: { id: 212832276, type: "private" } });
+  });
+  await withFetch(async () => assert.fail("unexpected network call"), async () => {
+    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832276" }), studioEnv)).status, 400);
+    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "212832277" }), adminEnv)).status, 400);
+  });
+});
+
+test("studio private photo preserves the existing exact photo envelope", async () => {
+  const adminEnv = { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" };
+  await withFetch(async (_url, options) => {
+    assert.equal(options.body.get("chat_id"), "212832276");
+    assert.deepEqual(Buffer.from(await options.body.get("photo").arrayBuffer()), studioPhoto);
+    return json({ ok: true, result: { message_id: 43, chat: { id: 212832276, type: "private" } } });
+  }, async () => {
+    assert.equal((await worker.fetch(studioRequest({ ...studioPayload, chat_id: "212832276" }), adminEnv)).status, 200);
+  });
+});
+
+test("studio still rejects a private response for a configured group after admin is enabled", async () => {
+  await withFetch(async () => json({ ok: true, result: { id: -10077777, type: "private" } }), async () => {
+    assert.equal((await worker.fetch(studioRequest({ method: "getChat", chat_id: "-10077777" }),
+      { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" })).status, 502);
+  });
+});

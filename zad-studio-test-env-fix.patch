@@ -1,0 +1,35 @@
+diff --git a/main/tests/test_studio_transport.py b/main/tests/test_studio_transport.py
+index 9556cc902d4e063820ef05660e95f7bcc4961794..ce3538b04e1a5fc1e71f745bd5a3a384c7227862 100644
+--- a/main/tests/test_studio_transport.py
++++ b/main/tests/test_studio_transport.py
+@@ -25,6 +25,8 @@ class Response(BytesIO):
+ 
+ @override_settings(
+     TELEGRAM_SAME_DAY_GROUP_ID=GROUP,
++    TELEGRAM_STUDIO_CUSTOM_GROUP_ID="",
++    TELEGRAM_STUDIO_ADMIN_CHAT_ID="",
+     TELEGRAM_BOT_TOKEN="private-token",
+     TELEGRAM_SAME_DAY_RELAY_URL="",
+     TELEGRAM_LEAD_RELAY_SECRET="private-secret",
+@@ -105,6 +107,21 @@ class StudioTransportTests(SimpleTestCase):
+         self.assertEqual(error.exception.code, "invalid_payload")
+         self.opener.open.assert_not_called()
+ 
++    def test_other_configured_destinations_cannot_authorize_an_unconfigured_ready_group(self):
++        # A configured custom/private destination is not the same as having
++        # no destinations. Both must still reject the absent ready group.
++        for custom, admin in (("-5182713369", ""), ("", "212832276")):
++            with self.subTest(custom=custom, admin=admin), override_settings(
++                TELEGRAM_SAME_DAY_GROUP_ID="",
++                TELEGRAM_STUDIO_CUSTOM_GROUP_ID=custom,
++                TELEGRAM_STUDIO_ADMIN_CHAT_ID=admin,
++            ):
++                with self.assertRaises(transport.TelegramDeliveryError) as error:
++                    transport.send_photo(GROUP, JPEG, "price")
++                self.assertEqual(error.exception.code, "invalid_payload")
++                self.assertFalse(error.exception.retryable)
++        self.opener.open.assert_not_called()
++
+     def test_missing_group_or_unsafe_relay_configuration_never_reaches_network(self):
+         settings_cases = [
+             {"TELEGRAM_SAME_DAY_GROUP_ID": ""},
