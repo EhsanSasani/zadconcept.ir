@@ -56,23 +56,67 @@ def delivery_summary(record):
 
 
 def queue_retirement(record):
-    """Call in the status transaction. Only messages emitted by our outbox retire."""
-    if (record.status == StudioProduct.Status.AVAILABLE
-            or not record.telegram_chat_id or not record.telegram_message_id):
+    """Queue Telegram retirement with a grace period for sold/withdrawn items."""
+    if (
+        record.status == StudioProduct.Status.AVAILABLE
+        or not record.telegram_chat_id
+        or not record.telegram_message_id
+    ):
         return None
-    published = record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).first()
+
+    published = record.deliveries.filter(
+        action=StudioDelivery.Action.PUBLISH
+    ).first()
     if not published:
         return None
+
+    now = timezone.now()
+
+    if record.status == StudioProduct.Status.SOLD:
+        terminal_at = record.sold_at or now
+        due_at = terminal_at + timedelta(minutes=45)
+    elif record.status == StudioProduct.Status.WITHDRAWN:
+        terminal_at = record.withdrawn_at or now
+        due_at = terminal_at + timedelta(minutes=45)
+    else:
+        # Administrative deletion and other terminal states stay immediate.
+        due_at = now
+
     job, created = StudioDelivery.objects.get_or_create(
-        record=record, action=StudioDelivery.Action.RETIRE,
-        defaults={"chat_id": record.telegram_chat_id, "message_id": record.telegram_message_id,
-                  "telegram_created_at": published.telegram_created_at if published else None},
+        record=record,
+        action=StudioDelivery.Action.RETIRE,
+        defaults={
+            "chat_id": record.telegram_chat_id,
+            "message_id": record.telegram_message_id,
+            "telegram_created_at": published.telegram_created_at,
+            "next_attempt_at": due_at,
+        },
     )
-    # An older caption fallback may need to reflect a later terminal update. A
-    # deleted message is already absent and must not be posted again.
-    if not created and job.status == StudioDelivery.Status.SENT and job.outcome == "caption_marked":
-        job.status, job.next_attempt_at, job.last_error = StudioDelivery.Status.RETRY, timezone.now(), ""
-        job.save(update_fields=["status", "next_attempt_at", "last_error", "updated_at"])
+
+    if created:
+        return job
+
+    if (
+        job.status == StudioDelivery.Status.SENT
+        and job.outcome == "caption_marked"
+    ):
+        job.status = StudioDelivery.Status.RETRY
+        job.next_attempt_at = due_at
+        job.last_error = ""
+        job.save(
+            update_fields=[
+                "status",
+                "next_attempt_at",
+                "last_error",
+                "updated_at",
+            ]
+        )
+        return job
+
+    if job.status in READY:
+        job.next_attempt_at = due_at
+        job.save(update_fields=["next_attempt_at", "updated_at"])
+
     return job
 
 
