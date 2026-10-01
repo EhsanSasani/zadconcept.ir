@@ -3108,6 +3108,50 @@ class StudioDelivery(TimeStampedModel):
         )]
 
 
+class StudioAdminNotification(TimeStampedModel):
+    """Durable customer-safe photo notifications for the configured admin PV."""
+
+    class Event(models.TextChoices):
+        CREATED = "CREATED", "ثبت محصول"
+        PRICE = "PRICE", "تغییر قیمت"
+        STATUS = "STATUS", "تغییر وضعیت"
+        DELETED = "DELETED", "حذف مدیریتی"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "در صف"
+        SENDING = "SENDING", "در حال ارسال"
+        RETRY = "RETRY", "تلاش مجدد"
+        SENT = "SENT", "ارسال شد"
+        UNCERTAIN = "UNCERTAIN", "نیازمند بررسی"
+        FAILED = "FAILED", "ناموفق"
+
+    record = models.ForeignKey(
+        StudioProduct, on_delete=models.CASCADE, related_name="admin_notifications",
+    )
+    event = models.CharField(max_length=12, choices=Event.choices)
+    chat_id = models.BigIntegerField()
+    caption = models.CharField(max_length=1024)
+    status = models.CharField(
+        max_length=12, choices=Status.choices, default=Status.PENDING, db_index=True,
+    )
+    attempts = models.PositiveIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now, db_index=True)
+    locked_at = models.DateTimeField(null=True, blank=True)
+    lock_token = models.UUIDField(null=True, blank=True, editable=False)
+    telegram_message_id = models.PositiveBigIntegerField(null=True, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField(max_length=64, blank=True)
+
+    class Meta:
+        ordering = ["next_attempt_at", "pk"]
+        verbose_name = "اعلان خصوصی استودیو"
+        verbose_name_plural = "اعلان‌های خصوصی استودیو"
+        indexes = [
+            models.Index(fields=["status", "next_attempt_at"], name="studio_admin_notify_due"),
+            models.Index(fields=["record", "created_at"], name="studio_admin_notify_record"),
+        ]
+
+
 class StudioIngestionIssue(TimeStampedModel):
     """Rejected custom photo attempts; never an incomplete production record."""
 

@@ -53,11 +53,14 @@ def _retry_after(value):
 
 def _chat_id(value):
     value = str(value).strip()
-    if not re.fullmatch(r"-[1-9][0-9]{0,19}", value):
+    if not re.fullmatch(r"-?[1-9][0-9]{0,19}", value):
         raise TelegramDeliveryError("invalid_payload")
     configured = {str(getattr(settings, name, "")).strip() for name in (
         "TELEGRAM_SAME_DAY_GROUP_ID", "TELEGRAM_STUDIO_CUSTOM_GROUP_ID")}
     configured = {item for item in configured if re.fullmatch(r"-[1-9][0-9]{0,19}", item)}
+    admin_chat_id = str(getattr(settings, "TELEGRAM_STUDIO_ADMIN_CHAT_ID", "")).strip()
+    if re.fullmatch(r"[1-9][0-9]{0,19}", admin_chat_id):
+        configured.add(admin_chat_id)
     if not configured:
         raise TelegramDeliveryError("configuration_error")
     if value not in configured:

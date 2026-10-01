@@ -1,0 +1,35 @@
+--- a/ops/cloudflare/zad-telegram-relay-worker.js
++++ b/ops/cloudflare/zad-telegram-relay-worker.js
+@@ -912,7 +912,11 @@
+ 
+     .map((value) => String(value ?? "").trim()).filter((value) => /^-[1-9][0-9]{0,19}$/.test(value));
+ 
+-  if (!groups.length ||
++  const admin = String(env.TELEGRAM_STUDIO_ADMIN_CHAT_ID ?? "").trim();
++
++  const destinations = /^[1-9][0-9]{0,19}$/.test(admin) ? [...groups, admin] : groups;
++
++  if (!destinations.length ||
+ 
+       typeof env.TELEGRAM_BOT_TOKEN !== "string" || !/^[A-Za-z0-9:\_-]{1,256}$/.test(env.TELEGRAM_BOT_TOKEN)) {
+ 
+@@ -956,7 +960,7 @@
+ 
+       !(typeof payload.chat_id === "string" || Number.isSafeInteger(payload.chat_id)) ||
+ 
+-      !groups.includes(group) ||
++      !destinations.includes(group) ||
+ 
+       (fields.includes("message_id") && (!Number.isSafeInteger(payload.message_id) || payload.message_id < 1)) ||
+ 
+@@ -1068,7 +1072,9 @@
+ 
+       const valid = checkingChat
+ 
+-        ? value && String(value.id) === group && ["group", "supergroup"].includes(value.type)
++        ? value && String(value.id) === group &&
++
++          (["group", "supergroup"].includes(value.type) || (group === admin && value.type === "private"))
+ 
+         : sendingPhoto
+ 

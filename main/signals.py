@@ -156,6 +156,48 @@ def remember_deleted_telegram_product(sender, instance, using, **kwargs):
         )
 
 
+@receiver(pre_save, sender=StudioProduct, dispatch_uid="main.snapshot_studio_admin_notification")
+def snapshot_studio_admin_notification(sender, instance, raw=False, using=None, **kwargs):
+    if raw or not instance.pk:
+        instance._studio_notify_previous = None
+        return
+    instance._studio_notify_previous = StudioProduct.objects.using(using).filter(
+        pk=instance.pk,
+    ).values("price", "status", "source").first()
+
+
+@receiver(post_save, sender=StudioProduct, dispatch_uid="main.queue_studio_admin_notification")
+def queue_studio_admin_notification(sender, instance, created=False, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.source not in {
+        StudioProduct.Source.PORTAL,
+        StudioProduct.Source.DASHBOARD,
+        StudioProduct.Source.ADMIN,
+    }:
+        return
+
+    from .models import StudioAdminNotification
+    from .studio_admin_notifications import queue_admin_notification
+
+    if created:
+        queue_admin_notification(instance, StudioAdminNotification.Event.CREATED)
+        return
+
+    previous = getattr(instance, "_studio_notify_previous", None)
+    if not previous:
+        return
+    if previous["status"] != instance.status:
+        event = (
+            StudioAdminNotification.Event.DELETED
+            if instance.status == StudioProduct.Status.DELETED
+            else StudioAdminNotification.Event.STATUS
+        )
+        queue_admin_notification(instance, event)
+    elif previous["price"] != instance.price:
+        queue_admin_notification(instance, StudioAdminNotification.Event.PRICE)
+
+
 @receiver(post_save, sender=Product, dispatch_uid="main.sync_studio_public_projection")
 def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwargs):
     if raw:
