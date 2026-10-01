@@ -43,8 +43,11 @@ class TeamProductForm(forms.Form):
         error_messages={"required": "فلوریست سازنده را انتخاب کنید.",
                         "invalid_choice": "فلوریست انتخاب‌شده فعال نیست؛ یکی از فلوریست‌های فعال را انتخاب کنید."},
     )
-    production_type = forms.ChoiceField(label="نوع تولید", choices=StudioProduct.ProductionType.choices,
-                                        initial=StudioProduct.ProductionType.DAILY)
+    production_type = forms.ChoiceField(
+        label="نوع تولید",
+        choices=StudioProduct.ProductionType.choices,
+        error_messages={"required": "مشخص کنید محصول آماده روز است یا سفارش اختصاصی."},
+    )
     product_type = forms.ChoiceField(label="نوع محصول", choices=StudioProduct.ProductType.choices)
     factor_code = forms.CharField(label="شماره فاکتور", max_length=40, widget=forms.TextInput(attrs={
         "autocomplete": "off", "autocapitalize": "characters", "dir": "ltr", "placeholder": "مثلاً ۱۰۲۴"}))
