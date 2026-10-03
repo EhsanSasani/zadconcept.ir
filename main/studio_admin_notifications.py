@@ -29,6 +29,10 @@ NOTIFIED_SOURCES = {
 logger = logging.getLogger(__name__)
 
 
+def admin_notifications_enabled():
+    return getattr(settings, "STUDIO_ADMIN_NOTIFICATIONS_ENABLED", False) is True
+
+
 def _database(record):
     return record._state.db or "default"
 
@@ -58,6 +62,8 @@ def customer_caption(record):
 
 def queue_admin_notification(record, event):
     """Create a DB outbox row; Telegram never runs inside the product request."""
+    if not admin_notifications_enabled():
+        return None
     if record.source not in NOTIFIED_SOURCES:
         return None
     chat_id = _admin_chat_id()
@@ -84,6 +90,8 @@ def _recover_stale(now):
 
 
 def claim_admin_notification():
+    if not admin_notifications_enabled():
+        return None
     now = timezone.now()
     _recover_stale(now)
     older_unresolved = StudioAdminNotification.objects.filter(
@@ -191,6 +199,8 @@ def _record_error(job, error):
 def _can_manage(actor):
     if not getattr(actor, "is_active", False) or not actor.has_perm("main.change_studioproduct"):
         raise PermissionDenied
+    if not admin_notifications_enabled():
+        raise ValidationError("اعلان خصوصی مدیر غیرفعال است؛ ارسال دوباره انجام نمی‌شود.")
 
 
 def _audit_recovery(job, actor, action):

@@ -17,6 +17,7 @@ from django.views.decorators.cache import never_cache
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .studio_access import require_studio_permission
+from .studio_admin_notifications import admin_notifications_enabled
 from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 
 
@@ -136,6 +137,7 @@ def _chart(qs, period):
 def _base(request, active, period=None):
     keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
     return {"active": active, "period": period,
+            "private_notifications_enabled": admin_notifications_enabled(),
             "period_filters": [(key, value) for key, value in request.GET.items() if key in keep], "nav": [
         ("dashboard", "داشبورد", "studio_dashboard"),
         ("products", "محصولات", "studio_products"),

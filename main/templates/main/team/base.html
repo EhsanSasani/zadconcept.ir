@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="{% static 'main/team/apple-touch-icon.png' %}">
   <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'main/css/pages/team.css' %}?v=1">
-  <script src="{% static 'main/js/pages/team.js' %}?v=2" defer></script>
+  <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
 </head>
 <body data-team-page="{{ active }}" data-team-user="{{ request.user.pk|default:'' }}"{% if active == 'login' %} class="login-page"{% endif %}>
 {% include 'main/team/partials/icons.html' %}

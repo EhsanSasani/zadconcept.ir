@@ -10,6 +10,7 @@ from .test_telegram_same_day import image_file
 
 
 @override_settings(
+    STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True,
     TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276",
     TELEGRAM_SAME_DAY_GROUP_ID="-10077777",
     TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-10087654",

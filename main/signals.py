@@ -158,7 +158,8 @@ def remember_deleted_telegram_product(sender, instance, using, **kwargs):
 
 @receiver(pre_save, sender=StudioProduct, dispatch_uid="main.snapshot_studio_admin_notification")
 def snapshot_studio_admin_notification(sender, instance, raw=False, using=None, **kwargs):
-    if raw or not instance.pk:
+    from .studio_admin_notifications import admin_notifications_enabled
+    if raw or not instance.pk or not admin_notifications_enabled():
         instance._studio_notify_previous = None
         return
     previous = StudioProduct.objects.using(using).filter(pk=instance.pk)
@@ -171,7 +172,8 @@ def snapshot_studio_admin_notification(sender, instance, raw=False, using=None, 
 
 @receiver(post_save, sender=StudioProduct, dispatch_uid="main.queue_studio_admin_notification")
 def queue_studio_admin_notification(sender, instance, created=False, raw=False, using=None, **kwargs):
-    if raw:
+    from .studio_admin_notifications import admin_notifications_enabled
+    if raw or not admin_notifications_enabled():
         return
     # update_fields may leave unsaved price/status values on the instance. A
     # notification must describe the persisted row, never those dirty values.

@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Count
 
 from main.models import StudioAdminNotification, StudioDelivery
-from main.studio_admin_notifications import _admin_chat_id
+from main.studio_admin_notifications import _admin_chat_id, admin_notifications_enabled
 from main.studio_transport import TelegramDeliveryError, _chat_id, get_chat
 
 
@@ -36,6 +36,9 @@ class Command(BaseCommand):
         failures = []
         for label, name in destinations.items():
             if options["destination"] not in {"all", label}:
+                continue
+            if label == "admin" and not admin_notifications_enabled():
+                self.stdout.write("admin=disabled (existing private queue preserved; no sends or retries)")
                 continue
             value = str(getattr(settings, name, "")).strip()
             if not value:

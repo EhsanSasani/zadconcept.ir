@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import close_old_connections
 
 from main.studio_delivery import process_next_delivery
-from main.studio_admin_notifications import process_next_admin_notification
+from main.studio_admin_notifications import admin_notifications_enabled, process_next_admin_notification
 
 
 class Command(BaseCommand):
@@ -35,7 +35,7 @@ class Command(BaseCommand):
                     )
                     if not options["watch"] and count >= options["limit"]:
                         break
-                notification = process_next_admin_notification()
+                notification = process_next_admin_notification() if admin_notifications_enabled() else None
                 if notification:
                     processed = True
                     count += 1

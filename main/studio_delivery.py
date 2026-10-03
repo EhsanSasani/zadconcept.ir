@@ -68,6 +68,14 @@ def delivery_summary(record):
     return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
 
 
+def _retirement_due_at(record, now):
+    if record.status == StudioProduct.Status.SOLD:
+        return (record.sold_at or now) + timedelta(minutes=45)
+    if record.status == StudioProduct.Status.WITHDRAWN:
+        return (record.withdrawn_at or now) + timedelta(minutes=45)
+    return now
+
+
 def queue_retirement(record):
     """Call in the status transaction. Only messages emitted by our outbox retire."""
     if (record.status == StudioProduct.Status.AVAILABLE
@@ -76,16 +84,36 @@ def queue_retirement(record):
     published = record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).first()
     if not published:
         return None
+    now = timezone.now()
+    due_at = _retirement_due_at(record, now)
     job, created = StudioDelivery.objects.get_or_create(
         record=record, action=StudioDelivery.Action.RETIRE,
         defaults={"chat_id": record.telegram_chat_id, "message_id": record.telegram_message_id,
-                  "telegram_created_at": published.telegram_created_at if published else None},
+                  "telegram_created_at": published.telegram_created_at,
+                  "next_attempt_at": due_at},
     )
     # An older caption fallback may need to reflect a later terminal update. A
     # deleted message is already absent and must not be posted again.
     if not created and job.status == StudioDelivery.Status.SENT and job.outcome == "caption_marked":
-        job.status, job.next_attempt_at, job.last_error = StudioDelivery.Status.RETRY, timezone.now(), ""
-        job.save(update_fields=["status", "next_attempt_at", "last_error", "updated_at"])
+        StudioDelivery.objects.filter(
+            pk=job.pk, status=StudioDelivery.Status.SENT, outcome="caption_marked",
+        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
+                 last_error="", updated_at=now)
+        job.refresh_from_db()
+    elif not created and job.status in READY:
+        # Administrative deletion brings a pending grace-period job forward.
+        # A genuine transport retry retains its backoff/rate-limit deadline.
+        if job.status == StudioDelivery.Status.RETRY and job.last_error:
+            due_at = max(due_at, job.next_attempt_at)
+        # A worker may have recorded a new backoff after this snapshot. Match
+        # its scheduling fields so that a status replay cannot overwrite it.
+        StudioDelivery.objects.filter(
+            pk=job.pk, status=job.status, next_attempt_at=job.next_attempt_at,
+            last_error=job.last_error,
+        ).update(
+            next_attempt_at=due_at, updated_at=now,
+        )
+        job.refresh_from_db()
     return job
 
 
@@ -170,7 +198,13 @@ def retry_delivery(delivery_id):
             raise ValidationError("این ارسال قابل تکرار نیست؛ ارسال نامشخص ابتدا باید در گروه بررسی شود.")
         if job.action == StudioDelivery.Action.PUBLISH and job.message_id:
             raise ValidationError("پیام این محصول قبلاً ثبت شده است.")
-        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, timezone.now()
+        now = timezone.now()
+        next_attempt_at = now
+        if job.action == StudioDelivery.Action.RETIRE:
+            next_attempt_at = max(now, _retirement_due_at(job.record, now))
+            if job.status == StudioDelivery.Status.RETRY and job.last_error == "rate_limited":
+                next_attempt_at = max(next_attempt_at, job.next_attempt_at)
+        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, next_attempt_at
         job.locked_at = job.lock_token = None
         job.attempts, job.last_error = 0, ""
         job.save(update_fields=["status", "next_attempt_at", "locked_at", "lock_token", "attempts", "last_error", "updated_at"])
@@ -341,6 +375,17 @@ def _publish(job):
 
 def _retire(job):
     record = StudioProduct.objects.get(pk=job.record_id)
+    now = timezone.now()
+    due_at = _retirement_due_at(record, now)
+    if due_at > now:
+        # Recheck persisted status before touching Telegram. This protects old
+        # immediate jobs and a status change made after this lease was claimed.
+        StudioDelivery.objects.filter(
+            pk=job.pk, lock_token=job.lock_token, status=StudioDelivery.Status.SENDING,
+        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
+                 attempts=F("attempts") - 1, locked_at=None, lock_token=None,
+                 last_error="", updated_at=now)
+        return
     if not job.message_id:
         raise studio_transport.TelegramDeliveryError("message_identity_missing")
     too_old = job.telegram_created_at and timezone.now() - job.telegram_created_at >= timedelta(hours=48)
@@ -377,7 +422,8 @@ def _retire(job):
             # A withdrawal can follow a sale while the caption request is in
             # flight. Keep the newer terminal state queued instead of losing it.
             StudioDelivery.objects.filter(pk=job.pk, lock_token=job.lock_token).update(
-                status=StudioDelivery.Status.RETRY, next_attempt_at=timezone.now(),
+                status=StudioDelivery.Status.RETRY,
+                next_attempt_at=_retirement_due_at(current, timezone.now()),
                 locked_at=None, lock_token=None, updated_at=timezone.now(),
             )
         else:

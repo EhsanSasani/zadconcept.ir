@@ -22,7 +22,7 @@ from .test_telegram_same_day import image_file
 GROUP = -5595039112
 
 
-@override_settings(TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276")
+@override_settings(STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True, TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276")
 class StudioProjectionSyncTests(TestCase):
     def setUp(self):
         self.media = tempfile.TemporaryDirectory()
