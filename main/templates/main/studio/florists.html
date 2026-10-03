@@ -5,7 +5,7 @@
   <div class="person-top">{% include 'main/studio/partials/avatar.html' with florist=item.florist avatar_class='person-avatar' %}<span class="badge {% if item.florist.is_active %}badge-custom{% else %}badge-withdrawn{% endif %}"><i></i>{% if item.florist.is_active %}فعال{% else %}غیرفعال{% endif %}</span></div>
   <h2>{{ item.florist.name }}</h2><p class="person-code">کد ثبت <b dir="ltr">{{ item.florist.code }}</b></p>
   <div class="person-stats"><div><strong>{{ item.stats.produced|fa_number }}</strong><small>تولید</small></div><div><strong>{{ item.stats.sold|fa_number }}</strong><small>فروخته شده</small></div><div><strong>{{ item.stats.withdrawn|fa_number }}</strong><small>کشیده شده</small></div></div>
-  <div class="person-rate"><span>نرخ فروش</span><strong>{{ item.stats.sell_through|fa_number }}٪</strong><progress max="100" value="{{ item.stats.sell_through }}" aria-label="نرخ فروش {{ item.florist.name }}"></progress></div>
+  <div class="person-rate"><span>نرخ فروش تولیدهای بازه</span><strong>{{ item.stats.sell_through|fa_number }}٪</strong><progress max="100" value="{{ item.stats.sell_through }}" aria-label="نرخ فروش {{ item.florist.name }}"></progress></div>
   <a class="person-more" href="{% url 'studio_florist_profile' item.florist.pk %}">مشاهده عملکرد و پروفایل <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
 </article>{% empty %}<div class="panel empty-state"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg><strong>تیم استودیو را معرفی کنید</strong><p>با افزودن فلوریست، عملکرد او به‌صورت جداگانه قابل بررسی می‌شود.</p>{% if perms.main.add_florist %}<a class="btn btn-primary" href="{% url 'studio_florist_add' %}">افزودن فلوریست</a>{% endif %}</div>{% endfor %}</div>
 {% endblock %}

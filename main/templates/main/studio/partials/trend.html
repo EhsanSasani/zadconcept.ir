@@ -1,8 +1,8 @@
 {% load studio_ui %}
 <section class="panel trend-panel">
   <div class="panel-head"><div><p class="eyebrow">PRODUCTION & SALES</p><h2>روند تولید و فروش</h2></div><span class="panel-meta">{{ stats.produced|fa_number }} محصول در بازه</span></div>
-  <div class="chart-legend"><button type="button" data-chart-series="produced" aria-pressed="true"><i class="legend-dot green"></i>تولید شده</button><button type="button" data-chart-series="sold" aria-pressed="true"><i class="legend-dot pink"></i>فروخته شده از همان تولید</button></div>
+  <div class="chart-legend"><button type="button" data-chart-series="produced" aria-pressed="true"><i class="legend-dot green"></i>تولید شده</button><button type="button" data-chart-series="sold" aria-pressed="true"><i class="legend-dot pink"></i>فروش ثبت‌شده</button></div>
   <div class="trend-chart" id="trend-chart" aria-label="نمودار تولید و فروش"></div>{{ chart|json_script:'trend-data' }}
   <p class="chart-note">{{ chart|length|fa_number }} روز پایانی بازه · برای دیدن تعداد هر روز روی نقطه بزنید.</p>
-  <details class="chart-data"><summary>داده‌های نمودار</summary><div class="table-scroll"><table class="studio-table"><caption class="sr-only">مقادیر روزانه نمودار</caption><thead><tr><th scope="col">روز</th><th scope="col">تولید</th><th scope="col">فروش از تولید همین روز</th></tr></thead><tbody>{% for day in chart %}<tr><td><time data-persian-date="{{ day.label }}">{{ day.label }}</time></td><td>{{ day.produced|fa_number }}</td><td>{{ day.sold|fa_number }}</td></tr>{% endfor %}</tbody></table></div></details>
+  <details class="chart-data"><summary>داده‌های نمودار</summary><div class="table-scroll"><table class="studio-table"><caption class="sr-only">مقادیر روزانه نمودار</caption><thead><tr><th scope="col">روز</th><th scope="col">تولید</th><th scope="col">فروش ثبت‌شده در این روز</th><th scope="col">کشیده‌شده در این روز</th></tr></thead><tbody>{% for day in chart %}<tr><td><time data-persian-date="{{ day.label }}">{{ day.label }}</time></td><td>{{ day.produced|fa_number }}</td><td>{{ day.sold|fa_number }}</td><td>{{ day.withdrawn|fa_number }}</td></tr>{% endfor %}</tbody></table></div></details>
 </section>

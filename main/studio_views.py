@@ -52,9 +52,10 @@ def _period(request):
     return {"choice": choice, "start": start, "end": end, "lower": lower, "upper": upper}
 
 
-def _cohort(period, *, florist=None, production_type=None, include_deleted=False):
+def _activity(period, *, florist=None, production_type=None, include_deleted=False):
     qs = StudioProduct.objects.select_related("florist", "product").filter(
-        produced_at__gte=period["lower"], produced_at__lt=period["upper"])
+        _event_filter("produced_at", period) | _event_filter("sold_at", period)
+        | _event_filter("withdrawn_at", period))
     if not include_deleted:
         qs = qs.exclude(status=StudioProduct.Status.DELETED)
     if florist:
@@ -64,18 +65,28 @@ def _cohort(period, *, florist=None, production_type=None, include_deleted=False
     return qs
 
 
-def _stats(qs):
+def _event_filter(field, period):
+    return Q(**{field + "__gte": period["lower"], field + "__lt": period["upper"]})
+
+
+def _stats(qs, period):
+    produced = _event_filter("produced_at", period)
+    sold = Q(status=StudioProduct.Status.SOLD) & _event_filter("sold_at", period)
+    withdrawn = Q(status=StudioProduct.Status.WITHDRAWN) & _event_filter("withdrawn_at", period)
     values = qs.aggregate(
-        produced=Count("pk"), sold=Count("pk", filter=Q(status=StudioProduct.Status.SOLD)),
-        withdrawn=Count("pk", filter=Q(status=StudioProduct.Status.WITHDRAWN)),
-        available=Count("pk", filter=Q(status=StudioProduct.Status.AVAILABLE)),
-        cancelled=Count("pk", filter=Q(status=StudioProduct.Status.CANCELLED)),
-        total_value=Sum("price"),
-        sold_value=Sum("price", filter=Q(status=StudioProduct.Status.SOLD)),
-        average_price=Avg("price"),
-        average_time=Avg(F("sold_at") - F("produced_at"), filter=Q(status=StudioProduct.Status.SOLD)),
+        produced=Count("pk", filter=produced), sold=Count("pk", filter=sold),
+        withdrawn=Count("pk", filter=withdrawn),
+        available=Count("pk", filter=produced & Q(status=StudioProduct.Status.AVAILABLE)),
+        cancelled=Count("pk", filter=produced & Q(status=StudioProduct.Status.CANCELLED)),
+        cohort_sold=Count("pk", filter=produced & Q(status=StudioProduct.Status.SOLD)),
+        total_value=Sum("price", filter=produced),
+        sold_value=Sum("price", filter=sold), average_price=Avg("price", filter=produced),
+        average_time=Avg(F("sold_at") - F("produced_at"), filter=sold),
     )
-    values["sell_through"] = round(100 * values["sold"] / values["produced"]) if values["produced"] else 0
+    # Conversion remains a cohort metric: sales of older stock must not make
+    # this period's production conversion exceed 100%.
+    values["sell_through"] = round(100 * values["cohort_sold"] / values["produced"]) if values["produced"] else 0
+    values["outcome_total"] = sum(values[key] for key in ("sold", "withdrawn", "available", "cancelled"))
     duration = values["average_time"]
     values["average_days"] = round(duration.total_seconds() / 86400, 1) if duration else None
     for key in ("total_value", "sold_value", "average_price"):
@@ -124,14 +135,21 @@ def _sort_products(request, qs):
 
 
 def _chart(qs, period):
-    trend = {row["day"].isoformat(): row for row in qs.annotate(
-        day=TruncDate("produced_at", tzinfo=timezone.get_current_timezone())
-    ).values("day").annotate(produced=Count("pk"), sold=Count("pk", filter=Q(status="SOLD")))}
+    series = {}
+    for key, field, status in (("produced", "produced_at", None),
+                               ("sold", "sold_at", StudioProduct.Status.SOLD),
+                               ("withdrawn", "withdrawn_at", StudioProduct.Status.WITHDRAWN)):
+        rows = qs.filter(_event_filter(field, period))
+        if status:
+            rows = rows.filter(status=status)
+        series[key] = {row["day"].isoformat(): row["count"] for row in rows.annotate(
+            day=TruncDate(field, tzinfo=timezone.get_current_timezone())
+        ).values("day").annotate(count=Count("pk"))}
     days = min((period["end"] - period["start"]).days + 1, 31)
     start = period["end"] - timedelta(days=days - 1)
     return [{"label": (start + timedelta(days=i)).isoformat(),
-             "produced": trend.get((start + timedelta(days=i)).isoformat(), {}).get("produced", 0),
-             "sold": trend.get((start + timedelta(days=i)).isoformat(), {}).get("sold", 0)} for i in range(days)]
+             **{key: values.get((start + timedelta(days=i)).isoformat(), 0)
+                for key, values in series.items()}} for i in range(days)]
 
 
 def _base(request, active, period=None):
@@ -153,19 +171,19 @@ def _base(request, active, period=None):
 def dashboard(request):
     _access(request)
     period = _period(request)
-    qs = _cohort(period)
-    stats = _stats(qs)
-    previous = _stats(_cohort(_previous(period)))
+    qs = _activity(period)
+    stats = _stats(qs, period)
+    previous = _stats(_activity(_previous(period)), _previous(period))
     comparisons = {key: _delta(stats[key], previous[key]) for key in
                    ("produced", "sold", "withdrawn", "available", "total_value")}
-    breakdown = dict(qs.values_list("production_type").annotate(count=Count("pk")))
+    breakdown = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     daily = breakdown.get(StudioProduct.ProductionType.DAILY, 0)
     custom = breakdown.get(StudioProduct.ProductionType.CUSTOM, 0)
     chart = _chart(qs, period)
     latest, table_sort = _sort_products(request, qs)
     florist_rows = []
     for florist in Florist.objects.filter(is_active=True):
-        florist_rows.append({"florist": florist, "stats": _stats(qs.filter(florist=florist))})
+        florist_rows.append({"florist": florist, "stats": _stats(qs.filter(florist=florist), period)})
     missing_count = TelegramSameDayPost.objects.filter(product__isnull=False, product__studio_record__isnull=True).count()
     issue_count = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).count()
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
@@ -180,7 +198,7 @@ def dashboard(request):
 def products(request):
     _access(request)
     period = _period(request)
-    qs = _cohort(period, include_deleted=True)
+    qs = _activity(period, include_deleted=True)
     q = request.GET.get("q", "").strip()[:80]
     if q:
         matching_types = [key for key, label in StudioProduct.ProductType.choices
@@ -196,7 +214,7 @@ def products(request):
     florist_id = request.GET.get("florist", "")
     if florist_id.isdecimal():
         qs = qs.filter(florist_id=int(florist_id))
-    summary = _stats(qs.exclude(status=StudioProduct.Status.DELETED))
+    summary = _stats(qs.exclude(status=StudioProduct.Status.DELETED), period)
     qs, table_sort = _sort_products(request, qs)
     page = Paginator(qs, 20).get_page(request.GET.get("page"))
     return render(request, "main/studio/products.html", {
@@ -211,7 +229,7 @@ def products(request):
 def florists(request):
     _access(request)
     period = _period(request)
-    rows = [{"florist": florist, "stats": _stats(_cohort(period, florist=florist))}
+    rows = [{"florist": florist, "stats": _stats(_activity(period, florist=florist), period)}
             for florist in Florist.objects.all()]
     return render(request, "main/studio/florists.html", {
         **_base(request, "florists", period), "rows": rows})
@@ -224,13 +242,13 @@ def florist_profile(request, pk):
     florist = get_object_or_404(Florist, pk=pk)
     period = _period(request)
     production_type = request.GET.get("production_type")
-    qs = _cohort(period, florist=florist, production_type=production_type)
-    breakdown = list(qs.values("product_type").annotate(count=Count("pk")).order_by("-count"))
-    split = dict(qs.values_list("production_type").annotate(count=Count("pk")))
+    qs = _activity(period, florist=florist, production_type=production_type)
+    breakdown = list(qs.filter(_event_filter("produced_at", period)).values("product_type").annotate(count=Count("pk")).order_by("-count"))
+    split = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     chart = _chart(qs, period)
     qs, table_sort = _sort_products(request, qs)
     return render(request, "main/studio/profile.html", {
-        **_base(request, "florists", period), "florist": florist, "stats": _stats(qs),
+        **_base(request, "florists", period), "florist": florist, "stats": _stats(qs, period),
         "chart": chart, "table_sort": table_sort,
         "breakdown": breakdown, "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0),
         "page": Paginator(qs, 15).get_page(request.GET.get("page"))})
@@ -241,22 +259,26 @@ def florist_profile(request, pk):
 def analytics(request):
     _access(request)
     period = _period(request)
-    qs = _cohort(period)
+    qs = _activity(period)
+    produced = _event_filter("produced_at", period)
+    sold = Q(status="SOLD") & _event_filter("sold_at", period)
+    withdrawn = Q(status="WITHDRAWN") & _event_filter("withdrawn_at", period)
     by_type = list(qs.values("product_type").annotate(
-        produced=Count("pk"), sold=Count("pk", filter=Q(status="SOLD")),
-        withdrawn=Count("pk", filter=Q(status="WITHDRAWN")),
-        sold_value=Sum("price", filter=Q(status="SOLD"))).order_by("-produced"))
+        produced=Count("pk", filter=produced), sold=Count("pk", filter=sold),
+        withdrawn=Count("pk", filter=withdrawn),
+        cohort_sold=Count("pk", filter=produced & Q(status="SOLD")),
+        sold_value=Sum("price", filter=sold)).order_by("-produced"))
     for row in by_type:
-        row["sell_through"] = round(row["sold"] / row["produced"] * 100) if row["produced"] else 0
+        row["sell_through"] = round(row["cohort_sold"] / row["produced"] * 100) if row["produced"] else 0
     fields = {"type": "product_type", "produced": "produced", "sold": "sold", "withdrawn": "withdrawn",
               "rate": "sell_through", "value": "sold_value"}
     table_sort = _sort_state(request, fields, "produced")
     labels = dict(StudioProduct.ProductType.choices)
     by_type.sort(key=lambda row: labels[row["product_type"]] if table_sort["key"] == "type"
                  else (row[fields[table_sort["key"]]] or 0), reverse=table_sort["direction"] == "desc")
-    split = dict(qs.values_list("production_type").annotate(count=Count("pk")))
+    split = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     return render(request, "main/studio/analytics.html", {
-        **_base(request, "analytics", period), "stats": _stats(qs), "by_type": by_type, "table_sort": table_sort,
+        **_base(request, "analytics", period), "stats": _stats(qs, period), "by_type": by_type, "table_sort": table_sort,
         "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0)})
 
 
