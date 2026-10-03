@@ -267,7 +267,8 @@ def process_custom(message, update_id, stored_files):
         record = StudioProduct(telegram_chat_id=chat_id, telegram_message_id=message_id,
                                production_type=StudioProduct.ProductionType.CUSTOM,
                                source=StudioProduct.Source.TELEGRAM_CUSTOM,
-                               produced_at=_event_time(message))
+                               produced_at=_event_time(message),
+                               status=StudioProduct.Status.SOLD, sold_at=_event_time(message))
     record.factor_code = metadata["factor_code"]
     record.florist = metadata["florist"]
     record.product_type = metadata["product_type"]

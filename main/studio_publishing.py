@@ -83,6 +83,10 @@ def save_dashboard_record(record):
         raise ValidationError("برای اصلاح محصول ثبت‌شده از فرم ویرایش استفاده کنید.")
     if record.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}:
         raise ValidationError("منبع ثبت مدیریتی معتبر نیست.")
+    if record.production_type == StudioProduct.ProductionType.CUSTOM:
+        record.status = StudioProduct.Status.SOLD
+        record.sold_at = record.produced_at or timezone.now()
+        record.withdrawn_at = None
     publish_daily = (record.production_type == StudioProduct.ProductionType.DAILY
                      and record.status == StudioProduct.Status.AVAILABLE)
     category, group_id = _daily_configuration() if publish_daily else (None, None)
@@ -207,6 +211,9 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
         factor_code=factor, product_type=product_type, production_type=production_type,
         price=amount, image=normalized, source=StudioProduct.Source.PORTAL, notes=notes or "",
     )
+    if not daily:
+        record.status = StudioProduct.Status.SOLD
+        record.sold_at = record.produced_at
     try:
         with transaction.atomic():
             # Lock in a stable order when two colleagues register for each other.

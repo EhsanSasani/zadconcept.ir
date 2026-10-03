@@ -48,7 +48,8 @@ def pending_caption_matches(record, caption):
 def delivery_summary(record):
     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
-    job = next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None)
+    job = (None if record.production_type == StudioProduct.ProductionType.CUSTOM else
+           next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None))
     job = job or next((item for item in jobs if item.action == StudioDelivery.Action.PUBLISH), None)
     if not job:
         return {"state": "internal", "label": "ثبت استودیو", "detail": "ارسالی از پنل برای این محصول وجود ندارد."}
@@ -78,6 +79,8 @@ def _retirement_due_at(record, now):
 
 def queue_retirement(record):
     """Call in the status transaction. Only messages emitted by our outbox retire."""
+    if record.production_type == StudioProduct.ProductionType.CUSTOM:
+        return None
     if (record.status == StudioProduct.Status.AVAILABLE
             or not record.telegram_chat_id or not record.telegram_message_id):
         return None
@@ -340,7 +343,9 @@ def _finish(job, outcome):
 
 def _publish(job):
     record = StudioProduct.objects.get(pk=job.record_id)
-    if record.status != StudioProduct.Status.AVAILABLE:
+    custom_sale = (record.production_type == StudioProduct.ProductionType.CUSTOM
+                   and record.status == StudioProduct.Status.SOLD)
+    if record.status != StudioProduct.Status.AVAILABLE and not custom_sale:
         _finish(job, "not_available")
         return
     photo = _jpeg_bytes(record)
@@ -375,6 +380,9 @@ def _publish(job):
 
 def _retire(job):
     record = StudioProduct.objects.get(pk=job.record_id)
+    if record.production_type == StudioProduct.ProductionType.CUSTOM:
+        _finish(job, "custom_preserved")
+        return
     now = timezone.now()
     due_at = _retirement_due_at(record, now)
     if due_at > now:

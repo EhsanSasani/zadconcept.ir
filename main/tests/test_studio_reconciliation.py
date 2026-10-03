@@ -98,8 +98,8 @@ class StudioReconciliationTests(TestCase):
             "reply_to_message": original,
         }, 100000 + row.telegram_message_id)
 
-    def test_daily_and_custom_replies_hide_stock_now_and_delete_only_after_45_minutes(self):
-        for production in ("DAILY", "CUSTOM"):
+    def test_daily_replies_hide_stock_now_and_delete_only_after_45_minutes(self):
+        for production in ("DAILY",):
             for status in (StudioProduct.Status.SOLD, StudioProduct.Status.WITHDRAWN):
                 with self.subTest(production=production, status=status):
                     row = self.publish(production)
