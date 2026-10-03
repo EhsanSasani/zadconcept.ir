@@ -1,5 +1,6 @@
 import tempfile
 import uuid
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -60,6 +61,15 @@ class StudioPublishingTests(TestCase):
         record.refresh_from_db()
         return record, job
 
+    @contextmanager
+    def at_retirement_deadline(self, record):
+        # Transport/fallback tests run when the persisted job actually becomes
+        # due. Dedicated reconciliation tests cover the preceding grace period.
+        job = record.deliveries.get(action=StudioDelivery.Action.RETIRE)
+        instant = max(timezone.now(), job.next_attempt_at)
+        with patch("main.studio_delivery.timezone.now", return_value=instant):
+            yield
+
     def sold_reply(self, record, *, text="فروخته شد"):
         reply = self.telegram_message()
         reply["caption"] = product_caption(record)
@@ -96,7 +106,8 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(result["result"], "sold")
         record.refresh_from_db()
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
-        self.assertEqual(process_next_delivery().outcome, "deleted")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().outcome, "deleted")
         self.delete.assert_called_once_with(GROUP, 812)
 
     def test_soft_delete_daily_product_hides_site_retires_telegram_and_keeps_ledger(self):
@@ -180,7 +191,8 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(process_update("message", message, 901)["result"], "status_updated")
         record.refresh_from_db()
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
-        job = process_next_delivery()
+        with self.at_retirement_deadline(record):
+            job = process_next_delivery()
         self.assertEqual(job.action, StudioDelivery.Action.RETIRE)
         self.assertEqual(job.status, StudioDelivery.Status.SENT)
         self.delete.assert_called_once_with(-5182713369, 812)
@@ -297,7 +309,8 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
         self.assertFalse(Product.objects.for_same_day().published().filter(pk=record.product_id).exists())
         self.assertTrue(record.image.storage.exists(record.image.name))
-        self.assertEqual(process_next_delivery().outcome, "deleted")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().outcome, "deleted")
         self.delete.assert_called_once_with(GROUP, 812)
         self.edit.assert_not_called()
         self.assertEqual(process_update("message", self.sold_reply(record), 912), "duplicate_ignored")
@@ -317,7 +330,8 @@ class StudioPublishingTests(TestCase):
         record, _ = self.publish()
         record.deliveries.update(telegram_created_at=timezone.now() - timedelta(hours=49))
         set_portal_status(record, "SOLD", actor=self.manager)
-        job = process_next_delivery()
+        with self.at_retirement_deadline(record):
+            job = process_next_delivery()
         self.assertEqual(job.outcome, "caption_marked")
         self.delete.assert_not_called()
         self.assertEqual(self.edit.call_args.args[2], "فروخته شد\nقیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
@@ -326,15 +340,17 @@ class StudioPublishingTests(TestCase):
         record, _ = self.publish()
         set_portal_status(record, "WITHDRAWN", actor=self.manager)
         self.delete.side_effect = TelegramDeliveryError("message_cannot_be_deleted")
-        self.assertEqual(process_next_delivery().outcome, "caption_marked")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().outcome, "caption_marked")
         self.assertTrue(self.edit.call_args.args[2].startswith("کشیده شد\n"))
 
     def test_retryable_delete_failure_does_not_claim_success(self):
         record, _ = self.publish()
         set_portal_status(record, "SOLD", actor=self.manager)
         self.delete.side_effect = TelegramDeliveryError("rate_limited", retryable=True, retry_after=75)
-        before = timezone.now()
-        job = process_next_delivery()
+        with self.at_retirement_deadline(record):
+            before = timezone.now()
+            job = process_next_delivery()
         self.assertEqual(job.status, "RETRY")
         self.assertGreaterEqual(job.next_attempt_at, before + timedelta(seconds=75))
         self.edit.assert_not_called()
@@ -344,7 +360,8 @@ class StudioPublishingTests(TestCase):
         record.deliveries.update(telegram_created_at=timezone.now() - timedelta(hours=49))
         set_portal_status(record, "SOLD", actor=self.manager)
         self.edit.side_effect = TelegramDeliveryError("message_not_found")
-        self.assertEqual(process_next_delivery().outcome, "already_absent")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().outcome, "already_absent")
 
     def test_ambiguous_send_is_visible_and_never_blindly_retried(self):
         record, _ = self.create()
@@ -417,9 +434,10 @@ class StudioPublishingTests(TestCase):
     def test_stale_retirement_can_retry_without_republishing(self):
         record, _ = self.publish()
         set_portal_status(record, "SOLD", actor=self.manager)
-        retirement = claim_delivery()
-        StudioDelivery.objects.filter(pk=retirement.pk).update(locked_at=timezone.now() - timedelta(minutes=5))
-        self.assertEqual(process_next_delivery().outcome, "deleted")
+        with self.at_retirement_deadline(record):
+            retirement = claim_delivery()
+            StudioDelivery.objects.filter(pk=retirement.pk).update(locked_at=timezone.now() - timedelta(minutes=5))
+            self.assertEqual(process_next_delivery().outcome, "deleted")
         self.send.assert_called_once()
 
     def test_caption_fallback_failure_remains_visible(self):
@@ -427,7 +445,8 @@ class StudioPublishingTests(TestCase):
         set_portal_status(record, "SOLD", actor=self.manager)
         self.delete.side_effect = TelegramDeliveryError("forbidden")
         self.edit.side_effect = TelegramDeliveryError("forbidden")
-        job = process_next_delivery()
+        with self.at_retirement_deadline(record):
+            job = process_next_delivery()
         self.assertEqual(job.status, "FAILED")
         self.assertEqual(delivery_summary(record)["state"], "failed")
         self.assertTrue(record.image.storage.exists(record.image.name))
@@ -508,9 +527,11 @@ class StudioPublishingTests(TestCase):
             )
             return True
         self.edit.side_effect = withdraw_during_caption
-        self.assertEqual(process_next_delivery().status, "RETRY")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().status, "RETRY")
         self.edit.side_effect = None
-        self.assertEqual(process_next_delivery().outcome, "caption_marked")
+        with self.at_retirement_deadline(record):
+            self.assertEqual(process_next_delivery().outcome, "caption_marked")
         self.assertTrue(self.edit.call_args.args[2].startswith("کشیده شد\n"))
 
     def test_portal_photo_echo_and_explicit_price_reply_update_both_projections(self):

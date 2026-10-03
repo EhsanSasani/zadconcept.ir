@@ -66,6 +66,10 @@ def _record_failure(post, reason, event="price parsing failed"):
 def _sync_product(message, update_id, stored_files, *, direct_group=False):
     post = _post(message["chat"]["id"], message["message_id"])
     if post.product_id and StudioProduct.objects.filter(
+        product_id=post.product_id, status=StudioProduct.Status.DELETED,
+    ).exists():
+        return "admin_deleted_ignored"
+    if post.product_id and StudioProduct.objects.filter(
         product_id=post.product_id,
         source__in=[StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN],
     ).exists():

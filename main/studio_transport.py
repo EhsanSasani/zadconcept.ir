@@ -256,6 +256,17 @@ def send_photo(chat_id, photo_bytes, caption):
     return _request("sendPhoto", {"chat_id": _chat_id(chat_id), "caption": _caption(caption)}, _photo(photo_bytes))
 
 
+def get_chat(chat_id):
+    """Read-only identity check through the exact configured delivery transport."""
+    destination = _chat_id(chat_id)
+    result = _request("getChat", {"chat_id": destination})
+    allowed_types = {"private"} if not destination.startswith("-") else {"group", "supergroup"}
+    if (not isinstance(result, dict) or str(result.get("id")) != destination
+            or result.get("type") not in allowed_types):
+        raise TelegramDeliveryError("invalid_response", retryable=True)
+    return {"id": result["id"], "type": result["type"]}
+
+
 def delete_message(chat_id, message_id):
     return _request("deleteMessage", {"chat_id": _chat_id(chat_id), "message_id": _message_id(message_id)})
 

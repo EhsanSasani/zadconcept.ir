@@ -104,13 +104,15 @@ def studio_logout(request):
 
 
 def _own_products(request):
-    return StudioProduct.objects.filter(florist=request.florist).select_related("product", "florist")
+    return StudioProduct.objects.filter(florist=request.florist).exclude(
+        status=StudioProduct.Status.DELETED
+    ).select_related("product", "florist")
 
 
 def _visible_products(request):
     return StudioProduct.objects.filter(
         Q(florist=request.florist) | Q(created_by=request.user)
-    ).select_related("product", "florist")
+    ).exclude(status=StudioProduct.Status.DELETED).select_related("product", "florist")
 
 
 @team_required
@@ -163,6 +165,12 @@ def team_product_add(request):
                         return JsonResponse({"ok": False, "errors": {"submission_key": [
                             "شناسه پیش‌نویس معتبر نیست؛ یک ثبت تازه باز کنید."]}}, status=400)
                     raise PermissionDenied
+                if existing.status == StudioProduct.Status.DELETED:
+                    text = "این ثبت با تصمیم مدیر حذف شده است؛ برای بررسی با مدیر استودیو تماس بگیرید."
+                    if wants_json(request):
+                        return JsonResponse({"ok": False, "errors": {"submission_key": [text]}}, status=409)
+                    messages.error(request, text)
+                    return redirect("team_products")
                 return _success_response(request, existing, created=False)
     form = TeamProductForm(request.POST if request.method == "POST" else None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
@@ -190,7 +198,9 @@ def team_products(request):
     status = request.GET.get("status", "")
     production = request.GET.get("production", "")
     q = request.GET.get("q", "").strip()[:80]
-    if status in StudioProduct.Status.values:
+    status_choices = [(value, label) for value, label in StudioProduct.Status.choices
+                      if value != StudioProduct.Status.DELETED]
+    if status in dict(status_choices):
         products = products.filter(status=status)
     else:
         status = ""
@@ -204,7 +214,7 @@ def team_products(request):
     return render(request, "main/team/products.html", {
         **portal_context(request, "products"), "page_obj": Paginator(products, 18).get_page(request.GET.get("page")),
         "status_filter": status, "production_filter": production, "q": q,
-        "status_choices": StudioProduct.Status.choices, "production_choices": StudioProduct.ProductionType.choices})
+        "status_choices": status_choices, "production_choices": StudioProduct.ProductionType.choices})
 
 
 @team_required
@@ -230,7 +240,7 @@ def _peer_card(florist):
 @require_GET
 def team_colleagues(request):
     colleagues = Florist.objects.filter(is_active=True).exclude(pk=request.florist.pk).annotate(
-        product_count=Count("studio_products"))
+        product_count=Count("studio_products", filter=~Q(studio_products__status=StudioProduct.Status.DELETED)))
     return render(request, "main/team/colleagues.html", {
         **portal_context(request, "colleagues"), "colleagues": [_peer_card(peer) for peer in colleagues]})
 
@@ -238,10 +248,12 @@ def team_colleagues(request):
 @team_required
 @require_GET
 def team_colleague_profile(request, pk):
-    peer = get_object_or_404(Florist.objects.filter(is_active=True).annotate(product_count=Count("studio_products")), pk=pk)
+    peer = get_object_or_404(Florist.objects.filter(is_active=True).annotate(
+        product_count=Count("studio_products", filter=~Q(studio_products__status=StudioProduct.Status.DELETED))), pk=pk)
     gallery = [{"image_url": record.photo_url, "product_type": record.get_product_type_display(),
                 "production_type": record.get_production_type_display(), "produced_at": record.produced_at}
-               for record in peer.studio_products.select_related("product").exclude(status=StudioProduct.Status.CANCELLED)[:24]]
+               for record in peer.studio_products.select_related("product").exclude(
+                   status__in=[StudioProduct.Status.CANCELLED, StudioProduct.Status.DELETED])[:24]]
     return render(request, "main/team/colleague_profile.html", {
         **portal_context(request, "colleagues"), "colleague": _peer_card(peer), "work_gallery": gallery})
 

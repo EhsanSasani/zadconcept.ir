@@ -7,6 +7,7 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from .image_pipeline import ImageUploadError, create_responsive_image_variants, normalize_admin_image
 from .models import Category, Florist, Product, StudioDelivery, StudioProduct
@@ -78,6 +79,8 @@ def _create_daily_projection(record, category, group_id, *, slug):
 
 def save_dashboard_record(record):
     """Persist a manager entry; available daily stock follows the portal pipeline."""
+    if record.pk:
+        raise ValidationError("برای اصلاح محصول ثبت‌شده از فرم ویرایش استفاده کنید.")
     if record.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}:
         raise ValidationError("منبع ثبت مدیریتی معتبر نیست.")
     publish_daily = (record.production_type == StudioProduct.ProductionType.DAILY
@@ -95,6 +98,63 @@ def save_dashboard_record(record):
         _clean_failed_file(record)
         raise
     return record
+
+
+def update_dashboard_record(record, *, changed_fields):
+    """Edit stored manager fields and their existing public row in one transaction.
+
+    Only fields actually changed by the form are copied onto the locked row.
+    Delivery identity, source, status and audit fields always come from the DB;
+    this path never creates or retries a Telegram publication.
+    """
+    editable = {"image", "florist", "factor_code", "product_type", "production_type", "price", "notes"}
+    changed = editable.intersection(changed_fields)
+    using = record._state.db or "default"
+    try:
+        with transaction.atomic(using=using):
+            # Keep the same lock order as catalog signals and status/delivery
+            # services, even if the request loaded an older ledger instance.
+            product_id = StudioProduct.objects.using(using).values_list("product_id", flat=True).get(pk=record.pk)
+            public = (Product.objects.using(using).select_for_update().filter(pk=product_id).first()
+                      if product_id else None)
+            current = StudioProduct.objects.using(using).select_for_update().get(pk=record.pk)
+            if current.product_id != product_id:
+                raise ValidationError("پیوند کاتالوگ محصول تغییر کرده است؛ فرم را دوباره باز کنید.")
+            if (current.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}
+                    or current.status != StudioProduct.Status.AVAILABLE):
+                raise PermissionDenied
+            # Reclassification needs an explicit conversion workflow; it must
+            # not leave public stock/custom group identities out of sync.
+            if ("production_type" in changed
+                    and record.production_type != current.production_type):
+                raise ValidationError({"production_type": "نوع تولید پس از ثبت قابل تغییر نیست؛ برای اصلاح با مدیر هماهنگ کنید."})
+            if ("factor_code" in changed and record.factor_code != current.factor_code
+                    and current.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists()):
+                raise ValidationError({"factor_code": "شماره فاکتور محصول دارای ارسال تلگرام قابل تغییر نیست."})
+            if public and public.status != Product.Status.AVAILABLE:
+                raise ValidationError("وضعیت نهایی محصول در کاتالوگ ثبت شده است؛ این محصول قابل ویرایش نیست.")
+            if "image" in changed and not record.image:
+                raise ValidationError({"image": "تصویر محصول لازم است؛ برای تغییر، عکس جایگزین انتخاب کنید."})
+            for field in changed:
+                setattr(current, field, getattr(record, field))
+            current.full_clean()
+            if changed:
+                current.save(using=using, update_fields=[*sorted(changed), "updated_at"])
+            projection = {}
+            if public:
+                if "price" in changed:
+                    projection.update(price=current.price, pricing_type=Product.PricingType.FIXED)
+                if "image" in changed:
+                    projection["cover_image"] = current.image.name
+            if projection:
+                Product.objects.using(using).filter(pk=public.pk).update(**projection, updated_at=timezone.now())
+            if public and "image" in changed:
+                storage, name = current.image.storage, current.image.name
+                transaction.on_commit(lambda: create_responsive_image_variants(storage, name), using=using)
+            return current
+    except Exception:
+        _clean_failed_file(record)
+        raise
 
 
 def create_portal_record(*, user, florist, image, factor_code, product_type,

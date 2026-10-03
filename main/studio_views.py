@@ -17,6 +17,7 @@ from django.views.decorators.cache import never_cache
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .studio_access import require_studio_permission
+from .studio_admin_notifications import admin_notifications_enabled
 from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 
 
@@ -136,6 +137,7 @@ def _chart(qs, period):
 def _base(request, active, period=None):
     keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
     return {"active": active, "period": period,
+            "private_notifications_enabled": admin_notifications_enabled(),
             "period_filters": [(key, value) for key, value in request.GET.items() if key in keep], "nav": [
         ("dashboard", "داشبورد", "studio_dashboard"),
         ("products", "محصولات", "studio_products"),
@@ -359,6 +361,28 @@ class ProductEditForm(ProductForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["image"].required = False
+        # An existing maker remains selectable after leaving the team; editing
+        # the price must not require reassigning their historical production.
+        self.fields["florist"].queryset = Florist.objects.filter(
+            Q(is_active=True) | Q(pk=self.instance.florist_id))
+
+    def clean_production_type(self):
+        value = self.cleaned_data["production_type"]
+        if value != self.instance.production_type:
+            raise forms.ValidationError("نوع تولید پس از ثبت قابل تغییر نیست؛ برای اصلاح با مدیر هماهنگ کنید.")
+        return value
+
+    def clean_image(self):
+        if self.cleaned_data.get("image") is False:
+            raise forms.ValidationError("تصویر محصول لازم است؛ برای تغییر، عکس جایگزین انتخاب کنید.")
+        return super().clean_image()
+
+    def clean_factor_code(self):
+        value = super().clean_factor_code()
+        if (value != self.instance.factor_code
+                and self.instance.deliveries.filter(action=StudioDelivery.Action.PUBLISH).exists()):
+            raise forms.ValidationError("شماره فاکتور محصول دارای ارسال تلگرام قابل تغییر نیست.")
+        return value
 
 
 @never_cache
@@ -405,9 +429,18 @@ def product_edit(request, pk):
         raise PermissionDenied
     form = ProductEditForm(request.POST or None, request.FILES or None, instance=record)
     if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "اطلاعات محصول اصلاح شد.")
-        return redirect("studio_products")
+        from .studio_publishing import update_dashboard_record
+        try:
+            record = update_dashboard_record(form.save(commit=False), changed_fields=form.changed_data)
+        except ValidationError as error:
+            if hasattr(error, "message_dict"):
+                for field, errors in error.message_dict.items():
+                    form.add_error(field if field in form.fields else None, errors)
+            else:
+                form.add_error(None, error)
+        else:
+            messages.success(request, "اطلاعات محصول اصلاح شد.")
+            return redirect("studio_products")
     return render(request, "main/studio/form.html", {
         **_base(request, "products"), "form": form, "title": f"ویرایش فاکتور {record.factor_code}",
         "submit_label": "ذخیره تغییرات", "preview_url": record.photo_url,

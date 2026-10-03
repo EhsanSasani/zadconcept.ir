@@ -197,6 +197,9 @@ TELEGRAM_DISCUSSION_GROUP_ID = os.getenv("TELEGRAM_DISCUSSION_GROUP_ID", "").str
 TELEGRAM_SAME_DAY_CATEGORY_ID = os.getenv("TELEGRAM_SAME_DAY_CATEGORY_ID", "").strip()
 TELEGRAM_STUDIO_CUSTOM_GROUP_ID = os.getenv("TELEGRAM_STUDIO_CUSTOM_GROUP_ID", "").strip()
 TELEGRAM_STUDIO_ADMIN_CHAT_ID = os.getenv("TELEGRAM_STUDIO_ADMIN_CHAT_ID", "").strip()
+# Private product notifications are opt-in. A stored destination alone must
+# never resume the abandoned queue after a deployment or worker restart.
+STUDIO_ADMIN_NOTIFICATIONS_ENABLED = env_bool("STUDIO_ADMIN_NOTIFICATIONS_ENABLED", False)
 # Activate after the daily team's caption format and historical backlog are reviewed.
 STUDIO_DAILY_REQUIRE_METADATA = env_bool("STUDIO_DAILY_REQUIRE_METADATA", False)
 # Optional existing Worker transport, required where VPS -> Telegram is blocked.

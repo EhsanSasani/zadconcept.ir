@@ -6,6 +6,7 @@ from . import views
 from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
 from . import studio_views
+from .studio_notification_views import admin_notifications
 
 urlpatterns = [
     path("", include("main.team_urls")),
@@ -22,6 +23,7 @@ urlpatterns = [
     path("studio/analytics/", studio_views.analytics, name="studio_analytics"),
     path("studio/settings/", studio_views.settings_view, name="studio_settings"),
     path("studio/deliveries/", studio_views.deliveries, name="studio_deliveries"),
+    path("studio/admin-notifications/", admin_notifications, name="studio_admin_notifications"),
     path("studio/issues/<int:pk>/resolve/", studio_views.resolve_issue, name="studio_resolve_issue"),
     path("api/telegram/webhook/", telegram_webhook, name="telegram_webhook"),
     path(

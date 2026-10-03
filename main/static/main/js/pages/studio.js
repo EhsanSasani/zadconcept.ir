@@ -165,7 +165,37 @@
 
   const photoDialog = $("#photo-dialog"),
     statusDialog = $("#status-dialog");
-  let pendingStatus;
+  const confirmButton = $("[data-confirm-status]");
+  const submittedActions = new WeakSet();
+  let pendingAction;
+  function submitAction(form) {
+    if (submittedActions.has(form)) return;
+    // A sorting request can replace the table while confirmation is open.
+    if (!form.isConnected || !form.reportValidity()) {
+      statusDialog?.close();
+      announce("جدول تغییر کرده یا اطلاعات کامل نیست؛ محصول را دوباره بررسی کنید.");
+      return;
+    }
+    submittedActions.add(form);
+    pendingAction = undefined;
+    if (confirmButton) {
+      confirmButton.disabled = true;
+      confirmButton.textContent = "در حال ثبت…";
+    }
+    form.querySelectorAll("button[type=submit]").forEach((button) => {
+      button.disabled = true;
+    });
+    HTMLFormElement.prototype.submit.call(form);
+  }
+  statusDialog?.addEventListener("close", () => {
+    // Native close events are queued; ignore a prior close after reopening.
+    if (statusDialog.open) return;
+    pendingAction = undefined;
+    if (confirmButton) {
+      confirmButton.disabled = false;
+      confirmButton.textContent = "تأیید و ثبت";
+    }
+  });
   document.addEventListener("click", (event) => {
     const photo = event.target.closest("[data-photo]");
     if (photo && photoDialog) {
@@ -195,14 +225,32 @@
   );
   document.addEventListener("submit", (event) => {
     const form = event.target;
-    if (form.matches(".status-form") && statusDialog) {
+    if (form.matches(".status-form,.product-delete-form")) {
       event.preventDefault();
-      const selected = $("select", form)?.selectedOptions[0];
-      if (!selected?.value) return;
-      pendingStatus = form;
-      $("[data-status-description]").textContent =
-        `فاکتور ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
+      if (submittedActions.has(form) || (pendingAction && statusDialog?.open)) return;
+      const deleting = form.matches(".product-delete-form");
+      const reason = deleting ? $("input[name=reason]", form) : null;
+      if (reason) reason.value = reason.value.trim();
+      if (!form.reportValidity()) return;
+      const selected = deleting ? null : $("select[name=status]", form)?.selectedOptions[0];
+      if (!deleting && !selected?.value) return;
+      const description = deleting
+        ? `فاکتور ${form.dataset.factor} با علت «${reason?.value || ""}» حذف مدیریتی شود؟`
+        : `فاکتور ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
+      if (!statusDialog?.showModal || !confirmButton) {
+        if (window.confirm(description)) submitAction(form);
+        return;
+      }
+      pendingAction = form;
+      $("#status-title", statusDialog).textContent = deleting ? "حذف مدیریتی محصول" : "ثبت وضعیت محصول";
+      $("[data-status-description]", statusDialog).textContent = description;
+      $("p.muted", statusDialog).textContent = deleting
+        ? "محصول از سایت، کارنامه و آمار فلوریست خارج می‌شود؛ تصویر و سابقهٔ مدیریتی محفوظ می‌ماند."
+        : "این محصول از فهرست موجودها خارج می‌شود.";
+      confirmButton.disabled = false;
+      confirmButton.textContent = deleting ? "تأیید حذف مدیریتی" : "تأیید و ثبت";
       statusDialog.showModal();
+      if (deleting) $("[data-close-dialog]", statusDialog)?.focus();
     } else if (form.matches("[data-editor-form]")) {
       const button = $("button[type=submit]", form);
       if (button) {
@@ -211,11 +259,8 @@
       }
     }
   });
-  $("[data-confirm-status]")?.addEventListener("click", (event) => {
-    if (!pendingStatus) return;
-    event.currentTarget.disabled = true;
-    event.currentTarget.textContent = "در حال ثبت…";
-    HTMLFormElement.prototype.submit.call(pendingStatus);
+  confirmButton?.addEventListener("click", () => {
+    if (pendingAction && statusDialog?.open) submitAction(pendingAction);
   });
   window.addEventListener("pageshow", (event) => {
     if (event.persisted) window.location.reload();

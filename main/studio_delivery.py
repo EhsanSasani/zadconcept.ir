@@ -32,6 +32,19 @@ def product_caption(record):
     return f"قیمت: {record.price:,.0f} تومان\nفاکتور: {record.factor_code}"
 
 
+def pending_caption_matches(record, caption):
+    """Only defer an in-flight reply; a caption never establishes message ownership.
+
+    The invoice is immutable, while a manager can correct the price during send.
+    Accept only our narrow outbound shape, so that correction cannot lose a sale.
+    """
+    if not isinstance(caption, str) or len(caption) > 1024:
+        return False
+    return bool(re.fullmatch(
+        rf"قیمت: [0-9,]+ تومان\nفاکتور: {re.escape(record.factor_code)}", caption,
+    ))
+
+
 def delivery_summary(record):
     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
@@ -55,68 +68,52 @@ def delivery_summary(record):
     return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
 
 
-def queue_retirement(record):
-    """Queue Telegram retirement with a grace period for sold/withdrawn items."""
-    if (
-        record.status == StudioProduct.Status.AVAILABLE
-        or not record.telegram_chat_id
-        or not record.telegram_message_id
-    ):
-        return None
+def _retirement_due_at(record, now):
+    if record.status == StudioProduct.Status.SOLD:
+        return (record.sold_at or now) + timedelta(minutes=45)
+    if record.status == StudioProduct.Status.WITHDRAWN:
+        return (record.withdrawn_at or now) + timedelta(minutes=45)
+    return now
 
-    published = record.deliveries.filter(
-        action=StudioDelivery.Action.PUBLISH
-    ).first()
+
+def queue_retirement(record):
+    """Call in the status transaction. Only messages emitted by our outbox retire."""
+    if (record.status == StudioProduct.Status.AVAILABLE
+            or not record.telegram_chat_id or not record.telegram_message_id):
+        return None
+    published = record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).first()
     if not published:
         return None
-
     now = timezone.now()
-
-    if record.status == StudioProduct.Status.SOLD:
-        terminal_at = record.sold_at or now
-        due_at = terminal_at + timedelta(minutes=45)
-    elif record.status == StudioProduct.Status.WITHDRAWN:
-        terminal_at = record.withdrawn_at or now
-        due_at = terminal_at + timedelta(minutes=45)
-    else:
-        # Administrative deletion and other terminal states stay immediate.
-        due_at = now
-
+    due_at = _retirement_due_at(record, now)
     job, created = StudioDelivery.objects.get_or_create(
-        record=record,
-        action=StudioDelivery.Action.RETIRE,
-        defaults={
-            "chat_id": record.telegram_chat_id,
-            "message_id": record.telegram_message_id,
-            "telegram_created_at": published.telegram_created_at,
-            "next_attempt_at": due_at,
-        },
+        record=record, action=StudioDelivery.Action.RETIRE,
+        defaults={"chat_id": record.telegram_chat_id, "message_id": record.telegram_message_id,
+                  "telegram_created_at": published.telegram_created_at,
+                  "next_attempt_at": due_at},
     )
-
-    if created:
-        return job
-
-    if (
-        job.status == StudioDelivery.Status.SENT
-        and job.outcome == "caption_marked"
-    ):
-        job.status = StudioDelivery.Status.RETRY
-        job.next_attempt_at = due_at
-        job.last_error = ""
-        job.save(
-            update_fields=[
-                "status",
-                "next_attempt_at",
-                "last_error",
-                "updated_at",
-            ]
+    # An older caption fallback may need to reflect a later terminal update. A
+    # deleted message is already absent and must not be posted again.
+    if not created and job.status == StudioDelivery.Status.SENT and job.outcome == "caption_marked":
+        StudioDelivery.objects.filter(
+            pk=job.pk, status=StudioDelivery.Status.SENT, outcome="caption_marked",
+        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
+                 last_error="", updated_at=now)
+        job.refresh_from_db()
+    elif not created and job.status in READY:
+        # Administrative deletion brings a pending grace-period job forward.
+        # A genuine transport retry retains its backoff/rate-limit deadline.
+        if job.status == StudioDelivery.Status.RETRY and job.last_error:
+            due_at = max(due_at, job.next_attempt_at)
+        # A worker may have recorded a new backoff after this snapshot. Match
+        # its scheduling fields so that a status replay cannot overwrite it.
+        StudioDelivery.objects.filter(
+            pk=job.pk, status=job.status, next_attempt_at=job.next_attempt_at,
+            last_error=job.last_error,
+        ).update(
+            next_attempt_at=due_at, updated_at=now,
         )
-        return job
-
-    if job.status in READY:
-        job.next_attempt_at = due_at
-        job.save(update_fields=["next_attempt_at", "updated_at"])
-
+        job.refresh_from_db()
     return job
 
 
@@ -187,7 +184,7 @@ def soft_delete_product(record, *, actor, reason):
                 updated_at=now,
             )
             TelegramSameDayPost.objects.filter(product_id=record.product_id).update(
-                withdrawn_at=now, updated_at=now,
+                withdrawn_at=now, deleted_at=now, updated_at=now,
             )
 
         queue_retirement(record)
@@ -201,7 +198,13 @@ def retry_delivery(delivery_id):
             raise ValidationError("این ارسال قابل تکرار نیست؛ ارسال نامشخص ابتدا باید در گروه بررسی شود.")
         if job.action == StudioDelivery.Action.PUBLISH and job.message_id:
             raise ValidationError("پیام این محصول قبلاً ثبت شده است.")
-        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, timezone.now()
+        now = timezone.now()
+        next_attempt_at = now
+        if job.action == StudioDelivery.Action.RETIRE:
+            next_attempt_at = max(now, _retirement_due_at(job.record, now))
+            if job.status == StudioDelivery.Status.RETRY and job.last_error == "rate_limited":
+                next_attempt_at = max(next_attempt_at, job.next_attempt_at)
+        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, next_attempt_at
         job.locked_at = job.lock_token = None
         job.attempts, job.last_error = 0, ""
         job.save(update_fields=["status", "next_attempt_at", "locked_at", "lock_token", "attempts", "last_error", "updated_at"])
@@ -372,6 +375,17 @@ def _publish(job):
 
 def _retire(job):
     record = StudioProduct.objects.get(pk=job.record_id)
+    now = timezone.now()
+    due_at = _retirement_due_at(record, now)
+    if due_at > now:
+        # Recheck persisted status before touching Telegram. This protects old
+        # immediate jobs and a status change made after this lease was claimed.
+        StudioDelivery.objects.filter(
+            pk=job.pk, lock_token=job.lock_token, status=StudioDelivery.Status.SENDING,
+        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
+                 attempts=F("attempts") - 1, locked_at=None, lock_token=None,
+                 last_error="", updated_at=now)
+        return
     if not job.message_id:
         raise studio_transport.TelegramDeliveryError("message_identity_missing")
     too_old = job.telegram_created_at and timezone.now() - job.telegram_created_at >= timedelta(hours=48)
@@ -408,7 +422,8 @@ def _retire(job):
             # A withdrawal can follow a sale while the caption request is in
             # flight. Keep the newer terminal state queued instead of losing it.
             StudioDelivery.objects.filter(pk=job.pk, lock_token=job.lock_token).update(
-                status=StudioDelivery.Status.RETRY, next_attempt_at=timezone.now(),
+                status=StudioDelivery.Status.RETRY,
+                next_attempt_at=_retirement_due_at(current, timezone.now()),
                 locked_at=None, lock_token=None, updated_at=timezone.now(),
             )
         else:

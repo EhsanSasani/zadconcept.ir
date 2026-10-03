@@ -205,33 +205,43 @@
       .replace(/[٠-٩]/g, (c) => "٠١٢٣٤٥٦٧٨٩".indexOf(c));
   function formatPriceInput() {
     const input = form.elements.price;
-    const amount = normalizeDigits(input.value).replace(/[^0-9]/g, "");
-
-    if (!amount) {
-      input.value = "";
-      return;
+    const original = input.value;
+    const digits = (value) => normalizeDigits(value).replace(/[^0-9]/g, "");
+    const formatted = digits(original).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (original === formatted) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const direction = input.selectionDirection;
+    input.value = formatted;
+    if (document.activeElement === input && start !== null && end !== null) {
+      const position = (count) => {
+        if (!count) return 0;
+        let seen = 0;
+        for (let i = 0; i < formatted.length; i++) {
+          if (/[0-9]/.test(formatted[i]) && ++seen === count) return i + 1;
+        }
+        return formatted.length;
+      };
+      input.setSelectionRange(
+        position(digits(original.slice(0, start)).length),
+        position(digits(original.slice(0, end)).length),
+        direction,
+      );
     }
-
-    input.value = amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
-
   function updateCopy() {
     const productionType = form.elements.production_type.value;
     const copy = $("[data-publish-copy]");
-
     if (productionType === "CUSTOM") {
-      copy.textContent =
-        "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود.";
+      copy.textContent = "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود.";
       if (!submitting) submitLabel.textContent = "ثبت سفارش اختصاصی";
     } else if (productionType === "DAILY") {
-      copy.textContent =
-        "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
+      copy.textContent = "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
       if (!submitting) submitLabel.textContent = "ثبت و انتشار محصول";
     } else {
       copy.textContent = "برای ادامه، محل استفاده محصول را انتخاب کنید.";
       if (!submitting) submitLabel.textContent = "ثبت محصول";
     }
-
     const amount = normalizeDigits(form.elements.price.value).replace(
       /[,٬\s]/g,
       "",
