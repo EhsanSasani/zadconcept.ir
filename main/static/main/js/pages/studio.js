@@ -349,7 +349,7 @@
     }));
     const headers = Array.from(chartTable.tHead.rows[0].cells);
     headers.forEach((header, index) => {
-      const key = ["label", "produced", "sold"][index];
+      const key = ["label", "produced", "sold", "withdrawn"][index];
       const label = header.textContent;
       const button = document.createElement("button");
       button.type = "button";
