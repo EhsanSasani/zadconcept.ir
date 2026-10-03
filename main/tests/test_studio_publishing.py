@@ -181,22 +181,47 @@ class StudioPublishingTests(TestCase):
         self.assertEqual(StudioDelivery.objects.count(), 1)
         self.assertFalse(Product.objects.exists())
 
-    def test_custom_portal_reply_retires_message_without_public_product(self):
+    def test_custom_is_sold_at_creation_and_message_is_preserved(self):
         record, _ = self.create(production_type="CUSTOM")
-        process_next_delivery()
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
+        self.assertEqual(record.sold_at, record.produced_at)
+        self.assertEqual(process_next_delivery().outcome, "published")
         record.refresh_from_db()
         message = self.sold_reply(record)
         message["chat"]["id"] = -5182713369
         message["reply_to_message"]["chat"]["id"] = -5182713369
-        self.assertEqual(process_update("message", message, 901)["result"], "status_updated")
-        record.refresh_from_db()
-        self.assertEqual(record.status, StudioProduct.Status.SOLD)
-        with self.at_retirement_deadline(record):
-            job = process_next_delivery()
-        self.assertEqual(job.action, StudioDelivery.Action.RETIRE)
-        self.assertEqual(job.status, StudioDelivery.Status.SENT)
-        self.delete.assert_called_once_with(-5182713369, 812)
+        self.assertEqual(process_update("message", message, 901)["result"], "duplicate_ignored")
+        self.assertFalse(record.deliveries.filter(action="RETIRE").exists())
+        self.assertIsNone(process_next_delivery())
+        self.delete.assert_not_called()
+        self.edit.assert_not_called()
         self.assertFalse(Product.objects.exists())
+
+    def test_old_custom_retirement_is_completed_without_network(self):
+        record, _ = self.create(production_type="CUSTOM")
+        process_next_delivery()
+        record.refresh_from_db()
+        StudioDelivery.objects.create(record=record, action="RETIRE", chat_id=-5182713369,
+                                      message_id=812)
+        self.assertEqual(process_next_delivery().outcome, "custom_preserved")
+        self.assertIn("سفارشی‌ها", delivery_summary(record)["label"])
+        self.delete.assert_not_called()
+        self.edit.assert_not_called()
+
+    def test_dashboard_custom_is_sold_without_touching_existing_records(self):
+        record = StudioProduct(florist=self.florist, factor_code="CUSTOM-DASH", product_type="box",
+                               production_type="CUSTOM", price=2500000, image=image_file(),
+                               source="DASHBOARD")
+        save_dashboard_record(record)
+        self.assertEqual(record.status, "SOLD")
+        self.assertIsNotNone(record.sold_at)
+        self.assertFalse(record.deliveries.exists())
+        StudioProduct.objects.filter(pk=record.pk).update(status="AVAILABLE", sold_at=None)
+        record.refresh_from_db()
+        record.notes = "old record"
+        record.save(update_fields=["notes"])
+        record.refresh_from_db()
+        self.assertEqual(record.status, "AVAILABLE")
 
     def test_custom_portal_photo_edits_do_not_reimport_minimal_caption(self):
         record, _ = self.create(production_type="CUSTOM")

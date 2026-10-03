@@ -236,7 +236,7 @@ class StudioReplySafetyTests(TestCase):
                 with self.subTest(status=status, text=text), self.assertRaises(SyncConfigurationError):
                     process_update("message", self._reply(record, text), 200)
         record.refresh_from_db()
-        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
         self.assertEqual(record.price, 2400000)
 
     def test_unknown_custom_bot_photo_is_not_matched_by_an_unrelated_caption(self):
@@ -247,7 +247,7 @@ class StudioReplySafetyTests(TestCase):
         result = process_update("message", reply, 200)
         self.assertEqual(result["result"], "unknown_reply_ignored")
         record.refresh_from_db()
-        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
 
     def _assert_old_caption_during_pending_price_change_is_retryable(self, production_type):
         record = self._portal_record(production_type, publish=False)
@@ -259,7 +259,7 @@ class StudioReplySafetyTests(TestCase):
         with self.assertRaises(SyncConfigurationError):
             process_update("message", reply, 200)
         record.refresh_from_db()
-        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
+        self.assertEqual(record.status, "SOLD" if production_type == "CUSTOM" else "AVAILABLE")
         self.assertEqual(record.price, 3500000)
         self.assertIsNone(record.telegram_message_id)
 
@@ -283,7 +283,7 @@ class StudioReplySafetyTests(TestCase):
                 result = process_update("message", reply, 200)
                 self.assertEqual(result["result"], "unknown_reply_ignored")
         record.refresh_from_db()
-        self.assertEqual(record.status, StudioProduct.Status.AVAILABLE)
+        self.assertEqual(record.status, StudioProduct.Status.SOLD)
         self.assertIsNone(record.telegram_message_id)
 
     def test_custom_reply_rereads_mapping_when_initial_lookup_misses_commit(self):
@@ -303,10 +303,10 @@ class StudioReplySafetyTests(TestCase):
         with patch.object(QuerySet, "filter", new=miss_first_identity_lookup):
             result = process_update("message", self._reply(record, "فروخته شد"), 200)
         self.assertTrue(missed)
-        self.assertEqual(result["result"], "status_updated")
+        self.assertEqual(result["result"], "duplicate_ignored")
         record.refresh_from_db()
         self.assertEqual(record.status, StudioProduct.Status.SOLD)
-        self.assertTrue(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists())
+        self.assertFalse(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists())
 
     def _assert_price_ordering(self, production_type):
         record = self._portal_record(production_type)
@@ -371,8 +371,9 @@ class StudioReplySafetyTests(TestCase):
                     process_update("message", self._reply(record, text, seconds=20), 220)
                     record.refresh_from_db()
                     self.assertEqual(record.price, 3500000)
-                    self.assertEqual(record.status, status)
-                    self.assertTrue(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists())
+                    self.assertEqual(record.status, "SOLD" if production_type == "CUSTOM" else status)
+                    self.assertEqual(record.deliveries.filter(action=StudioDelivery.Action.RETIRE).exists(),
+                                     production_type == "DAILY")
                     if record.product_id:
                         product = Product.objects.get(pk=record.product_id)
                         self.assertEqual(product.price, 3500000)

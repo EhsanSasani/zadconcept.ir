@@ -119,7 +119,7 @@ class StudioIntegrationTests(TestCase):
                  "chat": {"id": CUSTOM_GROUP, "type": "supergroup"},
                  "from": {"id": 666, "is_bot": False}, "date": 1700000001,
                  "text": "فروخته شد", "reply_to_message": custom_photo()["message"]}}
-        self.assertEqual(self.send(reply).json()["result"], "status_updated")
+        self.assertEqual(self.send(reply).json()["result"], "duplicate_ignored")
         self.assertEqual(self.send(reply).json()["result"], "duplicate_ignored")
         record = StudioProduct.objects.get()
         self.assertEqual(record.status, "SOLD")
@@ -260,13 +260,9 @@ class StudioIntegrationTests(TestCase):
         self.assertEqual(record.created_by, user)
         self.assertEqual(record.source, StudioProduct.Source.DASHBOARD)
         self.assertFalse(Product.objects.exists())
-        response = self.client.post(reverse("studio_product_edit", args=[record.pk]), {
-            "florist": self.florist.pk, "factor_code": "ZAD-5001", "product_type": "jar",
-            "production_type": "CUSTOM", "price": "2600000", "notes": "اصلاح دستی",
-        }, **csrf)
-        self.assertEqual(response.status_code, 302)
-        record.refresh_from_db()
-        self.assertEqual((record.price, record.product_type), (2600000, "jar"))
+        self.assertEqual(record.status, "SOLD")
+        self.assertIsNotNone(record.sold_at)
+        self.assertEqual(self.client.get(reverse("studio_product_edit", args=[record.pk])).status_code, 403)
         response = self.client.post(reverse("studio_product_status", args=[record.pk]), {"status": "SOLD"}, **csrf)
         self.assertEqual(response.status_code, 302)
         record.refresh_from_db()
