@@ -1,5 +1,6 @@
 """Private, server-rendered ZAD Studio Operations views."""
 from datetime import date, datetime, time, timedelta
+from urllib.parse import urlencode
 
 from django import forms
 from django.contrib import messages
@@ -25,9 +26,9 @@ def _access(request, permission="view_studioproduct"):
     require_studio_permission(request, permission)
 
 
-def _period(request):
+def _period(request, default="30"):
     today = timezone.localdate()
-    choice = request.GET.get("period", "30")
+    choice = request.GET.get("period", default)
     if choice == "today":
         start, end = today, today
     elif choice == "7":
@@ -156,13 +157,18 @@ def _base(request, active, period=None):
     keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
     return {"active": active, "period": period,
             "private_notifications_enabled": admin_notifications_enabled(),
+            "mobile_nav": [("dashboard", "خانه", "studio_dashboard", "grid"),
+                           ("products", "محصولات", "studio_products", "box"),
+                           ("analytics", "تحلیل‌ها", "studio_analytics", "chart"),
+                           ("florists", "تیم", "studio_florists", "users"),
+                           ("settings", "بیشتر", "studio_settings", "menu")],
             "period_filters": [(key, value) for key, value in request.GET.items() if key in keep], "nav": [
-        ("dashboard", "داشبورد", "studio_dashboard"),
+        ("dashboard", "خانه", "studio_dashboard"),
         ("products", "محصولات", "studio_products"),
         ("florists", "فلوریست‌ها", "studio_florists"),
         ("analytics", "تحلیل‌ها", "studio_analytics"),
         ("add", "ثبت محصول", "studio_product_add"),
-        ("settings", "تنظیمات", "studio_settings"),
+        ("settings", "بیشتر", "studio_settings"),
     ]}
 
 
@@ -170,12 +176,14 @@ def _base(request, active, period=None):
 @login_required(login_url="studio_login")
 def dashboard(request):
     _access(request)
-    period = _period(request)
+    period = _period(request, default="today")
     qs = _activity(period)
     stats = _stats(qs, period)
+    stats["available"] = _vitrine().count()
     previous = _stats(_activity(_previous(period)), _previous(period))
     comparisons = {key: _delta(stats[key], previous[key]) for key in
-                   ("produced", "sold", "withdrawn", "available", "total_value")}
+                   ("produced", "sold", "withdrawn", "available", "total_value", "sold_value")}
+    comparisons["available"] = None
     breakdown = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     daily = breakdown.get(StudioProduct.ProductionType.DAILY, 0)
     custom = breakdown.get(StudioProduct.ProductionType.CUSTOM, 0)
@@ -189,8 +197,66 @@ def dashboard(request):
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
                "daily": daily, "custom": custom, "chart": chart, "florists": florist_rows,
                "latest": latest[:5], "table_sort": table_sort,
-               "missing_count": missing_count, "issue_count": issue_count}
+               "missing_count": missing_count, "issue_count": issue_count,
+               "metric_links": {key: reverse("studio_metric", args=[key]) + "?" + urlencode({
+                   "period": period["choice"], "start": period["start"], "end": period["end"]})
+                   for key in METRICS},
+               "vitrine": _vitrine()[:4], "vitrine_count": _vitrine().count()}
     return render(request, "main/studio/dashboard.html", context)
+
+
+METRICS = {
+    "produced": ("تولید شده", "produced_at", None, False),
+    "sold": ("فروخته شده", "sold_at", "SOLD", False),
+    "withdrawn": ("کشیده شده", "withdrawn_at", "WITHDRAWN", False),
+    "available": ("موجودی فعلی ویترین", None, "AVAILABLE", False),
+    "total_value": ("ارزش تولید", "produced_at", None, True),
+    "sold_value": ("ارزش فروش", "sold_at", "SOLD", True),
+}
+
+
+def _vitrine():
+    return StudioProduct.objects.select_related("florist", "product").filter(
+        status="AVAILABLE", production_type="DAILY").order_by("-produced_at", "-pk")
+
+
+@never_cache
+@login_required(login_url="studio_login")
+def metric_detail(request, metric):
+    _access(request)
+    from django.http import Http404
+    if metric not in METRICS:
+        raise Http404
+    label, field, status, money = METRICS[metric]
+    period = _period(request)
+    qs = StudioProduct.objects.select_related("florist", "product").exclude(status="DELETED")
+    if metric == "available":
+        qs = _vitrine()
+    else:
+        qs = qs.filter(_event_filter(field, period))
+        if status:
+            qs = qs.filter(status=status)
+    total = (qs.aggregate(value=Sum("price"))["value"] or 0) if money else qs.count()
+    by_florist = list(qs.values("florist__name").annotate(value=Sum("price") if money else Count("pk")).order_by("-value", "florist__name"))
+    florist_peak = max((row["value"] or 0 for row in by_florist), default=0) or 1
+    for row in by_florist:
+        row["share"] = round((row["value"] or 0) / florist_peak * 100)
+    # One bar per day, covering the entire selected period; no truncated report.
+    chart = []
+    if field:
+        buckets = {row["day"]: row["value"] for row in qs.annotate(
+            day=TruncDate(field, tzinfo=timezone.get_current_timezone())).values("day").annotate(
+            value=Sum("price") if money else Count("pk"))}
+        peak = max(buckets.values(), default=0) or 1
+        for offset in range((period["end"] - period["start"]).days + 1):
+            day = period["start"] + timedelta(days=offset)
+            value = buckets.get(day, 0) or 0
+            chart.append({"day": day.isoformat(), "value": value, "height": round(value / peak * 100)})
+    qs, table_sort = _sort_products(request, qs)
+    return render(request, "main/studio/metric.html", {
+        **_base(request, "dashboard", period), "metric": metric, "label": label,
+        "money": money, "total": total, "chart_rows": chart, "by_florist": by_florist, "table_sort": table_sort,
+        "page": Paginator(qs, 20).get_page(request.GET.get("page"))})
 
 
 @never_cache
@@ -278,8 +344,21 @@ def analytics(request):
                  else (row[fields[table_sort["key"]]] or 0), reverse=table_sort["direction"] == "desc")
     split = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     return render(request, "main/studio/analytics.html", {
-        **_base(request, "analytics", period), "stats": _stats(qs, period), "by_type": by_type, "table_sort": table_sort,
+        **_base(request, "analytics", period), "chart": _chart(qs, period), "stats": _stats(qs, period), "by_type": by_type, "table_sort": table_sort,
         "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0)})
+
+
+@never_cache
+@login_required(login_url="studio_login")
+def product_detail(request, pk):
+    _access(request)
+    record = get_object_or_404(StudioProduct.objects.select_related("florist", "product", "created_by", "deleted_by"), pk=pk)
+    return render(request, "main/studio/product_detail.html", {
+        **_base(request, "products"), "record": record,
+        "deliveries": record.deliveries.order_by("-created_at", "-pk")[:10],
+        "can_edit_record": request.user.has_perm("main.change_studioproduct")
+            and record.status == "AVAILABLE" and record.source in {"DASHBOARD", "ADMIN"},
+    })
 
 
 class FloristForm(forms.ModelForm):
@@ -571,7 +650,7 @@ def deliveries(request):
             elif request.POST.get("action") == "reconcile":
                 message_id = request.POST.get("message_id", "").strip()
                 if not message_id.isdecimal() or int(message_id) <= 0 or request.POST.get("verified") != "yes":
-                    raise ValidationError("پیام همین محصول را در گروه آماده‌ها بررسی کنید و شناسهٔ عددی آن را وارد کنید.")
+                    raise ValidationError("پیام همین محصول را در گروه مقصد بررسی کنید و شناسهٔ عددی آن را وارد کنید.")
                 reconcile_delivery(delivery.pk, int(message_id))
                 messages.success(request, "پیام تأییدشده به محصول متصل شد؛ پیام تازه‌ای ارسال نشد.")
             elif request.POST.get("action") == "retry_absent":
