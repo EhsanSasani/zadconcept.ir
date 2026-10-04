@@ -2588,3 +2588,64 @@ dialog[open] {
 .delivery-actions input[type="checkbox"] { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--sage-deep); }
 .notification-caption { white-space: pre-line; min-width: 180px; }
 .sidebar-bottom form { margin-block-start: 14px; }
+
+/* Manager overview: preserve Studio identity, give stock the visual priority. */
+.kpi-link {color:inherit;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease;}
+.kpi-link:hover {transform:translateY(-2px);box-shadow:0 8px 24px #304b3a12;}
+.kpi-link:focus-visible,.vitrine-photo:focus-visible {outline:3px solid #355940;outline-offset:4px;}
+.kpi-link .kpi-foot::after {content:'مشاهده جزئیات ←';display:block;margin-top:6px;color:#355940;font-size:12px;}
+.vitrine-panel {margin-top:24px;}
+.vitrine-note {color:#555f55;font-size:13px;margin:0 0 18px;line-height:1.8;}
+.vitrine-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;}
+.vitrine-card {min-width:0;border:1px solid #e6e9e2;border-radius:18px;overflow:hidden;background:#fff;}
+.vitrine-photo {display:flex;width:100%;aspect-ratio:1;border:0;padding:0;background:#eeeee7;cursor:zoom-in;overflow:hidden;}
+.vitrine-photo img {width:100%;height:100%;object-fit:cover;}
+.vitrine-placeholder {align-items:center;justify-content:center;flex-direction:column;gap:10px;font-size:13px;}
+.vitrine-copy {padding:14px;display:grid;gap:7px;}
+.vitrine-copy>strong {font-size:19px;color:#304f39;line-height:1.6;}
+.vitrine-copy small {font-size:12px;font-weight:400;}
+.vitrine-copy h3 {margin:0;font-size:14px;}
+.vitrine-copy a {font-size:13px;color:#455645;min-height:32px;display:flex;align-items:center;}
+.vitrine-copy .factor {font-size:12px;justify-self:end;color:#60695f;}
+.vitrine-grid>.empty-state {grid-column:1/-1;}
+.metric-back {margin-bottom:20px;min-height:44px;}
+.metric-total {padding:24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.metric-total strong {font-size:28px;color:#355940;}
+.metric-total small {font-size:13px;}
+.metric-chart,.metric-products {margin-bottom:24px;}
+.metric-bars {display:flex;gap:14px;overflow-x:auto;max-width:100%;padding:16px 4px;direction:ltr;}
+.metric-day {flex:0 0 80px;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:12px;}
+.metric-day meter {width:24px;height:120px;writing-mode:vertical-lr;transform:rotate(180deg);}
+.metric-day time {white-space:nowrap;font-size:11px;}
+@media(max-width:900px){.vitrine-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}}
+@media(max-width:600px){
+ body[data-studio-page="dashboard"] .studio-main{padding-left:16px;padding-right:16px;}
+ body[data-studio-page="dashboard"] .kpi{padding:16px;min-width:0;}
+ body[data-studio-page="dashboard"] .kpi-top>span:first-child{font-size:13px;}
+ body[data-studio-page="dashboard"] .kpi p{font-size:12px;line-height:1.7;}
+ body[data-studio-page="dashboard"] .kpi .money{font-size:23px;overflow-wrap:anywhere;}
+ body[data-studio-page="dashboard"] .kpi-foot{font-size:11px;}
+ .vitrine-panel{padding:16px;margin-top:20px;}
+ .vitrine-copy{padding:12px;gap:4px;}
+ .vitrine-copy>strong{font-size:17px;}
+ .vitrine-copy small{font-size:11px;}
+ .vitrine-panel .panel-head{gap:8px;align-items:center;}
+ .vitrine-panel .panel-head h2{font-size:18px;}
+ .vitrine-panel .text-link{min-height:44px;font-size:12px;}
+ .metric-total{padding:18px;flex-wrap:wrap;}
+ .metric-total strong{font-size:25px;}
+ .florist-panel .florist-name strong{font-size:13px;}
+ .florist-panel .florist-number small,.florist-panel .florist-rate small{font-size:11px;}
+ .metric-products .panel-head{padding-bottom:12px;}
+}
+@media(prefers-reduced-motion:reduce){.kpi-link{transition:none;}.kpi-link:hover{transform:none;}}
+
+.metric-florists{margin-bottom:24px;}.metric-florist{display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px 0;font-size:14px;}.metric-florist progress{grid-column:1/-1;width:100%;height:8px;accent-color:#355940;}
+@media(max-width:600px){
+ body[data-studio-page="dashboard"] .kpi-link .kpi-foot{font-size:10px;line-height:1.7;}
+ body[data-studio-page="dashboard"] .kpi-link .kpi-foot::after{font-size:11px;margin-top:2px;}
+ body[data-studio-page="dashboard"] .kpi-link>strong{margin-top:10px;margin-bottom:4px;}
+ body[data-studio-page="dashboard"] .kpi-link>p{margin-bottom:8px;font-size:11px;}
+ body[data-studio-page="dashboard"] .kpi-link{padding:14px;}
+ body[data-studio-page="dashboard"] .kpi-link .money{font-size:20px;white-space:normal;}
+}

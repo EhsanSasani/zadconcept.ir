@@ -10,8 +10,10 @@ from .studio_notification_views import admin_notifications
 
 urlpatterns = [
     path("", include("main.team_urls")),
+    path("studio/metrics/<str:metric>/", studio_views.metric_detail, name="studio_metric"),
     path("studio/", studio_views.dashboard, name="studio_dashboard"),
     path("studio/products/", studio_views.products, name="studio_products"),
+    path("studio/products/<int:pk>/", studio_views.product_detail, name="studio_product_detail"),
     path("studio/products/add/", studio_views.product_add, name="studio_product_add"),
     path("studio/products/<int:pk>/edit/", studio_views.product_edit, name="studio_product_edit"),
     path("studio/products/<int:pk>/status/", studio_views.product_status, name="studio_product_status"),
