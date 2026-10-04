@@ -1,0 +1,20 @@
+{
+  "vps_base": "86e058b0506ffb03be37a4633400a6db19712171",
+  "local_base": "5821425deba27df654abe4c7e3b077b973767427",
+  "vps_changed_files": 37,
+  "compared_source_files": 499,
+  "both_patches_apply_cleanly": true,
+  "resulting_sources_identical": true,
+  "worker_runtime_changed": false,
+  "models_or_migrations_changed": false,
+  "tests": {
+    "django_total": 588,
+    "django_skipped": 1,
+    "javascript_passed": 52,
+    "browser": "passed on isolated data"
+  },
+  "patch_sha256": {
+    "zad-studio-reconcile-5821425.patch": "046b61fccdd834852c53ab67bad1dd409c815b5b257177a97e51edf83f6c35c8",
+    "zad-studio-reconcile-vps-86e058b.patch": "9437cff80aae04b5d08ce4e4129f10e0350e902138821eca3eb6780c0c86f9ff"
+  }
+}

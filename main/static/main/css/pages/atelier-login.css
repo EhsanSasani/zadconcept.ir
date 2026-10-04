@@ -1,0 +1,37 @@
+/* Isolated shared Studio / Team login; lightweight abstract atelier. */
+body.login-page{background:#111f34;color:#fff9f0;isolation:isolate}
+.login-page .team-main{position:relative;min-height:100svh;padding:48px 24px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px}
+.login-page .team-frame{margin:0}
+.atelier-scene{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 84% 14%,#bd642f 0,transparent 39%),radial-gradient(ellipse at 2% 95%,#101d32 0,transparent 55%),linear-gradient(125deg,#172b46,#70462f 58%,#14253d)}
+.atelier-scene span{position:absolute;width:56vw;height:110vh;min-width:360px;right:-9vw;top:9vh;border-radius:50% 50% 0 0;background:linear-gradient(135deg,#e6945099,#d5733410 55%,#15294130);box-shadow:inset 2px 1px 2px #ffe8c55c,-30px 20px 100px #08172c55;transform:rotate(-18deg)}
+.atelier-scene:after{content:'';position:absolute;width:65vw;height:65vw;min-width:470px;min-height:470px;border:1px solid #f5d4a333;border-radius:50%;left:-35vw;top:5vh;box-shadow:0 0 0 55px #efc69b08,0 0 0 130px #efc69b06}
+.atelier-card{width:min(100%,480px);padding:40px 32px 26px;border:1px solid #fff7e8a6;border-radius:26px;background:linear-gradient(145deg,#14263bd9,#192a40e6);box-shadow:0 24px 80px #08132660,inset 0 1px 0 #ffffff20;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);text-align:center}
+.atelier-brand{font-family:Georgia,'Times New Roman',serif;font-size:76px;line-height:1.1;letter-spacing:-5px;color:#fffaf4;display:inline-block;text-decoration:none}.atelier-brand span{color:#ffae7c;letter-spacing:0}
+.atelier-intro{margin:24px 0 30px}.atelier-intro h1{font-size:23px;font-weight:600;line-height:1.9;margin:0;color:#fffaf4}.atelier-intro p{font-size:15px;line-height:1.9;margin:4px 0 0;color:#eee1d0}
+.atelier-form{text-align:right;display:grid;gap:18px}.atelier-field label{display:block;font-size:12px;margin:0 3px 8px;color:#f6eadd}
+.atelier-field input{width:100%;height:54px;min-width:0;border:1px solid #fff4e576;border-radius:13px;background:#ffeed410;color:#fffaf4;padding:0 16px;font:inherit;font-size:16px;box-shadow:none}.atelier-field .password-wrap input{padding-right:52px}
+.atelier-field input:focus{outline:2px solid #ffd2a6;outline-offset:3px;border-color:#ffe1bf;background:#fff4e51c}
+.atelier-field .password-toggle{right:4px;top:5px;color:#fff5e7;width:44px;height:44px;background:transparent;border:0}
+.atelier-options{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 12px;font-size:11px}.atelier-options a{color:#ffd1a7;min-height:44px;display:inline-flex;align-items:center;text-decoration:underline;text-underline-offset:5px}
+.atelier-remember{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}.atelier-remember input{width:19px;height:19px;accent-color:#ffd1a7;margin:0}
+.atelier-submit{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-height:54px;border:1px solid #fff7ed;border-radius:14px;background:#ffb477;color:#172c46;font:inherit;font-size:16px;font-weight:650;cursor:pointer;transition:background .15s,transform .15s}.atelier-submit:hover{background:#ffc591}.atelier-submit:active{transform:translateY(1px)}.atelier-submit .icon{width:22px;height:22px}
+.atelier-help{margin-top:25px;padding-top:17px;border-top:1px solid #fff2dd55;font-size:12px;line-height:2}.atelier-help summary{cursor:pointer;list-style:none;min-height:44px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}.atelier-help summary::-webkit-details-marker{display:none}.atelier-help summary span{color:#ffd1a7;text-decoration:underline;text-underline-offset:5px}.atelier-help p{color:#f2e5d5;margin:12px 0 0;text-align:right}
+.atelier-error{padding:12px 14px;border:1px solid #ffd1bb;background:#5e2828;color:#fff4ee;border-radius:12px;font-size:12px;line-height:1.9}.atelier-error ul{list-style:none;padding:0;margin:0}.atelier-field .field-errors{color:#ffdecf}
+.atelier-card :is(button,a,summary,input):focus-visible{outline:2px solid #ffcea1;outline-offset:4px}.login-page .flash-list{width:min(100%,480px)}
+@media(max-width:480px){.login-page .team-main{padding:max(24px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left))}.atelier-card{padding:30px 22px 20px;border-radius:24px}.atelier-brand{font-size:66px}.atelier-intro{margin:20px 0 24px}.atelier-intro h1{font-size:20px}.atelier-intro p{font-size:13px}.atelier-form{gap:15px}.atelier-scene span{right:-55%;width:100vw}}
+@media(max-width:350px){.atelier-card{padding-inline:17px}.atelier-intro h1{font-size:18px}.atelier-options{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.atelier-submit{transition:none}}
+@media(forced-colors:active){.atelier-card,.atelier-field input,.atelier-submit{border:1px solid CanvasText}.atelier-scene{display:none}}
+
+.atelier-input{position:relative}.atelier-field-icon{position:absolute;left:16px;top:16px;width:22px;height:22px;pointer-events:none;stroke:currentColor;fill:none;stroke-width:1.5}.atelier-field input{padding-left:48px}
+
+/* Opaque light fields preserve icon contrast with browser/password-manager autofill. */
+.atelier-field input,.atelier-field input:focus{background:#fff7ee;color:#182b45;caret-color:#182b45;border-color:#dfc5ad;color-scheme:light}
+.atelier-field-icon,.atelier-field .password-toggle{color:#243b58;stroke-width:1.8;z-index:1}
+.atelier-field .password-toggle:hover{background:#e9dccd}
+.atelier-field .password-toggle[aria-pressed="true"]{background:#f6d3b5;color:#172c46}
+.atelier-field input:autofill{background:#fff7ee;color:#182b45;box-shadow:inset 0 0 0 1000px #fff7ee}
+.atelier-field input:-webkit-autofill,.atelier-field input:-webkit-autofill:hover,.atelier-field input:-webkit-autofill:focus{-webkit-text-fill-color:#182b45;caret-color:#182b45;-webkit-box-shadow:inset 0 0 0 1000px #fff7ee;box-shadow:inset 0 0 0 1000px #fff7ee}
+.atelier-field .password-toggle:focus-visible{outline:2px solid #9b441b;outline-offset:-3px}
+.atelier-submit{border-color:#ffb477}
+@media(forced-colors:active){.atelier-field input,.atelier-field input:focus{background:Field;color:FieldText}.atelier-field-icon,.atelier-field .password-toggle{color:ButtonText}}

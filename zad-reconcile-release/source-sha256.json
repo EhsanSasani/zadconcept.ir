@@ -1,0 +1,1998 @@
+[
+  {
+    "path": ".env.example",
+    "sha256": "81b11a978cfd3029675c5d957a3c176fb753fb20ce17d7fede8532ad9e83bc1f"
+  },
+  {
+    "path": "config/__init__.py",
+    "sha256": "c683c55e7329626b18e8799d7ecc866e78378691712eb199066d9355a84ded43"
+  },
+  {
+    "path": "config/asgi.py",
+    "sha256": "19165bef653b8429fb5e07425e4e9b6e3ce196addaec73e82fd5127c178e1d26"
+  },
+  {
+    "path": "config/settings.py",
+    "sha256": "1dfb541281e9e9a592ef8be2dba7dd8649d9c0bef60f26cd3e95be61ad9af8bf"
+  },
+  {
+    "path": "config/urls.py",
+    "sha256": "8baec9ffdea4a63295976baaccaab2cf6eeb54e078a489d44319041a0b1a685d"
+  },
+  {
+    "path": "config/wsgi.py",
+    "sha256": "1c9b9255d412fad1f0a56eeb91e1785ce2bb06a8f16c2ec983c8c98118cfde79"
+  },
+  {
+    "path": "docs/editorial-sources.md",
+    "sha256": "964e8a8cd01eb8b389eb25ee20ba50d3a50d7c744e1733b3f801b86e8bfcfcb1"
+  },
+  {
+    "path": "docs/editorial/README-fa.md",
+    "sha256": "9131b8071096f6bd360aaf62a97916151dd963bf4a540d486a133492fb77d94a"
+  },
+  {
+    "path": "docs/editorial/articles-fa.md",
+    "sha256": "71cc561d17c0fb02eb2e8209692ece071320218652658167ccd0c83500ec3171"
+  },
+  {
+    "path": "docs/editorial/seo-content-map-fa.md",
+    "sha256": "c1061f2387f5b5d261bbd7abe57f0dcadaacd1d89b5b0318aca454e03b2b6c08"
+  },
+  {
+    "path": "docs/editorial/verification.md",
+    "sha256": "3acdd79878240195ac255d476730d0f29b44c91e5b325ec03103f54fd963023b"
+  },
+  {
+    "path": "docs/project/06-studio-team-contract.md",
+    "sha256": "b906cfdd708a076f84a424058d4fad469aa620c12e4133a4e10cb8e5c8a35cb5"
+  },
+  {
+    "path": "docs/project/same-day-seo-integrated.md",
+    "sha256": "65be51fb5862ca8b41a8cb91225efd2a4305d8985ddbd398c672f3e374188626"
+  },
+  {
+    "path": "docs/refactor-v2-state.md",
+    "sha256": "48db70f92689e0bcf8b3c440ef47198aabe3e83c0675af865ff85035b40d9402"
+  },
+  {
+    "path": "docs/source-layout.md",
+    "sha256": "7e9008b094b9243ccae2cb2e23b0f6c84cec03b3b9764accfb3639e321af3ea9"
+  },
+  {
+    "path": "docs/studio-operations-rollout-fa.md",
+    "sha256": "d657fd8d7953421afc7a515f6537b50b16a29cab34a308175f98335454b85e85"
+  },
+  {
+    "path": "docs/studio-reconciliation-rollout-fa.md",
+    "sha256": "8a457eed87ca9d8a68432992407d40d947553fc7219a392446521ee5f32f6aea"
+  },
+  {
+    "path": "docs/studio-safety-rollout-fa.md",
+    "sha256": "400eef9ea963a994fc2a4c7ef9d806168aeae370c059078e937840f8ff524940"
+  },
+  {
+    "path": "docs/studio-team-rollout-fa.md",
+    "sha256": "8f618fd6c7f2a3438d5d284815016d232135de2b18a6602779631f02d39be618"
+  },
+  {
+    "path": "docs/studio-ui-v2-fa.md",
+    "sha256": "c1af52b1a4aceb4b1db617d4872694796e0ba0a1c2127e7671f868d592feb585"
+  },
+  {
+    "path": "docs/telegram-group-products-fa.md",
+    "sha256": "45e99c4c3216df7726afa79b4a6b9f6ead258afda83039e891b942b8f69b3072"
+  },
+  {
+    "path": "docs/telegram-integration.md",
+    "sha256": "76f9056ba1ced27f9135d67f79f72321450e93c65730def7e55baea3e2cd5bdf"
+  },
+  {
+    "path": "docs/telegram-same-day-fa.md",
+    "sha256": "89ae68c75b087e3ad92da91bfb2d21b533ee5c1beb7e1e4deb2b5d2b5ccd455f"
+  },
+  {
+    "path": "main/__init__.py",
+    "sha256": "fe1d6791230ebe561abf4336a629baeaa879d6a2d3c02d2cbb4567bee5534adc"
+  },
+  {
+    "path": "main/admin.py",
+    "sha256": "1b01c9e2fcf0ea848ccca0188c6da67f4b2707b0b40c6eb412a9fa280a9828f7"
+  },
+  {
+    "path": "main/admin_content.py",
+    "sha256": "865159c781368e612a706fa9cb5de3914806074248ba909b6834b7d8c57d3ce9"
+  },
+  {
+    "path": "main/apps.py",
+    "sha256": "443b8b68e529a620e46a2429565c5fd864510b17f538a61f8f24d5c38c136079"
+  },
+  {
+    "path": "main/catalog_selectors.py",
+    "sha256": "506b67c57ee09cfd8b2080a00a04311129521229a3406ce3bd7a06f726693799"
+  },
+  {
+    "path": "main/category_presentation.py",
+    "sha256": "1de8e8c9ac6c2ed06f84e9507369ab46852fa6be30b4aef30a6becb967afebf7"
+  },
+  {
+    "path": "main/content/editorial_launch.json",
+    "sha256": "2f15e3e0776f89114441f247c55c8ee0f06c991d75c97f5ca3793c4cb37b22a1"
+  },
+  {
+    "path": "main/context_processors.py",
+    "sha256": "4a4c94d1370da4f801f1e51818c06fd73593acdd828d499e8214ea4df6226912"
+  },
+  {
+    "path": "main/editorial.py",
+    "sha256": "65c3dde6eaa944548512aeea99f7ae5fb2aa681d1c4c3d9f94a5357184d8c9fc"
+  },
+  {
+    "path": "main/editorial_assets/news/IMAGE-PLACEMENT-fa.md",
+    "sha256": "cf876d468e88c3f3c967b6cc865ed38dfc1e93740382c2ca0ef6114a1f5369b2"
+  },
+  {
+    "path": "main/editorial_assets/news/birthday-flower-guide-cover.webp",
+    "sha256": "eff17a28ee77e4417d8bc3b3b3f1e15367573f5c6193f1e0cbc13a6c6cae8a80"
+  },
+  {
+    "path": "main/editorial_assets/news/birthday-flower-guide-inline-workplace.webp",
+    "sha256": "7ca64d01a0f10816faee7f99abb85ab9d560d8f366dbcde7c1e08ec2d54c47ff"
+  },
+  {
+    "path": "main/editorial_assets/news/box-vs-bouquet-cover.webp",
+    "sha256": "32cd5a05f8af5a49875e0c29dfe5c61dc470c928b41f98fb14bb7c5beae6c3d3"
+  },
+  {
+    "path": "main/editorial_assets/news/box-vs-bouquet-inline-home-table.webp",
+    "sha256": "8b83b00a81625dfaf9665b3bb1603a7ba91e85c30824c7307f915f270fb34e38"
+  },
+  {
+    "path": "main/editorial_assets/news/cut-flower-care-cover.webp",
+    "sha256": "7f74835c702115356ef78c6ddd31a4b0ee82184b9f79ffaba98c238237bbf869"
+  },
+  {
+    "path": "main/editorial_assets/news/cut-flower-care-inline-refresh-water.webp",
+    "sha256": "ca27b9949ca6d0e8ce3440557ae66fa3ef5a69f04ebf07bdccb8d9d7c33f6de3"
+  },
+  {
+    "path": "main/editorial_assets/news/flower-color-guide-cover.webp",
+    "sha256": "b3c815b6984e23c37a4f8fad9f425597db72dc813b307c57ebcf7fafa8c3ba8b"
+  },
+  {
+    "path": "main/editorial_assets/news/flower-color-guide-inline-room-and-vessel.webp",
+    "sha256": "c9d97c665035d86233c7e21ca02d36fbec1582bb41b520db29df71cfb903bf50"
+  },
+  {
+    "path": "main/editorial_assets/news/flower-price-factors-cover.webp",
+    "sha256": "a807457ee8ce1155c71acfcf020a22cc7963dcee1e0d8ab58eca3248ac391531"
+  },
+  {
+    "path": "main/editorial_assets/news/flower-price-factors-inline-materials.webp",
+    "sha256": "19a8e1d215acae6dd484e74db03efa76e687d5434a2537d632963b90098c6643"
+  },
+  {
+    "path": "main/editorial_assets/news/order-flowers-for-mashhad-cover.webp",
+    "sha256": "a7e40d8f771e4cd658307a56fd7edb2d50d1a84f24c5b0c68d74923bcd43083e"
+  },
+  {
+    "path": "main/editorial_assets/news/order-flowers-for-mashhad-inline-clear-message.webp",
+    "sha256": "23c4a3c184fb14e2ec8a9e7c37fcd44aecc70930bf8cd62a292c8a35f78274b2"
+  },
+  {
+    "path": "main/editorial_assets/news/reading-a-flower-arrangement-cover.webp",
+    "sha256": "14a1aa9087f0522dd852075081dd300bd458cdbb6dda3e7ec057d28b521146fc"
+  },
+  {
+    "path": "main/editorial_assets/news/reading-a-flower-arrangement-inline-focal-point.webp",
+    "sha256": "3c3b735056edf8e6988131e3a4baa5ff13c5637112d5cc68782ad2cf974c0d60"
+  },
+  {
+    "path": "main/editorial_assets/news/ready-or-custom-flowers-cover.webp",
+    "sha256": "c6dc0a599cab0695d99c93a970a35d91a96d4c8d645f02a587312b71bae82121"
+  },
+  {
+    "path": "main/editorial_assets/news/ready-or-custom-flowers-inline-two-paths.webp",
+    "sha256": "c5892efae14de9b887702a61313726776b632b3c5b64c102f81064cd9d7c14cb"
+  },
+  {
+    "path": "main/editorial_links.py",
+    "sha256": "1705a653e9ad7a2b82106ce3012a98488f32a9b71048351fa11ed622fd73055d"
+  },
+  {
+    "path": "main/fixtures/catalog_data.json",
+    "sha256": "c3b62b74925cc900164231b51f03b6f272c7bb55de37648162dc5a0d6c077eb2"
+  },
+  {
+    "path": "main/forms.py",
+    "sha256": "787ba21a9acd8ffbce373bb802a06ea4d49280607661a086bce23b5e09af241c"
+  },
+  {
+    "path": "main/image_pipeline.py",
+    "sha256": "a6dd912811c212fb08ff1e1619b7b2d1098b1e63792263720594ab217a4823e6"
+  },
+  {
+    "path": "main/managed_heroes.py",
+    "sha256": "ba358ad229ffdd731fa38080ec0e1761cccd44304dc4c4008c4323bcc19bc92f"
+  },
+  {
+    "path": "main/management/__init__.py",
+    "sha256": "b4a1eacebd2c0a06c9418541460c5402ff59e62e2ee6b7872befddf4977ff934"
+  },
+  {
+    "path": "main/management/commands/__init__.py",
+    "sha256": "2680895a42c8cbb40dc153c58689ed4bbdfac9300a24643acecfbeca8b97655d"
+  },
+  {
+    "path": "main/management/commands/apply_catalog_hotfix_20260811.py",
+    "sha256": "441074eea31f87489fc105f78f053b652cfd113179a86ecfcc80b6bb0d2ac21e"
+  },
+  {
+    "path": "main/management/commands/audit_editorial.py",
+    "sha256": "b740309c0972a03b391146800d156e962f7c2271c4591179f177eeef050ee65c"
+  },
+  {
+    "path": "main/management/commands/audit_project.py",
+    "sha256": "9c6160f5fc2f209e845f7c7edf95a6a6beef944e0858c1ccd797a2081d360ba2"
+  },
+  {
+    "path": "main/management/commands/audit_seo.py",
+    "sha256": "25b8c514d1c86bfe79f2b2f919e193401a1e25bddc47702ee7105b20715ba550"
+  },
+  {
+    "path": "main/management/commands/audit_weddings.py",
+    "sha256": "a66d4eeaa483760c5d4381f820e840df1f01dcdf2197e447f67ce3b1b4cbe301"
+  },
+  {
+    "path": "main/management/commands/backfill_slugs.py",
+    "sha256": "958104da4a6a1218029d5f5285a2a19e8724c433092a8b9e669d9e476a531133"
+  },
+  {
+    "path": "main/management/commands/import_flash_products.py",
+    "sha256": "20aa8da512582c294e7a28a8ef5d454c75c2ba9916142b7ed4aa91222b3ca63d"
+  },
+  {
+    "path": "main/management/commands/install_editorial_images.py",
+    "sha256": "6efc01ffbc2d4c2a6c2a036680181ea6973987a074477dd736a123be28d93e9e"
+  },
+  {
+    "path": "main/management/commands/optimize_images.py",
+    "sha256": "ce739665419f5719189fb57969e9e223a3af1919affd5d3e357b12681f84c261"
+  },
+  {
+    "path": "main/management/commands/process_story_videos.py",
+    "sha256": "e464d55f6eb5418c606296d4bdef96e8b2e1483136c996c11332927c1be95118"
+  },
+  {
+    "path": "main/management/commands/process_studio_deliveries.py",
+    "sha256": "69e52da7cea7406c583ac3ee06f94b91421fcd64fc0d333b996ae437adb6d4c6"
+  },
+  {
+    "path": "main/management/commands/seed_catalog.py",
+    "sha256": "b48e0806f6af1f43ccc5f40081b311de44bbc1852122e0452f50d543b149c98f"
+  },
+  {
+    "path": "main/management/commands/seed_editorial.py",
+    "sha256": "24c937ca9497ebb5b3e934ca4fb498720c0d9ad7dfda91912516cd6116988c76"
+  },
+  {
+    "path": "main/management/commands/seed_studio_demo.py",
+    "sha256": "35324f749a08b2e163cbd6257e2656938bf067ceff44fa7f1371ede3934270d9"
+  },
+  {
+    "path": "main/management/commands/seed_tags.py",
+    "sha256": "9409a1f83b9b452ce7fa51a00290183df41981dfa421be0469bf95df8d26a36d"
+  },
+  {
+    "path": "main/management/commands/studio_account.py",
+    "sha256": "e20fdc43d73fbeec689582c62ea490d0f781b1cfd1b731cf3a13dfc43cc1815d"
+  },
+  {
+    "path": "main/management/commands/studio_delivery_check.py",
+    "sha256": "9bff0b17c3c38970b8bfbf5372d94d9a8f096510d655f2178b9c66eb999de529"
+  },
+  {
+    "path": "main/management/commands/submit_indexnow.py",
+    "sha256": "dbddd389e9544ba924022740f9b6fefff07db4ca803329731fd381d21b9c1eeb"
+  },
+  {
+    "path": "main/management/commands/telegram_same_day_webhook.py",
+    "sha256": "64c7a16a38d903e436a820bc3194a3e5bf70f991d3ca70759eaf4a741ca41c12"
+  },
+  {
+    "path": "main/migrations/0001_initial.py",
+    "sha256": "93fbee04d445a9fac24f44191195ffc5d41d1f5d708e172e2967ce3ab8004826"
+  },
+  {
+    "path": "main/migrations/0002_product_price_usd.py",
+    "sha256": "c970fd6c690b1b45ca5ec4cc2d0b048760bb46cbd349299ead97bdd6bb807c21"
+  },
+  {
+    "path": "main/migrations/0003_alter_product_tags.py",
+    "sha256": "ea84f5685905bca6cead9d7d06c0085bc9b0c4f65f387a9a25fa631665d42ae2"
+  },
+  {
+    "path": "main/migrations/0004_product_product_code_alter_product_name.py",
+    "sha256": "6c6ada4c394372fc4bcad09f611bd10a2e80e152d94772a552a8f5522e150ff1"
+  },
+  {
+    "path": "main/migrations/0005_alter_product_product_code.py",
+    "sha256": "42a136fcf92be24f2d26ef8bcbef9a5e16c8d61826ec9435cfd501179e4d66fe"
+  },
+  {
+    "path": "main/migrations/0006_alter_sitehero_target_page.py",
+    "sha256": "38013563ded71e9c91f11155e4172c7ae864c2cd04a51728dc5fcbf23f5407a7"
+  },
+  {
+    "path": "main/migrations/0007_remove_visit_page_hero_target.py",
+    "sha256": "dbb80db17d762ed6d0bf3fd1a73bae012ecb7660ad509810c67691177babbf44"
+  },
+  {
+    "path": "main/migrations/0008_move_wedding_to_occasions.py",
+    "sha256": "8ff43f9e3bb54ab97878643704a254ce37e2164e1b4fc58d8ab76fe25f8736cc"
+  },
+  {
+    "path": "main/migrations/0009_workshoppagecontent_alter_tag_is_occasion.py",
+    "sha256": "5e4b1432c5386ad1a97753eea61db49ff6b413c23c7a9094244a32d4b54cb784"
+  },
+  {
+    "path": "main/migrations/0010_workshop_page_content_sections.py",
+    "sha256": "ff37ba348584b78b77511d522abea08d951904216c3f6ef509cc770a9bed7c53"
+  },
+  {
+    "path": "main/migrations/0011_pagecontentblock.py",
+    "sha256": "940f33f7899ef35a165b7cae25b29a511f76a06a054310ac0df5e649948a0d5e"
+  },
+  {
+    "path": "main/migrations/0012_alter_category_cover_image_alter_event_cover_image_and_more.py",
+    "sha256": "f18bfcc0e58b6c24ebef653d768f3985cbaa8b98d9e028f8bc31f18241b0ae55"
+  },
+  {
+    "path": "main/migrations/0013_zad_v14.py",
+    "sha256": "d720ee238b88f2e8e33ac17f14ee99ee76d0b4da7d01f5bf9992279109376a07"
+  },
+  {
+    "path": "main/migrations/0014_v14_followup.py",
+    "sha256": "e2ab0dd9a2f54f45a86e9f666dae9f2ae1008c9f975826b4690e143b141c7a3b"
+  },
+  {
+    "path": "main/migrations/0015_normalize_global_hero_targets.py",
+    "sha256": "6f6a4a2d106cb036dfbc6427f26a73be4584ad54ee4d075695ac0a949c23b847"
+  },
+  {
+    "path": "main/migrations/0016_wedding_schema.py",
+    "sha256": "b9023c32989ef9c6a325dbb953c798e0a0faa1d1d2544d82bc9a8c5d45cab0e7"
+  },
+  {
+    "path": "main/migrations/0017_migrate_wedding_catalog.py",
+    "sha256": "44826d1ce33bd785a4415bc124b55599a47d209205094549618b041784d4d607"
+  },
+  {
+    "path": "main/migrations/0018_optional_hero_text.py",
+    "sha256": "1171976f0c0d8a69fd1426b234108bbf84107dbcdad4dd8c11070e3764617e31"
+  },
+  {
+    "path": "main/migrations/0019_wedding_proposal_card_images.py",
+    "sha256": "53e16e1f599faf1ca95a410a6dda39c74ba0f7de62dcbd12ab8f0fac28688e28"
+  },
+  {
+    "path": "main/migrations/0020_optional_wedding_proposal_copy.py",
+    "sha256": "a6bd389924620857db2979ed75f6f1b29fc76109e2f6023d74aa03a6f35fa46f"
+  },
+  {
+    "path": "main/migrations/0021_restore_wedding_proposal_separator.py",
+    "sha256": "84344734ff82f4554acde7fd20452718021f25150959a655bd73ca3dbc046ae4"
+  },
+  {
+    "path": "main/migrations/0022_wedding_day_card_controls.py",
+    "sha256": "a0ee34f6bc3e6028ebb84426c679e81a598201bf402b0e01b43c7cc2dceec2a5"
+  },
+  {
+    "path": "main/migrations/0023_wedding_collection_content.py",
+    "sha256": "7ed0390a7a7c81d4911e97feda6611cacb657e046d0769e3561f2bb93dc88dac"
+  },
+  {
+    "path": "main/migrations/0024_telegram_bot_user.py",
+    "sha256": "f4d44aab8958bbeab6aee5cf16622463b6a8c829b0f5c020a05878786cde7b3a"
+  },
+  {
+    "path": "main/migrations/0025_same_day_catalog_scope.py",
+    "sha256": "4a53baf48d7517a7492c991283aa51d4e7a9bd7c54febc8ec77f0d4c8bf22e97"
+  },
+  {
+    "path": "main/migrations/0026_workshop_types_and_gallery.py",
+    "sha256": "89a4fc324f1c6ba99fa7604d79c5e3e57a15b6ae62823251e65edcc62d9a363b"
+  },
+  {
+    "path": "main/migrations/0027_delete_selected_products.py",
+    "sha256": "3c99e0c505cbb6690eb0ad4335e805e6a3eeb34ec2f79a5536cc0dec677a022b"
+  },
+  {
+    "path": "main/migrations/0028_story_storyclip.py",
+    "sha256": "e7c4924adb4f30eab12fa084a52c445f7d2629f5505a3406bd9a7c293def9605"
+  },
+  {
+    "path": "main/migrations/0029_storyclip_image_support.py",
+    "sha256": "21314a842626995506f114be31fbdd9e3486a4278233a592e110651fae6ed4d4"
+  },
+  {
+    "path": "main/migrations/0030_wedding_film.py",
+    "sha256": "522fd915e8a315a5965f76a1c802d54bea3cc78c41d61a0d6500ba96d894d755"
+  },
+  {
+    "path": "main/migrations/0031_editorial_content_system.py",
+    "sha256": "ae71d60680687e4475cc454681b90d17fc6088ce807de7a4687004bbbd7b08c0"
+  },
+  {
+    "path": "main/migrations/0032_telegram_same_day_sync.py",
+    "sha256": "ff6ee7f83c7d874156c44caaa225a953e53e129c14717f30cc55a0ed422eb5b4"
+  },
+  {
+    "path": "main/migrations/0033_telegram_group_products.py",
+    "sha256": "36fdc55a6c10b3e98e55e2f363eab7a830d60fa207bbfead63bcaa993c8e66db"
+  },
+  {
+    "path": "main/migrations/0034_same_day_admin_deletion.py",
+    "sha256": "4f1a45cabf7cb91ff62c06380993175c23e7be1f6a303eaa03a3a7e647b3673f"
+  },
+  {
+    "path": "main/migrations/0035_studio_operations.py",
+    "sha256": "45f0514f1eaba774ad9d9d579dcf02a2cf8bc97a6643eb4123de3152d634aedc"
+  },
+  {
+    "path": "main/migrations/0036_florist_profile_photo.py",
+    "sha256": "69be0887141f0b9eb7c4d66c53ea69205f387cf9e8a302a61a1dd428d4ea29b7"
+  },
+  {
+    "path": "main/migrations/0037_studio_team_portal.py",
+    "sha256": "b45134cc1aa91ae1dfad31cb97dd54d8915d2d4b7a67419cc3d7f4101c225bbd"
+  },
+  {
+    "path": "main/migrations/0038_studioproduct_soft_delete.py",
+    "sha256": "0034cbd48e4bb770116caf73628a57724822b829e7551cae17c2934f31449fb9"
+  },
+  {
+    "path": "main/migrations/0039_studio_admin_notifications.py",
+    "sha256": "794f1b177b05b88074f5fbfcf68961adeb7d76e2264a31980a5bb419c22097fc"
+  },
+  {
+    "path": "main/migrations/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "main/models.py",
+    "sha256": "46515c76052bab0a3d445d2b58d991ee55259122fab88983734f5edeefff08f1"
+  },
+  {
+    "path": "main/occasion_presentation.py",
+    "sha256": "f203cb2fbe67cd7e976d4eef30994b36d9cab7d2443581543acb9c6e430179db"
+  },
+  {
+    "path": "main/page_context.py",
+    "sha256": "61a8ecee3720293eda29bf0932b20406f4d504421af849740e6efe756b3a92f4"
+  },
+  {
+    "path": "main/page_presentation.py",
+    "sha256": "437644a0ad3e68c8fb6c3ad4139573fb4bdf6d437c1648576902579848175648"
+  },
+  {
+    "path": "main/seo.py",
+    "sha256": "2308ef394103a8e1f8d4697d8f9801871ff62bfdf1b907bfa78c6612b52cd4b7"
+  },
+  {
+    "path": "main/signals.py",
+    "sha256": "a93991443b4cae615cf329c142d787af1b1de152a6b01ba7a3ff444ef8fe2fcb"
+  },
+  {
+    "path": "main/site_content.py",
+    "sha256": "1ad112fb357cac37917a5ff2c55a9a4ba547372dfe6a1b31aedaff17e4e3ab8a"
+  },
+  {
+    "path": "main/sitemaps.py",
+    "sha256": "1cb184b2743b870c6f6d54c5211853e76ee612d1a8e805ca8de5408f7f31be3d"
+  },
+  {
+    "path": "main/static/main/admin/fonts/Vazirmatn-Bold.woff2",
+    "sha256": "836fae7d42d83faa249bc00e0099592be98a1fa260d22d82f269b6091e585627"
+  },
+  {
+    "path": "main/static/main/admin/fonts/Vazirmatn-Regular.woff2",
+    "sha256": "e382101336c6eb32cfb31381c027d02d2e0354bad08f6a395d4088beb3db3d91"
+  },
+  {
+    "path": "main/static/main/css/admin-wedding-page.css",
+    "sha256": "7768284e768e39e7876b46572504e8ddc327828e33e4eb723ffe6aa228e408e3"
+  },
+  {
+    "path": "main/static/main/css/admin_custom.css",
+    "sha256": "9e2cab98a1d56ed363abaeff6bcf797759fc922c884bea9e305df811daeec14e"
+  },
+  {
+    "path": "main/static/main/css/admin_modern.css",
+    "sha256": "a37d1b28840abd8c0b70e87c3384f8080e614a16f75a211474d2b6fa3bfadafd"
+  },
+  {
+    "path": "main/static/main/css/components/catalog-filter.css",
+    "sha256": "e9a5a371b286922332d2a452f1d179015618c47694841b1fbb38686b3f68d58f"
+  },
+  {
+    "path": "main/static/main/css/components/core.css",
+    "sha256": "faa8444337510412e4d2412fc75e7226d0f2c9ff4311dbe7668901c4516e413c"
+  },
+  {
+    "path": "main/static/main/css/components/editorial-guides.css",
+    "sha256": "d5cbaa93117baeac3519677ababff7bc681bb719bab3c4092092c6b589ba88fa"
+  },
+  {
+    "path": "main/static/main/css/components/interaction.css",
+    "sha256": "62ef6833219c8c5cf1d042ccb6a48b0818c18a11730e1bf5aea29ed22f8a3540"
+  },
+  {
+    "path": "main/static/main/css/components/product-card.css",
+    "sha256": "96eeba5493cc3248450a18964fdb0ec1a7250e047f3f5edce43703a27f6c4782"
+  },
+  {
+    "path": "main/static/main/css/components/product-dialog.css",
+    "sha256": "b71db8ee495e77cd7e295ca7dd0fcc3f6e6cb1690aca13e278d3974a0de1fa92"
+  },
+  {
+    "path": "main/static/main/css/components/product-rail.css",
+    "sha256": "b8fdcab1f2fc6716dfad4c796db7d4ea55621001de80c52becf500497cbf8bf5"
+  },
+  {
+    "path": "main/static/main/css/components/story-viewer.css",
+    "sha256": "5e98c39d97ffd5e17fee33b2b649f14993cf5bb7639496750e5e0b5378b47eb9"
+  },
+  {
+    "path": "main/static/main/css/foundation/accessibility.css",
+    "sha256": "f0f07c601e15a6101e5e05df84840f2a3b853c609c3f8fa0c68123c0c6217c6d"
+  },
+  {
+    "path": "main/static/main/css/foundation/base.css",
+    "sha256": "e99b0142154baa22f842994a136bd90fbe1c810a78ddadc111ea81fa0aaa1d50"
+  },
+  {
+    "path": "main/static/main/css/foundation/fonts.css",
+    "sha256": "ed78690c300025c6538128c972810a64486112100ce838654af0e6e7b7693b89"
+  },
+  {
+    "path": "main/static/main/css/foundation/responsive.css",
+    "sha256": "ece6528eee12cc2197c064ebcb266f8fc5ecde038dcad17b53c35a0b28e3eda8"
+  },
+  {
+    "path": "main/static/main/css/layout/footer.css",
+    "sha256": "0639c462ae3781a77bc80bf45ce5e67db303d986a5dc3328438211b9620bdbd5"
+  },
+  {
+    "path": "main/static/main/css/layout/hero-config.css",
+    "sha256": "35f808adc62ef9b114978e0db2ce78a4b9e03e1456ea53ccff053c4b666fca7c"
+  },
+  {
+    "path": "main/static/main/css/layout/hero-policy.css",
+    "sha256": "187d998a1234f561ea0eed5030ef36d36f57f01ef0d89d244bf6d4afdab2bbb1"
+  },
+  {
+    "path": "main/static/main/css/layout/hero.css",
+    "sha256": "95ce8b5a1a2bedc09ac1d475de02cd02f60f3c5feb2b45ae9f23bc230f9714a4"
+  },
+  {
+    "path": "main/static/main/css/layout/navigation.css",
+    "sha256": "de5a44d1c93956443bf9a052eb18d6ada4f6c83ad1e8424d492dcf627c80fb2d"
+  },
+  {
+    "path": "main/static/main/css/layout/page-spacing.css",
+    "sha256": "8233b2a2f645e8dee8532cc85f628da027e6e6225d997ca777acad0b3eb2b18a"
+  },
+  {
+    "path": "main/static/main/css/layout/scroll-system.css",
+    "sha256": "cfb910d4f2d35aed3796b03b145e9373752abb33d51d02a3e614eac7ab91dd37"
+  },
+  {
+    "path": "main/static/main/css/layout/structure.css",
+    "sha256": "3781b3ede406db53ad40206806116ef0d039d3d9151a56605f26f308fab66297"
+  },
+  {
+    "path": "main/static/main/css/pages/blog/detail.css",
+    "sha256": "cede7ebc3273578c238f3decf2c39073a36c3ec923d056acfddd2d66c6240f2b"
+  },
+  {
+    "path": "main/static/main/css/pages/blog/editorial.css",
+    "sha256": "414ef79b4c626636dbf50a5d7ab225f331932e3a754c3e183c10473061c37a6a"
+  },
+  {
+    "path": "main/static/main/css/pages/catalog/core.css",
+    "sha256": "f61a07545b544a6ec6b1dc08bf11ece768574c517b5cd69cfae78e8b06dfe952"
+  },
+  {
+    "path": "main/static/main/css/pages/catalog/flower-studio.css",
+    "sha256": "1716d9698186db1b28ec1edbd255823efe03dc9a1d6f71898a475bcadb3ab7a4"
+  },
+  {
+    "path": "main/static/main/css/pages/catalog/landing.css",
+    "sha256": "6a778de48f6fc9f411f3506d40cfde027f0401d32feca78a3dbdb1cf0609a50d"
+  },
+  {
+    "path": "main/static/main/css/pages/catalog/same-day-seo.css",
+    "sha256": "8144906467142e9734ca03d80f7952986d7d47ff32d75babd3242c3fb215a91d"
+  },
+  {
+    "path": "main/static/main/css/pages/content/about.css",
+    "sha256": "82933c7ad6677a9f3f4e6de67e1523c79e0805f6b86afb1224830b88d0a470f9"
+  },
+  {
+    "path": "main/static/main/css/pages/content/contact.css",
+    "sha256": "93301c7f9cd37023d5aae68729dea22221393b0f06a34e2a2995f5ec96d962f7"
+  },
+  {
+    "path": "main/static/main/css/pages/content/faq.css",
+    "sha256": "9cd6089049cc93a0784796426c3485270f95a1192d5244d7561f0e41390644ac"
+  },
+  {
+    "path": "main/static/main/css/pages/content/policy.css",
+    "sha256": "d19f096fd343f060b8ac2a1c6f0ab0abaeddee586c886fa2992cf6b7e1e0d7fe"
+  },
+  {
+    "path": "main/static/main/css/pages/errors/404.css",
+    "sha256": "d38fa7c514c8ff50b20f12c060ff2457937b7475709c88cb1db82ccf89fbd987"
+  },
+  {
+    "path": "main/static/main/css/pages/home/daily-occasions.css",
+    "sha256": "0cc53d3dd904b0e8be79ebf7afb474d7cfbc6eb843c8366df0ce335bd12ee3ac"
+  },
+  {
+    "path": "main/static/main/css/pages/home/index.css",
+    "sha256": "7d027ecf85df63336d249336ce08026c5b8334641db2940dcb001bf4254d7a04"
+  },
+  {
+    "path": "main/static/main/css/pages/home/international-feature.css",
+    "sha256": "5bb080f76ebd8f3e074ecf1a956477009dc0340140f915f3b08d8a6df5eebb88"
+  },
+  {
+    "path": "main/static/main/css/pages/home/moments-discover.css",
+    "sha256": "1036e6083889241a3d06dd6e688bbe7e06de744756ec8f74f3a2b815aea12e8d"
+  },
+  {
+    "path": "main/static/main/css/pages/home/responsive-desktop.css",
+    "sha256": "82d71767b63fc0af9563eefe2c6b6f4076c3ee1cfaf408f67aaf576006ae4842"
+  },
+  {
+    "path": "main/static/main/css/pages/international/orders.css",
+    "sha256": "6cb492a2ff011a660f5912c88f88550f1a49196ccea633677e1d2b7c0c072b55"
+  },
+  {
+    "path": "main/static/main/css/pages/occasions/index.css",
+    "sha256": "8a5f9aa8dda98e1a2f9ec5f83f164f1957e32f8cceacc3e6df72ffa5c8b0398e"
+  },
+  {
+    "path": "main/static/main/css/pages/products/detail.css",
+    "sha256": "765b7a14982947f052c9652630b24be8a4d92f47748986da583d90fc53c28c40"
+  },
+  {
+    "path": "main/static/main/css/pages/products/lightbox.css",
+    "sha256": "3c350e622c8e19cd708c11179144a5a02212203cb3048ca8210da4aabf35fe68"
+  },
+  {
+    "path": "main/static/main/css/pages/shared/zad-editorial.css",
+    "sha256": "35ab1fac52109e526531eac31aaba5546a8b8c36ec41093555bc55e0e84e33bb"
+  },
+  {
+    "path": "main/static/main/css/pages/studio.css",
+    "sha256": "0a9b7c958325884a7a9fabba3d6181e49e4d32e501afb08d4679ec7aa03dfcc9"
+  },
+  {
+    "path": "main/static/main/css/pages/team.css",
+    "sha256": "d8ae741891be9b04e72bff09beaeb5567917ddb422a5859a9c2279e5a7226f3f"
+  },
+  {
+    "path": "main/static/main/css/pages/weddings/collection.css",
+    "sha256": "0c74e413a866604e22adbd61c34d4273afe4ab13a5b0287b65594afb6704fd65"
+  },
+  {
+    "path": "main/static/main/css/pages/weddings/editorial.css",
+    "sha256": "0ee02e6f047bd2b581d173ba9422e7febc30209d22119d12e7b406e123dcf52d"
+  },
+  {
+    "path": "main/static/main/css/pages/weddings/film.css",
+    "sha256": "1d36ee2317b296e599fa6a0fcb25f5682c6889c47c8740d4a765eb72aa6068b7"
+  },
+  {
+    "path": "main/static/main/css/pages/weddings/index.css",
+    "sha256": "3f33069bdcba52fa5097d14cf11045576604c6afac4db9481bca119907500fd3"
+  },
+  {
+    "path": "main/static/main/css/pages/workshops/detail.css",
+    "sha256": "911b7cc2d18da7ca7715892ee4746b784419211a3a3a24c4c7c511ad05d4f745"
+  },
+  {
+    "path": "main/static/main/css/pages/workshops/index.css",
+    "sha256": "d3f3e5b3a0a8dc8d7deca05d787ba6982dbcbdffd90b538b36dc277a7e0aa8d8"
+  },
+  {
+    "path": "main/static/main/css/pages/workshops/redesign.css",
+    "sha256": "16fb93476c26c58638aaa7a411713152c953a05b1e940db50ad801b86a336e6a"
+  },
+  {
+    "path": "main/static/main/fonts/CormorantGaramond-Bold.ttf",
+    "sha256": "8a41a6f966a0d60daa5065609150ad666347c789432369bb3d7951020a022131"
+  },
+  {
+    "path": "main/static/main/fonts/CormorantGaramond-Regular.ttf",
+    "sha256": "7b99138ffa3baab8616d8491dc6d75961c5ae568b206c5031fbc7bb127385428"
+  },
+  {
+    "path": "main/static/main/fonts/CormorantGaramond-SemiBold.ttf",
+    "sha256": "c26e0547fc712fa60d1b0842cbc20801bd54144a31e2ad28001c65479b662b7f"
+  },
+  {
+    "path": "main/static/main/fonts/Estedad-Bold.woff2",
+    "sha256": "ffe809b5a5fc33a10c7d236cc8973e23a0a6dc45704be75fbb5cab772a9beecb"
+  },
+  {
+    "path": "main/static/main/fonts/Estedad-Medium.woff2",
+    "sha256": "f8321dc7e97190a33fe7b34ed80a72d1d0781e6df832187c12d643734202f028"
+  },
+  {
+    "path": "main/static/main/fonts/Estedad-Regular.woff2",
+    "sha256": "ac3578ef2861fcd9df95f4a5cbdccc724f282f6bb9971a8d816a600325f5ea72"
+  },
+  {
+    "path": "main/static/main/fonts/Estedad-SemiBold.woff2",
+    "sha256": "fdc8deb73dae2d1c3ba52bfdb5e3ac886c698d366274ccaec7d2e400b5906062"
+  },
+  {
+    "path": "main/static/main/fonts/PlusJakartaSans-Bold.ttf",
+    "sha256": "71af7a0aac7db1b7e30cd389d7aabdabb44b5b5553d470ddd5aa25c0537c8108"
+  },
+  {
+    "path": "main/static/main/fonts/PlusJakartaSans-Medium.ttf",
+    "sha256": "00ec347136c7f6d904fa8c54decba898cc2c74c17388e62fa4388433de8be226"
+  },
+  {
+    "path": "main/static/main/fonts/PlusJakartaSans-Regular.ttf",
+    "sha256": "ca6ef907028d1d1808870967d7b7ddcf68c0f33552d15d7f0c6c7d6ae97e7571"
+  },
+  {
+    "path": "main/static/main/fonts/PlusJakartaSans-SemiBold.ttf",
+    "sha256": "bbaa1d21ce4839070547b1cc06d5db2a56f520abe90278d971665b3f6dca6851"
+  },
+  {
+    "path": "main/static/main/img/404-zad.webp",
+    "sha256": "b5becacb59f6238fcead5dcb5319174f30fe17e911a965cd4dff5eb9950d24af"
+  },
+  {
+    "path": "main/static/main/img/about-process.webp",
+    "sha256": "3472b44a2673dc45211d117fabd0464fa496eef2a02337e521899d92cfb862d6"
+  },
+  {
+    "path": "main/static/main/img/about-store.webp",
+    "sha256": "72df601e49b70f1e00b4d5157a90a6c4c4d45afcdc7a661b6ca8ab0be2e8b057"
+  },
+  {
+    "path": "main/static/main/img/about-team.webp",
+    "sha256": "4d57f9fe791a670700a932529a132f3a86f706c25253298643a4c9cd4405b767"
+  },
+  {
+    "path": "main/static/main/img/about/zad-floral-wall-v1.webp",
+    "sha256": "3f376a5fe4287a7faa95668184d45208b0a0b29bf2f42e7e8290e7a008f7e23c"
+  },
+  {
+    "path": "main/static/main/img/about/zad-store-flowers-v1.webp",
+    "sha256": "97a352cfec60be016d8c956dacff1adb5e55fb1641ee5fa14e6fb3b99c9aa7c7"
+  },
+  {
+    "path": "main/static/main/img/about/zad-store-v1.webp",
+    "sha256": "2dc57b67cf3c21536818b680ada281997174347ca875cab6da1d2522c868b21a"
+  },
+  {
+    "path": "main/static/main/img/about/zad-sweetbar-v1.webp",
+    "sha256": "8fa17536b21bc918b8d524f5cca57d88f9af70dceff69c5570f0be3d64195972"
+  },
+  {
+    "path": "main/static/main/img/about/zad-workshop-making-v1.webp",
+    "sha256": "89c5144c709f4ab766c12418dd7addfb47abba1f89652531776b61872aa37013"
+  },
+  {
+    "path": "main/static/main/img/about/zad-workshop-space-v1.webp",
+    "sha256": "98fca57cb1978e9bbb62e17a3ae8ebc0541630ccb769a07b701530576e8e6ae0"
+  },
+  {
+    "path": "main/static/main/img/about/zad-workshop-talk-v1.webp",
+    "sha256": "02aebcf3bef3a33ede8efa4aa3fb1878b0bca2dff1cdb34ab2f14a35d3a0e8c7"
+  },
+  {
+    "path": "main/static/main/img/cat-bakery.webp",
+    "sha256": "cf82366c9a43c34e369a9f9dcd0819d18fad9c2cf8cfac6638b70dda8edc081a"
+  },
+  {
+    "path": "main/static/main/img/cat-events.webp",
+    "sha256": "0242785dbe83d40b2e74780031b0221bbc0a4a0cdfa8cff2e6043b0cd726a674"
+  },
+  {
+    "path": "main/static/main/img/cat-flowers.webp",
+    "sha256": "22b2f336a467e97112d52e58ea9aa76f0ba0562d75b81a3a20e88da2214d5fd1"
+  },
+  {
+    "path": "main/static/main/img/cat-gifts.webp",
+    "sha256": "b9b6a1782d963a18f270ff312a77af24c335e86c73d6e54183631f4ba1a50960"
+  },
+  {
+    "path": "main/static/main/img/favicon.svg",
+    "sha256": "f298d9fca4bf30be2b1266b59d3fa9bb1c6e4c38f079842234a3291bfd7b3191"
+  },
+  {
+    "path": "main/static/main/img/flowers-hero.webp",
+    "sha256": "58b33b006006c4555a55bc4f0eca2c7718e03b87e161274640e77c1d406ae305"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/bouquet-640.webp",
+    "sha256": "0cddc8e217dad0e68bd53dfbbad2c39f63bf2a8e4da4b5653c8f5f68081c62aa"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/bouquet-960.webp",
+    "sha256": "bf73ab3a723026b323b92416002961072151cf23e89495a42caaa766e5ac2f45"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/box-640.webp",
+    "sha256": "b7d66eacee0c6b0cf009454ca151b11f0777ca451c2b099045114393a3b041be"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/box-960.webp",
+    "sha256": "507c69ed87fd406fb45143d54f2c02815997874f86ace2b51f17ca27a4a20036"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/hand-bouquet-640.webp",
+    "sha256": "8df46ae051872f981e61db81b3a9619452c4115008c0940443c14f1321391b84"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/hand-bouquet-960.webp",
+    "sha256": "9f7c5805b23fb21dff08a6786ef1b95f85f8fe959f2e38f84460a964f1b54e36"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/jarl-640.webp",
+    "sha256": "658ee59be17a05a9ad4e3225f6f83447ccb7123184e983699da369df0f12b52c"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/jarl-960.webp",
+    "sha256": "5bce17cf516ccc06d61dc794b0279385b6043689033a025e2043224167c2ec65"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/plants-640.webp",
+    "sha256": "25d711df064263a7f0ceb48ff8b7ca00ddba43adf65dc2a38643b64cfa4d59d6"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/plants-960.webp",
+    "sha256": "b3ef228a05d38db063b1ac648db3a8be0d79fe32248b34a07772d95ffc781ea4"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/stand-640.webp",
+    "sha256": "df8b5fd466338b24f2d9b2c51b042d55424b85ae6e64883817167df977e0b772"
+  },
+  {
+    "path": "main/static/main/img/flowers/categories/stand-960.webp",
+    "sha256": "3de0346110917e399113c5bb5dbaaed4e454750e7d17a0ff72a4696c432c31d8"
+  },
+  {
+    "path": "main/static/main/img/footer-floral.webp",
+    "sha256": "174facd6e8e39c269bf3ecd9aa7637880ec245c366eb776638336e30016cbd84"
+  },
+  {
+    "path": "main/static/main/img/gifts-custom-v1.webp",
+    "sha256": "8385d7edad8d29ca051bcbb713bbdcb54c048289d46896af4f5e7ad3f704af50"
+  },
+  {
+    "path": "main/static/main/img/hero-1.webp",
+    "sha256": "8964caea12c7cc51810ed4565b62e287917004ab4b0b79e71ad053a1776ad63b"
+  },
+  {
+    "path": "main/static/main/img/hero-2.webp",
+    "sha256": "31cb3bed43043134b218fc25a2ef4df84f20a37518b22e112ed3df75a5baae43"
+  },
+  {
+    "path": "main/static/main/img/hero-3.webp",
+    "sha256": "b23ab9627e7a840072b1e1d171bdb6fb9aa0412d2b553f0a23f246127699b8a8"
+  },
+  {
+    "path": "main/static/main/img/hero-about.webp",
+    "sha256": "80a29b8833881415d913d12ceb9b0c81716c790d7001ad6186a922a021f66803"
+  },
+  {
+    "path": "main/static/main/img/hero-bakery.webp",
+    "sha256": "106692c648dff83a9557d5484784515595599bbbe916b9ba2374ccaa2e13b5e3"
+  },
+  {
+    "path": "main/static/main/img/hero-contact.webp",
+    "sha256": "fa7cfc2ecb9e23f6a016d003fda7749933fdc8332bdfe876eeb1954b6bf70b53"
+  },
+  {
+    "path": "main/static/main/img/hero-events.webp",
+    "sha256": "b4ce7caba926587e5309bcc1b7720f87c603d12c1b028e62f3b90e5cd251a89b"
+  },
+  {
+    "path": "main/static/main/img/hero-faq.webp",
+    "sha256": "b9a2ac80229acd318fe163314014f83cc735be062f5b49f2495a3ae0f985acc8"
+  },
+  {
+    "path": "main/static/main/img/hero-gifts-v2.webp",
+    "sha256": "3a879e9ab35f7c7a2faea83f1a0b374b9eb6685bd540e58f7e1433c944383a88"
+  },
+  {
+    "path": "main/static/main/img/hero-gifts.webp",
+    "sha256": "1f3fa01346d4baa804a813fe0976f87976f6be784418b5fd33a93e94e2bbd6cd"
+  },
+  {
+    "path": "main/static/main/img/hero-mashhad.webp",
+    "sha256": "36430b2a4e6835cf4175c4c1912a603a6ace129356f90d5231cd9c9655aa2997"
+  },
+  {
+    "path": "main/static/main/img/hero-mobile-1.webp",
+    "sha256": "5c96309eafe5249c7a6355d491832ef7525d76927b78aa69441d07d78dd5f8ca"
+  },
+  {
+    "path": "main/static/main/img/hero-mobile-2.webp",
+    "sha256": "044cea1a9ff3b2edde123afb7e770b3c9c740210504778b33df7638178ac3593"
+  },
+  {
+    "path": "main/static/main/img/hero-mobile-3.webp",
+    "sha256": "9a4205c57e9081238d66a979836cf6e7782c207bcccb0f7e0d81cb564fedd4b4"
+  },
+  {
+    "path": "main/static/main/img/hero-occasions.webp",
+    "sha256": "313c2a1d3bf9ba9eb7e9b2ec0654f1df190dfbf31204beef37deee4f9f70ff69"
+  },
+  {
+    "path": "main/static/main/img/hero-subcategory.webp",
+    "sha256": "6af379b28afa40ce60493e4d5965a138a8ea6a25e998cdf606dc0ce8c2a48c4a"
+  },
+  {
+    "path": "main/static/main/img/home-abroad.webp",
+    "sha256": "eabe0ced33d0fbfc7dc9a92fe7941da3c32146abdf896a232a03734c6b302e80"
+  },
+  {
+    "path": "main/static/main/img/home-occasions-bg.webp",
+    "sha256": "99ab404d9b75e93283295f52f3255921d152e692e352437a8fe2799710d39d82"
+  },
+  {
+    "path": "main/static/main/img/home-workshop.webp",
+    "sha256": "13be9cc7fb97f9f756639f6eeaea38dd81830afc7226297bc33f36a10daab355"
+  },
+  {
+    "path": "main/static/main/img/home/about-footer/about-flowers-640.webp",
+    "sha256": "b87aad75737659cd5bfa4cb4dc2d524ec23841782479d905992468cae28fda98"
+  },
+  {
+    "path": "main/static/main/img/home/about-footer/about-flowers-960.webp",
+    "sha256": "ed7cc707cb01ab7d21f9ec7a2803ed9b7b50c1d428f5140d796a1dce1ecfb387"
+  },
+  {
+    "path": "main/static/main/img/home/hero-main.webp",
+    "sha256": "73762c04c877948ef7f49d756dd29cf1e185862bc64b6021f69338416a7c636a"
+  },
+  {
+    "path": "main/static/main/img/home/hero-sequence/worktable-01.webp",
+    "sha256": "4df19c78266fe237ff49cd654a732273f455562faff4e8b445e14d3543456f7a"
+  },
+  {
+    "path": "main/static/main/img/home/hero-sequence/worktable-02.webp",
+    "sha256": "595a0ca1731d0486e818eab3aac8d87687cbbea1991cb38f57c0712d667c7be8"
+  },
+  {
+    "path": "main/static/main/img/home/hero-sequence/worktable-03.webp",
+    "sha256": "ccb1aed479a638a5b03228f96fa90bd09e676c2d43c35eda3710effa2fd9663b"
+  },
+  {
+    "path": "main/static/main/img/home/international/international-orders-1280.webp",
+    "sha256": "598b378aff01ca35391b4879ed87ebaad1ef6c8b5c619fd25953400c7aa4eeb9"
+  },
+  {
+    "path": "main/static/main/img/home/international/international-orders-1536.webp",
+    "sha256": "88421851ff8e0670b6374cbb7b8d6c368e89e3ec81b4281eb5e417a963c7f4c4"
+  },
+  {
+    "path": "main/static/main/img/home/international/international-orders-mobile-960.webp",
+    "sha256": "56d920281fb19ac932356064875b79e4901d735e68a15caffc8e42b4abba2f63"
+  },
+  {
+    "path": "main/static/main/img/home/moments/bakery-640.webp",
+    "sha256": "d9fa87be5e2b8143c39b8b82dc7f219e801853ece24daa229b505240abba8aba"
+  },
+  {
+    "path": "main/static/main/img/home/moments/bakery-960.webp",
+    "sha256": "fb9a7f13b7e615bc7f57c37eec641d9009c4a2bcc5c1aa2694fa8dbebda5c82c"
+  },
+  {
+    "path": "main/static/main/img/home/moments/flowers-640.webp",
+    "sha256": "2f168060fa43dc4e8622e7f7afc7035848940f10a71db1f905413d644f9243c9"
+  },
+  {
+    "path": "main/static/main/img/home/moments/flowers-960.webp",
+    "sha256": "f75006d9831b1b8f60faacc5dc3b8941d4ef34ac612f899a664f952a6b96d752"
+  },
+  {
+    "path": "main/static/main/img/home/moments/surface.webp",
+    "sha256": "0d7f56239bcb72e1cb9548f7ef9df539e7844d1a0a5755dc8f235ee055ff426e"
+  },
+  {
+    "path": "main/static/main/img/home/moments/wedding-640.webp",
+    "sha256": "55bc182add0efe38fb41938d53ff62f7361f9ddc6977f4a44148a7f1f004c27d"
+  },
+  {
+    "path": "main/static/main/img/home/moments/wedding-960.webp",
+    "sha256": "bf192da3e59b450ca20e86bd8d08d5b207a4f34c32e7d29ca45a643e46d34933"
+  },
+  {
+    "path": "main/static/main/img/home/moments/workshops-640.webp",
+    "sha256": "99999136aff9339a4558684def3e3f363a67ca4c4aaa2e8ddb9c7d49d213c428"
+  },
+  {
+    "path": "main/static/main/img/home/moments/workshops-960.webp",
+    "sha256": "809ce4288390ceaed66dd7482957f7b757a446c82ae2bbb2ac05734d593599ff"
+  },
+  {
+    "path": "main/static/main/img/icons/delivery.svg",
+    "sha256": "6a895d45c3a09356a8a407c375f7f57840fc7b091560c87522a14e1037aa61fa"
+  },
+  {
+    "path": "main/static/main/img/icons/favicon.svg",
+    "sha256": "f298d9fca4bf30be2b1266b59d3fa9bb1c6e4c38f079842234a3291bfd7b3191"
+  },
+  {
+    "path": "main/static/main/img/icons/flower.svg",
+    "sha256": "304234af43a6cfb7f8ed5bacc592cbb7c740a1ddd3b40a51897c53bddfbbc52f"
+  },
+  {
+    "path": "main/static/main/img/icons/gift.svg",
+    "sha256": "f6833c72e85512f3075cf49d07de55ee84ec48fd6a12b28cd3342b4ee985fcca"
+  },
+  {
+    "path": "main/static/main/img/logo-zaad-en.webp",
+    "sha256": "5bb394724b49b023a5629e69fef86ef28ecc43b5682c4b28ad0bf9c511d83a45"
+  },
+  {
+    "path": "main/static/main/img/occasion-detail-hero-mobile-v1.webp",
+    "sha256": "744014d6c5121da6d343d244faea63eedb3ab0e2bd837b7f462546857582ba9e"
+  },
+  {
+    "path": "main/static/main/img/occasion-detail-hero-v1.webp",
+    "sha256": "8e376e351508de47acda0547954a0f646501109df2a8e56431d7b9dd69916528"
+  },
+  {
+    "path": "main/static/main/img/occasions/birthday.webp",
+    "sha256": "890ae27314451add55b5a4d963fa9e2aace39954f1a8f8a6ed74c15d674bd3bf"
+  },
+  {
+    "path": "main/static/main/img/occasions/condolence.webp",
+    "sha256": "f4c210328cfb259cde1c810bd8a2634c5be306424169e905369c62f8d13a1e80"
+  },
+  {
+    "path": "main/static/main/img/occasions/romantic.webp",
+    "sha256": "fbe61fa407dde5c176952f9fa6fa8536489f05ae3835fe2d5a38771c2c8caf9f"
+  },
+  {
+    "path": "main/static/main/img/occasions/special.webp",
+    "sha256": "5c17fb2ea3ca07931a0a14ca7309722b632346107d9d99d859bb01e0956a19af"
+  },
+  {
+    "path": "main/static/main/img/sub-bouquet.webp",
+    "sha256": "915a5e177b4dfbe72b6a6b138289f1652db86c2d399d1c9107fcf5d138334201"
+  },
+  {
+    "path": "main/static/main/img/sub-box.webp",
+    "sha256": "673eb4e87b9b3265b60223af1f2d2ab6f4a08c30f39eed153d52e7b3042e9618"
+  },
+  {
+    "path": "main/static/main/img/sub-bridal-bouquet.webp",
+    "sha256": "ec81b8c67a922082a84a522caa84a0e317694a0633bc86c095f5f1322930456b"
+  },
+  {
+    "path": "main/static/main/img/sub-bridal-car.webp",
+    "sha256": "2bd3bd579b80fc4485c97861a5a7bc1fa05311fd0e3656aaa114f2f34c2e3ad1"
+  },
+  {
+    "path": "main/static/main/img/sub-plant.webp",
+    "sha256": "49baca36520dfe639eec8dccf9d79074794b2a49187328afc09004424eefe524"
+  },
+  {
+    "path": "main/static/main/img/sub-stand.webp",
+    "sha256": "eda243a5a050eaaeb0a04c47f2e4d680cbcc153c7552bd05c47223fbb1566dac"
+  },
+  {
+    "path": "main/static/main/img/workshop-event-01.webp",
+    "sha256": "7a662290c3c619299f693cd59c68e41beb933df987353069cb2e00139eda1c81"
+  },
+  {
+    "path": "main/static/main/img/workshop-event-02.webp",
+    "sha256": "1e6300d0cb5345f2040a7f3dbf12d3b6fc405872de6da7de5d772591d7ecdc6c"
+  },
+  {
+    "path": "main/static/main/img/workshop-type-corporate.webp",
+    "sha256": "454b24bbd169a89251f554b5008e27a27cebb7be382c81d02aab45780d2b391d"
+  },
+  {
+    "path": "main/static/main/img/workshop-type-private.webp",
+    "sha256": "dc92cf69d8f460cb7afa6db867564380efadfd29acd2878038e3f460e6f001d0"
+  },
+  {
+    "path": "main/static/main/img/workshop-type-public.webp",
+    "sha256": "659b210a1cd1a2aa506770d95bb65af69274d7c0298e96701d871dc49fd19170"
+  },
+  {
+    "path": "main/static/main/img/workshops-cta.webp",
+    "sha256": "b563b483db8576be6acd57519ae2d30ff7d7c9c4be100f2fe303b60bad54b81c"
+  },
+  {
+    "path": "main/static/main/img/workshops-hero.webp",
+    "sha256": "f0fe4096e8914945c7ea9d6010dfbd3ea4dd952510ae16f703352f532b905c0a"
+  },
+  {
+    "path": "main/static/main/img/workshops-story.webp",
+    "sha256": "b284b24b5ae84ef1ae439f3c4d26d33a76a84d9a89d1fefae934b1c6b0d6e3ad"
+  },
+  {
+    "path": "main/static/main/js/admin/modern.js",
+    "sha256": "f87fbbe01646be8b59ba95d6fedc1f602f047cc0b9b2854943c5b7b8613d57c9"
+  },
+  {
+    "path": "main/static/main/js/admin/product-price-input.js",
+    "sha256": "cf0c04c9dd126f4a414569760a122ae71b83ddf148c35cc89520f6efe3c791a0"
+  },
+  {
+    "path": "main/static/main/js/admin/theme.js",
+    "sha256": "bffbd87fc8c9a057815859e30a126ff55146b0bda41dbf8e7d46583448f532c7"
+  },
+  {
+    "path": "main/static/main/js/components/filter-links.js",
+    "sha256": "37e5dd8c18f555bc0fa6a1d3101c93f868c2efdd1597b98f9b4fbcbda7993596"
+  },
+  {
+    "path": "main/static/main/js/components/hero-carousel.js",
+    "sha256": "9d1f5bd4163553c62e53ae2f7846f8ad04d72bdb67762276fcc9a468b8094f46"
+  },
+  {
+    "path": "main/static/main/js/components/product-dialog.js",
+    "sha256": "3f14e5383e0adc8390c570d7406fb8080e81d1a9fda945fc0db03570e926c84a"
+  },
+  {
+    "path": "main/static/main/js/components/product-rail.js",
+    "sha256": "fc9055cdc7795fc9dd7b4a498deff360d9f8d225c8e640a8ce49795b420778b7"
+  },
+  {
+    "path": "main/static/main/js/components/story-viewer.js",
+    "sha256": "3a85e311f64f524691e925c55a40dd08b913b0d9fcc5b9f824ad3306eb2c0ff7"
+  },
+  {
+    "path": "main/static/main/js/core/analytics.js",
+    "sha256": "1fa7faeaa35ffbbd9821039a162edff01874b669f92fd154d5433cc990f9350b"
+  },
+  {
+    "path": "main/static/main/js/core/web-vitals.js",
+    "sha256": "18b59374f2717a4f1985e34d978e00d743867a542c9405b08db019e082da5930"
+  },
+  {
+    "path": "main/static/main/js/layout/navigation.js",
+    "sha256": "97f7bbe8a6cdd3f96c76df7624a0f85371381013051e698291fc7c043b9b6e24"
+  },
+  {
+    "path": "main/static/main/js/layout/overlays.js",
+    "sha256": "0dfc750618f565f42e9a98ac0f6ffe55cbacf2f9cbe67adcb33de94196f4af29"
+  },
+  {
+    "path": "main/static/main/js/pages/blog/editorial.js",
+    "sha256": "39c2e93b70d95c910bce70dd5c141628261523e627fa47cbc04664d5e493b963"
+  },
+  {
+    "path": "main/static/main/js/pages/catalog/index.js",
+    "sha256": "4e66c08a2475b92de340ff27b44bb9fa03c28da8a4f90c2377980ee9fb251b4a"
+  },
+  {
+    "path": "main/static/main/js/pages/home/daily-rail.js",
+    "sha256": "b0ed0793207952216a08e2342d878d230a11424d78ce6f862e9c3aaa84fe1e5d"
+  },
+  {
+    "path": "main/static/main/js/pages/home/hero-slider.js",
+    "sha256": "638a112566c6208702350c0b4675eb4e706acef78fbeee82d070b4a36d9f4665"
+  },
+  {
+    "path": "main/static/main/js/pages/home/home-motion.js",
+    "sha256": "d95aecfd57d4cb8902dfad3e0326e6749d154c3ea13bb08e96d2fc0e577bd7c0"
+  },
+  {
+    "path": "main/static/main/js/pages/home/moments-rail.js",
+    "sha256": "30d46055a6c26553c4650f4ca5f257f5e60693948d52d47e0bc8ec729ae1f756"
+  },
+  {
+    "path": "main/static/main/js/pages/products/lightbox.js",
+    "sha256": "4f8a48fe82f4fd911072459de8c94ccd0fc2758500e2bfcc198e49f21056bb5d"
+  },
+  {
+    "path": "main/static/main/js/pages/studio.js",
+    "sha256": "fe393bd59b639252afbaa6090104edb81f12988dc77190519b083b576f45aa41"
+  },
+  {
+    "path": "main/static/main/js/pages/team.js",
+    "sha256": "fb9b80f308ecfaeb045d54f49ff56b4cf6a4acab426b3cd640f5bf7f3a580465"
+  },
+  {
+    "path": "main/static/main/js/pages/weddings/film.js",
+    "sha256": "b0d5c38ef3c5d1742d6713d0566f07b8b51f70dff07d59661967b1682813ad68"
+  },
+  {
+    "path": "main/static/main/js/pages/workshops/redesign.js",
+    "sha256": "af5e63b4bff3e5e171f37c603e215702adbeeeae028f04492c7ec5b7a5010b47"
+  },
+  {
+    "path": "main/static/main/team/app-icon.svg",
+    "sha256": "88d1219c5cf7ff0d9e33291eb88fdf79eb69d0575371cb2b4294f256b4fa7bfc"
+  },
+  {
+    "path": "main/static/main/team/apple-touch-icon.png",
+    "sha256": "66ecd8c2d65b85b3554baeef618469b98fdb1aa9ddebffc0f56ee941d9fd73ec"
+  },
+  {
+    "path": "main/static/main/team/icon-192.png",
+    "sha256": "2e3934ea7bb0a6b2bc4722cbb9741223329f7266dff0c12583adbcee521e9a00"
+  },
+  {
+    "path": "main/static/main/team/icon-512.png",
+    "sha256": "52ca8983102d46ba52faf2a52be7c0e4bf93cf05e400869b6248171a86aecdbf"
+  },
+  {
+    "path": "main/static/main/vendor/bootstrap-icons/bootstrap-icons.min.css",
+    "sha256": "a5d6387a32ca3baec4d02336b5b3edab50c9dd518355576a011ea3dd9c1d884e"
+  },
+  {
+    "path": "main/static/main/vendor/bootstrap-icons/fonts/bootstrap-icons.woff",
+    "sha256": "f55513b7b591cb84a3b87ff0e34ea24d4831d6fedc22e54b911ca64b5b544a15"
+  },
+  {
+    "path": "main/static/main/vendor/bootstrap-icons/fonts/bootstrap-icons.woff2",
+    "sha256": "6c75710364a1ca5604267716f6d28997b26319fdb078cf11e0b42ab66ff2ea61"
+  },
+  {
+    "path": "main/storage.py",
+    "sha256": "78906ddb42df6a77177f8ecb971f652d8ab5180ada5b9d1f01a259442245e689"
+  },
+  {
+    "path": "main/story_presentation.py",
+    "sha256": "47b3a66eeca08a596bb7c54d3245c8e338ed5be12ca91f4ca996063aa49468ec"
+  },
+  {
+    "path": "main/studio_access.py",
+    "sha256": "cef9dd32c54ae011affac80338465858a18b063da53da7cd4449676b13f81cfb"
+  },
+  {
+    "path": "main/studio_admin_notifications.py",
+    "sha256": "62b057c4385235781412cf3a630a67672f9b6e976d1d953f43d0901c66be85a0"
+  },
+  {
+    "path": "main/studio_delivery.py",
+    "sha256": "2e873bc8882c5ce3c4beff7837ec8537d86a896c62ffc7cf330d0a3ea3c92b9c"
+  },
+  {
+    "path": "main/studio_ingestion.py",
+    "sha256": "6126f7babe1d23c3a506b96b6ffa554b6d5f733ee624a3cd8e81e735d45795f6"
+  },
+  {
+    "path": "main/studio_notification_views.py",
+    "sha256": "3fb68b90102c36fa6ebb20d95b3a9b8f817b61d754185c5da42a940f96f92d77"
+  },
+  {
+    "path": "main/studio_publishing.py",
+    "sha256": "2f6b6ecfc5f85d27265b83eb6a3324680844892d70321e2b27fd642dda616dd3"
+  },
+  {
+    "path": "main/studio_transport.py",
+    "sha256": "1997b69849dfe6bbc7b85665cd17925b2d8e2d80d69c721a8f1518a9098fe464"
+  },
+  {
+    "path": "main/studio_views.py",
+    "sha256": "69318d55bcf4fdf871b6cda8047e77aee83a21dc808f54d08c6562b71d3aaf51"
+  },
+  {
+    "path": "main/team_forms.py",
+    "sha256": "afd4913fa42cac75a8ce91de7c2aacf32036c471f7697067daa2830f94d924a4"
+  },
+  {
+    "path": "main/team_urls.py",
+    "sha256": "9e079225e1a41da658ab8adeb6723e93da89a49f5c8cd075f2a56e57818617e3"
+  },
+  {
+    "path": "main/team_views.py",
+    "sha256": "8608241bd2fed02bb27f54e79b5572d29d9e3831f333b18488822e813f159cda"
+  },
+  {
+    "path": "main/telegram_notifications.py",
+    "sha256": "483561276b765d9470caf174e7e237712379493cdec3528c206961e9318ce2a9"
+  },
+  {
+    "path": "main/telegram_product_lookup.py",
+    "sha256": "cd4802dead439ff96f200a42a092a688aac41fb4ec852eaead595fdcc04ad7c2"
+  },
+  {
+    "path": "main/telegram_same_day/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "main/telegram_same_day/client.py",
+    "sha256": "62837a82681bfdf8d743317f56ad0faa10660b37fa5db53552d9b5dc68ec0b1a"
+  },
+  {
+    "path": "main/telegram_same_day/group.py",
+    "sha256": "1b3bea3a1f55a3082e77cd73979863906779de065126da6a73c6028dbb3d2af3"
+  },
+  {
+    "path": "main/telegram_same_day/price.py",
+    "sha256": "b8399cc53ab87add3813b079b3117f48ab9b43a9ef33d5c00caa4fe626364059"
+  },
+  {
+    "path": "main/telegram_same_day/service.py",
+    "sha256": "5845da3a8634bebd2421dffdbdb86d971a9b75d796149708160ae73444ca79ee"
+  },
+  {
+    "path": "main/telegram_same_day/validation.py",
+    "sha256": "8a32f51a45538d34fe9f04f748a3a5238d03f9eb551d1d27352796034188d6ce"
+  },
+  {
+    "path": "main/telegram_same_day/webhook.py",
+    "sha256": "d80b322ff5a1df8812384d0e3d20f21d8656b22f9c802491afed0f07490b0402"
+  },
+  {
+    "path": "main/templates/admin/base_site.html",
+    "sha256": "80b9bde44222a8271d36f4feb2253f486a14a31275e338ebb1031ba61681e090"
+  },
+  {
+    "path": "main/templates/admin/change_form.html",
+    "sha256": "3e4ac4905c974a8804324a19438f34f5c70d090d43f6fa46eef1610561e8540f"
+  },
+  {
+    "path": "main/templates/admin/index.html",
+    "sha256": "a78e93642097c0b93cc7454fd22285e534cad7d9cb450cc22c771662c13765e8"
+  },
+  {
+    "path": "main/templates/admin/login.html",
+    "sha256": "cd2b50b9b164926d42006cfc924aa79cdd650bbc0da1ff3596ccb076442be6d6"
+  },
+  {
+    "path": "main/templates/admin/main/tag/delete_confirmation.html",
+    "sha256": "e6ca1863b69a32981d6688fdf0161402fc59507df29dc68b03bb30cd4f061d97"
+  },
+  {
+    "path": "main/templates/admin/main/tag/delete_selected_confirmation.html",
+    "sha256": "e496d196e5c8a95ab15d2620907edc51dcabbb02425fcd6d417f6be28c37ecb3"
+  },
+  {
+    "path": "main/templates/admin/submit_line.html",
+    "sha256": "a3f18aace1f2d119ff299db971eb6a8930a840a7644523049aecfd0f47813ecb"
+  },
+  {
+    "path": "main/templates/admin/zad/sidebar.html",
+    "sha256": "f45f67902783ffc7668b6ad684acbb2e29261c3b3c157936e7b3e2d958a007c5"
+  },
+  {
+    "path": "main/templates/main/components/breadcrumbs.html",
+    "sha256": "65070238af84792b0fbe7143c25b435585fd005a72788d6f0a94c53befe08840"
+  },
+  {
+    "path": "main/templates/main/components/catalog_filter.html",
+    "sha256": "5e3ff42672add5f6d837f43e1b7467511c736c1d89988986f32e00fb166f6f68"
+  },
+  {
+    "path": "main/templates/main/components/catalog_filter_icon.html",
+    "sha256": "a6b91194ed0dfd3c8d78ab96ed0534d10202986cdb430aa8febc1e7a9f802923"
+  },
+  {
+    "path": "main/templates/main/components/editorial_guides.html",
+    "sha256": "be44c4839a3f8e5ecb8ec13eef125529b42c47c81a5f32b8479be8cb07269a38"
+  },
+  {
+    "path": "main/templates/main/components/faq_block.html",
+    "sha256": "1416bf8b01dc28e93b6d1883a8fec60932dca9ec8d117fa902367473f72b3598"
+  },
+  {
+    "path": "main/templates/main/components/home_about_footer_intro.html",
+    "sha256": "1b88791a63bee07f83a5bd2332419706203ae75b21bcd9e0f0364d0243a0ed3c"
+  },
+  {
+    "path": "main/templates/main/components/home_daily_occasions.html",
+    "sha256": "08f09bfe3bf9716c83de81c068ed24b80beca052530c04069cc6882589989d23"
+  },
+  {
+    "path": "main/templates/main/components/home_hero_frame_sequence.html",
+    "sha256": "d235690673d2b3d26cf3acf81cc557ec558994fc3aa8305dad3490e576afef06"
+  },
+  {
+    "path": "main/templates/main/components/home_international_feature.html",
+    "sha256": "02a8b51d4cd8428becd6b2d8068cfe59dc32eadf971a762414515a4079bf756d"
+  },
+  {
+    "path": "main/templates/main/components/home_moments_discover.html",
+    "sha256": "bf0dbce7d698044ddb0e89dfb822e459b1727471b364da8115b58c581ba7d9ab"
+  },
+  {
+    "path": "main/templates/main/components/lead_form.html",
+    "sha256": "8082d905957aafd885624593257e25f97e2db6b6d9abd457cd20aa5b5e92efa1"
+  },
+  {
+    "path": "main/templates/main/components/product_card.html",
+    "sha256": "f9f791c54dc8de16750f84195d77b3ada41a911c9214ebc4a18052afc34d4159"
+  },
+  {
+    "path": "main/templates/main/components/product_dialog.html",
+    "sha256": "82c20e9e9230c612558369ebfa6d0aaafb66b6fd3c927112e62925c9cdfffd74"
+  },
+  {
+    "path": "main/templates/main/components/product_grid.html",
+    "sha256": "5686ee629d0e318805e0bcdfdef02fbd47ff8eb1ad57c347299fc35b079f033d"
+  },
+  {
+    "path": "main/templates/main/components/product_rail.html",
+    "sha256": "b85e94d8b1f2d9f2f3e14525ecc5134847a849770d5c21fe2b684cfe7fda75c1"
+  },
+  {
+    "path": "main/templates/main/components/same_day_guide.html",
+    "sha256": "ef75eb29148e7fd71641368568e15ffa816b39bcda9ce1c890bcd929afb1e74a"
+  },
+  {
+    "path": "main/templates/main/components/same_day_summary.html",
+    "sha256": "1ee1df9a86ca6b3056291d54d74e12622c4822b60034b521bd6c7fdbc9af0d1f"
+  },
+  {
+    "path": "main/templates/main/components/story_rail.html",
+    "sha256": "f79346031e0c907d4885fd604bafce5ff633ef539ea7b1a7955fa099f633eccb"
+  },
+  {
+    "path": "main/templates/main/components/wedding_film.html",
+    "sha256": "eaa731e8300e8badfaee5bac52f21802df68eb85e287fc7bc898c0236814c8b9"
+  },
+  {
+    "path": "main/templates/main/errors/404.html",
+    "sha256": "b202728980d1bd33f6e1b6bef7a69cb1048d530f7d573e0b017ba88d1ed46522"
+  },
+  {
+    "path": "main/templates/main/layout/base.html",
+    "sha256": "d807e347a2e04794255f207877cce26a2cbf76b5a0a5c48e1d86a9b3e7cc54e7"
+  },
+  {
+    "path": "main/templates/main/layout/flash_messages.html",
+    "sha256": "d3cd564d6e223f66ad41e5543d95c5198a758df94876c6af7e1ecf71689839cc"
+  },
+  {
+    "path": "main/templates/main/layout/page_hero.html",
+    "sha256": "cab12e1ebceece3b1a692aa62386f2e6664fdc6f11ed7c4739401234ff1884b4"
+  },
+  {
+    "path": "main/templates/main/layout/site_footer.html",
+    "sha256": "90a69e0638e90ec8002472a743ca047d993cfe5a5c63ae9869578497e062c22e"
+  },
+  {
+    "path": "main/templates/main/layout/site_header.html",
+    "sha256": "a9925ef9c9809c44c7dda3422f7b2df7852e276ed9a9582213db4916ffc1663a"
+  },
+  {
+    "path": "main/templates/main/pages/blog/detail.html",
+    "sha256": "790c221b1e7dbe3e73a58f3d0c8720d0e719152ba58ddcaf8c8354b0ceb81c58"
+  },
+  {
+    "path": "main/templates/main/pages/blog/index.html",
+    "sha256": "9b6dcc84550384432103ee3c56f0ee888aa814c076594b07d4903714ab2f9390"
+  },
+  {
+    "path": "main/templates/main/pages/catalog/landing.html",
+    "sha256": "89bb0e6536d73c0c2e829e19787304071d42a0633ebdb37de2612001ac947e65"
+  },
+  {
+    "path": "main/templates/main/pages/catalog/section.html",
+    "sha256": "8e7cc8512e0632a5592100f3765c6d71ef124bbb43483cdc50518e1182977038"
+  },
+  {
+    "path": "main/templates/main/pages/catalog/subcategory.html",
+    "sha256": "75456f68ef085d5e67f80b660c2e31595fca628681a0989453bf64203b4db54f"
+  },
+  {
+    "path": "main/templates/main/pages/content/about.html",
+    "sha256": "837d021cbe71e4ce699b0ce578eb98f30836c23e37ee6eb946b18f3bf99c6d38"
+  },
+  {
+    "path": "main/templates/main/pages/content/contact.html",
+    "sha256": "68a497d8f260629170ecf875cae30e81d6f7dc97d0fb45758075c01ae7f738e5"
+  },
+  {
+    "path": "main/templates/main/pages/content/faq.html",
+    "sha256": "d47d59dff699d3b1b399b26980edcc98e31a9451ba7390e4e79156bfadf9f5bc"
+  },
+  {
+    "path": "main/templates/main/pages/content/policy.html",
+    "sha256": "a27ac66b040149aca859af50f7c8b6d685709cc38a9fe53d605567a184e05d9b"
+  },
+  {
+    "path": "main/templates/main/pages/home/index.html",
+    "sha256": "be84da1ee11a4acb4bc44bb15def5f8362fe5c768205ad8f8f8baec0048a6ad5"
+  },
+  {
+    "path": "main/templates/main/pages/international/orders_en.html",
+    "sha256": "4a15af7b6ff8d375de9069b31c9ddf93d7b9968df9179593b1891a8a5e92dc4d"
+  },
+  {
+    "path": "main/templates/main/pages/international/orders_fa.html",
+    "sha256": "24f7b29fb05f91f691dac857203bc80e3d113bbdb451959c8910030718719936"
+  },
+  {
+    "path": "main/templates/main/pages/local/hub.html",
+    "sha256": "78e9282ee02c1ce7c52bc4e3574de7baba9c269b379d35c262b22cb6743a75f4"
+  },
+  {
+    "path": "main/templates/main/pages/local/landing.html",
+    "sha256": "495ff6397a4d797c45a8f00e5a18c8b37ba59e50beac2b3a37a5df77434d96bf"
+  },
+  {
+    "path": "main/templates/main/pages/occasions/detail.html",
+    "sha256": "1afb1bc90e818a9f0d5b021297fb3814247935bbbd952ffc13988d6f45ed9b3b"
+  },
+  {
+    "path": "main/templates/main/pages/occasions/index.html",
+    "sha256": "9531d262f14eb10fa64a41237022d6126ac653d82b945193a47a8d5d677889da"
+  },
+  {
+    "path": "main/templates/main/pages/products/detail.html",
+    "sha256": "5cf62c5a31be10407d88bf168384e794dd6ef6d4100ec690851482b3b4ca4b30"
+  },
+  {
+    "path": "main/templates/main/pages/weddings/collection.html",
+    "sha256": "6382148ac59eb20be8b9f0b167f4cfee19106eed6f3c4f9e720db90642f6c3c9"
+  },
+  {
+    "path": "main/templates/main/pages/weddings/index.html",
+    "sha256": "178fb98a72362f99c6fa4be74c4376356651bd90e862a0e285f648cf416093a4"
+  },
+  {
+    "path": "main/templates/main/pages/workshops/detail.html",
+    "sha256": "df00489a4a95b7069fc02eb367e5afaeb53de25e0713522ed9d4e8af72c7ad06"
+  },
+  {
+    "path": "main/templates/main/pages/workshops/index.html",
+    "sha256": "cfcc6aaa50b7e5a6cf5d716c22305dcf923dcf70576897b09041dea96f7e1cad"
+  },
+  {
+    "path": "main/templates/main/pages/workshops/redesign.html",
+    "sha256": "bc2ff0e525f9c39bd382208ac12e0d57f68d23841e6e0f71b7ba83c2890577d0"
+  },
+  {
+    "path": "main/templates/main/studio/accounts.html",
+    "sha256": "819b01e4cd52431c3067d7d967bc14ab491558369a027106b4aeeb1d6c840889"
+  },
+  {
+    "path": "main/templates/main/studio/admin_notifications.html",
+    "sha256": "14789285e32d665f10ff21ff3af881bb96b18a5d8d9151e170c52a87502b801d"
+  },
+  {
+    "path": "main/templates/main/studio/analytics.html",
+    "sha256": "1d44ccb941455ffed1c14dbcef4243818abb610f5f0de8529d49f68ea7cc704a"
+  },
+  {
+    "path": "main/templates/main/studio/base.html",
+    "sha256": "243fce9b2bfeff0cfb4331f08e322d06da6c0b2329efb412ffed40aab253e051"
+  },
+  {
+    "path": "main/templates/main/studio/dashboard.html",
+    "sha256": "0940c5dee3867461c13bc384e75e4a30dcdfb141e5eaa4b6357fb04e599078e6"
+  },
+  {
+    "path": "main/templates/main/studio/deliveries.html",
+    "sha256": "b9b93e866aaf665c7d7a2d90a1dd9c150aa6d673b316c3d8297518e8ed486406"
+  },
+  {
+    "path": "main/templates/main/studio/florists.html",
+    "sha256": "b9526069510a960f9adbf612af572df67b8bd866ac330a06dbb56444b0628df0"
+  },
+  {
+    "path": "main/templates/main/studio/form.html",
+    "sha256": "22e89a25f07a11398b810595c3a51b82ca61d7d9d88dc918104c6d25c8c7f8b4"
+  },
+  {
+    "path": "main/templates/main/studio/partials/avatar.html",
+    "sha256": "b700457660ef027af93dd32e9324f2f41fa97ec5eccde6c03119a498d39f7cea"
+  },
+  {
+    "path": "main/templates/main/studio/partials/delta.html",
+    "sha256": "350f23708cc667af76f10b121f3fea06928e3fdc7e66f921f488ea22fd223c09"
+  },
+  {
+    "path": "main/templates/main/studio/partials/mix.html",
+    "sha256": "22b53b7c63c215ec2e20bad5167215119d7b31c07a30356302fc3a85c713318f"
+  },
+  {
+    "path": "main/templates/main/studio/partials/pagination.html",
+    "sha256": "a386bc64d53e3e7f89b3a2c4622a758fa7dfbc1ede86e3b788f82786379b3f3c"
+  },
+  {
+    "path": "main/templates/main/studio/partials/period.html",
+    "sha256": "6489117c1702dea3666457868a65a6765924eed1c469dfbbed44f002dd1fe97b"
+  },
+  {
+    "path": "main/templates/main/studio/partials/products_table.html",
+    "sha256": "3fcd5aee4c4cbd67a04513e67a898d83ca8e10e644ab97d45b34d48093130221"
+  },
+  {
+    "path": "main/templates/main/studio/partials/sort_header.html",
+    "sha256": "4de72218b97d324a401bbd07ec40b5d86df9b94c1a7db121867db892f2434031"
+  },
+  {
+    "path": "main/templates/main/studio/partials/trend.html",
+    "sha256": "09e9bd779a8e96b400da2158abbab52feaa89a886a8ef35cc1c90d28a151cf59"
+  },
+  {
+    "path": "main/templates/main/studio/products.html",
+    "sha256": "eee5600184563078a759b7dcfb63e14b1d7c89f0f50c5eb9f892b544818898de"
+  },
+  {
+    "path": "main/templates/main/studio/profile.html",
+    "sha256": "07ec46b0dd8be87d2ba13f7ec46fab60b06cceab152162d20f5aa267ca6c60f6"
+  },
+  {
+    "path": "main/templates/main/studio/settings.html",
+    "sha256": "e2d1cc4e207c2603e30bfdf3ee292a6c64a76ded69335c5a0980bfddff9914d1"
+  },
+  {
+    "path": "main/templates/main/team/base.html",
+    "sha256": "eefdb41f1c393462259c85b5810a6995ab162ad2b7d0b69e1844219adc7b2e6a"
+  },
+  {
+    "path": "main/templates/main/team/colleague_profile.html",
+    "sha256": "d20b8d5b44d47b1bcd29f83aed548e6cb4714efb5b49f8d719c28217cfb2f1df"
+  },
+  {
+    "path": "main/templates/main/team/colleagues.html",
+    "sha256": "37614cd19826014829ea3b12f727b7016fefd7f930cc29266ee6eed789e35c42"
+  },
+  {
+    "path": "main/templates/main/team/home.html",
+    "sha256": "e94af5d41d284c2c424784b7bc233a2469b9c69958d2972e60c2c7a30c9e9050"
+  },
+  {
+    "path": "main/templates/main/team/login.html",
+    "sha256": "8fc4ede999a6304249bda0b80bdae3c1a52806c160ef5b5e6508697d3c2a09c9"
+  },
+  {
+    "path": "main/templates/main/team/partials/field_errors.html",
+    "sha256": "fb07ba127d1415e5893bbc946f3168be7175a9dcf048fe22b685a07f87fff268"
+  },
+  {
+    "path": "main/templates/main/team/partials/icons.html",
+    "sha256": "f359ae028e6606868d2718bf343864d0ad6c391559bd82e3d15d356f892f23b7"
+  },
+  {
+    "path": "main/templates/main/team/partials/nav.html",
+    "sha256": "e81cb28dd8789764bcb7ba0521518024422d9e778a3f75b4b89f6d5de809168d"
+  },
+  {
+    "path": "main/templates/main/team/partials/product_card.html",
+    "sha256": "302919dab81b0b570b84ddde01b31637289a5de2787d1a009de6d160267ee504"
+  },
+  {
+    "path": "main/templates/main/team/product_detail.html",
+    "sha256": "e9253b8810473a36bada9149bec6f06d5f4a5daac22c12d04f8d55496a35f794"
+  },
+  {
+    "path": "main/templates/main/team/product_form.html",
+    "sha256": "be0f6d28a9ffc94f7d39e2202b83660b8bc5d2538652e151b1a9d44a3cdda62a"
+  },
+  {
+    "path": "main/templates/main/team/products.html",
+    "sha256": "0cb95763673ad30541a272345ac2879461f724b69703fb1fefd59c1265cc009d"
+  },
+  {
+    "path": "main/templates/main/team/profile.html",
+    "sha256": "9304450339886a77d7cbc1176554ba886227fb32f20d04a1709abbf82e731cfc"
+  },
+  {
+    "path": "main/templatetags/__init__.py",
+    "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+  },
+  {
+    "path": "main/templatetags/seo_tags.py",
+    "sha256": "88edbc5a136fe97ee5c003cac43b2518d213e708cb4a1a55693e0d5d2bba31ab"
+  },
+  {
+    "path": "main/templatetags/studio_ui.py",
+    "sha256": "1eca8d5882b81bb738958d82cada32a3be96a446d0f79de96e7fce074e2bc455"
+  },
+  {
+    "path": "main/templatetags/zad_admin.py",
+    "sha256": "e9012b0514a83950551d7ed5806954786e527c64730102a9b1d733e3aa6bca0d"
+  },
+  {
+    "path": "main/tests/__init__.py",
+    "sha256": "59cc22116d028ea56feb4f95d997c45d3892cb8c8fb1657790a104025d036fa4"
+  },
+  {
+    "path": "main/tests/moments-rail.test.cjs",
+    "sha256": "c92650d4e5bafbc14df9698cd7a9e6e65da4ef29bed41850a4da12a466222a9b"
+  },
+  {
+    "path": "main/tests/test_admin_workspace.py",
+    "sha256": "d88a67797289b4f0f883829b12b8adca420fe7b79fd942d01cf94cc5fcb25377"
+  },
+  {
+    "path": "main/tests/test_backend_editorial.py",
+    "sha256": "b52f336312603dc5191b4c077ff9de867d3d53f56ccadcfda91a44b27c3648d5"
+  },
+  {
+    "path": "main/tests/test_catalog_admin_actions.py",
+    "sha256": "c1ef9df39ba9f2f0b73054429426522358de28e2741bb311f3c0aeca4748d9b6"
+  },
+  {
+    "path": "main/tests/test_catalog_curation.py",
+    "sha256": "52ffb7ab7e5fea3a01ba3e002151e47440afa4be426335b4ef270c998229d33f"
+  },
+  {
+    "path": "main/tests/test_editorial_import.py",
+    "sha256": "b58278f55cdddff7e6cfb891760f78e40d5c0b32aa1ee4df82374506799a8af9"
+  },
+  {
+    "path": "main/tests/test_editorial_page_system.py",
+    "sha256": "93cd8708497e6b038c0bc41c7638eefe8fd30ff7965582cb9ef0a4b8ba0e9ee3"
+  },
+  {
+    "path": "main/tests/test_flower_studio_landing.py",
+    "sha256": "11cf2951fc5220f225b93e23c69bf745b7f27d5c58fe2e189a099736077f8181"
+  },
+  {
+    "path": "main/tests/test_home_daily_occasions.py",
+    "sha256": "0036591425de4d41e3ea148f1db14b56c5e02f0a6abf3bc09cc078ff3593412e"
+  },
+  {
+    "path": "main/tests/test_home_moments.py",
+    "sha256": "f607b3ca31b07712837fa3a16553c15cddd9346f4ad8a5a2319f8d004108e42a"
+  },
+  {
+    "path": "main/tests/test_images.py",
+    "sha256": "14ac0a65e9bfbab5ffabed555f1d82e8b9b7bee042427785c8e42b7e29cd4454"
+  },
+  {
+    "path": "main/tests/test_media_review.py",
+    "sha256": "847f7cdc638c0135f6c4dbe3a4028e25ab7cfdfc94035bee8720850fcc8cda8d"
+  },
+  {
+    "path": "main/tests/test_migration_import_contract.py",
+    "sha256": "b4a0d1d210ca9dfe466585df364e5869cd7e1f469b7df604eeebe628b5359487"
+  },
+  {
+    "path": "main/tests/test_product_url_contract.py",
+    "sha256": "8d631653fc27846361c0765c7d678c624da33052e4d9fa24f2ee3d4762812297"
+  },
+  {
+    "path": "main/tests/test_regressions.py",
+    "sha256": "5790334d434d401c81ef39daaffa998db6fabb22917d26c1e8d1d4b2128ae883"
+  },
+  {
+    "path": "main/tests/test_same_day_admin.py",
+    "sha256": "5f3a532f8456d6f73ccefee0c5b3e10d687ec86619d7e340b5935a49b79266ff"
+  },
+  {
+    "path": "main/tests/test_same_day_catalog.py",
+    "sha256": "ecef0bb109746459da9d74efb8bc9a9084e06ac8d1a9651524b077c6b3fe7439"
+  },
+  {
+    "path": "main/tests/test_same_day_fixes.py",
+    "sha256": "ca543d6b3948b82d3786ba18299088d05710bbd18e63e9b29e6af7eeb2d4b1e0"
+  },
+  {
+    "path": "main/tests/test_same_day_migration.py",
+    "sha256": "4b3175bd5fcfe1076033c17985bee04d2a6a8a1b79d82b1b6464794fbc738619"
+  },
+  {
+    "path": "main/tests/test_same_day_seo.py",
+    "sha256": "3876bdca0f01518889b60a5452afdfb19fbe55cc26d052e528561c53e127a367"
+  },
+  {
+    "path": "main/tests/test_scroll_surface.py",
+    "sha256": "71881313d0ea8dd3afe2781a2fbeb35565da4e1c8936e9bd77cf7be6cbfdefb4"
+  },
+  {
+    "path": "main/tests/test_seed_studio_demo.py",
+    "sha256": "433edc166f48615ae0ea78a2d65c5f5d8fde7340793895aa051d8e3e08abd5fe"
+  },
+  {
+    "path": "main/tests/test_seo.py",
+    "sha256": "3762b949a9774164b1084a9d7df309bfed2a533359e238744507a9226efa2f55"
+  },
+  {
+    "path": "main/tests/test_source_layout.py",
+    "sha256": "de19ab916b3008ac9c6c4b18f8a86143a5e9989e11ce92ce0d75793dc828172e"
+  },
+  {
+    "path": "main/tests/test_stories.py",
+    "sha256": "2980493ab85e69f8a7d2a6f716b549835b6083da826a276a6cb4d68d4716683b"
+  },
+  {
+    "path": "main/tests/test_studio_admin_notifications.py",
+    "sha256": "158dc93d6ba62892b04531e006e9a85b38125e82a2099c1b0b9bcad39851d0be"
+  },
+  {
+    "path": "main/tests/test_studio_notification_safety.py",
+    "sha256": "6e4bc8c735beebaa3179bb88a3277d401f330f4f8c922edcfbb0f4791e25222b"
+  },
+  {
+    "path": "main/tests/test_studio_operations.py",
+    "sha256": "19289331e93e09f10b5a4179f96f95cf10b584bf900ff2cd5cb15b0d7dca0838"
+  },
+  {
+    "path": "main/tests/test_studio_portal_safety.py",
+    "sha256": "95cee82149a7f317ff460ec124d8fb5527600a62fa4a2e47f8d97a80f3bc143f"
+  },
+  {
+    "path": "main/tests/test_studio_projection_sync.py",
+    "sha256": "233811400c2eec3a5bd6c84817eec02af35bfe2c78d164faf09932cacbc2c279"
+  },
+  {
+    "path": "main/tests/test_studio_publishing.py",
+    "sha256": "0a0dd8f4cfe0aab89290b240b9e63e193924fb0bcca83e2ebbe403c76da189f0"
+  },
+  {
+    "path": "main/tests/test_studio_reconciliation.py",
+    "sha256": "9e9b04f7e33d63a22473443d4884f9d4189894971623170ea8e621a83b545004"
+  },
+  {
+    "path": "main/tests/test_studio_reply_safety.py",
+    "sha256": "0f10492b10f82b42437652f60badbf685e4a972ef18c0a658e3c45d3f0ea08c4"
+  },
+  {
+    "path": "main/tests/test_studio_team_management.py",
+    "sha256": "8a361fb68903fb37b408d03060cf9e5374b030cce7cace84843f2a77160e9b4d"
+  },
+  {
+    "path": "main/tests/test_studio_transport.py",
+    "sha256": "f2a0ac9ff4b72ae5c0b14d27afcbdd18616d5335b2dbf1e87b91fcb5fe8572e8"
+  },
+  {
+    "path": "main/tests/test_studio_ui.py",
+    "sha256": "78b451b76371ca835b1599474fa8aead2b32b0b1f4cc7223df6dcd7961686116"
+  },
+  {
+    "path": "main/tests/test_team_portal.py",
+    "sha256": "8100b85d10ef9f182011bc992a03d534003f9bd924811033c3a9e96170ffcf4b"
+  },
+  {
+    "path": "main/tests/test_telegram_group_products.py",
+    "sha256": "b0eb2946ad6789150321aae7325c9ecdee06cc5ff22499b490a363aae1a5f593"
+  },
+  {
+    "path": "main/tests/test_telegram_lead_notifications.py",
+    "sha256": "1a8b98f9c8f85b065232410255d44263f51e0f27986502c02013f5e0371600e2"
+  },
+  {
+    "path": "main/tests/test_telegram_product_lookup.py",
+    "sha256": "27dec53d3dbd284e04396306a769f09262d5bde7c0b9d2cf08469029e649c9a4"
+  },
+  {
+    "path": "main/tests/test_telegram_relay.py",
+    "sha256": "9cf99ed3886eb5b3aa4ef022b4315902b616642c86fe3628d2700b7e874e21a3"
+  },
+  {
+    "path": "main/tests/test_telegram_same_day.py",
+    "sha256": "9b7ded03d1020534ca7e1134ff0f63f17541f8e968863e85aa1ba2a87add2610"
+  },
+  {
+    "path": "main/tests/test_unique_catalog.py",
+    "sha256": "f4301dac25e6ce24cefbee8440a55cf82548b948b2a98101540542c9ac889a52"
+  },
+  {
+    "path": "main/tests/test_views.py",
+    "sha256": "4faeae53ec15c2cb0d3db5bd77719bc679dc05f48a2b0cde5c1b54c9243e4728"
+  },
+  {
+    "path": "main/tests/test_wedding_film.py",
+    "sha256": "0de1cae5932d3506b8b7a352557c094d563d51d770643effc285dce6998908a3"
+  },
+  {
+    "path": "main/tests/test_weddings.py",
+    "sha256": "337b0b60b37dc55097f8f1f86251fd0411763cd1c41ba47fcfa3aa2cee054cd6"
+  },
+  {
+    "path": "main/urls.py",
+    "sha256": "336d7e412010c93590c0a4800636e48ed5386336132ac699770c05fe2934b7b8"
+  },
+  {
+    "path": "main/video_pipeline.py",
+    "sha256": "95f329265f946f70aef4cd7bec88f9bb6149624471627036dabd9e240628d93d"
+  },
+  {
+    "path": "main/views/__init__.py",
+    "sha256": "5dc083c490b03268d1209ceca3d24ba75ecd29d20d707c5bbf6f6d5a94d4c4f5"
+  },
+  {
+    "path": "main/views/blog_views.py",
+    "sha256": "19e27070d707f54f4c1d97e3a105de1f385d582ffbffe3ddbe2cfb601b2ea0cf"
+  },
+  {
+    "path": "main/views/catalog_views.py",
+    "sha256": "f2de9515097c152f323be92c1ec894204fef2451ee4041f2e8e8bf0f12947aef"
+  },
+  {
+    "path": "main/views/error_views.py",
+    "sha256": "a97ae53fdd19fe7351c305c0840f39731bb5e435e72be5ac210b8c2678dbd215"
+  },
+  {
+    "path": "main/views/event_views.py",
+    "sha256": "4e1b81b60c0637b60a526e0a40472f1994e38fb5ffbad8f4bc431ebbda8b893a"
+  },
+  {
+    "path": "main/views/hero_style_views.py",
+    "sha256": "ecda0dcc1a0da55117395a069f9f496aa354caa4609537f24be00a18deea09a8"
+  },
+  {
+    "path": "main/views/home_views.py",
+    "sha256": "7ede76c30398c9bdc7d2cdb4a0e0238fd2cc4894518bdf3026bc3d5da7979064"
+  },
+  {
+    "path": "main/views/international_order_views.py",
+    "sha256": "44e187ef04d29d97976f9d020739916986877332ec37bd2d18e15aeab2223b2b"
+  },
+  {
+    "path": "main/views/local_seo_views.py",
+    "sha256": "452a770b5630aa2575b1c42e8820bf4e6270d57ee051ec80a4909a7d65351537"
+  },
+  {
+    "path": "main/views/media_views.py",
+    "sha256": "187d3d6db2dc7287f83a2802d4183fc057b63801b150eaf98661dc6db26bd332"
+  },
+  {
+    "path": "main/views/occasion_views.py",
+    "sha256": "1836c22e79932db41d9cac1120eef6f6428d570d4758ace81b383bd9d4d6eace"
+  },
+  {
+    "path": "main/views/policy_views.py",
+    "sha256": "b147b8b5043ae67d9ff8bc40e60e53dc1c6f1ad6837dbc12602383de830fa00a"
+  },
+  {
+    "path": "main/views/product_detail_views.py",
+    "sha256": "083a00531871beee2ec8658ab8cd945e691d96258a4333e4e5db480438aec29c"
+  },
+  {
+    "path": "main/views/product_redirect_views.py",
+    "sha256": "e74d0fccf0fe70e7fd401c3b301a74a4a1065e1370f76fb3f280dfa2e1f44aa9"
+  },
+  {
+    "path": "main/views/section_views.py",
+    "sha256": "97c34a350d5972b6a4f6fd18bfd14301c646a449ea796e7ea361ff528b2ed6e3"
+  },
+  {
+    "path": "main/views/security_views.py",
+    "sha256": "c7dc970b7439e626aea69bfa50165457d7a73e78b242e275fb3c81fccbe92ba6"
+  },
+  {
+    "path": "main/views/seo_views.py",
+    "sha256": "435c45ec1e596610ee0da8767f07f41a5df1e9ab8a9dcba7e37f1b084886a517"
+  },
+  {
+    "path": "main/views/static_page_views.py",
+    "sha256": "b8096508541dd419b0e71425ea067703d8571d7e3fe25968e1bd7ea32009e142"
+  },
+  {
+    "path": "main/views/wedding_views.py",
+    "sha256": "c314bdd51598ecf0d28d0bbfa34956d3c5998b7ccce97b82979d3babf7932033"
+  },
+  {
+    "path": "ops/cloudflare/zad-telegram-relay-worker.js",
+    "sha256": "b9ca3a5b398a7ba98e4965b0ad91960bd1786023a8cc25c4df88cb3bc83256cd"
+  },
+  {
+    "path": "ops/cloudflare/zad-telegram-relay-worker.test.mjs",
+    "sha256": "7fcb550cd6eb816d035e7c2407516999977f460de2ccab5083496b8032910f16"
+  },
+  {
+    "path": "ops/tests/overlays.test.cjs",
+    "sha256": "e7a766dfb0e38eee78565c2ecf7d8c9681c7935bdeb5df34609271ad44fdf2b9"
+  },
+  {
+    "path": "ops/tests/same-day-analytics.test.mjs",
+    "sha256": "e1095252c53fd36019e02af21bad4cb493908336bacc48b94808d379841948da"
+  },
+  {
+    "path": "ops/tests/studio-actions.test.cjs",
+    "sha256": "6ce255649b231785699398df456ff08ae08b562a6ff5496a24cc4fe62699f2cd"
+  },
+  {
+    "path": "requirements.txt",
+    "sha256": "d042a6079e3edf75f3b8b9f36a5d4e2bafe679d02aae1fde1a929658a4f61cf4"
+  }
+]

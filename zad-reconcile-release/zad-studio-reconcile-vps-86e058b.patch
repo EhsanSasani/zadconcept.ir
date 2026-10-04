@@ -1,10 +1,190 @@
+diff --git a/.env.example b/.env.example
+index 70c12aa6c0f78b759cbe64a9e5bb2cebbce92bbc..0a6b5b1567088d8f474358bcfe46b9a590fc599e 100644
+--- a/.env.example
++++ b/.env.example
+@@ -82,6 +82,7 @@ TELEGRAM_DISCUSSION_GROUP_ID=
+ TELEGRAM_SAME_DAY_CATEGORY_ID=
+ TELEGRAM_STUDIO_CUSTOM_GROUP_ID=
+ TELEGRAM_STUDIO_ADMIN_CHAT_ID=
++STUDIO_ADMIN_NOTIFICATIONS_ENABLED=false
+ STUDIO_DAILY_REQUIRE_METADATA=false
+ TELEGRAM_SAME_DAY_RELAY_URL=
+ TELEGRAM_SAME_DAY_TIMEOUT_SECONDS=8
+diff --git a/config/settings.py b/config/settings.py
+index 207e112a5d99c33d8fbd241b854b2d21fefa0e48..c81dcdadff4157e7c25c16fbf6616ac455c38ec3 100644
+--- a/config/settings.py
++++ b/config/settings.py
+@@ -197,6 +197,9 @@ TELEGRAM_DISCUSSION_GROUP_ID = os.getenv("TELEGRAM_DISCUSSION_GROUP_ID", "").str
+ TELEGRAM_SAME_DAY_CATEGORY_ID = os.getenv("TELEGRAM_SAME_DAY_CATEGORY_ID", "").strip()
+ TELEGRAM_STUDIO_CUSTOM_GROUP_ID = os.getenv("TELEGRAM_STUDIO_CUSTOM_GROUP_ID", "").strip()
+ TELEGRAM_STUDIO_ADMIN_CHAT_ID = os.getenv("TELEGRAM_STUDIO_ADMIN_CHAT_ID", "").strip()
++# Private product notifications are opt-in. A stored destination alone must
++# never resume the abandoned queue after a deployment or worker restart.
++STUDIO_ADMIN_NOTIFICATIONS_ENABLED = env_bool("STUDIO_ADMIN_NOTIFICATIONS_ENABLED", False)
+ # Activate after the daily team's caption format and historical backlog are reviewed.
+ STUDIO_DAILY_REQUIRE_METADATA = env_bool("STUDIO_DAILY_REQUIRE_METADATA", False)
+ # Optional existing Worker transport, required where VPS -> Telegram is blocked.
+diff --git a/docs/studio-reconciliation-rollout-fa.md b/docs/studio-reconciliation-rollout-fa.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..130c0fa189099b18678d863a393e9d38707e9efa
+--- /dev/null
++++ b/docs/studio-reconciliation-rollout-fa.md
+@@ -0,0 +1,143 @@
++# ادغام اصلاحات Studio — ۲ اکتبر ۲۰۲۶
++
++این نسخه، اصلاحات ایمنی موجود در commit
++`5821425deba27df654abe4c7e3b077b973767427` را حفظ می‌کند و اصلاحات عملیاتی
++ادامهٔ گفتگو را به همان کد اضافه می‌کند. پچ local از همین commit ساخته شده است؛
++پچ ایمنی بزرگ قبلی نباید دوباره روی local اعمال شود.
++
++## رفتار نهایی
++
++- محصول فروخته‌شده یا کشیده‌شده بلافاصله از موجودی سایت خارج می‌شود. حذف پیام
++  خروجی آن در گروه آماده‌ها یا سفارشی‌ها، ۴۵ دقیقه پس از ثبت وضعیت انجام می‌شود.
++  تکرار همان وضعیت، این مهلت را از نو شروع نمی‌کند.
++- حذف مدیریتی، کارنامهٔ فلوریست و کاتالوگ عمومی را بلافاصله به‌روز می‌کند و
++  درخواست حذف پیام را بدون مهلت ۴۵ دقیقه‌ای به صف می‌فرستد. علت حذف، عکس و
++  سابقهٔ مدیریتی حفظ می‌شوند. محدودیت نرخ تلگرام همچنان رعایت می‌شود.
++- صف حذفِ قدیمی با زمان اجرای فوری، هنگام پردازش دوباره با زمان واقعی فروش یا
++  خروج سنجیده می‌شود. تلاش دوبارهٔ دستی نیز مهلت ۴۵ دقیقه‌ای را دور نمی‌زند.
++- حذف پیامی که قبلاً حذف شده است موفق محسوب می‌شود؛ عکس تازه‌ای برای آن منتشر نمی‌شود.
++  مسیر موجودِ اصلاح کپشن برای پیام‌های غیرقابل‌حذف حفظ شده است.
++- در فرم ثبت فلوریست، هیچ نوع تولیدی از ابتدا انتخاب نشده است. انتخاب
++  «آماده روز» یا «سفارش اختصاصی» اجباری است؛ بدون انتخاب، محصول و صف ارسال
++  ساخته نمی‌شوند. فلوریست سازنده نیز باید از بین همکاران فعال انتخاب شود.
++- قیمت هنگام تایپ با جداکنندهٔ هزارگان نمایش داده می‌شود. ارقام فارسی و عربی
++  پذیرفته می‌شوند و اصلاح وسط عدد، محل نشانگر تایپ را حفظ می‌کند. پیش‌نویس، عکس
++  و شناسهٔ جلوگیری از ثبت تکراری در مسیر بازیابی حفظ می‌شوند.
++- اعلان خصوصی مدیر به‌صورت پیش‌فرض خاموش است. باقی‌ماندن شناسهٔ مدیر در `.env`
++  باعث ارسال نمی‌شود. هیچ اعلان خصوصی تازه‌ای صف نمی‌شود؛ صف‌های قدیمی پردازش
++  یا بازیابی نمی‌شوند و سابقهٔ آن‌ها در دیتابیس حفظ می‌شود. صفحهٔ تاریخچه فقط
++  برای مدیر قابل‌مشاهده است و اقدام ارسال دوباره ندارد.
++
++خاموش‌بودن اعلان خصوصی با تنظیم زیر کنترل می‌شود:
++
++```dotenv
++STUDIO_ADMIN_NOTIFICATIONS_ENABLED=false
++```
++
++نبود این متغیر نیز به معنی خاموش‌بودن است. اگر متغیر از قبل صریحاً `true` شده
++باشد، پیش از بارگذاری نسخهٔ جدید باید `false` شود. پاک‌کردن تاریخچه یا شناسهٔ
++مدیر برای این تغییر لازم نیست.
++
++## محدودهٔ تغییر
++
++فایل اجرایی Cloudflare Worker، شناسهٔ گروه‌ها، webhook، مسیر ارسال عکس گروهی
++و تنظیم Nginx تغییر نکرده‌اند. این نسخه migration جدید ندارد و دیتابیس، رسانه
++و `.env` عملیاتی را جایگزین نمی‌کند. اصلاحات ایمنی ویرایش، حذف، تطبیق قیمت و
++جلوگیری از ارسال دوبارهٔ نامشخصِ پچ قبلی همچنان برقرار هستند.
++
++## اعمال روی local
++
++این مراحل پس از دسترسی به کامپیوتر انجام می‌شوند. ابتدا مبنا و تغییرات
++ثبت‌نشده را بررسی کنید:
++
++```powershell
++git status --short
++git log -1 --oneline
++git apply --check .\zad-studio-reconcile-5821425.patch
++```
++
++مبنای بررسی‌شده `5821425` در شاخهٔ `fix/studio-safety` است. اگر کد local بعد از
++آن تغییر کرده یا بررسی patch خطا داد، قبل از اعمال، همان تفاوت باید بررسی شود.
++فایل دانلودشدهٔ patch می‌تواند untracked باشد.
++
++پس از موفقیت بررسی و حفظ هر تغییر قبلی:
++
++```powershell
++git switch -c fix/studio-reconcile
++git apply .\zad-studio-reconcile-5821425.patch
++python manage.py check
++python manage.py makemigrations --check --dry-run
++python manage.py test --noinput
++node --test ops/cloudflare/zad-telegram-relay-worker.test.mjs ops/tests/studio-actions.test.cjs
++git diff --check
++```
++
++خروجی migration باید `No changes detected` باشد. پچ دانلودشده را داخل commit
++کد قرار ندهید. ثبت و push پس از بررسی نتیجهٔ local انجام می‌شوند.
++
++## تطبیق VPS
++
++آرشیو کد فعلی VPS در ۳ اکتبر دریافت و مقایسه شد. مبنای سرور `86e058b` در شاخهٔ
++`deploy/studio-team-bddf3a7` است و working tree گزارش‌شده تمیز بود. اصلاح تأخیر
++۴۵ دقیقه‌ای در `7750c83` و اصلاح فرم در `86e058b` ثبت شده‌اند. پچ مخصوص VPS از
++همین آرشیو ساخته می‌شود و این دو اصلاح را حفظ می‌کند.
++
++بستهٔ نهایی دو پچ با یک نتیجهٔ مشترک دارد: پچ local برای `5821425` و پچ VPS
++برای `86e058b`. کد اجرایی Worker و تمام فایل‌های مدل و migration در آرشیو سرور
++با نسخهٔ نهایی یکسان بودند. تنها تفاوت stylesheet عمومی، یک خط خالی انتهای
++فایل بود؛ نسخهٔ نهایی همان پایان فایلِ سرور را حفظ می‌کند.
++
++با دسترسی به ترمینال، از `/var/www/zad/app` ابتدا فقط خروجی‌های زیر دریافت
++می‌شوند:
++
++```bash
++git status --short
++git log -8 --oneline
++sudo systemctl is-active zad.service zad-studio-deliveries.service
++```
++
++پیش از اعمال پچ VPS باید همچنان HEAD برابر `86e058b` و کد پروژه تمیز باشد.
++بررسی اولیهٔ سازگاری:
++
++```bash
++git apply --check /home/cloud-admin/zad-studio-reconcile-vps-86e058b.patch
++```
++
++اعمال پچ و بارگذاری سرویس‌ها، پس از پشتیبان‌گیری تازه و بررسی نسخهٔ local
++انجام می‌شوند. یکسانی فایل‌های کد هدف است؛ تفاوت تاریخچهٔ commit یا
++تنظیمات محیط local و production دلیل جایگزینی کل پروژه نیست. از اعمال پچ قدیمی
++با `--reject`، reset اجباری، انتقال دیتابیس local و بازنویسی پوشهٔ media پرهیز کنید.
++
++پیش از استقرار نهایی، نسخهٔ قابل‌بازگشت کد و پشتیبان تازهٔ دیتابیس و رسانه حفظ
++می‌شوند. پس از بررسی سازگاری، اجرای check و collectstatic، هر دو سرویس وب و
++پردازشگر باید کد جدید را بارگذاری کنند؛ restart وب به‌تنهایی کافی نیست. زمان
++این مرحله با کار تیم هماهنگ می‌شود. ارسالِ درحال‌اجرا یا نتیجهٔ نامشخص را به
++صورت دسته‌جمعی دوباره صف نکنید.
++
++برای تشخیص تنظیمات و شمارش صف، فرمان زیر فقط می‌خواند و درخواست شبکه ندارد:
++
++```bash
++/var/www/zad/venv/bin/python manage.py studio_delivery_check
++```
++
++در نسخهٔ جدید، مقصد خصوصی `admin=disabled` گزارش می‌شود. حتی بررسی شبکهٔ مقصد
++خصوصی در این حالت به تلگرام درخواست نمی‌فرستد. پس از استقرار، سلامت سرویس‌ها
++و رفتار اولین تراکنش واقعی تیم بررسی می‌شود؛ محصول ساختگی روی VPS ثبت نمی‌شود.
++بازگشت احتمالی، بازگشت کد است؛ بازگرداندن دیتابیس قدیمی درحالی‌که تیم محصول
++ثبت می‌کند بخشی از این مسیر نیست.
++
++## شواهد بررسی
++
++مجموعهٔ ۵۸۸ تست Django با یک تست skipped و ۵۲ تست JavaScript موفق بودند.
++بررسی سیستم، نبود تغییر migration و پاک‌بودن diff نیز تأیید شدند. رفتار تأخیر
++۴۵ دقیقه‌ای، حذف مدیریتی فوری،
++حفظ backoff جدید در تغییر هم‌زمان، بازیابی صف پس از restart، عدم انتشار دوباره،
++خاموش‌ماندن صف خصوصی قدیمی و اعتبارسنجی نوع تولید پوشش داده شده‌اند.
++
++بررسی مرورگر در عرض‌های ۳۷۵، ۳۹۰، ۷۶۸ و ۱۴۴۰ پیکسل روی دیتابیس و رسانهٔ
++مستقل انجام شد. انتخاب اجباری نوع تولید، تایپ و اصلاح قیمت، بازیابی پیش‌نویس،
++حفظ اطلاعات پس از خطای ارسال و ثبت موفق با همان پیش‌نویس، تأیید و لغو حذف و
++تاریخچهٔ فقط‌خواندنی اعلان خصوصی بررسی شدند. اعتبارسنجی فرم بدون JavaScript
++نیز بررسی شد. محیط آزمایش پردازشگر ارسال یا اعتبارنامهٔ تلگرام نداشت.
++این بررسی جای مشاهدهٔ PostgreSQL و ارسال واقعی پس از
++تطبیق و استقرار کنترل‌شدهٔ VPS را نمی‌گیرد.
 diff --git a/docs/studio-safety-rollout-fa.md b/docs/studio-safety-rollout-fa.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..86e81084be69fa42617908d065bf71accc1901ce
+index 0000000000000000000000000000000000000000..0470536001ed7e4150bacdd95202fec761a5ee8e
 --- /dev/null
 +++ b/docs/studio-safety-rollout-fa.md
-@@ -0,0 +1,139 @@
+@@ -0,0 +1,144 @@
 +# اصلاحات ایمنی Studio — ۱ اکتبر ۲۰۲۶
++
++> راهنمای فعلی: [ادغام اصلاحات Studio](studio-reconciliation-rollout-fa.md).
++> در نسخهٔ ادغام‌شده، اعلان خصوصی مدیر خاموش است و صف قدیمی بازیابی نمی‌شود.
++> مراحل فعال‌سازی و بازیابی اعلان خصوصی در این سند، شرح نسخهٔ قبلی هستند و
++> برای استقرار جدید اجرا نمی‌شوند.
 +
 +این patch برای شاخهٔ `feature/studio-team-portal` و نسخهٔ مبنای
 +`6ad0f7d4b3f0f6a95f67ab7b67be541ea63d42d3` تهیه شده است.
@@ -143,12 +323,34 @@ index 0000000000000000000000000000000000000000..86e81084be69fa42617908d065bf71ac
 +و ارسال زنده از تنظیمات VPS در این بررسی اجرا نشده‌اند. بررسی اولیهٔ صف‌ها و
 +سلامت هر دو سرویس بعد از استقرار همچنان لازم است. پیام‌های قبلاً نامشخص یا
 +failed به‌صورت دسته‌جمعی بازفرستاده نمی‌شوند.
+diff --git a/main/management/commands/process_studio_deliveries.py b/main/management/commands/process_studio_deliveries.py
+index 9412c777f59b2b108e191d498a2c27145335ec22..572a49d6520146852341648bf43805f9db9877e0 100644
+--- a/main/management/commands/process_studio_deliveries.py
++++ b/main/management/commands/process_studio_deliveries.py
+@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
+ from django.db import close_old_connections
+ 
+ from main.studio_delivery import process_next_delivery
+-from main.studio_admin_notifications import process_next_admin_notification
++from main.studio_admin_notifications import admin_notifications_enabled, process_next_admin_notification
+ 
+ 
+ class Command(BaseCommand):
+@@ -35,7 +35,7 @@ class Command(BaseCommand):
+                     )
+                     if not options["watch"] and count >= options["limit"]:
+                         break
+-                notification = process_next_admin_notification()
++                notification = process_next_admin_notification() if admin_notifications_enabled() else None
+                 if notification:
+                     processed = True
+                     count += 1
 diff --git a/main/management/commands/studio_delivery_check.py b/main/management/commands/studio_delivery_check.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..a21c9db46bfea98c6c620fe50b3290a9e199002d
+index 0000000000000000000000000000000000000000..c777351af71630348e5a9b1b0ea3d6d1288b69da
 --- /dev/null
 +++ b/main/management/commands/studio_delivery_check.py
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,65 @@
 +"""Safe diagnostics: no sends, retries, webhook registration or data changes."""
 +from urllib.parse import urlsplit
 +
@@ -157,7 +359,7 @@ index 0000000000000000000000000000000000000000..a21c9db46bfea98c6c620fe50b3290a9
 +from django.db.models import Count
 +
 +from main.models import StudioAdminNotification, StudioDelivery
-+from main.studio_admin_notifications import _admin_chat_id
++from main.studio_admin_notifications import _admin_chat_id, admin_notifications_enabled
 +from main.studio_transport import TelegramDeliveryError, _chat_id, get_chat
 +
 +
@@ -188,6 +390,9 @@ index 0000000000000000000000000000000000000000..a21c9db46bfea98c6c620fe50b3290a9
 +        for label, name in destinations.items():
 +            if options["destination"] not in {"all", label}:
 +                continue
++            if label == "admin" and not admin_notifications_enabled():
++                self.stdout.write("admin=disabled (existing private queue preserved; no sends or retries)")
++                continue
 +            value = str(getattr(settings, name, "")).strip()
 +            if not value:
 +                self.stdout.write(f"{label}=not_configured")
@@ -212,11 +417,16 @@ index 0000000000000000000000000000000000000000..a21c9db46bfea98c6c620fe50b3290a9
 +        if not options["network"]:
 +            self.stdout.write("No network call made. Add --network for read-only getChat checks.")
 diff --git a/main/signals.py b/main/signals.py
-index dc813e4ca87cd64d1e767ce172a71698e14376dd..4371b4abca911921de5458a08d1f5621f5e0950c 100644
+index dc813e4ca87cd64d1e767ce172a71698e14376dd..db850a6307db499a54649337c4ddd57159a80fb8 100644
 --- a/main/signals.py
 +++ b/main/signals.py
-@@ -161,16 +161,22 @@ def snapshot_studio_admin_notification(sender, instance, raw=False, using=None,
-     if raw or not instance.pk:
+@@ -158,19 +158,27 @@ def remember_deleted_telegram_product(sender, instance, using, **kwargs):
+ 
+ @receiver(pre_save, sender=StudioProduct, dispatch_uid="main.snapshot_studio_admin_notification")
+ def snapshot_studio_admin_notification(sender, instance, raw=False, using=None, **kwargs):
+-    if raw or not instance.pk:
++    from .studio_admin_notifications import admin_notifications_enabled
++    if raw or not instance.pk or not admin_notifications_enabled():
          instance._studio_notify_previous = None
          return
 -    instance._studio_notify_previous = StudioProduct.objects.using(using).filter(
@@ -232,8 +442,10 @@ index dc813e4ca87cd64d1e767ce172a71698e14376dd..4371b4abca911921de5458a08d1f5621
  
  @receiver(post_save, sender=StudioProduct, dispatch_uid="main.queue_studio_admin_notification")
 -def queue_studio_admin_notification(sender, instance, created=False, raw=False, **kwargs):
+-    if raw:
 +def queue_studio_admin_notification(sender, instance, created=False, raw=False, using=None, **kwargs):
-     if raw:
++    from .studio_admin_notifications import admin_notifications_enabled
++    if raw or not admin_notifications_enabled():
          return
 -    if instance.source not in {
 +    # update_fields may leave unsaved price/status values on the instance. A
@@ -243,7 +455,7 @@ index dc813e4ca87cd64d1e767ce172a71698e14376dd..4371b4abca911921de5458a08d1f5621
          StudioProduct.Source.PORTAL,
          StudioProduct.Source.DASHBOARD,
          StudioProduct.Source.ADMIN,
-@@ -181,41 +187,67 @@ def queue_studio_admin_notification(sender, instance, created=False, raw=False,
+@@ -181,41 +189,67 @@ def queue_studio_admin_notification(sender, instance, created=False, raw=False,
      from .studio_admin_notifications import queue_admin_notification
  
      if created:
@@ -479,8 +691,70 @@ index d2aa8e5a18df4fa2d6d591d5f4ff0d742c68501a..880a8e76eb745d56ac01518d7b9ad0f8
    });
    window.addEventListener("pageshow", (event) => {
      if (event.persisted) window.location.reload();
+diff --git a/main/static/main/js/pages/team.js b/main/static/main/js/pages/team.js
+index 4ed0fd1cbe9b85764ce7f41402c1ab7f1fc08386..31c9f083a45ccea70f95480a47d46d6889ee7a95 100644
+--- a/main/static/main/js/pages/team.js
++++ b/main/static/main/js/pages/team.js
+@@ -205,33 +205,43 @@
+       .replace(/[٠-٩]/g, (c) => "٠١٢٣٤٥٦٧٨٩".indexOf(c));
+   function formatPriceInput() {
+     const input = form.elements.price;
+-    const amount = normalizeDigits(input.value).replace(/[^0-9]/g, "");
+-
+-    if (!amount) {
+-      input.value = "";
+-      return;
++    const original = input.value;
++    const digits = (value) => normalizeDigits(value).replace(/[^0-9]/g, "");
++    const formatted = digits(original).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++    if (original === formatted) return;
++    const start = input.selectionStart;
++    const end = input.selectionEnd;
++    const direction = input.selectionDirection;
++    input.value = formatted;
++    if (document.activeElement === input && start !== null && end !== null) {
++      const position = (count) => {
++        if (!count) return 0;
++        let seen = 0;
++        for (let i = 0; i < formatted.length; i++) {
++          if (/[0-9]/.test(formatted[i]) && ++seen === count) return i + 1;
++        }
++        return formatted.length;
++      };
++      input.setSelectionRange(
++        position(digits(original.slice(0, start)).length),
++        position(digits(original.slice(0, end)).length),
++        direction,
++      );
+     }
+-
+-    input.value = amount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+-
+   function updateCopy() {
+     const productionType = form.elements.production_type.value;
+     const copy = $("[data-publish-copy]");
+-
+     if (productionType === "CUSTOM") {
+-      copy.textContent =
+-        "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود.";
++      copy.textContent = "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود.";
+       if (!submitting) submitLabel.textContent = "ثبت سفارش اختصاصی";
+     } else if (productionType === "DAILY") {
+-      copy.textContent =
+-        "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
++      copy.textContent = "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
+       if (!submitting) submitLabel.textContent = "ثبت و انتشار محصول";
+     } else {
+       copy.textContent = "برای ادامه، محل استفاده محصول را انتخاب کنید.";
+       if (!submitting) submitLabel.textContent = "ثبت محصول";
+     }
+-
+     const amount = normalizeDigits(form.elements.price.value).replace(
+       /[,٬\s]/g,
+       "",
 diff --git a/main/studio_admin_notifications.py b/main/studio_admin_notifications.py
-index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a559ef9c8e6 100644
+index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..49ab0c73ea844ca943eca4a09d6e7db83764ec9f 100644
 --- a/main/studio_admin_notifications.py
 +++ b/main/studio_admin_notifications.py
 @@ -1,11 +1,15 @@
@@ -500,11 +774,15 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
  from django.utils import timezone
  from PIL import Image
  
-@@ -22,13 +26,26 @@ NOTIFIED_SOURCES = {
+@@ -22,13 +26,30 @@ NOTIFIED_SOURCES = {
      StudioProduct.Source.DASHBOARD,
      StudioProduct.Source.ADMIN,
  }
 +logger = logging.getLogger(__name__)
++
++
++def admin_notifications_enabled():
++    return getattr(settings, "STUDIO_ADMIN_NOTIFICATIONS_ENABLED", False) is True
 +
 +
 +def _database(record):
@@ -528,7 +806,14 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
  
  
  def customer_caption(record):
-@@ -46,7 +63,7 @@ def queue_admin_notification(record, event):
+@@ -41,12 +62,14 @@ def customer_caption(record):
+ 
+ def queue_admin_notification(record, event):
+     """Create a DB outbox row; Telegram never runs inside the product request."""
++    if not admin_notifications_enabled():
++        return None
+     if record.source not in NOTIFIED_SOURCES:
+         return None
      chat_id = _admin_chat_id()
      if chat_id is None:
          return None
@@ -537,7 +822,7 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
          record=record,
          event=event,
          chat_id=chat_id,
-@@ -55,9 +72,7 @@ def queue_admin_notification(record, event):
+@@ -55,9 +78,7 @@ def queue_admin_notification(record, event):
  
  
  def _recover_stale(now):
@@ -548,8 +833,12 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
      StudioAdminNotification.objects.filter(
          status=StudioAdminNotification.Status.SENDING,
          locked_at__lt=cutoff,
-@@ -71,16 +86,28 @@ def _recover_stale(now):
+@@ -69,18 +90,32 @@ def _recover_stale(now):
+ 
+ 
  def claim_admin_notification():
++    if not admin_notifications_enabled():
++        return None
      now = timezone.now()
      _recover_stale(now)
 -    due = StudioAdminNotification.objects.filter(
@@ -579,7 +868,7 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
          ).update(
              status=StudioAdminNotification.Status.SENDING,
              locked_at=now,
-@@ -102,21 +129,27 @@ def _jpeg_bytes(record):
+@@ -102,21 +137,27 @@ def _jpeg_bytes(record):
          image = record.product.cover_image
      if not image:
          raise studio_transport.TelegramDeliveryError("invalid_payload")
@@ -617,7 +906,7 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
      ).update(
          status=StudioAdminNotification.Status.SENT,
          telegram_message_id=message_id,
-@@ -150,8 +183,75 @@ def _record_error(job, error):
+@@ -150,8 +191,77 @@ def _record_error(job, error):
      if status != StudioAdminNotification.Status.UNCERTAIN:
          updates.update(locked_at=None, lock_token=None)
      StudioAdminNotification.objects.filter(
@@ -630,6 +919,8 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
 +def _can_manage(actor):
 +    if not getattr(actor, "is_active", False) or not actor.has_perm("main.change_studioproduct"):
 +        raise PermissionDenied
++    if not admin_notifications_enabled():
++        raise ValidationError("اعلان خصوصی مدیر غیرفعال است؛ ارسال دوباره انجام نمی‌شود.")
 +
 +
 +def _audit_recovery(job, actor, action):
@@ -694,7 +985,7 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
  
  
  def process_next_admin_notification():
-@@ -159,13 +259,19 @@ def process_next_admin_notification():
+@@ -159,13 +269,19 @@ def process_next_admin_notification():
      if job is None:
          return None
      try:
@@ -718,7 +1009,7 @@ index c7ad2dc2908d9c7b99134ccb760d04a259b8a079..8caf4deee3de30dc165b25724e600a55
                  "invalid_response", uncertain=True,
              )
 diff --git a/main/studio_delivery.py b/main/studio_delivery.py
-index 01d05dfb9db0ab013f68251ccbe0f7c9ebba5cfc..137136885b06ac8b87cbbf7a2b8ef68e82f2db19 100644
+index 488a885ff95eb9aa06b9779241689a0ab7c7454c..36fa7b8ff88a287ba408a0c0b03b13a8b81fc5d6 100644
 --- a/main/studio_delivery.py
 +++ b/main/studio_delivery.py
 @@ -32,6 +32,19 @@ def product_caption(record):
@@ -741,7 +1032,114 @@ index 01d05dfb9db0ab013f68251ccbe0f7c9ebba5cfc..137136885b06ac8b87cbbf7a2b8ef68e
  def delivery_summary(record):
      group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
      jobs = list(record.deliveries.all())
-@@ -143,7 +156,7 @@ def soft_delete_product(record, *, actor, reason):
+@@ -55,68 +68,52 @@ def delivery_summary(record):
+     return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
+ 
+ 
++def _retirement_due_at(record, now):
++    if record.status == StudioProduct.Status.SOLD:
++        return (record.sold_at or now) + timedelta(minutes=45)
++    if record.status == StudioProduct.Status.WITHDRAWN:
++        return (record.withdrawn_at or now) + timedelta(minutes=45)
++    return now
++
++
+ def queue_retirement(record):
+-    """Queue Telegram retirement with a grace period for sold/withdrawn items."""
+-    if (
+-        record.status == StudioProduct.Status.AVAILABLE
+-        or not record.telegram_chat_id
+-        or not record.telegram_message_id
+-    ):
++    """Call in the status transaction. Only messages emitted by our outbox retire."""
++    if (record.status == StudioProduct.Status.AVAILABLE
++            or not record.telegram_chat_id or not record.telegram_message_id):
+         return None
+-
+-    published = record.deliveries.filter(
+-        action=StudioDelivery.Action.PUBLISH
+-    ).first()
++    published = record.deliveries.filter(action=StudioDelivery.Action.PUBLISH).first()
+     if not published:
+         return None
+-
+     now = timezone.now()
+-
+-    if record.status == StudioProduct.Status.SOLD:
+-        terminal_at = record.sold_at or now
+-        due_at = terminal_at + timedelta(minutes=45)
+-    elif record.status == StudioProduct.Status.WITHDRAWN:
+-        terminal_at = record.withdrawn_at or now
+-        due_at = terminal_at + timedelta(minutes=45)
+-    else:
+-        # Administrative deletion and other terminal states stay immediate.
+-        due_at = now
+-
++    due_at = _retirement_due_at(record, now)
+     job, created = StudioDelivery.objects.get_or_create(
+-        record=record,
+-        action=StudioDelivery.Action.RETIRE,
+-        defaults={
+-            "chat_id": record.telegram_chat_id,
+-            "message_id": record.telegram_message_id,
+-            "telegram_created_at": published.telegram_created_at,
+-            "next_attempt_at": due_at,
+-        },
++        record=record, action=StudioDelivery.Action.RETIRE,
++        defaults={"chat_id": record.telegram_chat_id, "message_id": record.telegram_message_id,
++                  "telegram_created_at": published.telegram_created_at,
++                  "next_attempt_at": due_at},
+     )
+-
+-    if created:
+-        return job
+-
+-    if (
+-        job.status == StudioDelivery.Status.SENT
+-        and job.outcome == "caption_marked"
+-    ):
+-        job.status = StudioDelivery.Status.RETRY
+-        job.next_attempt_at = due_at
+-        job.last_error = ""
+-        job.save(
+-            update_fields=[
+-                "status",
+-                "next_attempt_at",
+-                "last_error",
+-                "updated_at",
+-            ]
++    # An older caption fallback may need to reflect a later terminal update. A
++    # deleted message is already absent and must not be posted again.
++    if not created and job.status == StudioDelivery.Status.SENT and job.outcome == "caption_marked":
++        StudioDelivery.objects.filter(
++            pk=job.pk, status=StudioDelivery.Status.SENT, outcome="caption_marked",
++        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
++                 last_error="", updated_at=now)
++        job.refresh_from_db()
++    elif not created and job.status in READY:
++        # Administrative deletion brings a pending grace-period job forward.
++        # A genuine transport retry retains its backoff/rate-limit deadline.
++        if job.status == StudioDelivery.Status.RETRY and job.last_error:
++            due_at = max(due_at, job.next_attempt_at)
++        # A worker may have recorded a new backoff after this snapshot. Match
++        # its scheduling fields so that a status replay cannot overwrite it.
++        StudioDelivery.objects.filter(
++            pk=job.pk, status=job.status, next_attempt_at=job.next_attempt_at,
++            last_error=job.last_error,
++        ).update(
++            next_attempt_at=due_at, updated_at=now,
+         )
+-        return job
+-
+-    if job.status in READY:
+-        job.next_attempt_at = due_at
+-        job.save(update_fields=["next_attempt_at", "updated_at"])
+-
++        job.refresh_from_db()
+     return job
+ 
+ 
+@@ -187,7 +184,7 @@ def soft_delete_product(record, *, actor, reason):
                  updated_at=now,
              )
              TelegramSameDayPost.objects.filter(product_id=record.product_id).update(
@@ -750,6 +1148,49 @@ index 01d05dfb9db0ab013f68251ccbe0f7c9ebba5cfc..137136885b06ac8b87cbbf7a2b8ef68e
              )
  
          queue_retirement(record)
+@@ -201,7 +198,13 @@ def retry_delivery(delivery_id):
+             raise ValidationError("این ارسال قابل تکرار نیست؛ ارسال نامشخص ابتدا باید در گروه بررسی شود.")
+         if job.action == StudioDelivery.Action.PUBLISH and job.message_id:
+             raise ValidationError("پیام این محصول قبلاً ثبت شده است.")
+-        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, timezone.now()
++        now = timezone.now()
++        next_attempt_at = now
++        if job.action == StudioDelivery.Action.RETIRE:
++            next_attempt_at = max(now, _retirement_due_at(job.record, now))
++            if job.status == StudioDelivery.Status.RETRY and job.last_error == "rate_limited":
++                next_attempt_at = max(next_attempt_at, job.next_attempt_at)
++        job.status, job.next_attempt_at = StudioDelivery.Status.PENDING, next_attempt_at
+         job.locked_at = job.lock_token = None
+         job.attempts, job.last_error = 0, ""
+         job.save(update_fields=["status", "next_attempt_at", "locked_at", "lock_token", "attempts", "last_error", "updated_at"])
+@@ -372,6 +375,17 @@ def _publish(job):
+ 
+ def _retire(job):
+     record = StudioProduct.objects.get(pk=job.record_id)
++    now = timezone.now()
++    due_at = _retirement_due_at(record, now)
++    if due_at > now:
++        # Recheck persisted status before touching Telegram. This protects old
++        # immediate jobs and a status change made after this lease was claimed.
++        StudioDelivery.objects.filter(
++            pk=job.pk, lock_token=job.lock_token, status=StudioDelivery.Status.SENDING,
++        ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
++                 attempts=F("attempts") - 1, locked_at=None, lock_token=None,
++                 last_error="", updated_at=now)
++        return
+     if not job.message_id:
+         raise studio_transport.TelegramDeliveryError("message_identity_missing")
+     too_old = job.telegram_created_at and timezone.now() - job.telegram_created_at >= timedelta(hours=48)
+@@ -408,7 +422,8 @@ def _retire(job):
+             # A withdrawal can follow a sale while the caption request is in
+             # flight. Keep the newer terminal state queued instead of losing it.
+             StudioDelivery.objects.filter(pk=job.pk, lock_token=job.lock_token).update(
+-                status=StudioDelivery.Status.RETRY, next_attempt_at=timezone.now(),
++                status=StudioDelivery.Status.RETRY,
++                next_attempt_at=_retirement_due_at(current, timezone.now()),
+                 locked_at=None, lock_token=None, updated_at=timezone.now(),
+             )
+         else:
 diff --git a/main/studio_ingestion.py b/main/studio_ingestion.py
 index 5cacb1e020b0bb7cd925a08c029bafa17e303de3..cf8f9b59ffdcd001876edc361c52b33723ca823d 100644
 --- a/main/studio_ingestion.py
@@ -1019,10 +1460,26 @@ index 25608db296fad758e1adae8ba7028ae76965e985..5d5e0eddce053f00b8b0d9babd5b3b01
      return _request("deleteMessage", {"chat_id": _chat_id(chat_id), "message_id": _message_id(message_id)})
  
 diff --git a/main/studio_views.py b/main/studio_views.py
-index d8aedda0ace5812721629d61883d007233db087b..0692de0bff698accb39af48e8804272b71a9182d 100644
+index d8aedda0ace5812721629d61883d007233db087b..c52a895ccba2861ed0423ba4a2e31d83c1984824 100644
 --- a/main/studio_views.py
 +++ b/main/studio_views.py
-@@ -359,6 +359,28 @@ class ProductEditForm(ProductForm):
+@@ -17,6 +17,7 @@ from django.views.decorators.cache import never_cache
+ 
+ from .image_pipeline import ImageUploadError, normalize_admin_image
+ from .studio_access import require_studio_permission
++from .studio_admin_notifications import admin_notifications_enabled
+ from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
+ 
+ 
+@@ -136,6 +137,7 @@ def _chart(qs, period):
+ def _base(request, active, period=None):
+     keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
+     return {"active": active, "period": period,
++            "private_notifications_enabled": admin_notifications_enabled(),
+             "period_filters": [(key, value) for key, value in request.GET.items() if key in keep], "nav": [
+         ("dashboard", "داشبورد", "studio_dashboard"),
+         ("products", "محصولات", "studio_products"),
+@@ -359,6 +361,28 @@ class ProductEditForm(ProductForm):
      def __init__(self, *args, **kwargs):
          super().__init__(*args, **kwargs)
          self.fields["image"].required = False
@@ -1051,7 +1508,7 @@ index d8aedda0ace5812721629d61883d007233db087b..0692de0bff698accb39af48e8804272b
  
  
  @never_cache
-@@ -405,9 +427,18 @@ def product_edit(request, pk):
+@@ -405,9 +429,18 @@ def product_edit(request, pk):
          raise PermissionDenied
      form = ProductEditForm(request.POST or None, request.FILES or None, instance=record)
      if request.method == "POST" and form.is_valid():
@@ -1224,14 +1681,15 @@ index 2d2c5e1f8e1766089baefa3d5da4424e4a97b372..d6a5a1b81ff7ca107148a5cf1a939517
          source__in=[StudioProduct.Source.PORTAL, StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN],
 diff --git a/main/templates/main/studio/admin_notifications.html b/main/templates/main/studio/admin_notifications.html
 new file mode 100644
-index 0000000000000000000000000000000000000000..bdb6723ae002c8bbb14513c24cd12a8e07735ed3
+index 0000000000000000000000000000000000000000..b285e37121bedd46d747cc06c3d84763dc4c2866
 --- /dev/null
 +++ b/main/templates/main/studio/admin_notifications.html
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,18 @@
 +{% extends 'main/studio/base.html' %}{% load studio_ui %}
 +{% block title %}اعلان خصوصی ادمین{% endblock %}{% block crumb %}پیگیری اعلان خصوصی{% endblock %}
 +{% block content %}
 +<div class="page-heading"><div><p class="eyebrow">PRIVATE NOTIFICATIONS</p><h1>اعلان خصوصی ادمین</h1><p>تصویر محصول همراه کد، قیمت و وضعیت؛ ارسال این صف مستقل از صف گروه‌ها پیگیری می‌شود.</p></div><a class="btn btn-outline" href="{% url 'studio_deliveries' %}">ارسال به گروه‌ها</a></div>
++{% if not private_notifications_enabled %}<p class="flash flash-info" role="status">اعلان خصوصی مدیر غیرفعال است. این صفحه فقط سابقهٔ اعلان‌های قبلی را نشان می‌دهد؛ هیچ ارسال یا تلاش دوباره‌ای انجام نمی‌شود.</p>{% endif %}
 +<div class="settings-grid" aria-label="خلاصه اعلان‌های خصوصی">
 +  <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف یا منتظر تلاش مجدد؛ پیام‌های هر محصول به ترتیب پردازش می‌شوند.</p></section>
 +  <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>نتیجهٔ نامشخص بدون بررسی دوباره ارسال نمی‌شود.</p></section>
@@ -1241,25 +1699,27 @@ index 0000000000000000000000000000000000000000..bdb6723ae002c8bbb14513c24cd12a8e
 +<section class="panel latest-panel" id="notifications-table" data-table-region><div class="table-scroll" tabindex="0" role="region" aria-label="جدول اعلان‌های خصوصی"><table class="studio-table">
 +<thead><tr>{% sort_header 'factor' 'فاکتور' %}{% sort_header 'event' 'رویداد' %}{% sort_header 'status' 'وضعیت' %}{% sort_header 'attempts' 'تلاش' %}{% sort_header 'date' 'زمان ثبت' %}<th scope="col">پیگیری</th></tr></thead>
 +<tbody>{% for item in page %}<tr><td><strong dir="ltr">#{{ item.record.factor_code }}</strong><br><span class="muted">{{ item.record.florist.name }}</span></td><td>{{ item.get_event_display }}<details><summary>متن همین اعلان</summary><p class="notification-caption">{{ item.caption }}</p></details></td><td><span class="badge">{{ item.get_status_display }}</span>{% if item.error_label %}<p class="muted">{{ item.error_label }}</p>{% endif %}</td><td>{{ item.attempts|fa_number }}</td><td><time dir="ltr" data-persian-time="{{ item.created_at|date:'c' }}">{{ item.created_at|date:'Y/m/d H:i' }}</time></td><td class="delivery-actions">
-+{% if item.status == 'UNCERTAIN' %}<details><summary>بررسی پیام خصوصی</summary><p>شمارهٔ فاکتور، قیمت و وضعیت همین اعلان را در گفت‌وگوی خصوصی بررسی کنید.</p>{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="reconcile"><label>شناسهٔ پیام همین اعلان<input type="text" name="message_id" inputmode="numeric" pattern="[0-9]+" required dir="ltr"></label><label class="delivery-verify"><input type="checkbox" name="verified" value="yes" required> تصویر، فاکتور، قیمت و وضعیت را در گفت‌وگوی خصوصی بررسی کردم.</label><button type="submit" class="btn btn-outline">اتصال پیام موجود</button></form><details><summary>پیامی از این اعلان پیدا نکردم</summary><form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry_absent"><label class="delivery-verify"><input type="checkbox" name="verified_absent" value="yes" required> گفت‌وگو را بررسی کردم؛ پیام همین اعلان وجود ندارد و ارسال دوباره را تأیید می‌کنم.</label><button type="submit" class="btn btn-outline">تأیید ارسال دوباره</button></form></details>{% endif %}</details>
++{% if not private_notifications_enabled %}<span class="muted">ارسال خصوصی غیرفعال است.</span>{% elif item.status == 'UNCERTAIN' %}<details><summary>بررسی پیام خصوصی</summary><p>شمارهٔ فاکتور، قیمت و وضعیت همین اعلان را در گفت‌وگوی خصوصی بررسی کنید.</p>{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="reconcile"><label>شناسهٔ پیام همین اعلان<input type="text" name="message_id" inputmode="numeric" pattern="[0-9]+" required dir="ltr"></label><label class="delivery-verify"><input type="checkbox" name="verified" value="yes" required> تصویر، فاکتور، قیمت و وضعیت را در گفت‌وگوی خصوصی بررسی کردم.</label><button type="submit" class="btn btn-outline">اتصال پیام موجود</button></form><details><summary>پیامی از این اعلان پیدا نکردم</summary><form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry_absent"><label class="delivery-verify"><input type="checkbox" name="verified_absent" value="yes" required> گفت‌وگو را بررسی کردم؛ پیام همین اعلان وجود ندارد و ارسال دوباره را تأیید می‌کنم.</label><button type="submit" class="btn btn-outline">تأیید ارسال دوباره</button></form></details>{% endif %}</details>
 +{% elif item.status == 'FAILED' or item.status == 'RETRY' %}{% if perms.main.change_studioproduct %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ item.pk }}"><input type="hidden" name="action" value="retry"><button type="submit" class="btn btn-outline">تلاش دوباره</button></form>{% endif %}
 +{% elif item.telegram_message_id %}<span class="muted">شناسهٔ پیام: <bdi>{{ item.telegram_message_id }}</bdi></span>{% else %}<span class="muted">در انتظار پردازش؛ اگر اعلان قبلی این محصول نامشخص است، ابتدا آن را بررسی کنید.</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><strong>اعلانی در این فهرست نیست</strong><p>ثبت یا تغییر محصول، با تنظیم مقصد خصوصی، در این فهرست دیده می‌شود.</p></div></td></tr>{% endfor %}</tbody></table></div>{% include 'main/studio/partials/pagination.html' %}</section>
 +{% endblock %}
 diff --git a/main/templates/main/studio/base.html b/main/templates/main/studio/base.html
-index c6be77226d546eb4217f41b3f720b06e1588f337..4fe3e631a7fcc5b3dafa42389afea12bac0e0661 100644
+index c6be77226d546eb4217f41b3f720b06e1588f337..2134169ad778f73669d6f86092d0242aeb5f24b0 100644
 --- a/main/templates/main/studio/base.html
 +++ b/main/templates/main/studio/base.html
-@@ -5,8 +5,8 @@
+@@ -5,9 +5,9 @@
    <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f7f4f0">
    <title>{% block title %}داشبورد{% endblock %} | ZAD Studio Operations</title>
    <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
 -  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=3">
 -  <script src="{% static 'main/js/pages/studio.js' %}?v=3" defer></script>
+-  <script src="{% static 'main/js/pages/team.js' %}?v=1" defer></script>
 +  <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=4">
 +  <script src="{% static 'main/js/pages/studio.js' %}?v=4" defer></script>
-   <script src="{% static 'main/js/pages/team.js' %}?v=1" defer></script>
++  <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
  </head>
  <body data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
+ <svg focusable="false" class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 @@ -59,5 +59,5 @@
  </nav>
  <div class="sr-only" aria-live="polite" data-announcer></div>
@@ -1268,36 +1728,61 @@ index c6be77226d546eb4217f41b3f720b06e1588f337..4fe3e631a7fcc5b3dafa42389afea12b
 +<dialog class="confirm-dialog" id="status-dialog" aria-labelledby="status-title" aria-describedby="status-description"><span class="dialog-symbol"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg></span><h2 id="status-title">ثبت وضعیت محصول</h2><p id="status-description" data-status-description></p><p class="muted">این محصول از فهرست موجودها خارج می‌شود.</p><div class="dialog-actions"><button class="btn btn-primary" type="button" data-confirm-status>تأیید و ثبت</button><button class="btn btn-outline" type="button" data-close-dialog>انصراف</button></div></dialog>
  </body></html>
 diff --git a/main/templates/main/studio/deliveries.html b/main/templates/main/studio/deliveries.html
-index c8cfc94974e58ee8fbc5ef7fbb4b099bde28bcdd..179f4563d0534a0ecfac3a3f8604fda2401ef541 100644
+index c8cfc94974e58ee8fbc5ef7fbb4b099bde28bcdd..44bc1a2686b4c437a8236112766c934621901ba1 100644
 --- a/main/templates/main/studio/deliveries.html
 +++ b/main/templates/main/studio/deliveries.html
 @@ -2,6 +2,7 @@
  {% block title %}ارسال به گروه آماده‌ها{% endblock %}{% block crumb %}وضعیت ارسال{% endblock %}
  {% block content %}
  <div class="page-heading"><div><p class="eyebrow">DELIVERY STATUS</p><h1>ارسال به گروه آماده‌ها</h1><p>ثبت محصول در سایت مستقل از نتیجهٔ ارسال تلگرام است.</p></div><a class="btn btn-outline" href="{% url 'studio_settings' %}">وضعیت استودیو</a></div>
-+<p><a class="btn btn-outline" href="{% url 'studio_admin_notifications' %}">پیگیری اعلان خصوصی ادمین</a></p>
++{% if private_notifications_enabled %}<p><a class="btn btn-outline" href="{% url 'studio_admin_notifications' %}">پیگیری اعلان خصوصی ادمین</a></p>{% endif %}
  <div class="settings-grid" aria-label="خلاصهٔ ارسال‌ها">
    <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف، در حال ارسال یا منتظر تلاش مجدد.</p></section>
    <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>ارسال ناموفق یا نتیجه‌ای که تأیید آن نرسیده است.</p></section>
 diff --git a/main/templates/main/studio/partials/products_table.html b/main/templates/main/studio/partials/products_table.html
-index 4ab7e0d82384d60651371656d15a4b6d548c04cb..0e26ca2d29e52158a361c8f981644ede018e342f 100644
+index 3a5394d1aecea779a07e66b806593955ad5c0f97..0e26ca2d29e52158a361c8f981644ede018e342f 100644
 --- a/main/templates/main/studio/partials/products_table.html
 +++ b/main/templates/main/studio/partials/products_table.html
 @@ -21,7 +21,7 @@
                <form method="post" action="{% url 'studio_product_status' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label class="sr-only" for="status-{{ row.pk }}">وضعیت جدید</label><select id="status-{{ row.pk }}" name="status" required><option value="">وضعیت جدید</option><option value="SOLD">فروخته شد</option><option value="WITHDRAWN">کشیده شد</option><option value="CANCELLED">لغو شد</option></select><button class="btn btn-outline" type="submit">ثبت وضعیت</button></form>
              {% endif %}
              {% if perms.main.delete_studioproduct %}
--              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="status-form" data-factor="{{ row.factor_code }}" onsubmit="return confirm('این محصول از آمار فلوریست حذف می‌شود اما سابقهٔ مدیریتی آن باقی می‌ماند. ادامه می‌دهید؟');">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
+-              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="delete-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
 +              <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="product-delete-form" data-factor="{{ row.factor_code }}">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
              {% endif %}
            </div></details>
          {% else %}<span class="muted">—</span>{% endif %}
+diff --git a/main/templates/main/team/base.html b/main/templates/main/team/base.html
+index 7decd773b62d6c532fc896eb13fb4abe90d98c20..9e0af83c8b6c001ea29c6a2539dff8e356fed8a1 100644
+--- a/main/templates/main/team/base.html
++++ b/main/templates/main/team/base.html
+@@ -13,7 +13,7 @@
+   <link rel="apple-touch-icon" href="{% static 'main/team/apple-touch-icon.png' %}">
+   <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+   <link rel="stylesheet" href="{% static 'main/css/pages/team.css' %}?v=1">
+-  <script src="{% static 'main/js/pages/team.js' %}?v=2" defer></script>
++  <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
+ </head>
+ <body data-team-page="{{ active }}" data-team-user="{{ request.user.pk|default:'' }}"{% if active == 'login' %} class="login-page"{% endif %}>
+ {% include 'main/team/partials/icons.html' %}
+diff --git a/main/tests/test_studio_admin_notifications.py b/main/tests/test_studio_admin_notifications.py
+index 3d1f627203b9c4b8b7eedf7fee81948650d51c75..0db7cdc8fd54822ddc615da0e037a7a6d3822f0a 100644
+--- a/main/tests/test_studio_admin_notifications.py
++++ b/main/tests/test_studio_admin_notifications.py
+@@ -10,6 +10,7 @@ from .test_telegram_same_day import image_file
+ 
+ 
+ @override_settings(
++    STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True,
+     TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276",
+     TELEGRAM_SAME_DAY_GROUP_ID="-10077777",
+     TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-10087654",
 diff --git a/main/tests/test_studio_notification_safety.py b/main/tests/test_studio_notification_safety.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..bff9ff98fe82c981443c411ef1650b3307193b7b
+index 0000000000000000000000000000000000000000..597290db73204eb275392b9498d543a3099989a0
 --- /dev/null
 +++ b/main/tests/test_studio_notification_safety.py
-@@ -0,0 +1,273 @@
+@@ -0,0 +1,274 @@
 +import tempfile
 +import uuid
 +from datetime import timedelta
@@ -1322,6 +1807,7 @@ index 0000000000000000000000000000000000000000..bff9ff98fe82c981443c411ef1650b33
 +
 +
 +@override_settings(
++    STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True,
 +    TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276", TELEGRAM_SAME_DAY_GROUP_ID="-5595039112",
 +    TELEGRAM_STUDIO_CUSTOM_GROUP_ID="-5182713369", TELEGRAM_BOT_TOKEN="test-token",
 +    TELEGRAM_SAME_DAY_RELAY_URL="", STUDIO_DELIVERY_LOCK_SECONDS=120,
@@ -1712,7 +2198,7 @@ index 0000000000000000000000000000000000000000..34504addc3342143935cfbebd2f34f3d
 +        self.assertNotContains(response, "onsubmit=")
 diff --git a/main/tests/test_studio_projection_sync.py b/main/tests/test_studio_projection_sync.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..4be59740ccf6847c2a2177a5fa5c39992485983e
+index 0000000000000000000000000000000000000000..eaa988ff7b290e4e30bbeb8ad1549a6429b528a9
 --- /dev/null
 +++ b/main/tests/test_studio_projection_sync.py
 @@ -0,0 +1,253 @@
@@ -1740,7 +2226,7 @@ index 0000000000000000000000000000000000000000..4be59740ccf6847c2a2177a5fa5c3999
 +GROUP = -5595039112
 +
 +
-+@override_settings(TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276")
++@override_settings(STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True, TELEGRAM_SAME_DAY_GROUP_ID=str(GROUP), TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276")
 +class StudioProjectionSyncTests(TestCase):
 +    def setUp(self):
 +        self.media = tempfile.TemporaryDirectory()
@@ -1969,12 +2455,495 @@ index 0000000000000000000000000000000000000000..4be59740ccf6847c2a2177a5fa5c3999
 +        self.assertEqual(public.status, Product.Status.WITHDRAWN)
 +        self.assertEqual(public.stock_status, Product.StockStatus.OUT_OF_STOCK)
 +        self.assertFalse(self.notifications().exists())
+diff --git a/main/tests/test_studio_publishing.py b/main/tests/test_studio_publishing.py
+index 491de827eca9f8e4bd9581a8731d3d573c13567b..2027cd19e8586f442cbfa0f6f35197060eb27729 100644
+--- a/main/tests/test_studio_publishing.py
++++ b/main/tests/test_studio_publishing.py
+@@ -1,5 +1,6 @@
+ import tempfile
+ import uuid
++from contextlib import contextmanager
+ from datetime import timedelta
+ from pathlib import Path
+ from unittest.mock import patch
+@@ -60,6 +61,15 @@ class StudioPublishingTests(TestCase):
+         record.refresh_from_db()
+         return record, job
+ 
++    @contextmanager
++    def at_retirement_deadline(self, record):
++        # Transport/fallback tests run when the persisted job actually becomes
++        # due. Dedicated reconciliation tests cover the preceding grace period.
++        job = record.deliveries.get(action=StudioDelivery.Action.RETIRE)
++        instant = max(timezone.now(), job.next_attempt_at)
++        with patch("main.studio_delivery.timezone.now", return_value=instant):
++            yield
++
+     def sold_reply(self, record, *, text="فروخته شد"):
+         reply = self.telegram_message()
+         reply["caption"] = product_caption(record)
+@@ -96,7 +106,8 @@ class StudioPublishingTests(TestCase):
+         self.assertEqual(result["result"], "sold")
+         record.refresh_from_db()
+         self.assertEqual(record.status, StudioProduct.Status.SOLD)
+-        self.assertEqual(process_next_delivery().outcome, "deleted")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().outcome, "deleted")
+         self.delete.assert_called_once_with(GROUP, 812)
+ 
+     def test_soft_delete_daily_product_hides_site_retires_telegram_and_keeps_ledger(self):
+@@ -180,7 +191,8 @@ class StudioPublishingTests(TestCase):
+         self.assertEqual(process_update("message", message, 901)["result"], "status_updated")
+         record.refresh_from_db()
+         self.assertEqual(record.status, StudioProduct.Status.SOLD)
+-        job = process_next_delivery()
++        with self.at_retirement_deadline(record):
++            job = process_next_delivery()
+         self.assertEqual(job.action, StudioDelivery.Action.RETIRE)
+         self.assertEqual(job.status, StudioDelivery.Status.SENT)
+         self.delete.assert_called_once_with(-5182713369, 812)
+@@ -297,7 +309,8 @@ class StudioPublishingTests(TestCase):
+         self.assertEqual(record.status, StudioProduct.Status.SOLD)
+         self.assertFalse(Product.objects.for_same_day().published().filter(pk=record.product_id).exists())
+         self.assertTrue(record.image.storage.exists(record.image.name))
+-        self.assertEqual(process_next_delivery().outcome, "deleted")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().outcome, "deleted")
+         self.delete.assert_called_once_with(GROUP, 812)
+         self.edit.assert_not_called()
+         self.assertEqual(process_update("message", self.sold_reply(record), 912), "duplicate_ignored")
+@@ -317,7 +330,8 @@ class StudioPublishingTests(TestCase):
+         record, _ = self.publish()
+         record.deliveries.update(telegram_created_at=timezone.now() - timedelta(hours=49))
+         set_portal_status(record, "SOLD", actor=self.manager)
+-        job = process_next_delivery()
++        with self.at_retirement_deadline(record):
++            job = process_next_delivery()
+         self.assertEqual(job.outcome, "caption_marked")
+         self.delete.assert_not_called()
+         self.assertEqual(self.edit.call_args.args[2], "فروخته شد\nقیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
+@@ -326,15 +340,17 @@ class StudioPublishingTests(TestCase):
+         record, _ = self.publish()
+         set_portal_status(record, "WITHDRAWN", actor=self.manager)
+         self.delete.side_effect = TelegramDeliveryError("message_cannot_be_deleted")
+-        self.assertEqual(process_next_delivery().outcome, "caption_marked")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().outcome, "caption_marked")
+         self.assertTrue(self.edit.call_args.args[2].startswith("کشیده شد\n"))
+ 
+     def test_retryable_delete_failure_does_not_claim_success(self):
+         record, _ = self.publish()
+         set_portal_status(record, "SOLD", actor=self.manager)
+         self.delete.side_effect = TelegramDeliveryError("rate_limited", retryable=True, retry_after=75)
+-        before = timezone.now()
+-        job = process_next_delivery()
++        with self.at_retirement_deadline(record):
++            before = timezone.now()
++            job = process_next_delivery()
+         self.assertEqual(job.status, "RETRY")
+         self.assertGreaterEqual(job.next_attempt_at, before + timedelta(seconds=75))
+         self.edit.assert_not_called()
+@@ -344,7 +360,8 @@ class StudioPublishingTests(TestCase):
+         record.deliveries.update(telegram_created_at=timezone.now() - timedelta(hours=49))
+         set_portal_status(record, "SOLD", actor=self.manager)
+         self.edit.side_effect = TelegramDeliveryError("message_not_found")
+-        self.assertEqual(process_next_delivery().outcome, "already_absent")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().outcome, "already_absent")
+ 
+     def test_ambiguous_send_is_visible_and_never_blindly_retried(self):
+         record, _ = self.create()
+@@ -417,9 +434,10 @@ class StudioPublishingTests(TestCase):
+     def test_stale_retirement_can_retry_without_republishing(self):
+         record, _ = self.publish()
+         set_portal_status(record, "SOLD", actor=self.manager)
+-        retirement = claim_delivery()
+-        StudioDelivery.objects.filter(pk=retirement.pk).update(locked_at=timezone.now() - timedelta(minutes=5))
+-        self.assertEqual(process_next_delivery().outcome, "deleted")
++        with self.at_retirement_deadline(record):
++            retirement = claim_delivery()
++            StudioDelivery.objects.filter(pk=retirement.pk).update(locked_at=timezone.now() - timedelta(minutes=5))
++            self.assertEqual(process_next_delivery().outcome, "deleted")
+         self.send.assert_called_once()
+ 
+     def test_caption_fallback_failure_remains_visible(self):
+@@ -427,7 +445,8 @@ class StudioPublishingTests(TestCase):
+         set_portal_status(record, "SOLD", actor=self.manager)
+         self.delete.side_effect = TelegramDeliveryError("forbidden")
+         self.edit.side_effect = TelegramDeliveryError("forbidden")
+-        job = process_next_delivery()
++        with self.at_retirement_deadline(record):
++            job = process_next_delivery()
+         self.assertEqual(job.status, "FAILED")
+         self.assertEqual(delivery_summary(record)["state"], "failed")
+         self.assertTrue(record.image.storage.exists(record.image.name))
+@@ -508,9 +527,11 @@ class StudioPublishingTests(TestCase):
+             )
+             return True
+         self.edit.side_effect = withdraw_during_caption
+-        self.assertEqual(process_next_delivery().status, "RETRY")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().status, "RETRY")
+         self.edit.side_effect = None
+-        self.assertEqual(process_next_delivery().outcome, "caption_marked")
++        with self.at_retirement_deadline(record):
++            self.assertEqual(process_next_delivery().outcome, "caption_marked")
+         self.assertTrue(self.edit.call_args.args[2].startswith("کشیده شد\n"))
+ 
+     def test_portal_photo_echo_and_explicit_price_reply_update_both_projections(self):
+diff --git a/main/tests/test_studio_reconciliation.py b/main/tests/test_studio_reconciliation.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c72d6e1294bb3648db4b2dd26d8fe14ffac664c4
+--- /dev/null
++++ b/main/tests/test_studio_reconciliation.py
+@@ -0,0 +1,341 @@
++"""Exercise the combined release without contacting Telegram or production data."""
++import tempfile
++import uuid
++from datetime import timedelta
++from io import StringIO
++from unittest.mock import patch
++
++from django.contrib.auth import get_user_model
++from django.core.exceptions import ValidationError
++from django.core.management import call_command
++from django.test import TestCase, override_settings
++from django.urls import reverse
++from django.utils import timezone
++
++from main.models import Category, Florist, Product, StudioAdminNotification, StudioDelivery, StudioProduct
++from main.studio_admin_notifications import (
++    claim_admin_notification, process_next_admin_notification,
++    reconcile_admin_notification, retry_admin_notification,
++)
++from main.studio_delivery import (
++    claim_delivery, process_next_delivery, product_caption, queue_retirement,
++    retry_delivery, set_portal_status, soft_delete_product,
++)
++from main.studio_publishing import create_portal_record
++from main.studio_transport import TelegramDeliveryError
++from main.team_forms import TeamProductForm
++from main.telegram_same_day.service import process_update
++from .test_telegram_same_day import image_file
++
++
++DAILY_GROUP = -5595039112
++CUSTOM_GROUP = -5182713369
++
++
++@override_settings(
++    STUDIO_ADMIN_NOTIFICATIONS_ENABLED=False,
++    TELEGRAM_STUDIO_ADMIN_CHAT_ID="212832276",
++    TELEGRAM_SAME_DAY_GROUP_ID=str(DAILY_GROUP),
++    TELEGRAM_STUDIO_CUSTOM_GROUP_ID=str(CUSTOM_GROUP),
++    TELEGRAM_CHANNEL_ID="", TELEGRAM_DISCUSSION_GROUP_ID="",
++    PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
++)
++class StudioReconciliationTests(TestCase):
++    def setUp(self):
++        media = tempfile.TemporaryDirectory()
++        self.addCleanup(media.cleanup)
++        category = Category.objects.create(name="گل", slug="reconcile", section="flowers")
++        config = override_settings(MEDIA_ROOT=media.name, TELEGRAM_SAME_DAY_CATEGORY_ID=str(category.pk))
++        config.enable()
++        self.addCleanup(config.disable)
++        self.user = get_user_model().objects.create_user("reconcile-maker")
++        self.manager = get_user_model().objects.create_superuser("reconcile-manager")
++        self.florist = Florist.objects.create(name="سازنده", code="reconcile", user=self.user)
++        self.sequence = 0
++        self.send = self._patch("main.studio_transport.send_photo", side_effect=self.message)
++        self.delete = self._patch("main.studio_transport.delete_message", return_value=True)
++        self.edit = self._patch("main.studio_transport.edit_caption", return_value=True)
++
++    def _patch(self, target, **kwargs):
++        mocker = patch(target, **kwargs)
++        self.addCleanup(mocker.stop)
++        return mocker.start()
++
++    def message(self, chat_id, *_):
++        self.sequence += 1
++        return {"message_id": 9000 + self.sequence, "chat": {"id": chat_id, "type": "group"},
++                "date": int(timezone.now().timestamp()), "from": {"id": 99, "is_bot": True},
++                "photo": [{"file_id": "mock-photo", "width": 100, "height": 100}]}
++
++    def create(self, production="DAILY"):
++        row, _ = create_portal_record(
++            user=self.user, florist=self.florist, image=image_file(),
++            factor_code="R-" + uuid.uuid4().hex[:12], product_type="box",
++            production_type=production, price=2500000, submission_key=uuid.uuid4(),
++        )
++        return row
++
++    def publish(self, production="DAILY"):
++        row = self.create(production)
++        self.assertEqual(process_next_delivery().status, StudioDelivery.Status.SENT)
++        row.refresh_from_db()
++        return row
++
++    def reply(self, row, status):
++        original = {
++            "message_id": row.telegram_message_id,
++            "chat": {"id": row.telegram_chat_id, "type": "group"},
++            "date": int(timezone.now().timestamp()),
++            "from": {"id": 99, "is_bot": True},
++            "caption": product_caption(row),
++            "photo": [{"file_id": "mock-photo", "width": 100, "height": 100}],
++        }
++        text = "فروخته شد" if status == StudioProduct.Status.SOLD else "کشیده شد"
++        return process_update("message", {
++            "message_id": row.telegram_message_id + 100,
++            "chat": original["chat"], "date": original["date"],
++            "from": {"id": 702, "is_bot": False}, "text": text,
++            "reply_to_message": original,
++        }, 100000 + row.telegram_message_id)
++
++    def test_daily_and_custom_replies_hide_stock_now_and_delete_only_after_45_minutes(self):
++        for production in ("DAILY", "CUSTOM"):
++            for status in (StudioProduct.Status.SOLD, StudioProduct.Status.WITHDRAWN):
++                with self.subTest(production=production, status=status):
++                    row = self.publish(production)
++                    self.reply(row, status)
++                    row.refresh_from_db()
++                    terminal_at = row.sold_at if status == StudioProduct.Status.SOLD else row.withdrawn_at
++                    job = row.deliveries.get(action="RETIRE")
++                    self.assertEqual(job.next_attempt_at, terminal_at + timedelta(minutes=45))
++                    self.assertEqual(row.status, status)
++                    self.assertTrue(row.image.storage.exists(row.image.name))
++                    if row.product_id:
++                        self.assertFalse(Product.objects.for_same_day().published().filter(pk=row.product_id).exists())
++                    self.delete.reset_mock()
++                    self.edit.reset_mock()
++                    with patch("main.studio_delivery.timezone.now", return_value=job.next_attempt_at - timedelta(microseconds=1)):
++                        self.assertIsNone(process_next_delivery())
++                    self.delete.assert_not_called()
++                    self.edit.assert_not_called()
++                    with patch("main.studio_delivery.timezone.now", return_value=job.next_attempt_at):
++                        self.assertEqual(process_next_delivery().outcome, "deleted")
++                    self.delete.assert_called_once_with(row.telegram_chat_id, row.telegram_message_id)
++                    self.assertIsNone(process_next_delivery())
++        self.assertFalse(StudioAdminNotification.objects.exists())
++
++    def test_administrative_delete_brings_a_waiting_retirement_forward(self):
++        row = self.publish()
++        row = set_portal_status(row, "SOLD", actor=self.manager)
++        waiting = row.deliveries.get(action="RETIRE")
++        self.assertIsNone(process_next_delivery())
++        row = soft_delete_product(row, actor=self.manager, reason="ثبت اشتباه")
++        waiting.refresh_from_db()
++        self.assertLessEqual(waiting.next_attempt_at, timezone.now())
++        self.assertLess(waiting.next_attempt_at - row.deleted_at, timedelta(seconds=1))
++        self.assertEqual(process_next_delivery().outcome, "deleted")
++        self.delete.assert_called_once_with(DAILY_GROUP, row.telegram_message_id)
++        self.assertEqual(row.deliveries.filter(action="RETIRE").count(), 1)
++        self.assertEqual(row.deleted_by, self.manager)
++        self.assertTrue(row.image.storage.exists(row.image.name))
++
++    def test_repeated_status_does_not_restart_the_45_minute_clock(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        job = row.deliveries.get(action="RETIRE")
++        deadline = job.next_attempt_at
++        with patch("main.studio_delivery.timezone.now", return_value=deadline - timedelta(minutes=1)):
++            set_portal_status(row, "SOLD", actor=self.manager)
++        job.refresh_from_db()
++        self.assertEqual(job.next_attempt_at, deadline)
++        self.assertEqual(row.deliveries.filter(action="RETIRE").count(), 1)
++
++    def test_an_old_immediate_job_is_deferred_without_a_telegram_call(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        job = row.deliveries.get(action="RETIRE")
++        deadline = job.next_attempt_at
++        StudioDelivery.objects.filter(pk=job.pk).update(next_attempt_at=timezone.now())
++        processed = process_next_delivery()
++        self.assertEqual(processed.status, "RETRY")
++        self.assertEqual(processed.next_attempt_at, deadline)
++        self.assertEqual(processed.attempts, 0)
++        self.delete.assert_not_called()
++        self.edit.assert_not_called()
++
++    def test_manual_retry_cannot_bypass_the_grace_period(self):
++        row = set_portal_status(self.publish(), "WITHDRAWN", actor=self.manager)
++        job = row.deliveries.get(action="RETIRE")
++        deadline = job.next_attempt_at
++        StudioDelivery.objects.filter(pk=job.pk).update(status="FAILED", last_error="telegram_forbidden")
++        recovered = retry_delivery(job.pk)
++        self.assertEqual(recovered.next_attempt_at, deadline)
++        self.assertIsNone(process_next_delivery())
++        self.delete.assert_not_called()
++
++    def test_human_deleted_message_is_successful_and_never_republished(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        job = row.deliveries.get(action="RETIRE")
++        self.delete.side_effect = TelegramDeliveryError("message_not_found")
++        with patch("main.studio_delivery.timezone.now", return_value=job.next_attempt_at):
++            completed = process_next_delivery()
++            self.assertEqual(completed.outcome, "already_absent")
++            queue_retirement(row)
++            self.assertIsNone(process_next_delivery())
++        self.send.assert_called_once()
++        self.edit.assert_not_called()
++
++    def test_restart_recovers_retirement_without_a_second_photo(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        deadline = row.deliveries.get(action="RETIRE").next_attempt_at
++        with patch("main.studio_delivery.timezone.now", return_value=deadline):
++            leased = claim_delivery()
++            StudioDelivery.objects.filter(pk=leased.pk).update(locked_at=deadline - timedelta(minutes=5))
++            self.assertEqual(process_next_delivery().outcome, "deleted")
++        self.send.assert_called_once()
++        self.delete.assert_called_once()
++
++    def test_a_later_withdrawal_after_claim_gets_its_own_grace_period(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        deadline = row.deliveries.get(action="RETIRE").next_attempt_at
++        with patch("main.studio_delivery.timezone.now", return_value=deadline):
++            job = claim_delivery()
++            self.reply(row, StudioProduct.Status.WITHDRAWN)
++            from main.studio_delivery import _retire
++            _retire(job)
++        job.refresh_from_db()
++        self.assertEqual(job.next_attempt_at, deadline + timedelta(minutes=45))
++        self.assertEqual(job.status, "RETRY")
++        self.delete.assert_not_called()
++        self.edit.assert_not_called()
++
++    def test_status_replay_preserves_a_backoff_recorded_after_its_queue_snapshot(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        job = row.deliveries.get(action="RETIRE")
++        StudioDelivery.objects.filter(pk=job.pk).update(status="RETRY", last_error="")
++        retry_at = job.next_attempt_at + timedelta(minutes=5)
++        get_or_create = StudioDelivery.objects.get_or_create
++
++        def worker_finishes_after_snapshot(*args, **kwargs):
++            snapshot, created = get_or_create(*args, **kwargs)
++            StudioDelivery.objects.filter(pk=snapshot.pk).update(
++                status="RETRY", last_error="rate_limited", next_attempt_at=retry_at,
++            )
++            return snapshot, created
++
++        with patch.object(StudioDelivery.objects, "get_or_create", side_effect=worker_finishes_after_snapshot):
++            queue_retirement(row)
++        job.refresh_from_db()
++        self.assertEqual(job.next_attempt_at, retry_at)
++        self.assertEqual(job.last_error, "rate_limited")
++        with patch("main.studio_delivery.timezone.now", return_value=retry_at - timedelta(seconds=1)):
++            self.assertIsNone(process_next_delivery())
++        self.delete.assert_not_called()
++
++    def test_rate_limit_survives_status_replay_and_manual_retry(self):
++        row = set_portal_status(self.publish(), "SOLD", actor=self.manager)
++        deadline = row.deliveries.get(action="RETIRE").next_attempt_at
++        self.delete.side_effect = TelegramDeliveryError("rate_limited", retryable=True, retry_after=75)
++        with patch("main.studio_delivery.timezone.now", return_value=deadline):
++            job = process_next_delivery()
++            retry_at = job.next_attempt_at
++            self.assertEqual(retry_at, deadline + timedelta(seconds=75))
++            set_portal_status(row, "SOLD", actor=self.manager)
++            self.assertEqual(retry_delivery(job.pk).next_attempt_at, retry_at)
++            self.assertIsNone(process_next_delivery())
++        self.delete.assert_called_once()
++
++    def test_disabled_private_queue_preserves_old_rows_and_group_worker_still_sends(self):
++        row = self.create()
++        for status in ("PENDING", "RETRY", "FAILED", "SENDING", "UNCERTAIN"):
++            StudioAdminNotification.objects.create(
++                record=row, event="CREATED", chat_id=212832276, caption="اعلان قبلی",
++                status=status, attempts=1, last_error="invalid_payload",
++                locked_at=timezone.now() - timedelta(minutes=10),
++            )
++        before = list(StudioAdminNotification.objects.values())
++        self.assertIsNone(claim_admin_notification())
++        self.assertIsNone(process_next_admin_notification())
++        output = StringIO()
++        with patch("main.management.commands.process_studio_deliveries.process_next_admin_notification") as private:
++            call_command("process_studio_deliveries", once=True, stdout=output)
++        private.assert_not_called()
++        self.send.assert_called_once()
++        self.assertEqual(self.send.call_args.args[0], DAILY_GROUP)
++        self.assertNotIn("admin_notification=", output.getvalue())
++        self.assertEqual(list(StudioAdminNotification.objects.values()), before)
++
++    def test_create_price_sale_and_delete_never_queue_private_notifications(self):
++        row = self.publish("CUSTOM")
++        row.price = 2700000
++        row.save(update_fields=["price", "updated_at"])
++        row = set_portal_status(row, "SOLD", actor=self.manager)
++        soft_delete_product(row, actor=self.manager, reason="ثبت اشتباه")
++        self.assertFalse(StudioAdminNotification.objects.exists())
++
++    def test_disabled_private_recovery_cannot_resume_abandoned_jobs(self):
++        row = self.create("CUSTOM")
++        job = StudioAdminNotification.objects.create(
++            record=row, event="CREATED", chat_id=212832276, caption="اعلان قبلی", status="FAILED",
++        )
++        before = StudioAdminNotification.objects.values().get(pk=job.pk)
++        with self.assertRaises(ValidationError):
++            retry_admin_notification(job.pk, actor=self.manager)
++        with self.assertRaises(ValidationError):
++            reconcile_admin_notification(job.pk, 99, actor=self.manager, verified=True)
++        self.assertEqual(StudioAdminNotification.objects.values().get(pk=job.pk), before)
++        self.send.assert_not_called()
++
++    def test_disabled_private_history_is_read_only_and_hidden_from_group_actions(self):
++        row = self.create("CUSTOM")
++        job = StudioAdminNotification.objects.create(
++            record=row, event="CREATED", chat_id=212832276, caption="اعلان قبلی", status="FAILED",
++        )
++        self.client.force_login(self.manager)
++        history_url = reverse("studio_admin_notifications")
++        groups = self.client.get(reverse("studio_deliveries"))
++        self.assertNotContains(groups, history_url)
++        history = self.client.get(history_url)
++        self.assertContains(history, "اعلان خصوصی مدیر غیرفعال است")
++        self.assertNotContains(history, 'name="notification_id"')
++        response = self.client.post(history_url, {"notification_id": job.pk, "action": "retry"})
++        self.assertEqual(response.status_code, 302)
++        job.refresh_from_db()
++        self.assertEqual(job.status, "FAILED")
++
++    def test_diagnostics_do_not_probe_a_disabled_private_destination(self):
++        output = StringIO()
++        with patch("main.management.commands.studio_delivery_check.get_chat") as get_chat:
++            call_command("studio_delivery_check", network=True, destination="admin", stdout=output)
++        get_chat.assert_not_called()
++        self.assertIn("admin=disabled", output.getvalue())
++
++    def test_blank_form_has_no_preselected_destination_and_rejects_missing_choice(self):
++        form = TeamProductForm()
++        self.assertIsNone(form.fields["production_type"].initial)
++        self.client.force_login(self.user)
++        response = self.client.get(reverse("team_product_add"))
++        self.assertNotContains(response, ' checked')
++        self.assertContains(response, 'value="DAILY" required')
++        self.assertContains(response, 'value="CUSTOM" required')
++        rejected = self.client.post(reverse("team_product_add"), {
++            "image": image_file(), "florist": self.florist.pk, "price": "2,500,000",
++            "product_type": "box", "factor_code": "R-MISSING", "submission_key": uuid.uuid4(),
++        }, HTTP_ACCEPT="application/json")
++        self.assertEqual(rejected.status_code, 400)
++        self.assertIn("production_type", rejected.json()["errors"])
++        self.assertFalse(StudioProduct.objects.exists())
++        self.assertFalse(StudioDelivery.objects.exists())
++
++    def test_comma_and_persian_prices_are_stored_as_the_correct_amount(self):
++        self.client.force_login(self.user)
++        for amount in ("2,500,000", "۲٬۵۰۰٬۰۰۰", "٢,٥٠٠,٠٠٠"):
++            with self.subTest(amount=amount):
++                response = self.client.post(reverse("team_product_add"), {
++                    "image": image_file(), "florist": self.florist.pk, "price": amount,
++                    "production_type": "CUSTOM", "product_type": "box",
++                    "factor_code": "R-" + uuid.uuid4().hex[:12], "submission_key": uuid.uuid4(),
++                }, HTTP_ACCEPT="application/json")
++                self.assertEqual(response.status_code, 201)
++                row = StudioProduct.objects.get(pk=response.json()["record_id"])
++                self.assertEqual(row.price, 2500000)
++                self.assertEqual(row.deliveries.get().chat_id, CUSTOM_GROUP)
++        self.send.assert_not_called()
 diff --git a/main/tests/test_studio_reply_safety.py b/main/tests/test_studio_reply_safety.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..c9bcb2544fd6fd920212fb6dded75800688357b6
+index 0000000000000000000000000000000000000000..8b93c8cb8a1454004ad7adc93661387d064bb516
 --- /dev/null
 +++ b/main/tests/test_studio_reply_safety.py
-@@ -0,0 +1,378 @@
+@@ -0,0 +1,379 @@
 +"""Regression coverage for live replies, deletion history and delayed updates."""
 +import copy
 +import tempfile
@@ -2003,6 +2972,7 @@ index 0000000000000000000000000000000000000000..c9bcb2544fd6fd920212fb6dded75800
 +
 +
 +@override_settings(
++    STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True,
 +    TELEGRAM_CHANNEL_ID="", TELEGRAM_DISCUSSION_GROUP_ID="",
 +    TELEGRAM_SAME_DAY_GROUP_ID=str(DAILY_GROUP),
 +    TELEGRAM_STUDIO_CUSTOM_GROUP_ID=str(CUSTOM_GROUP),
@@ -2353,6 +3323,41 @@ index 0000000000000000000000000000000000000000..c9bcb2544fd6fd920212fb6dded75800
 +                        product = Product.objects.get(pk=record.product_id)
 +                        self.assertEqual(product.price, 3500000)
 +                        self.assertEqual(product.stock_status, Product.StockStatus.OUT_OF_STOCK)
+diff --git a/main/tests/test_studio_transport.py b/main/tests/test_studio_transport.py
+index 9556cc902d4e063820ef05660e95f7bcc4961794..ce3538b04e1a5fc1e71f745bd5a3a384c7227862 100644
+--- a/main/tests/test_studio_transport.py
++++ b/main/tests/test_studio_transport.py
+@@ -25,6 +25,8 @@ class Response(BytesIO):
+ 
+ @override_settings(
+     TELEGRAM_SAME_DAY_GROUP_ID=GROUP,
++    TELEGRAM_STUDIO_CUSTOM_GROUP_ID="",
++    TELEGRAM_STUDIO_ADMIN_CHAT_ID="",
+     TELEGRAM_BOT_TOKEN="private-token",
+     TELEGRAM_SAME_DAY_RELAY_URL="",
+     TELEGRAM_LEAD_RELAY_SECRET="private-secret",
+@@ -105,6 +107,21 @@ class StudioTransportTests(SimpleTestCase):
+         self.assertEqual(error.exception.code, "invalid_payload")
+         self.opener.open.assert_not_called()
+ 
++    def test_other_configured_destinations_cannot_authorize_an_unconfigured_ready_group(self):
++        # A configured custom/private destination is not the same as having
++        # no destinations. Both must still reject the absent ready group.
++        for custom, admin in (("-5182713369", ""), ("", "212832276")):
++            with self.subTest(custom=custom, admin=admin), override_settings(
++                TELEGRAM_SAME_DAY_GROUP_ID="",
++                TELEGRAM_STUDIO_CUSTOM_GROUP_ID=custom,
++                TELEGRAM_STUDIO_ADMIN_CHAT_ID=admin,
++            ):
++                with self.assertRaises(transport.TelegramDeliveryError) as error:
++                    transport.send_photo(GROUP, JPEG, "price")
++                self.assertEqual(error.exception.code, "invalid_payload")
++                self.assertFalse(error.exception.retryable)
++        self.opener.open.assert_not_called()
++
+     def test_missing_group_or_unsafe_relay_configuration_never_reaches_network(self):
+         settings_cases = [
+             {"TELEGRAM_SAME_DAY_GROUP_ID": ""},
 diff --git a/main/urls.py b/main/urls.py
 index cc01ab33030d04a9b4301cf50e7d250a39fef7aa..02f817eabdfdc21f7e36d442d2e1721cc9412b78 100644
 --- a/main/urls.py
