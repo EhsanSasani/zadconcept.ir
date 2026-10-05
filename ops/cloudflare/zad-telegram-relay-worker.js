@@ -369,6 +369,7 @@ const STUDIO_REQUEST_LIMIT = Math.ceil(STUDIO_PHOTO_LIMIT / 3) * 4 + 8192;
 const STUDIO_RESPONSE_LIMIT = 65536;
 const STUDIO_METHOD_FIELDS = {
   getChat: ["method", "chat_id"],
+  editMessageMedia: ["method", "chat_id", "message_id", "caption", "photo_base64"],
   sendPhoto: ["method", "chat_id", "caption", "photo_base64"],
   deleteMessage: ["method", "chat_id", "message_id"],
   editMessageCaption: ["method", "chat_id", "message_id", "caption"],
@@ -438,7 +439,7 @@ function studioApiFailure(result, status, method) {
       return method === "deleteMessage" ? jsonResponse({ ok: true, result: true }) : studioFailure("message_not_found", 400);
     }
     if (description.includes("message is not modified")) {
-      return method === "editMessageCaption" ? jsonResponse({ ok: true, result: true }) : studioFailure("message_not_modified", 400);
+      return ["editMessageCaption", "editMessageMedia"].includes(method) ? jsonResponse({ ok: true, result: true }) : studioFailure("message_not_modified", 400);
     }
     if (description.includes("message can't be deleted") || description.includes("message cannot be deleted")) {
       return studioFailure("message_cannot_be_deleted", 400);
@@ -487,12 +488,17 @@ async function handleStudioDelivery(request, env) {
   const sendingPhoto = payload.method === "sendPhoto";
   let body;
   const headers = {};
-  if (sendingPhoto) {
+  if (sendingPhoto || payload.method === "editMessageMedia") {
     const photo = studioPhoto(payload.photo_base64);
     if (!photo) return studioFailure("invalid_payload", 400);
     body = new FormData();
     body.set("chat_id", group);
-    body.set("caption", payload.caption);
+    if (sendingPhoto) {
+      body.set("caption", payload.caption);
+    } else {
+      body.set("message_id", String(payload.message_id));
+      body.set("media", JSON.stringify({ type: "photo", media: "attach://photo", caption: payload.caption }));
+    }
     body.set("photo", new Blob([photo], { type: "image/jpeg" }), "product.jpg");
   } else {
     const { method, ...apiPayload } = payload;

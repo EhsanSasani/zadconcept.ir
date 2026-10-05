@@ -31,6 +31,9 @@ from .team_forms import StudioAccountForm, TeamLoginForm, TeamProductForm, TeamP
 
 
 def _landing(user):
+    from .studio_access import can_use_sales
+    if can_use_sales(user) and not can_manage_studio(user):
+        return reverse("sales_home")
     if get_active_florist(user):
         return reverse("team_home")
     if can_manage_studio(user):
@@ -47,6 +50,11 @@ def _safe_next(request, fallback):
         if path in {reverse("studio_login").rstrip("/"), reverse("studio_logout").rstrip("/")}:
             return fallback
         if request.user.is_authenticated:
+            from .studio_access import can_use_sales
+            sales = reverse("sales_home").rstrip("/")
+            if (path == sales or path.startswith(sales + "/")) and not can_use_sales(request.user):
+                if path != reverse("sales_history").rstrip("/") or not can_manage_studio(request.user):
+                    return fallback
             studio = reverse("studio_dashboard").rstrip("/")
             team = reverse("team_home").rstrip("/")
             if (path == studio or path.startswith(studio + "/")) and not can_manage_studio(request.user):

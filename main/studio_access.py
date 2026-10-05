@@ -14,6 +14,10 @@ def wants_json(request):
     return "application/json" in request.headers.get("Accept", "")
 
 
+def can_use_sales(user):
+    return bool(user.is_authenticated and user.is_active and user.has_perm("main.use_sales_workspace"))
+
+
 def can_manage_studio(user):
     return bool(user.is_authenticated and user.is_active and user.has_perm("main.view_studioproduct"))
 

@@ -100,6 +100,8 @@ def sync_group(message, update_id, stored_files):
     record = _record_for(post)
     if post.deleted_at or (record and record.status == StudioProduct.Status.DELETED):
         return "admin_deleted_ignored"
+    if record and record.sales_reopened_at and message.get("date", 0) <= int(record.sales_reopened_at.timestamp()):
+        return "stale_before_restore_ignored"
     if _is_sold(message) or _is_withdrawn(message):
         result = _sell(post, withdrawn=_is_withdrawn(message))
         if result in {"sold", "withdrawn"}:

@@ -48,6 +48,14 @@ def pending_caption_matches(record, caption):
 def delivery_summary(record):
     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
+    sync = next((item for item in jobs if item.action == StudioDelivery.Action.SYNC), None)
+    retired = next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None)
+    if sync and sync.status != StudioDelivery.Status.SENT:
+        return {"state": "failed" if sync.status == StudioDelivery.Status.FAILED else "pending",
+                "label": "به‌روزرسانی تلگرام نیازمند رسیدگی" if sync.status == StudioDelivery.Status.FAILED else "در صف به‌روزرسانی تلگرام",
+                "detail": "اطلاعات سایت ذخیره شده؛ وضعیت همگام‌سازی پیام گروه را پیگیری کنید."}
+    if retired and retired.outcome == "restored":
+        jobs = [item for item in jobs if item.pk != retired.pk]
     job = (None if record.production_type == StudioProduct.ProductionType.CUSTOM else
            next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None))
     job = job or next((item for item in jobs if item.action == StudioDelivery.Action.PUBLISH), None)
@@ -97,10 +105,13 @@ def queue_retirement(record):
     )
     # An older caption fallback may need to reflect a later terminal update. A
     # deleted message is already absent and must not be posted again.
-    if not created and job.status == StudioDelivery.Status.SENT and job.outcome == "caption_marked":
+    if not created and job.status == StudioDelivery.Status.SENT and job.outcome in {"caption_marked", "restored"}:
         StudioDelivery.objects.filter(
-            pk=job.pk, status=StudioDelivery.Status.SENT, outcome="caption_marked",
+            pk=job.pk, status=StudioDelivery.Status.SENT, outcome=job.outcome,
         ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
+                 chat_id=record.telegram_chat_id, message_id=record.telegram_message_id,
+                 telegram_created_at=published.telegram_created_at,
+                 attempts=0 if job.outcome == "restored" else job.attempts,
                  last_error="", updated_at=now)
         job.refresh_from_db()
     elif not created and job.status in READY:
@@ -299,7 +310,7 @@ def _recover_stale_leases(now):
     stale.filter(action=StudioDelivery.Action.PUBLISH).update(
         status=StudioDelivery.Status.UNCERTAIN, last_error="worker_interrupted", updated_at=now,
     )
-    stale.filter(action=StudioDelivery.Action.RETIRE).update(
+    stale.exclude(action=StudioDelivery.Action.PUBLISH).update(
         status=StudioDelivery.Status.RETRY, locked_at=None, lock_token=None,
         next_attempt_at=now, last_error="worker_interrupted", updated_at=now,
     )
@@ -310,19 +321,32 @@ def claim_delivery():
     _recover_stale_leases(now)
     # The compare-and-set also works on local SQLite, where select_for_update
     # does not provide row locks. No database transaction spans the HTTP call.
-    for pk in StudioDelivery.objects.filter(status__in=READY, next_attempt_at__lte=now).values_list("pk", flat=True)[:20]:
+    busy_records = StudioDelivery.objects.filter(status__in=[StudioDelivery.Status.SENDING,
+        StudioDelivery.Status.UNCERTAIN]).values("record_id")
+    for pk in StudioDelivery.objects.filter(status__in=READY, next_attempt_at__lte=now).exclude(
+            record_id__in=busy_records).values_list("pk", flat=True)[:20]:
         token = uuid.uuid4()
-        changed = StudioDelivery.objects.filter(pk=pk, status__in=READY, next_attempt_at__lte=now).update(
-            status=StudioDelivery.Status.SENDING, locked_at=now, lock_token=token,
-            attempts=F("attempts") + 1, last_error="", updated_at=now,
-        )
-        if changed:
-            return StudioDelivery.objects.select_related("record").get(pk=pk)
+        with transaction.atomic():
+            record_id = StudioDelivery.objects.values_list("record_id", flat=True).get(pk=pk)
+            _lock_record(record_id)
+            # Serialize claims with sales edits/restores, and never overlap jobs for a product.
+            if StudioDelivery.objects.filter(record_id=record_id, status__in=[
+                    StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN]).exists():
+                continue
+            changed = StudioDelivery.objects.filter(pk=pk, status__in=READY, next_attempt_at__lte=now).update(
+                status=StudioDelivery.Status.SENDING, locked_at=now, lock_token=token,
+                attempts=F("attempts") + 1, last_error="", updated_at=now,
+            )
+            if changed:
+                return StudioDelivery.objects.select_related("record").get(pk=pk)
     return None
 
 
 def _jpeg_bytes(record):
-    with record.image.open("rb") as source, Image.open(source) as image:
+    image_field = record.image or (record.product.cover_image if record.product_id else None)
+    if not image_field:
+        raise OSError("product image missing")
+    with image_field.open("rb") as source, Image.open(source) as image:
         image.load()
         rgb = image.convert("RGB")
         try:
@@ -382,6 +406,13 @@ def _retire(job):
     record = StudioProduct.objects.get(pk=job.record_id)
     if record.production_type == StudioProduct.ProductionType.CUSTOM:
         _finish(job, "custom_preserved")
+        return
+    if record.status == StudioProduct.Status.AVAILABLE:
+        _finish(job, "restored")
+        return
+    cutoff = timezone.now() - timedelta(seconds=max(90, int(getattr(settings, "STUDIO_DELIVERY_LOCK_SECONDS", 120))))
+    if not StudioDelivery.objects.filter(pk=job.pk, status=StudioDelivery.Status.SENDING,
+            lock_token=job.lock_token, locked_at__gte=cutoff).exists():
         return
     now = timezone.now()
     due_at = _retirement_due_at(record, now)
@@ -465,6 +496,8 @@ def process_next_delivery():
     try:
         if job.action == StudioDelivery.Action.PUBLISH:
             _publish(job)
+        elif job.action == StudioDelivery.Action.SYNC:
+            _sync_message(job)
         else:
             _retire(job)
     except studio_transport.TelegramDeliveryError as error:
@@ -478,3 +511,50 @@ def process_next_delivery():
         _record_error(job, code="delivery_interrupted", uncertain=True)
     job.refresh_from_db()
     return job
+
+
+def _sync_message(job):
+    """Idempotent media edit: never blindly republishes an ambiguous message."""
+    from .sales_service import forget_absent_message, requeue_publication, version
+    record = StudioProduct.objects.select_related("product").get(pk=job.record_id)
+    if record.status == StudioProduct.Status.DELETED:
+        _finish(job, "not_available")
+        return
+    retirement = record.deliveries.filter(action=StudioDelivery.Action.RETIRE).first()
+    if retirement and retirement.status == StudioDelivery.Status.SENT and retirement.outcome in {"deleted", "already_absent"}:
+        _finish(job, "already_absent")
+        return
+    stamp = version(record)
+    photo = _jpeg_bytes(record)
+    cutoff = timezone.now() - timedelta(seconds=max(90, int(getattr(settings, "STUDIO_DELIVERY_LOCK_SECONDS", 120))))
+    if not StudioDelivery.objects.filter(pk=job.pk, status=StudioDelivery.Status.SENDING,
+            lock_token=job.lock_token, locked_at__gte=cutoff).exists():
+        return
+    caption = product_caption(record)
+    if retirement and retirement.outcome == "caption_marked" and record.status != StudioProduct.Status.AVAILABLE:
+        caption = record.get_status_display() + "\n" + caption
+    try:
+        studio_transport.edit_photo(job.chat_id, job.message_id, photo, caption)
+    except studio_transport.TelegramDeliveryError as error:
+        if error.code != "message_not_found":
+            raise
+        with transaction.atomic():
+            current = _lock_record(record.pk)
+            leased = StudioDelivery.objects.select_for_update().get(pk=job.pk)
+            if leased.lock_token != job.lock_token:
+                return
+            if current.status == StudioProduct.Status.AVAILABLE and current.production_type == StudioProduct.ProductionType.DAILY:
+                forget_absent_message(current)
+                requeue_publication(current)
+            _finish(job, "already_absent")
+        return
+    with transaction.atomic():
+        current = _lock_record(record.pk)
+        leased = StudioDelivery.objects.select_for_update().get(pk=job.pk)
+        if leased.lock_token != job.lock_token:
+            return
+        if version(current) != stamp:
+            StudioDelivery.objects.filter(pk=job.pk, lock_token=job.lock_token).update(
+                status=StudioDelivery.Status.RETRY, next_attempt_at=timezone.now(), locked_at=None, lock_token=None)
+        else:
+            _finish(job, "updated")
