@@ -1,17 +1,21 @@
 {% extends 'main/team/base.html' %}
-{% block title %}ورود به فضای تیم{% endblock %}
+{% load static %}
+{% block title %}ورود به فضای زاد{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/atelier-login.css' %}">{% endblock %}
 {% block content %}
-<div class="login-layout">
-  <section class="login-story" aria-label="فضای تیم زاد"><a class="brand" href="{% url 'studio_login' %}" aria-label="زاد"><span class="brand-word" dir="ltr">ZAD<span class="brand-dot"></span></span><span class="brand-caption">FLOWER STUDIO</span></a><div class="login-story-main"><span class="eyebrow">یک فضای کوچک برای کارهای بزرگ</span><h1>گل از شما.<br>ادامه‌اش با زاد.</h1><p>عکس بگیرید، محصولتان را ثبت کنید<br>و کارهای روزتان را یک‌جا ببینید.</p><svg class="login-flower" aria-hidden="true"><use href="#t-flower"/></svg></div><small>فضای اختصاصی تیم و مدیریت زاد</small></section>
-  <section class="login-panel"><div class="login-mobile-brand" dir="ltr">ZAD<span></span></div><span class="eyebrow">خوش آمدید</span><h2>وارد فضای خودتان شوید</h2><p class="muted">با نام کاربری و رمزی که دریافت کرده‌اید.</p>
-    <form method="post" class="stack-form" data-login-form>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
-      {% if form.non_field_errors %}<div class="notice notice-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-      <div class="field"><label for="{{ form.username.id_for_label }}">نام کاربری</label>{{ form.username }}{% include 'main/team/partials/field_errors.html' with field=form.username %}</div>
-      <div class="field"><label for="{{ form.password.id_for_label }}">رمز عبور</label><div class="password-wrap">{{ form.password }}<button class="icon-button password-toggle js-only" type="button" data-password-toggle aria-label="نمایش رمز عبور" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#t-eye"/></svg></button></div>{% include 'main/team/partials/field_errors.html' with field=form.password %}</div>
-      <label class="checkbox-line"><input type="checkbox" name="remember" value="1"{% if request.POST.remember %} checked{% endif %}> در این دستگاه وارد بمانم</label>
-      <button class="button button-primary button-full" type="submit">ورود <svg class="icon" aria-hidden="true"><use href="#t-arrow"/></svg></button>
+<div class="atelier-scene" aria-hidden="true"><span></span></div>
+<section class="atelier-card" aria-labelledby="atelier-title">
+<a class="atelier-brand" href="{% url 'studio_login' %}" aria-label="زاد" dir="ltr">ZAD<span>.</span></a>
+<header class="atelier-intro"><h1 id="atelier-title">اینجا پشت‌صحنهٔ زاد است؛</h1><p>جایی برای ساخت، نظم و رشد</p></header>
+    <form method="post" class="atelier-form" data-login-form>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+      {% if form.non_field_errors %}<div class="atelier-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+      <div class="atelier-field"><label for="{{ form.username.id_for_label }}">نام کاربری</label><div class="atelier-input">{{ form.username }}<svg class="atelier-field-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></div>{% include 'main/team/partials/field_errors.html' with field=form.username %}</div>
+      <div class="atelier-field"><label for="{{ form.password.id_for_label }}">رمز عبور</label><div class="password-wrap">{{ form.password }}<svg class="atelier-field-icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><button class="icon-button password-toggle js-only" type="button" data-password-toggle aria-label="نمایش رمز عبور" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#t-eye"/></svg></button></div>{% include 'main/team/partials/field_errors.html' with field=form.password %}</div>
+      <div class="atelier-options"><label class="atelier-remember"><input type="checkbox" name="remember" value="1"{% if request.POST.remember %} checked{% endif %}> مرا به خاطر بسپار</label><a href="#atelier-help">رمز عبور را فراموش کرده‌اید؟</a></div>
+      <button class="atelier-submit" type="submit">ورود <svg class="icon" aria-hidden="true"><use href="#t-arrow"/></svg></button>
     </form>
-    <p class="login-help">حساب یا رمز عبور ندارید؟<br>از مدیر استودیو بخواهید آن را برایتان آماده کند.</p>
-  </section>
-</div>
+
+<details class="atelier-help" id="atelier-help"><summary>حساب کاربری ندارید؟ <span>راهنمای ورود</span></summary><p>برای ساخت حساب یا دریافت رمز جدید با مدیر استودیو هماهنگ کنید. پس از ورود، فضای متناسب با دسترسی شما باز می‌شود.</p></details>
+</section>
+<script src="{% static 'main/js/pages/atelier-login.js' %}" defer></script>
 {% endblock %}
