@@ -17,12 +17,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("username")
         parser.add_argument("--florist", help="Existing florist code to link to this account")
+        parser.add_argument("--sales", action="store_true", help="Grant only the sales workspace permission")
         parser.add_argument("--manager", action="store_true", help="Grant Studio manager permissions (not Django Admin)")
         parser.add_argument("--reset-password", action="store_true", help="Prompt for a replacement password on an existing account")
 
     def handle(self, *args, **options):
-        if not options["florist"] and not options["manager"]:
-            raise CommandError("Choose --florist CODE and/or --manager.")
+        if not options["florist"] and not options["manager"] and not options["sales"]:
+            raise CommandError("Choose --florist CODE, --sales and/or --manager.")
         User = get_user_model()
         username = User.normalize_username(options["username"].strip())
         try:
@@ -67,6 +68,13 @@ class Command(BaseCommand):
                     raise CommandError("This florist was linked by another request; no changes saved.")
                 florist.user = user
                 florist.save(update_fields=["user", "updated_at"])
+            if options["sales"]:
+                permission = Permission.objects.filter(content_type__app_label="main", codename="use_sales_workspace").first()
+                if permission is None:
+                    raise CommandError("Sales permission missing. Run migrate first.")
+                group, _ = Group.objects.get_or_create(name="Studio sales")
+                group.permissions.add(permission)
+                user.groups.add(group)
             if options["manager"]:
                 group, _ = Group.objects.get_or_create(name="Studio managers")
                 codenames = {"view_studioproduct", "add_studioproduct", "change_studioproduct",

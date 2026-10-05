@@ -5,10 +5,13 @@ from django.templatetags.static import static
 from . import views
 from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
-from . import studio_views
+from . import studio_views, sales_views
 from .studio_notification_views import admin_notifications
 
 urlpatterns = [
+    path("sales/", sales_views.home, name="sales_home"),
+    path("sales/history/", sales_views.history, name="sales_history"),
+    path("sales/products/<int:pk>/", sales_views.detail, name="sales_detail"),
     path("", include("main.team_urls")),
     path("studio/metrics/<str:metric>/", studio_views.metric_detail, name="studio_metric"),
     path("studio/", studio_views.dashboard, name="studio_dashboard"),

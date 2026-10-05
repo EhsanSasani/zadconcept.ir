@@ -181,7 +181,11 @@ def _request(method, payload, photo=None):
             raise TelegramDeliveryError("configuration_error")
         url = f"https://api.telegram.org/bot{token}/{method}"
         if photo is not None:
-            body, headers["Content-Type"] = _multipart(payload, photo)
+            direct_payload = payload
+            if method == "editMessageMedia":
+                direct_payload = {"chat_id": payload["chat_id"], "message_id": payload["message_id"],
+                    "media": json.dumps({"type": "photo", "media": "attach://photo", "caption": payload["caption"]}, ensure_ascii=False)}
+            body, headers["Content-Type"] = _multipart(direct_payload, photo)
         else:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
             headers["Content-Type"] = "application/json"
@@ -224,7 +228,7 @@ def _request(method, payload, photo=None):
                 raise _unclear_response(method)
         elif method == "deleteMessage" and value is not True:
             raise _unclear_response(method)
-        elif method == "editMessageCaption" and not (value is True or isinstance(value, dict)):
+        elif method in {"editMessageCaption", "editMessageMedia"} and not (value is True or isinstance(value, dict)):
             raise _unclear_response(method)
         return value
     if result.get("ok") is not False:
@@ -247,7 +251,7 @@ def _request(method, payload, photo=None):
         error = _telegram_error(status, result)
     if method == "deleteMessage" and error.code == "message_not_found":
         return True
-    if method == "editMessageCaption" and error.code == "message_not_modified":
+    if method in {"editMessageCaption", "editMessageMedia"} and error.code == "message_not_modified":
         return True
     raise error from None
 
@@ -275,3 +279,8 @@ def edit_caption(chat_id, message_id, caption):
     return _request("editMessageCaption", {
         "chat_id": _chat_id(chat_id), "message_id": _message_id(message_id), "caption": _caption(caption),
     })
+
+
+def edit_photo(chat_id, message_id, photo_bytes, caption):
+    return _request("editMessageMedia", {"chat_id": _chat_id(chat_id),
+        "message_id": _message_id(message_id), "caption": _caption(caption)}, _photo(photo_bytes))

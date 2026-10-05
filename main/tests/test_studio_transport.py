@@ -241,3 +241,26 @@ class StudioTransportTests(SimpleTestCase):
             transport.send_photo(GROUP, JPEG, "price")
         self.assertEqual(error.exception.retry_after, 17)
         self.assertTrue(error.exception.retryable)
+
+    def test_sales_media_edit_is_multipart_with_same_message_identity(self):
+        transport.edit_photo(GROUP, 42, JPEG, 'updated price')
+        request = self.opener.open.call_args.args[0]
+        self.assertTrue(request.full_url.endswith('/editMessageMedia'))
+        self.assertIn(b'attach://photo', request.data)
+        self.assertIn(b'name="message_id"\r\n\r\n42', request.data)
+        self.assertIn(JPEG, request.data)
+        self.assertNotIn(b'parse_mode', request.data)
+
+    @override_settings(TELEGRAM_SAME_DAY_RELAY_URL='https://relay.example/')
+    def test_sales_media_edit_relay_has_exact_envelope(self):
+        transport.edit_photo(GROUP, 42, JPEG, 'updated price')
+        payload = json.loads(self.opener.open.call_args.args[0].data)
+        self.assertEqual(payload, {'method':'editMessageMedia','chat_id':GROUP,'message_id':42,
+            'caption':'updated price','photo_base64':base64.b64encode(JPEG).decode()})
+
+    def test_sales_media_edit_lost_response_retries_idempotently(self):
+        self.opener.open.side_effect = URLError('private diagnostic')
+        with self.assertRaises(transport.TelegramDeliveryError) as raised:
+            transport.edit_photo(GROUP, 42, JPEG, 'updated price')
+        self.assertTrue(raised.exception.retryable)
+        self.assertFalse(raised.exception.uncertain)

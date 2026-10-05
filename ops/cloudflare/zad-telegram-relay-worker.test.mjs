@@ -753,3 +753,39 @@ test("studio still rejects a private response for a configured group after admin
       { ...studioEnv, TELEGRAM_STUDIO_ADMIN_CHAT_ID: "212832276" })).status, 502);
   });
 });
+
+test("sales media edit uses exact existing message and multipart photo without sending a new message", async () => {
+  await withFetch(async (url, options) => {
+    assert.match(url, /\/editMessageMedia$/);
+    assert.equal(options.body.get("chat_id"), "-10077777");
+    assert.equal(options.body.get("message_id"), "42");
+    assert.deepEqual(JSON.parse(options.body.get("media")), {type:"photo",media:"attach://photo",caption:studioPayload.caption});
+    assert.equal(options.body.get("photo").type, "image/jpeg");
+    return json({ok:true,result:{message_id:42,chat:{id:-10077777}}});
+  }, async () => {
+    const response = await worker.fetch(studioRequest({...studioPayload,method:"editMessageMedia",message_id:42}),studioEnv);
+    assert.equal(response.status,200);
+  });
+});
+
+test("sales media edit rejects expanded envelope, foreign group and malformed photo before network", async () => {
+  let calls=0;
+  await withFetch(async()=>{calls++;throw new Error('must not call');},async()=>{
+    const payload={...studioPayload,method:"editMessageMedia",message_id:42};
+    for(const invalid of [{...payload,chat_id:"-999"},{...payload,message_id:0},{...payload,media:"https://other.test/a.jpg"},{...payload,photo_base64:"nope"}]){
+      assert.equal((await worker.fetch(studioRequest(invalid),studioEnv)).status,400);
+    }
+    assert.equal(calls,0);
+  });
+});
+
+test("sales media edits are retryable after network loss and idempotent when unchanged", async () => {
+  const payload={...studioPayload,method:"editMessageMedia",message_id:42};
+  await withFetch(async()=>{throw new Error('network');},async()=>{
+    const response=await worker.fetch(studioRequest(payload),studioEnv);
+    const result=await response.json();assert.equal(result.retryable,true);assert.equal(result.uncertain,false);
+  });
+  await withFetch(async()=>json({ok:false,error_code:400,description:"Bad Request: message is not modified"},400),async()=>{
+    assert.deepEqual(await (await worker.fetch(studioRequest(payload),studioEnv)).json(),{ok:true,result:true});
+  });
+});

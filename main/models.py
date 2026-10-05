@@ -3003,6 +3003,7 @@ class StudioProduct(TimeStampedModel):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
         related_name="studio_deleted_entries", verbose_name="حذف‌شده توسط",
     )
+    sales_reopened_at = models.DateTimeField(null=True, blank=True, editable=False)
     deletion_reason = models.TextField("علت حذف مدیریتی", blank=True)
 
     class Meta:
@@ -3065,6 +3066,7 @@ class StudioDelivery(TimeStampedModel):
     """Durable, bounded outbox; an ambiguous photo send is never blindly repeated."""
 
     class Action(models.TextChoices):
+        SYNC = "SYNC", "به‌روزرسانی پیام محصول"
         PUBLISH = "PUBLISH", "انتشار در تلگرام"
         RETIRE = "RETIRE", "خروج از گروه آماده‌ها"
 
@@ -3172,3 +3174,22 @@ class StudioIngestionIssue(TimeStampedModel):
 
     def __str__(self):
         return f"{self.telegram_chat_id}/{self.telegram_message_id}: {self.reason}"
+
+
+class StudioSalesAudit(models.Model):
+    """Append-only application audit. Snapshots preserve cancelled sale facts."""
+    record = models.ForeignKey(StudioProduct, on_delete=models.PROTECT, related_name="sales_audits")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    actor_name = models.CharField(max_length=150)
+    action = models.CharField(max_length=20)
+    reason = models.CharField(max_length=500)
+    before = models.JSONField(default=dict)
+    after = models.JSONField(default=dict)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        default_permissions = ("view",)
+        permissions = [("use_sales_workspace", "دسترسی به پنل فروش")]
+        verbose_name = "سابقهٔ اصلاح فروش"
+        verbose_name_plural = "سوابق اصلاح فروش"

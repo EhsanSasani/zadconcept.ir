@@ -44,6 +44,7 @@
     </nav>
     <div class="sidebar-bottom"><svg class="icon botanical" aria-hidden="true"><use href="#i-flower"/></svg><p>هر گل، حاصل یک تلاش.</p><span>MADE WITH CARE · ZAD</span>{% if perms.main.manage_studio_accounts %}<a class="site-link" href="{% url 'studio_accounts' %}">حساب‌های تیم <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></a>{% endif %}
     {% if request.user.studio_florist.is_active %}<a class="site-link" href="{% url 'team_home' %}">پنل شخصی من <svg class="icon" aria-hidden="true"><use href="#i-flower"/></svg></a>{% endif %}
+    <a class="site-link" href="{% url 'sales_history' %}">سوابق اصلاح فروش</a>{% if perms.main.use_sales_workspace %}<a class="site-link" href="{% url 'sales_home' %}">پنل فروش</a>{% endif %}
     {% if request.user.is_staff %}<a class="site-link" href="{% url 'admin:index' %}">مدیریت فنی سایت <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>{% endif %}
     <form method="post" action="{% url 'studio_logout' %}" data-team-logout>{% csrf_token %}<button class="btn btn-outline" type="submit">خروج از حساب</button></form></div>
   </aside>
