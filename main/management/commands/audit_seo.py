@@ -306,7 +306,9 @@ class Command(BaseCommand):
                 resolved = urlsplit(urljoin(settings.ZAD_SITE_URL, href))
                 if resolved.netloc != canonical_host:
                     continue
-                if resolved.path.startswith(("/static/", "/media/", "/admin/", "/lead-request/")):
+                # The private panel deliberately redirects anonymous staff to login.
+                # It is not a public indexable page, like the existing admin entry.
+                if resolved.path.startswith(("/static/", "/media/", "/admin/", "/lead-request/", "/panel/")):
                     continue
                 discovered_links.add(
                     resolved.path + (f"?{resolved.query}" if resolved.query else "")

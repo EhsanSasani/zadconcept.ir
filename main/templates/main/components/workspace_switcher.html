@@ -1,0 +1,6 @@
+{% if panel_current or panel_multiple %}
+<nav class="workspace-bar" aria-label="فضای کاری">
+  <span class="workspace-current"><span class="workspace-dot" aria-hidden="true"></span>{{ panel_current.label|default:'پنل زاد' }}</span>
+  {% if panel_multiple %}<a class="workspace-change" href="{% url 'panel_home' %}?choose=1" aria-label="تغییر فضای کاری؛ فضای فعلی {{ panel_current.label|default:'پنل زاد' }}">تغییر فضای کاری <span aria-hidden="true">⇄</span></a>{% endif %}
+</nav>
+{% endif %}

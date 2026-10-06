@@ -1,0 +1,30 @@
+{% extends 'main/studio/base.html' %}{% load static %}
+{% block title %}{% if account %}ویرایش کاربر{% else %}افزودن کاربر{% endif %}{% endblock %}{% block crumb %}کاربران{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/accounts/index.css' %}">{% endblock %}
+{% block content %}
+<a class="accounts-back" href="{% url 'studio_accounts' %}">→ همهٔ کاربران</a>
+<div class="accounts-heading"><div><p class="eyebrow">حساب و دسترسی</p><h1>{% if account %}{{ account.get_full_name|default:account.username }}{% else %}همکار جدید{% endif %}</h1><p>{% if account %}اطلاعات و فضاهای کاری این حساب را مدیریت کنید.{% else %}حساب بسازید و مشخص کنید همکارتان به کدام فضاها دسترسی دارد.{% endif %}</p></div></div>
+<form method="post" class="account-form" autocomplete="off">
+{% csrf_token %}{{ form.version }}
+{% if form.errors %}<div class="account-errors" role="alert"><strong>تغییرات هنوز ذخیره نشده است.</strong>{{ form.non_field_errors }}<p>موارد مشخص‌شده را بررسی کنید.</p></div>{% endif %}
+<section class="account-section"><div class="account-section-title"><span>۱</span><div><h2>اطلاعات حساب</h2><p>نام همکار در پنل‌ها نمایش داده می‌شود.</p></div></div><div class="account-fields">
+{% include 'main/pages/accounts/field.html' with field=form.first_name %}
+{% include 'main/pages/accounts/field.html' with field=form.last_name %}
+{% include 'main/pages/accounts/field.html' with field=form.username %}
+{% include 'main/pages/accounts/field.html' with field=form.email %}
+</div></section>
+<section class="account-section"><div class="account-section-title"><span>۲</span><div><h2>فضاهای کاری</h2><p>یک یا چند دسترسی انتخاب کنید.</p></div></div>
+<fieldset class="account-role-options"><legend class="sr-only">دسترسی‌های کاربر</legend>
+{% for checkbox in form.roles %}<label class="account-role-option" for="{{ checkbox.id_for_label }}">{{ checkbox.tag }}<span><strong>{{ checkbox.choice_label }}</strong><small>{% if checkbox.data.value == 'manager' %}آمار، مدیریت استودیو و مدیریت کاربران{% elif checkbox.data.value == 'sales' %}موجودی، فروش و اصلاح اطلاعات محصول{% else %}ثبت محصول و کارنامهٔ شخصی{% endif %}</small></span></label>{% endfor %}
+</fieldset>{% for error in form.roles.errors %}<p class="account-field-error">{{ error }}</p>{% endfor %}
+<p class="account-hint">کاربر تک‌دسترسی مستقیم وارد پنل خودش می‌شود؛ کاربر چنددسترسی فضای کاری را انتخاب می‌کند.</p>
+<div class="account-profile">{% include 'main/pages/accounts/field.html' with field=form.florist %}<p class="account-hint">فقط برای دسترسی فلوریست: پروفایل قبلی را انتخاب کنید تا کارنامه حفظ شود. اگر پروفایلی ندارد، گزینهٔ ساخت پروفایل جدید را نگه دارید. برداشتن دسترسی، محصولات و کارنامه را حذف نمی‌کند.</p></div>
+</section>
+<section class="account-section"><div class="account-section-title"><span>۳</span><div><h2>ورود و رمز عبور</h2><p>{% if account %}برای حفظ رمز فعلی، هر دو کادر رمز را خالی بگذارید.{% else %}رمز اولیهٔ قوی تعیین کنید و مستقیم به همکارتان بدهید.{% endif %}</p></div></div>
+<label class="account-active" for="{{ form.is_active.id_for_label }}">{{ form.is_active }}<span><strong>ورود به حساب فعال باشد</strong><small>با غیرفعال کردن، دسترسی بسته می‌شود و سوابق باقی می‌مانند.</small></span></label>
+<div class="account-fields">{% include 'main/pages/accounts/field.html' with field=form.password1 %}{% include 'main/pages/accounts/field.html' with field=form.password2 %}</div>
+{% if account.pk == request.user.pk %}<p class="account-hint">برای حفظ دسترسی، امکان غیرفعال کردن حساب یا حذف نقش مدیرِ خودتان وجود ندارد.</p>{% endif %}
+</section>
+<div class="account-actions"><button class="accounts-primary" type="submit">{% if account %}ذخیرهٔ تغییرات{% else %}ساخت حساب کاربری{% endif %}</button><a href="{% url 'studio_accounts' %}">انصراف</a></div>
+</form>
+{% endblock %}

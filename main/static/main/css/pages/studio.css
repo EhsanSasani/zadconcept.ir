@@ -604,6 +604,13 @@ strong {
   padding: 8px;
   background: #f8f9f6;
 }
+.custom-popover .period-error {
+  color: #9f3030;
+  line-height: 1.9;
+}
+.custom-popover input[aria-invalid="true"] {
+  border-color: #9f3030;
+}
 .attention {
   display: flex;
   align-items: center;

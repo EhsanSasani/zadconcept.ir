@@ -1,0 +1,10 @@
+{% extends 'main/pages/panel/base.html' %}
+{% block title %}دسترسی به فضای کاری{% endblock %}
+{% block content %}
+<section class="panel-intro panel-denied">
+  <p class="panel-greeting">فضای کاری زاد</p>
+  <h1>به این بخش دسترسی ندارید.</h1>
+  <p>می‌توانید به فضای کاری خود برگردید. اگر برای انجام کارتان به این بخش نیاز دارید، با مدیر زاد هماهنگ کنید.</p>
+  <a class="panel-primary" href="{% url 'panel_home' %}">رفتن به پنل من <span aria-hidden="true">←</span></a>
+</section>
+{% endblock %}

@@ -106,6 +106,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.csp",
                 "main.context_processors.site_defaults",
+                "main.panel.navigation",
             ],
         },
     },

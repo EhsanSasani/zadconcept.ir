@@ -1,0 +1,21 @@
+{% extends 'main/pages/panel/base.html' %}
+{% block content %}
+<section class="panel-intro">
+  <p class="panel-greeting">{{ request.user.get_short_name|default:request.user.username }}، خوش آمدید</p>
+  <h1>{% if choices %}امروز از کجا شروع کنیم؟{% else %}به پنل زاد خوش آمدید{% endif %}</h1>
+  <p>{% if choices %}فضای کاری خود را انتخاب کنید. هر زمان بخواهید می‌توانید آن را تغییر دهید.{% else %}هنوز فضای کاری فعالی برای این حساب تعریف نشده است. برای فعال‌سازی دسترسی با مدیر زاد هماهنگ کنید.{% endif %}</p>
+</section>
+<div class="panel-choices">
+{% for workspace in choices %}
+  <form method="post" action="{% url 'panel_select' %}">
+    {% csrf_token %}<input type="hidden" name="workspace" value="{{ workspace.key }}">
+    <button class="panel-card panel-card-{{ workspace.key }}" type="submit">
+      <span class="panel-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">{% if workspace.key == 'studio' %}<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>{% elif workspace.key == 'sales' %}<path d="M5 8h14l1 13H4L5 8Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/>{% else %}<path d="M12 21V11m0 6c-5 0-7-3-7-5 5 0 7 3 7 5Zm0-6C3 13 3 5 8 6c-1-7 9-7 8 0 5-1 5 7-4 5Z"/>{% endif %}</svg></span>
+      <span class="panel-card-copy"><strong>{{ workspace.label }}</strong><span>{{ workspace.description }}</span>{% if selected.key == workspace.key %}<small>آخرین فضای انتخاب‌شده</small>{% endif %}</span>
+      <span class="panel-card-arrow" aria-hidden="true">←</span>
+    </button>
+  </form>
+{% endfor %}
+</div>
+{% if choices %}<p class="panel-note">فقط فضاهای مجاز این حساب نمایش داده می‌شوند.</p>{% endif %}
+{% endblock %}

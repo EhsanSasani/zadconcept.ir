@@ -1,4 +1,6 @@
 <form class="period-bar" method="get" aria-label="بازه گزارش">
+  {# Enter in a custom date field submits this range, not the first quick preset. #}
+  <button type="submit" name="period" value="custom" hidden>نمایش گزارش</button>
   {% for key,value in period_filters %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
   <div class="segmented" role="group" aria-label="بازه‌های سریع">
     <button name="period" value="today" class="period-chip{% if period.choice == 'today' %} selected{% endif %}" aria-pressed="{% if period.choice == 'today' %}true{% else %}false{% endif %}">امروز</button>
@@ -6,6 +8,17 @@
     <button name="period" value="30" class="period-chip{% if period.choice == '30' %} selected{% endif %}" aria-pressed="{% if period.choice == '30' %}true{% else %}false{% endif %}">۳۰ روز</button>
     <button name="period" value="90" class="period-chip{% if period.choice == '90' %} selected{% endif %}" aria-pressed="{% if period.choice == '90' %}true{% else %}false{% endif %}">۳ ماه</button>
   </div>
-  <span class="period-range"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><time data-persian-date="{{ period.start|date:'Y-m-d' }}">{{ period.start|date:'Y/m/d' }}</time><span>تا</span><time data-persian-date="{{ period.end|date:'Y-m-d' }}">{{ period.end|date:'Y/m/d' }}</time></span>
-  <details class="custom-period"><summary>بازه دلخواه <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary><div class="custom-popover"><p>تاریخ ورودی به میلادی است.</p><label>از تاریخ<input type="date" name="start" value="{{ period.start|date:'Y-m-d' }}"></label><label>تا تاریخ<input type="date" name="end" value="{{ period.end|date:'Y-m-d' }}"></label><button name="period" value="custom" class="btn btn-primary">نمایش گزارش</button></div></details>
+  <span class="period-range"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><time data-persian-date="{{ period.start|date:'Y-m-d' }}">{{ period.start_jalali }}</time><span>تا</span><time data-persian-date="{{ period.end|date:'Y-m-d' }}">{{ period.end_jalali }}</time></span>
+  <details class="custom-period"{% if period.error %} open{% endif %}>
+    <summary>بازه دلخواه <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+    <div class="custom-popover">
+      <p id="period-help">تاریخ شمسی · سال/ماه/روز<br>مثلاً ۱۴۰۵/۰۷/۰۱</p>
+      {% if period.error %}<p class="period-error" id="period-error" role="alert">{{ period.error }}</p>{% endif %}
+      <label for="period-start">از تاریخ (شمسی)</label>
+      <input id="period-start" type="text" name="start_jalali" value="{{ period.input_start }}" dir="ltr" inputmode="text" maxlength="10" autocomplete="off" placeholder="۱۴۰۵/۰۷/۰۱" aria-describedby="period-help{% if period.error %} period-error{% endif %}"{% if period.error %} aria-invalid="true"{% endif %}>
+      <label for="period-end">تا تاریخ (شمسی)</label>
+      <input id="period-end" type="text" name="end_jalali" value="{{ period.input_end }}" dir="ltr" inputmode="text" maxlength="10" autocomplete="off" placeholder="۱۴۰۵/۰۷/۱۴" aria-describedby="period-help{% if period.error %} period-error{% endif %}"{% if period.error %} aria-invalid="true"{% endif %}>
+      <button name="period" value="custom" class="btn btn-primary">نمایش گزارش</button>
+    </div>
+  </details>
 </form>

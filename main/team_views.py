@@ -31,14 +31,11 @@ from .team_forms import StudioAccountForm, TeamLoginForm, TeamProductForm, TeamP
 
 
 def _landing(user):
-    from .studio_access import can_use_sales
-    if can_use_sales(user) and not can_manage_studio(user):
-        return reverse("sales_home")
-    if get_active_florist(user):
-        return reverse("team_home")
-    if can_manage_studio(user):
-        return reverse("studio_dashboard")
-    return None
+    from .panel import workspaces
+    choices = workspaces(user)
+    if len(choices) == 1:
+        return choices[0]["url"]
+    return reverse("panel_home") if choices else None
 
 
 def _safe_next(request, fallback):
@@ -92,7 +89,9 @@ def studio_login(request):
                 login(request, user)
                 request.session.set_expiry(60 * 60 * 24 * 30 if form.cleaned_data.get("remember") else 0)
                 cache.delete(key)
-                return redirect(_safe_next(request, destination))
+                # Multiple workspaces always require an explicit choice after login.
+                return redirect(destination if destination == reverse("panel_home")
+                                else _safe_next(request, destination))
             form.add_error(None, "دسترسی استودیو برای این حساب فعال نیست؛ با مدیر استودیو تماس بگیرید.")
         if not cache.add(key, 1, timeout=15 * 60):
             try:
@@ -293,7 +292,7 @@ def team_profile(request):
 def team_manifest(request):
     return JsonResponse({"id": "/team/", "name": "استودیو زاد", "short_name": "ZAD Studio",
                          # Include the branded /studio/login/ page in standalone navigation.
-                         "lang": "fa", "dir": "rtl", "start_url": reverse("team_home"), "scope": "/",
+                         "lang": "fa", "dir": "rtl", "start_url": reverse("panel_home"), "scope": "/",
                          "display": "standalone", "background_color": "#f7f4f0", "theme_color": "#f7f4f0",
                          "icons": [{"src": static("main/team/icon-192.png"), "sizes": "192x192", "type": "image/png", "purpose": "any"},
                                    {"src": static("main/team/icon-512.png"), "sizes": "512x512", "type": "image/png", "purpose": "any"},
@@ -313,6 +312,9 @@ def _resettable_account(user):
 @require_http_methods(["GET", "POST"])
 def studio_accounts(request):
     require_studio_permission(request, "manage_studio_accounts")
+    if request.method == "GET":
+        from .account_views import index
+        return index(request)
     form = StudioAccountForm()
     reset_form = None
     reset_florist = None
