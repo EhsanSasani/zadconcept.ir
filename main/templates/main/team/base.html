@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="{% static 'main/css/pages/team.css' %}?v=1">
   <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
 {% block extra_head %}{% endblock %}
+<link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
 </head>
 <body data-team-page="{{ active }}" data-team-user="{{ request.user.pk|default:'' }}"{% if active == 'login' %} class="login-page"{% endif %}>
 {% include 'main/team/partials/icons.html' %}
@@ -31,6 +32,7 @@
 <div class="team-frame">
 {% if active != 'login' %}
   <header class="team-topbar"><div class="topbar-start">{% block back %}<a class="mobile-brand" href="{% url 'team_home' %}" aria-label="خانه تیم زاد" dir="ltr">ZAD<span></span></a>{% endblock %}<span class="topbar-location">{% block location %}فضای تیم{% endblock %}</span></div><a class="topbar-profile" href="{% url 'team_profile' %}" aria-label="پروفایل من">{% if florist.photo %}<img src="{{ florist.photo.url }}" alt="" width="40" height="40">{% else %}<span class="avatar avatar-small">{{ florist.name|default:request.user.username|slice:':1' }}</span>{% endif %}<span class="topbar-name">{{ florist.name|default:request.user.get_short_name }}</span></a></header>
+{% include 'main/components/workspace_switcher.html' %}
 {% endif %}
   <main class="team-main" id="team-main" tabindex="-1">
     {% if messages %}<div class="flash-list" role="status">{% for message in messages %}<p class="notice notice-{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}

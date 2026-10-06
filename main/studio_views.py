@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.cache import never_cache
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
+from .persian_dates import format_persian_date, parse_persian_date
 from .studio_access import require_studio_permission
 from .studio_admin_notifications import admin_notifications_enabled
 from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
@@ -29,6 +30,7 @@ def _access(request, permission="view_studioproduct"):
 def _period(request, default="30"):
     today = timezone.localdate()
     choice = request.GET.get("period", default)
+    error = ""
     if choice == "today":
         start, end = today, today
     elif choice == "7":
@@ -39,18 +41,28 @@ def _period(request, default="30"):
         start, end = today.replace(day=1), today
     elif choice == "custom":
         try:
-            start = date.fromisoformat(request.GET["start"])
-            end = date.fromisoformat(request.GET["end"])
+            if "start_jalali" in request.GET or "end_jalali" in request.GET:
+                start = parse_persian_date(request.GET["start_jalali"])
+                end = parse_persian_date(request.GET["end_jalali"])
+            else:
+                # Preserve bookmarked reports and internal Gregorian query links.
+                start = date.fromisoformat(request.GET["start"])
+                end = date.fromisoformat(request.GET["end"])
             if start > end or (end - start).days > 366 or end > today:
                 raise ValueError
         except (KeyError, ValueError):
             start, end, choice = today - timedelta(days=29), today, "30"
+            error = "تاریخ شمسی معتبر وارد کنید؛ شروع نباید بعد از پایان باشد، پایان تا امروز و فاصله حداکثر ۳۶۶ روز است. فعلاً گزارش ۳۰ روز اخیر نمایش داده می‌شود."
     else:
         start, end, choice = today - timedelta(days=29), today, "30"
     tz = timezone.get_current_timezone()
     lower = timezone.make_aware(datetime.combine(start, time.min), tz)
     upper = timezone.make_aware(datetime.combine(end + timedelta(days=1), time.min), tz)
-    return {"choice": choice, "start": start, "end": end, "lower": lower, "upper": upper}
+    return {"choice": choice, "start": start, "end": end, "lower": lower, "upper": upper,
+            "start_jalali": format_persian_date(start), "end_jalali": format_persian_date(end),
+            "input_start": request.GET.get("start_jalali", "") if error else format_persian_date(start),
+            "input_end": request.GET.get("end_jalali", "") if error else format_persian_date(end),
+            "error": error}
 
 
 def _activity(period, *, florist=None, production_type=None, include_deleted=False):

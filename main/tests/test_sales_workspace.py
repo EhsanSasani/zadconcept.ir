@@ -262,13 +262,16 @@ class SalesWorkspaceTests(TestCase):
             self.assertEqual(self.client.get(path).status_code, 302)
         self.client.force_login(self.maker)
         for path in paths:
-            self.assertEqual(self.client.get(path).status_code, 403)
+            if path == '/sales/':
+                self.assertRedirects(self.client.get(path), '/panel/', fetch_redirect_response=False)
+            else:
+                self.assertEqual(self.client.get(path).status_code, 403)
         self.client.force_login(self.actor)
         for path in paths:
             response = self.client.get(path)
             self.assertEqual(response.status_code, 200, path)
             self.assertIn('no-store', response.headers.get('Cache-Control',''))
-        self.assertEqual(self.client.get('/studio/').status_code, 403)
+        self.assertRedirects(self.client.get('/studio/'), '/panel/', fetch_redirect_response=False)
         self.assertEqual(self.client.get('/sales/products/99999999/').status_code, 404)
 
     def test_manager_can_read_history_but_needs_sales_role_to_edit(self):

@@ -1,0 +1,17 @@
+{% extends 'main/studio/base.html' %}{% load static studio_ui %}
+{% block title %}مدیریت کاربران{% endblock %}{% block crumb %}کاربران{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/accounts/index.css' %}">{% endblock %}
+{% block content %}
+<div class="accounts-heading"><div><p class="eyebrow">تیم زاد</p><h1>مدیریت کاربران</h1><p>هر همکار، حساب خودش. هر حساب، دسترسی‌های مشخص.</p></div><a class="accounts-primary" href="{% url 'studio_account_add' %}"><span aria-hidden="true">＋</span> افزودن کاربر</a></div>
+<form class="accounts-search" method="get"><label for="account-search">پیدا کردن همکار</label><div><input id="account-search" type="search" name="q" value="{{ q }}" placeholder="نام، نام کاربری یا ایمیل"><button type="submit">جست‌وجو</button></div></form>
+<p class="accounts-count">{{ page.paginator.count|fa_number }} حساب{% if q %} برای «{{ q }}» · <a href="{% url 'studio_accounts' %}">پاک کردن جست‌وجو</a>{% endif %}</p>
+<div class="accounts-grid">
+{% for row in rows %}<article class="account-card">
+  <div class="account-card-top"><span class="account-avatar" aria-hidden="true">{{ row.account.get_full_name|default:row.account.username|slice:':1' }}</span><div><h2>{{ row.account.get_full_name|default:row.account.username }}{% if row.account.pk == request.user.pk %}<small>شما</small>{% endif %}</h2><p dir="ltr">{{ row.account.username }}</p></div><span class="account-status{% if not row.account.is_active %} is-disabled{% endif %}">{% if row.account.is_active %}فعال{% else %}غیرفعال{% endif %}</span></div>
+  <div class="account-roles" aria-label="دسترسی‌ها">{% for role in row.roles %}<span>{{ role }}</span>{% empty %}<span>بدون دسترسی</span>{% endfor %}</div>
+  {% if row.editable %}<a class="account-edit" href="{% url 'studio_account_edit' row.account.pk %}" aria-label="ویرایش حساب {{ row.account.get_full_name|default:row.account.username }}">ویرایش حساب و دسترسی‌ها <span aria-hidden="true">←</span></a>{% else %}<p class="account-protected">حساب فنی سایت · مدیریت از Django Admin</p>{% endif %}
+</article>{% empty %}<div class="account-empty"><h2>حسابی پیدا نشد</h2><p>نام دیگری را جست‌وجو کنید یا یک کاربر جدید بسازید.</p></div>{% endfor %}
+</div>
+{% if page.has_other_pages %}<nav class="accounts-pagination" aria-label="صفحات کاربران">{% if page.has_previous %}<a href="?q={{ q|urlencode }}&page={{ page.previous_page_number }}">صفحهٔ قبل</a>{% endif %}<span>{{ page.number|fa_number }} از {{ page.paginator.num_pages|fa_number }}</span>{% if page.has_next %}<a href="?q={{ q|urlencode }}&page={{ page.next_page_number }}">صفحهٔ بعد</a>{% endif %}</nav>{% endif %}
+<p class="accounts-entry">لینک ورود همهٔ همکاران: <a href="{% url 'panel_home' %}" dir="ltr">/panel/</a></p>
+{% endblock %}

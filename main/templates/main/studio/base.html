@@ -10,6 +10,8 @@
   <script src="{% static 'main/js/pages/manager-app.js' %}?v=1" defer></script>
   <script src="{% static 'main/js/pages/studio.js' %}?v=4" defer></script>
   <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
+<link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
+{% block extra_head %}{% endblock %}
 </head>
 <body class="manager-app" data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
 <svg focusable="false" class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -42,7 +44,7 @@
     <nav class="studio-nav" aria-label="منوی استودیو">
       {% for key,label,url in nav %}{% if key != 'add' or perms.main.add_studioproduct %}<a href="{% url url %}"{% if active == key %} class="active" aria-current="page"{% endif %}><svg class="icon"><use href="#i-{% if key == 'dashboard' %}grid{% elif key == 'products' %}box{% elif key == 'florists' %}users{% elif key == 'analytics' %}chart{% elif key == 'add' %}plus{% else %}settings{% endif %}"/></svg><span>{{ label }}</span>{% if key == 'add' %}<span class="nav-plus">+</span>{% endif %}</a>{% endif %}{% endfor %}
     </nav>
-    <div class="sidebar-bottom"><svg class="icon botanical" aria-hidden="true"><use href="#i-flower"/></svg><p>هر گل، حاصل یک تلاش.</p><span>MADE WITH CARE · ZAD</span>{% if perms.main.manage_studio_accounts %}<a class="site-link" href="{% url 'studio_accounts' %}">حساب‌های تیم <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></a>{% endif %}
+    <div class="sidebar-bottom"><svg class="icon botanical" aria-hidden="true"><use href="#i-flower"/></svg><p>هر گل، حاصل یک تلاش.</p><span>MADE WITH CARE · ZAD</span>{% if perms.main.manage_studio_accounts %}<a class="site-link" href="{% url 'studio_accounts' %}">مدیریت کاربران <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></a>{% endif %}
     {% if request.user.studio_florist.is_active %}<a class="site-link" href="{% url 'team_home' %}">پنل شخصی من <svg class="icon" aria-hidden="true"><use href="#i-flower"/></svg></a>{% endif %}
     <a class="site-link" href="{% url 'sales_history' %}">سوابق اصلاح فروش</a>{% if perms.main.use_sales_workspace %}<a class="site-link" href="{% url 'sales_home' %}">پنل فروش</a>{% endif %}
     {% if request.user.is_staff %}<a class="site-link" href="{% url 'admin:index' %}">مدیریت فنی سایت <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>{% endif %}
@@ -51,6 +53,7 @@
   <button class="backdrop" type="button" data-backdrop data-close-menu aria-label="بستن منو" hidden></button>
   <div class="studio-content">
     <header class="studio-topbar"><div class="top-right"><button class="icon-button menu-toggle" type="button" data-menu aria-label="باز کردن منو" aria-expanded="false" aria-controls="studio-sidebar"><svg class="icon"><use href="#i-menu"/></svg></button><a class="top-label" href="{% url 'studio_dashboard' %}">ZAD</a><span class="top-divider"></span><span class="top-crumb">{% block crumb %}داشبورد{% endblock %}</span></div><div class="top-left"><span class="live-pill">فضای مدیریت</span><span class="top-divider"></span><div class="user-box"><span class="user-avatar">{{ request.user.get_short_name|default:request.user.username|slice:":1" }}</span><span class="user-text"><strong>{{ request.user.get_short_name|default:request.user.username }}</strong><small>تیم زاد</small></span></div></div></header>
+{% include 'main/components/workspace_switcher.html' %}
     {% if messages %}<div class="flash-list" role="status">{% for message in messages %}<div class="flash flash-{{ message.tags }}"><span>{{ message }}</span><button type="button" class="icon-button" data-dismiss-flash aria-label="بستن اعلان"><svg class="icon"><use href="#i-close"/></svg></button></div>{% endfor %}</div>{% endif %}
     <main id="studio-main" class="studio-main" tabindex="-1">
       {% block content %}{% endblock %}

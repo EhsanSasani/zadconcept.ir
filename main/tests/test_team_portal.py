@@ -88,7 +88,7 @@ class TeamPortalTests(TestCase):
                 response = self.client.post(reverse("studio_login"), {
                     "username": self.owner.username, "password": self.password, "next": target})
                 self.assertRedirects(response, reverse("team_home"))
-                self.assertEqual(self.client.get(reverse("studio_dashboard")).status_code, 403)
+                self.assertRedirects(self.client.get(reverse("studio_dashboard")), reverse("panel_home"), fetch_redirect_response=False)
 
     def test_authenticated_florist_discards_manager_next(self):
         self.client.force_login(self.owner)
@@ -125,9 +125,9 @@ class TeamPortalTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
         self.client.force_login(self.owner)
-        self.assertEqual(self.client.get(reverse("team_home")).status_code, 403)
+        self.assertRedirects(self.client.get(reverse("team_home")), reverse("panel_home"), fetch_redirect_response=False)
         self.client.force_login(self.manager)
-        self.assertEqual(self.client.get(reverse("team_home")).status_code, 403)
+        self.assertRedirects(self.client.get(reverse("team_home")), reverse("panel_home"), fetch_redirect_response=False)
 
     def test_login_throttle_does_not_authenticate_after_limit(self):
         from main.team_views import _login_limit_key

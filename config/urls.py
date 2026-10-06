@@ -9,6 +9,7 @@ from main.sitemaps import sitemaps
 from main.views.media_views import private_story_source
 
 handler404 = "main.views.custom_404"
+handler403 = "main.panel.forbidden"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
