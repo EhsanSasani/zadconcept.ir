@@ -45,7 +45,7 @@ class TeamProductForm(forms.Form):
     )
     production_type = forms.ChoiceField(
         label="نوع تولید",
-        choices=StudioProduct.ProductionType.choices,
+        choices=[(key, label) for key, label in StudioProduct.ProductionType.choices if key != "MISC"],
         error_messages={"required": "مشخص کنید محصول آماده روز است یا سفارش اختصاصی."},
     )
     product_type = forms.ChoiceField(label="نوع محصول", choices=StudioProduct.ProductType.choices)

@@ -6,13 +6,15 @@ from . import views
 from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
 from . import studio_views, sales_views
-from . import panel
+from . import panel, misc_sales
 from .studio_notification_views import admin_notifications
 
 urlpatterns = [
     path("panel/", panel.home, name="panel_home"),
     path("panel/select/", panel.select, name="panel_select"),
     path("sales/", sales_views.home, name="sales_home"),
+    path("sales/misc/", misc_sales.counter, name="sales_misc"),
+    path("sales/misc/<int:pk>/", misc_sales.counter, name="sales_misc_edit"),
     path("sales/history/", sales_views.history, name="sales_history"),
     path("sales/products/<int:pk>/", sales_views.detail, name="sales_detail"),
     path("", include("main.team_urls")),

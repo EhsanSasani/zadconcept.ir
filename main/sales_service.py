@@ -78,6 +78,8 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
     try:
         with transaction.atomic():
             current = _lock_record(pk)
+            if current.production_type == "MISC":
+                raise ValidationError("فروش شاخه و متفرقه را از فرم مخصوص آن اصلاح کنید.")
             if version(current) != expected_version:
                 raise ValidationError('محصول پس از بازکردن صفحه تغییر کرده است؛ صفحه را تازه کنید و دوباره بررسی کنید.')
             if current.status == StudioProduct.Status.DELETED:

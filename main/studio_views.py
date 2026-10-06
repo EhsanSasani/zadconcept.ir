@@ -83,7 +83,7 @@ def _event_filter(field, period):
 
 
 def _stats(qs, period):
-    produced = _event_filter("produced_at", period)
+    produced = _event_filter("produced_at", period) & ~Q(production_type="MISC")
     sold = Q(status=StudioProduct.Status.SOLD) & _event_filter("sold_at", period)
     withdrawn = Q(status=StudioProduct.Status.WITHDRAWN) & _event_filter("withdrawn_at", period)
     values = qs.aggregate(
@@ -94,7 +94,10 @@ def _stats(qs, period):
         cohort_sold=Count("pk", filter=produced & Q(status=StudioProduct.Status.SOLD)),
         total_value=Sum("price", filter=produced),
         sold_value=Sum("price", filter=sold), average_price=Avg("price", filter=produced),
-        average_time=Avg(F("sold_at") - F("produced_at"), filter=sold),
+        daily_sales=Sum("price", filter=sold & Q(production_type="DAILY")),
+        custom_sales=Sum("price", filter=sold & Q(production_type="CUSTOM")),
+        misc_sales=Sum("price", filter=sold & Q(production_type="MISC")),
+        average_time=Avg(F("sold_at") - F("produced_at"), filter=sold & ~Q(production_type="MISC")),
     )
     # Conversion remains a cohort metric: sales of older stock must not make
     # this period's production conversion exceed 100%.
@@ -102,7 +105,7 @@ def _stats(qs, period):
     values["outcome_total"] = sum(values[key] for key in ("sold", "withdrawn", "available", "cancelled"))
     duration = values["average_time"]
     values["average_days"] = round(duration.total_seconds() / 86400, 1) if duration else None
-    for key in ("total_value", "sold_value", "average_price"):
+    for key in ("total_value", "sold_value", "average_price", "daily_sales", "custom_sales", "misc_sales"):
         values[key] = values[key] or 0
     return values
 
@@ -153,6 +156,8 @@ def _chart(qs, period):
                                ("sold", "sold_at", StudioProduct.Status.SOLD),
                                ("withdrawn", "withdrawn_at", StudioProduct.Status.WITHDRAWN)):
         rows = qs.filter(_event_filter(field, period))
+        if key == "produced":
+            rows = rows.exclude(production_type="MISC")
         if status:
             rows = rows.filter(status=status)
         series[key] = {row["day"].isoformat(): row["count"] for row in rows.annotate(
@@ -248,6 +253,8 @@ def metric_detail(request, metric):
         qs = qs.filter(_event_filter(field, period))
         if status:
             qs = qs.filter(status=status)
+    if metric in {"produced", "total_value"}:
+        qs = qs.exclude(production_type="MISC")
     total = (qs.aggregate(value=Sum("price"))["value"] or 0) if money else qs.count()
     by_florist = list(qs.values("florist__name").annotate(value=Sum("price") if money else Count("pk")).order_by("-value", "florist__name"))
     florist_peak = max((row["value"] or 0 for row in by_florist), default=0) or 1
@@ -281,9 +288,12 @@ def products(request):
     if q:
         matching_types = [key for key, label in StudioProduct.ProductType.choices
                           if q in label or q.casefold() in key.casefold()]
-        qs = qs.filter(Q(factor_code__icontains=q) | Q(florist__name__icontains=q) |
+        matching = ((Q(factor_code__icontains=q) & ~Q(production_type="MISC")) | Q(florist__name__icontains=q) |
                        Q(florist__code__icontains=q) | Q(product__name__icontains=q) |
-                       Q(product_type__in=matching_types))
+                       Q(product_type__in=matching_types) | Q(production_type="MISC", notes__icontains=q))
+        if q.isdecimal() and len(q) < 19:
+            matching |= Q(production_type="MISC", pk=int(q))
+        qs = qs.filter(matching)
     for field in ("status", "production_type", "product_type", "source"):
         value = request.GET.get(field, "")
         choices = dict(StudioProduct._meta.get_field(field).choices)
@@ -338,7 +348,7 @@ def analytics(request):
     _access(request)
     period = _period(request)
     qs = _activity(period)
-    produced = _event_filter("produced_at", period)
+    produced = _event_filter("produced_at", period) & ~Q(production_type="MISC")
     sold = Q(status="SOLD") & _event_filter("sold_at", period)
     withdrawn = Q(status="WITHDRAWN") & _event_filter("withdrawn_at", period)
     by_type = list(qs.values("product_type").annotate(
@@ -431,6 +441,8 @@ class ProductForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["production_type"].choices = [(key, label) for key, label in StudioProduct.ProductionType.choices if key != "MISC"]
+        self.fields["florist"].required = True
         self.fields["florist"].queryset = Florist.objects.filter(is_active=True)
         self.fields["florist"].label = "فلوریست سازنده"
         self.fields["florist"].empty_label = "فلوریست را انتخاب کنید"

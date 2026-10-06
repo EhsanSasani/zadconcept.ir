@@ -2950,6 +2950,7 @@ class StudioProduct(TimeStampedModel):
     class ProductionType(models.TextChoices):
         DAILY = "DAILY", "روزانه"
         CUSTOM = "CUSTOM", "سفارشی"
+        MISC = "MISC", "شاخه و متفرقه"
 
     class Status(models.TextChoices):
         AVAILABLE = "AVAILABLE", "موجود"
@@ -2976,7 +2977,7 @@ class StudioProduct(TimeStampedModel):
         OTHER = "other", "سایر"
 
     factor_code = models.CharField("شماره فاکتور", max_length=40, unique=True)
-    florist = models.ForeignKey(Florist, on_delete=models.PROTECT, related_name="studio_products")
+    florist = models.ForeignKey(Florist, on_delete=models.PROTECT, related_name="studio_products", null=True, blank=True)
     product_type = models.CharField("نوع محصول", max_length=16, choices=ProductType.choices)
     production_type = models.CharField("نوع تولید", max_length=8, choices=ProductionType.choices, db_index=True)
     price = models.DecimalField("قیمت به تومان", max_digits=12, decimal_places=0)
@@ -3015,8 +3016,14 @@ class StudioProduct(TimeStampedModel):
                                     name="studio_telegram_identity"),
             models.UniqueConstraint(Lower("factor_code"), name="studio_factor_ci_unique"),
             models.CheckConstraint(condition=Q(price__gt=0), name="studio_price_positive"),
-            models.CheckConstraint(condition=Q(image__gt="") | Q(product__isnull=False),
+            models.CheckConstraint(condition=Q(image__gt="") | Q(product__isnull=False) | Q(production_type="MISC"),
                                    name="studio_image_or_public_product"),
+            models.CheckConstraint(condition=Q(production_type="MISC") | Q(florist__isnull=False),
+                                   name="studio_production_has_florist"),
+            models.CheckConstraint(condition=~Q(production_type="MISC") | (
+                Q(florist__isnull=True, product__isnull=True, telegram_chat_id__isnull=True,
+                  telegram_message_id__isnull=True, sold_at__isnull=False, status__in=["SOLD", "DELETED"])
+                & ~Q(notes="")), name="studio_misc_sale_valid"),
             models.CheckConstraint(condition=~Q(production_type="CUSTOM") | Q(product__isnull=True),
                                    name="studio_custom_private"),
             models.CheckConstraint(condition=~Q(status="SOLD") | Q(sold_at__isnull=False),
@@ -3030,6 +3037,14 @@ class StudioProduct(TimeStampedModel):
         indexes = [models.Index(fields=["florist", "produced_at"], name="studio_florist_period_idx")]
 
     @property
+    def display_id(self):
+        return self.pk if self.production_type == self.ProductionType.MISC else self.factor_code
+
+    @property
+    def display_name(self):
+        return self.notes if self.production_type == self.ProductionType.MISC else self.get_product_type_display()
+
+    @property
     def photo_url(self):
         if self.image:
             return self.image.url
@@ -3041,7 +3056,7 @@ class StudioProduct(TimeStampedModel):
         super().clean()
         self.factor_code = (self.factor_code or "").strip().upper()
         errors = {}
-        if not self.image and not (self.product_id and self.product.cover_image):
+        if self.production_type != self.ProductionType.MISC and not self.image and not (self.product_id and self.product.cover_image):
             errors["image"] = "تصویر محصول لازم است."
         if bool(self.telegram_chat_id) != bool(self.telegram_message_id):
             errors["telegram_chat_id"] = "شناسه پیام تلگرام باید کامل باشد."
