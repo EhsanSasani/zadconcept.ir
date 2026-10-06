@@ -1,0 +1,20 @@
+{% extends 'main/sales/base.html' %}{% load static studio_ui %}
+{% block title %}شاخه و متفرقه{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/misc-sales.css' %}">{% endblock %}
+{% block content %}
+<div class="page-head"><p class="eyebrow">از دفتر فروش به زاد</p><h1>{% if record %}اصلاح فروش{% else %}شاخه و متفرقه{% endif %}</h1><p>تاریخ را انتخاب کنید و فروش‌ها را پشت سر هم ثبت کنید.</p></div>
+<div class="counter-layout">
+<section class="panel counter-entry">
+  <div class="counter-id"><span>شناسهٔ یکتا</span><strong>{% if record %}{{ record.pk|fa_number }}{% else %}پس از ثبت، خودکار{% endif %}</strong></div>
+  <form method="post" class="counter-form">{% csrf_token %}{{ form.token }}{{ form.version }}
+    {{ form.non_field_errors }}
+    {% for field in form.visible_fields %}<div class="counter-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.name == 'date' %}<small>سال/ماه/روز · تاریخ برای ثبت بعدی حفظ می‌شود.</small>{% endif %}</div>{% endfor %}
+    <button type="submit" class="primary">{% if record %}ذخیرهٔ اصلاحات{% else %}ثبت و فروش بعدی{% endif %}</button>
+    {% if record %}<a class="counter-cancel" href="{% url 'sales_misc' %}">انصراف و ثبت فروش جدید</a>{% endif %}
+  </form>
+</section>
+<section class="counter-ledger"><h2>فروش‌های ثبت‌شده <small>{{ page.paginator.count|fa_number }} مورد</small></h2>
+  {% for item in page %}<article class="panel counter-row"><div class="counter-meta"><span>شناسه {{ item.pk|fa_number }}</span><time dir="ltr">{{ item.sold_at|jalali_date }}</time></div><h3>{{ item.notes }}</h3><div class="counter-bottom"><strong>{{ item.price|fa_number }} <small>تومان</small></strong><a href="{% url 'sales_misc_edit' item.pk %}">اصلاح</a></div></article>{% empty %}<div class="panel empty"><h2>اولین فروش را ثبت کنید</h2><p>هر ردیف دفتر فروش، یک ثبت در زاد.</p></div>{% endfor %}
+  {% include 'main/sales/pagination.html' %}
+</section></div>
+{% endblock %}

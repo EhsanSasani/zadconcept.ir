@@ -5,6 +5,15 @@ DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 
 
 @register.filter
+def jalali_date(value):
+    from django.utils import timezone
+    from main.persian_dates import format_persian_date
+    if not value:
+        return "—"
+    return format_persian_date(timezone.localtime(value).date())
+
+
+@register.filter
 def fa_number(value):
     if value is None:
         return "—"

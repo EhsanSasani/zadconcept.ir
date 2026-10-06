@@ -79,13 +79,16 @@ def home(request):
         'available':Q(production_type='DAILY',status='AVAILABLE'),
         'sold':Q(status='SOLD',sold_at__gte=start,sold_at__lt=end),
         'withdrawn':Q(production_type='DAILY',status='WITHDRAWN'),
-        'custom':Q(production_type='CUSTOM'), 'all':Q(),
+        'misc':Q(production_type='MISC'), 'custom':Q(production_type='CUSTOM'), 'all':Q(),
     }
     if tab not in filters:tab='available'
     q = latin_digits(request.GET.get('q','').strip())[:100]
     records = records.filter(filters[tab])
     if q:
-        records = records.filter(Q(factor_code__icontains=q)|Q(florist__name__icontains=q)|Q(florist__code__icontains=q))
+        matching = (Q(factor_code__icontains=q) & ~Q(production_type="MISC"))|Q(florist__name__icontains=q)|Q(florist__code__icontains=q)|(Q(production_type="MISC",notes__icontains=q)|Q(production_type="MISC",notes__icontains=request.GET.get("q", "").strip()[:100]))
+        if q.isascii() and q.isdigit() and len(q) < 19:
+            matching |= Q(production_type='MISC', pk=int(q))
+        records = records.filter(matching)
     records = records.select_related('florist','product').order_by('-updated_at','-pk')
     page = Paginator(records,24).get_page(request.GET.get('page'))
     return render(request,'main/sales/home.html',{'page':page,'q':q,'tab':tab,'stats':stats,'active':'home'})
@@ -95,6 +98,8 @@ def home(request):
 @require_http_methods(['GET','POST'])
 def detail(request, pk):
     record = get_object_or_404(StudioProduct.objects.select_related('florist','product'),pk=pk)
+    if record.production_type == 'MISC':
+        return redirect('sales_misc_edit', pk=record.pk)
     initial = {name:getattr(record,name) for name in ('factor_code','product_type','price','notes')}
     initial.update(florist=record.florist_id,version=version(record))
     action = request.POST.get('action') if request.method=='POST' else None
