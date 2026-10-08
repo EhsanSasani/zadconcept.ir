@@ -21,7 +21,7 @@ class AdminWorkspaceTests(TestCase):
         self.client.force_login(self.admin_user)
 
     def test_dashboard_and_critical_forms_render_without_losing_native_controls(self):
-        for name in ('index', 'main_flower_changelist', 'main_samedayflower_add', 'main_weddingproduct_add', 'main_bakeryitem_add', 'main_giftitem_add', 'main_pagecontentblock_add', 'main_workshoppagecontent_add', 'main_newspost_add', 'main_story_add', 'main_sitehero_add'):
+        for name in ('index', 'main_flower_changelist', 'main_samedayflower_changelist', 'main_weddingproduct_add', 'main_bakeryitem_add', 'main_giftitem_add', 'main_pagecontentblock_add', 'main_workshoppagecontent_add', 'main_newspost_add', 'main_story_add', 'main_sitehero_add'):
             with self.subTest(name=name):
                 response = self.client.get(reverse(f'admin:{name}'))
                 self.assertEqual(response.status_code, 200)

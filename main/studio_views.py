@@ -21,6 +21,7 @@ from .persian_dates import format_persian_date, parse_persian_date
 from .studio_access import require_studio_permission
 from .studio_admin_notifications import admin_notifications_enabled
 from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
+from .procurement_queries import summary as procurement_summary
 
 
 def _access(request, permission="view_studioproduct"):
@@ -184,6 +185,7 @@ def _base(request, active, period=None):
         ("products", "محصولات", "studio_products"),
         ("florists", "فلوریست‌ها", "studio_florists"),
         ("analytics", "تحلیل‌ها", "studio_analytics"),
+        ("procurement", "خرید و دورریز", "studio_procurement"),
         ("add", "ثبت محصول", "studio_product_add"),
         ("settings", "بیشتر", "studio_settings"),
     ]}
@@ -212,6 +214,9 @@ def dashboard(request):
     missing_count = TelegramSameDayPost.objects.filter(product__isnull=False, product__studio_record__isnull=True).count()
     issue_count = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).count()
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
+               "procurement": procurement_summary(period),
+               "procurement_url": reverse('studio_procurement') + '?' + urlencode({
+                   'period': period['choice'], 'start': period['start'], 'end': period['end']}),
                "daily": daily, "custom": custom, "chart": chart, "florists": florist_rows,
                "latest": latest[:5], "table_sort": table_sort,
                "missing_count": missing_count, "issue_count": issue_count,
@@ -351,17 +356,21 @@ def analytics(request):
     produced = _event_filter("produced_at", period) & ~Q(production_type="MISC")
     sold = Q(status="SOLD") & _event_filter("sold_at", period)
     withdrawn = Q(status="WITHDRAWN") & _event_filter("withdrawn_at", period)
-    by_type = list(qs.values("product_type").annotate(
+    by_type = list(qs.annotate(report_type=Case(
+        When(production_type="MISC", then=Value("misc")),
+        default=F("product_type"), output_field=CharField())).values("report_type").annotate(
         produced=Count("pk", filter=produced), sold=Count("pk", filter=sold),
         withdrawn=Count("pk", filter=withdrawn),
         cohort_sold=Count("pk", filter=produced & Q(status="SOLD")),
         sold_value=Sum("price", filter=sold)).order_by("-produced"))
     for row in by_type:
+        row["product_type"] = row.pop("report_type")
         row["sell_through"] = round(row["cohort_sold"] / row["produced"] * 100) if row["produced"] else 0
     fields = {"type": "product_type", "produced": "produced", "sold": "sold", "withdrawn": "withdrawn",
               "rate": "sell_through", "value": "sold_value"}
     table_sort = _sort_state(request, fields, "produced")
     labels = dict(StudioProduct.ProductType.choices)
+    labels["misc"] = "شاخه و متفرقه"
     by_type.sort(key=lambda row: labels[row["product_type"]] if table_sort["key"] == "type"
                  else (row[fields[table_sort["key"]]] or 0), reverse=table_sort["direction"] == "desc")
     split = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
@@ -480,11 +489,14 @@ class ProductForm(forms.ModelForm):
 
 
 class ProductEditForm(ProductForm):
+    version = forms.CharField(widget=forms.HiddenInput)
     class Meta(ProductForm.Meta):
         fields = ("image", "florist", "factor_code", "product_type", "production_type", "price", "notes")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from .sales_service import version
+        self.fields["version"].initial = version(self.instance)
         self.fields["image"].required = False
         # An existing maker remains selectable after leaving the team; editing
         # the price must not require reassigning their historical production.
@@ -556,7 +568,8 @@ def product_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         from .studio_publishing import update_dashboard_record
         try:
-            record = update_dashboard_record(form.save(commit=False), changed_fields=form.changed_data)
+            record = update_dashboard_record(form.save(commit=False), changed_fields=form.changed_data,
+                                             actor=request.user, expected_version=form.cleaned_data["version"])
         except ValidationError as error:
             if hasattr(error, "message_dict"):
                 for field, errors in error.message_dict.items():

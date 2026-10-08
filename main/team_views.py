@@ -5,15 +5,15 @@ import uuid
 from urllib.parse import unquote, urlsplit
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model, login, logout, update_session_auth_hash
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
+from django.contrib.auth.forms import PasswordChangeForm
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.db.models import Count, Q
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
@@ -27,7 +27,7 @@ from .studio_access import (can_manage_studio, get_active_florist, portal_contex
                             require_studio_permission, team_required, wants_json)
 from .studio_delivery import delivery_summary
 from .studio_publishing import create_portal_record
-from .team_forms import StudioAccountForm, TeamLoginForm, TeamProductForm, TeamProfileForm
+from .team_forms import TeamLoginForm, TeamProductForm, TeamProfileForm
 
 
 def _landing(user):
@@ -47,7 +47,9 @@ def _safe_next(request, fallback):
         if path in {reverse("studio_login").rstrip("/"), reverse("studio_logout").rstrip("/")}:
             return fallback
         if request.user.is_authenticated:
-            from .studio_access import can_use_sales
+            from .studio_access import can_use_sales, can_use_procurement
+            if (path == '/procurement' or path.startswith('/procurement/')) and not can_use_procurement(request.user):
+                return fallback
             sales = reverse("sales_home").rstrip("/")
             if (path == sales or path.startswith(sales + "/")) and not can_use_sales(request.user):
                 if path != reverse("sales_history").rstrip("/") or not can_manage_studio(request.user):
@@ -119,7 +121,9 @@ def _own_products(request):
 def _visible_products(request):
     return StudioProduct.objects.filter(
         Q(florist=request.florist) | Q(created_by=request.user)
-    ).exclude(status=StudioProduct.Status.DELETED).select_related("product", "florist")
+    ).exclude(status=StudioProduct.Status.DELETED).exclude(
+        production_type=StudioProduct.ProductionType.MISC
+    ).select_related("product", "florist")
 
 
 @team_required
@@ -221,7 +225,8 @@ def team_products(request):
     return render(request, "main/team/products.html", {
         **portal_context(request, "products"), "page_obj": Paginator(products, 18).get_page(request.GET.get("page")),
         "status_filter": status, "production_filter": production, "q": q,
-        "status_choices": status_choices, "production_choices": StudioProduct.ProductionType.choices})
+        "status_choices": status_choices, "production_choices": [
+            choice for choice in StudioProduct.ProductionType.choices if choice[0] != "MISC"]})
 
 
 @team_required
@@ -300,13 +305,6 @@ def team_manifest(request):
                         content_type="application/manifest+json")
 
 
-def _resettable_account(user):
-    # A delegated account manager cannot take over a staff/manager account by
-    # resetting its password. Privileged accounts are managed by the operator.
-    return not (user.is_staff or user.is_superuser or user.get_all_permissions()
-                or user.user_permissions.exists() or user.groups.filter(permissions__isnull=False).exists())
-
-
 @never_cache
 @login_required(login_url="studio_login")
 @require_http_methods(["GET", "POST"])
@@ -315,47 +313,7 @@ def studio_accounts(request):
     if request.method == "GET":
         from .account_views import index
         return index(request)
-    form = StudioAccountForm()
-    reset_form = None
-    reset_florist = None
-    if request.method == "POST":
-        action = request.POST.get("action", "create")
-        if action == "create":
-            form = StudioAccountForm(request.POST)
-            if form.is_valid():
-                try:
-                    form.save()
-                except (ValidationError, IntegrityError):
-                    form.add_error(None, "ساخت حساب انجام نشد؛ نام کاربری و اتصال فلوریست را دوباره بررسی کنید.")
-                else:
-                    messages.success(request, "حساب فلوریست ساخته شد. نام کاربری و رمز اولیه را مستقیم به او بدهید.")
-                    return redirect("studio_accounts")
-        elif action in {"password", "disable", "enable"}:
-            try:
-                florist_id = int(request.POST.get("florist_id", ""))
-            except (ValueError, TypeError):
-                raise Http404 from None
-            reset_florist = get_object_or_404(Florist.objects.select_related("user"), pk=florist_id, user__isnull=False)
-            user = reset_florist.user
-            if not _resettable_account(user):
-                raise PermissionDenied
-            if action == "password":
-                reset_form = SetPasswordForm(user, request.POST)
-                if reset_form.is_valid():
-                    reset_form.save()
-                    messages.success(request, "رمز عبور تازه ذخیره شد و نشست‌های قبلی این حساب پایان می‌یابند.")
-                    return redirect("studio_accounts")
-            else:
-                user.is_active = action == "enable"
-                user.save(update_fields=["is_active"])
-                messages.success(request, "دسترسی ورود فعال شد." if user.is_active else "دسترسی ورود غیرفعال شد.")
-                return redirect("studio_accounts")
-        else:
-            raise PermissionDenied
-    rows = [{"florist": florist, "can_reset": _resettable_account(florist.user)}
-            for florist in Florist.objects.filter(user__isnull=False).select_related("user")]
-    # Import lazily: root owns the manager layout context.
-    from .studio_views import _base
-    return render(request, "main/studio/accounts.html", {
-        **_base(request, "accounts"), "form": form, "rows": rows,
-        "reset_form": reset_form, "reset_florist": reset_florist})
+    # Old bookmarks remain valid; stale forms must not mutate accounts without
+    # the current editor's version and audit contract.
+    messages.warning(request, "فرم مدیریت کاربران به‌روز شده است؛ تغییر را از فرم جدید انجام دهید.")
+    return redirect("studio_accounts")

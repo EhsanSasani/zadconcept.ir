@@ -104,7 +104,7 @@ def save_dashboard_record(record):
     return record
 
 
-def update_dashboard_record(record, *, changed_fields):
+def update_dashboard_record(record, *, changed_fields, actor=None, expected_version=None):
     """Edit stored manager fields and their existing public row in one transaction.
 
     Only fields actually changed by the form are copied onto the locked row.
@@ -122,6 +122,13 @@ def update_dashboard_record(record, *, changed_fields):
             public = (Product.objects.using(using).select_for_update().filter(pk=product_id).first()
                       if product_id else None)
             current = StudioProduct.objects.using(using).select_for_update().get(pk=record.pk)
+            from .sales_service import snapshot, version, _audit, queue_sync, ensure_delivery_editable
+            if actor is not None and (not actor.is_active or not actor.has_perm("main.change_studioproduct")):
+                raise PermissionDenied
+            if expected_version is not None and version(current) != expected_version:
+                raise ValidationError("محصول پس از بازکردن صفحه تغییر کرده است؛ صفحه را تازه کنید.")
+            ensure_delivery_editable(list(current.deliveries.select_for_update()))
+            before = snapshot(current)
             if current.product_id != product_id:
                 raise ValidationError("پیوند کاتالوگ محصول تغییر کرده است؛ فرم را دوباره باز کنید.")
             if (current.source not in {StudioProduct.Source.DASHBOARD, StudioProduct.Source.ADMIN}
@@ -146,6 +153,8 @@ def update_dashboard_record(record, *, changed_fields):
                 current.save(using=using, update_fields=[*sorted(changed), "updated_at"])
             projection = {}
             if public:
+                if "product_type" in changed:
+                    projection["name"] = current.get_product_type_display()
                 if "price" in changed:
                     projection.update(price=current.price, pricing_type=Product.PricingType.FIXED)
                 if "image" in changed:
@@ -155,6 +164,10 @@ def update_dashboard_record(record, *, changed_fields):
             if public and "image" in changed:
                 storage, name = current.image.storage, current.image.name
                 transaction.on_commit(lambda: create_responsive_image_variants(storage, name), using=using)
+            if changed:
+                queue_sync(current)
+                if actor is not None:
+                    _audit(current, actor, "edit", "اصلاح محصول از پنل مدیریت", before)
             return current
     except Exception:
         _clean_failed_file(record)

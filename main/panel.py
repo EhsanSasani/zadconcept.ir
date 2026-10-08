@@ -9,7 +9,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 from django.views.defaults import permission_denied
 
-from .studio_access import can_manage_studio, can_use_sales, get_active_florist
+from .studio_access import can_manage_studio, can_use_sales, can_use_procurement, get_active_florist
 
 SESSION_KEY = "zad_workspace"
 
@@ -20,6 +20,7 @@ def workspaces(user):
         ("studio", "مدیریت", "نمای کلی امروز، عملکرد تیم و گزارش‌ها", "studio_dashboard", can_manage_studio(user)),
         ("sales", "فروش", "موجودی، ثبت فروش و پیگیری محصولات", "sales_home", can_use_sales(user)),
         ("team", "فلوریست", "ثبت محصول، کارنامه و فضای شخصی شما", "team_home", bool(get_active_florist(user))),
+        ("procurement", "خرید و دورریز", "کالاها، فاکتورهای خرید و دورریز روزانه", "procurement_home", can_use_procurement(user)),
     ):
         if allowed:
             choices.append({"key": key, "label": label, "description": description, "url": reverse(route)})
@@ -27,7 +28,7 @@ def workspaces(user):
 
 
 def navigation(request):
-    if not request.path.startswith(("/panel/", "/studio/", "/team/", "/sales/")):
+    if not request.path.startswith(("/panel/", "/studio/", "/team/", "/sales/", "/procurement/")):
         return {}
     choices = workspaces(request.user)
     current = next((item for item in choices if request.path.startswith(item["url"])), None)
@@ -68,12 +69,12 @@ def select(request):
 
 @never_cache
 def forbidden(request, exception=None):
-    if not request.path.startswith(("/panel/", "/studio/", "/team/", "/sales/")):
+    if not request.path.startswith(("/panel/", "/studio/", "/team/", "/sales/", "/procurement/")):
         return permission_denied(request, exception)
     if "application/json" in request.headers.get("Accept", ""):
         return JsonResponse({"ok": False, "error": "به این بخش دسترسی ندارید.",
                              "panel_url": reverse("panel_home")}, status=403)
-    if request.method == "GET" and request.path in {"/studio/", "/sales/", "/team/"}:
+    if request.method == "GET" and request.path in {"/studio/", "/sales/", "/team/", "/procurement/"}:
         messages.info(request, "دسترسی این فضای کاری تغییر کرده است؛ از پنل زاد وارد شوید.")
         return redirect("panel_home")
     return render(request, "main/pages/panel/forbidden.html", status=403)

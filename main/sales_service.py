@@ -66,6 +66,13 @@ def requeue_publication(record):
     job.save()
 
 
+def ensure_delivery_editable(jobs):
+    if any(j.status in {StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN} for j in jobs):
+        raise ValidationError('ارسال تلگرام در حال انجام یا نیازمند بررسی است؛ پس از تعیین نتیجه دوباره اقدام کنید.')
+    if any(j.last_error == 'worker_interrupted' and j.updated_at > timezone.now() - timedelta(seconds=180) for j in jobs):
+        raise ValidationError('ارسال قبلی قطع شده است؛ سه دقیقه صبر کنید تا وضعیت صف پایدار شود.')
+
+
 def apply_sales_action(*, pk, actor, expected_version, action, reason, values=None):
     if not can_use_sales(actor):
         raise PermissionDenied
@@ -85,10 +92,7 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
             if current.status == StudioProduct.Status.DELETED:
                 raise ValidationError('محصول حذف مدیریتی شده؛ اصلاح آن از پنل فروش مجاز نیست.')
             jobs = list(current.deliveries.select_for_update())
-            if any(j.status in {StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN} for j in jobs):
-                raise ValidationError('ارسال تلگرام در حال انجام یا نیازمند بررسی است؛ پس از تعیین نتیجه دوباره اقدام کنید.')
-            if any(j.last_error == 'worker_interrupted' and j.updated_at > timezone.now() - timedelta(seconds=180) for j in jobs):
-                raise ValidationError('ارسال قبلی قطع شده است؛ سه دقیقه صبر کنید تا وضعیت صف پایدار شود.')
+            ensure_delivery_editable(jobs)
             before = snapshot(current)
             now = timezone.now()
             if action == 'edit':

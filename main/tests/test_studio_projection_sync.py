@@ -14,6 +14,7 @@ from main.models import (
     Category, Florist, Product, SameDayFlower, StudioAdminNotification,
     StudioDelivery, StudioProduct,
 )
+from main.sales_service import version
 from main.studio_delivery import soft_delete_product
 from main.studio_publishing import save_dashboard_record, update_dashboard_record
 from .test_telegram_same_day import image_file
@@ -56,6 +57,7 @@ class StudioProjectionSyncTests(TestCase):
         values = {
             "florist": self.florist.pk, "factor_code": self.record.factor_code,
             "product_type": "box", "production_type": "DAILY", "price": "2500000", "notes": "",
+            "version": version(StudioProduct.objects.get(pk=self.record.pk)),
         }
         values.update(overrides)
         return values
@@ -251,3 +253,59 @@ class StudioProjectionSyncTests(TestCase):
         self.assertEqual(public.status, Product.Status.WITHDRAWN)
         self.assertEqual(public.stock_status, Product.StockStatus.OUT_OF_STOCK)
         self.assertFalse(self.notifications().exists())
+
+    def test_manager_edit_syncs_caption_name_and_audit(self):
+        self.mark_existing_group_identity()
+        response = self.post_edit(price="3100000", product_type="jar")
+        self.assertEqual(response.status_code, 302)
+        self.record.refresh_from_db()
+        self.assertEqual(self.record.product.name, self.record.get_product_type_display())
+        self.assertEqual(self.record.deliveries.get(action="SYNC").status, "PENDING")
+        self.assertEqual(self.record.sales_audits.get().actor, self.manager)
+        self.send.assert_not_called()
+
+    def test_stale_manager_form_and_missing_version_cannot_overwrite(self):
+        old = version(self.record)
+        self.assertEqual(self.post_edit(price="3100000").status_code, 302)
+        for token in (old, ""):
+            response = self.post_edit(price="4200000", version=token)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context["form"].errors)
+        self.record.refresh_from_db()
+        self.assertEqual(self.record.price, 3100000)
+
+    def test_manager_cannot_edit_during_ambiguous_delivery(self):
+        self.record.deliveries.update(status="UNCERTAIN")
+        response = self.post_edit(price="3100000")
+        self.assertTrue(response.context["form"].errors)
+        self.record.refresh_from_db()
+        self.assertEqual(self.record.price, 2500000)
+
+    def test_catalog_cannot_reopen_sold_stock(self):
+        self.mark_existing_group_identity()
+        public = self.record.product
+        public.status = Product.Status.SOLD
+        public.save()
+        public.status = Product.Status.AVAILABLE
+        public.stock_status = Product.StockStatus.IN_STOCK
+        public.save()
+        public.refresh_from_db()
+        self.record.refresh_from_db()
+        self.assertEqual(public.status, "SOLD")
+        self.assertEqual(public.stock_status, Product.StockStatus.OUT_OF_STOCK)
+        self.assertEqual(self.record.status, "SOLD")
+        self.assertFalse(Product.objects.published().filter(pk=public.pk).exists())
+
+    def test_admin_operational_fields_and_creation_are_locked(self):
+        from django.contrib import admin
+        from django.test import RequestFactory
+        model_admin = admin.site._registry[SameDayFlower]
+        request = RequestFactory().get("/admin/")
+        request.user = self.manager
+        self.assertFalse(model_admin.has_add_permission(request))
+        self.assertFalse(model_admin.has_delete_permission(request, self.record.product))
+        self.assertNotIn("mark_in_stock", model_admin.get_actions(request))
+        self.assertNotIn("mark_out_of_stock", model_admin.get_actions(request))
+        readonly = model_admin.get_readonly_fields(request, self.record.product)
+        for name in ("status", "stock_status", "price", "cover_image", "name"):
+            self.assertIn(name, readonly)

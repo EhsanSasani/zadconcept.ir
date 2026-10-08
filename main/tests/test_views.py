@@ -2377,7 +2377,7 @@ class AdminSmokeTests(TestCase):
                     response = self.client.get(
                         reverse(f"{route_prefix}_{route_suffix}")
                     )
-                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.status_code, 403 if model_meta.label == "main.SameDayFlower" and route_suffix == "add" else 200)
 
     def test_site_hero_can_be_edited_through_admin(self):
         hero = SiteHero.objects.create(

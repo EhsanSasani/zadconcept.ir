@@ -1,0 +1,25 @@
+{% load static studio_ui %}<!doctype html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f7f5ef">
+<title>{% block title %}خرید و دورریز{% endblock %} · زاد</title>
+<link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'main/css/pages/procurement.css' %}?v=2"><link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
+<script src="{% static 'main/js/pages/procurement.js' %}?v=2" defer></script>
+</head><body class="proc-app">
+<a class="proc-skip" href="#proc-main">رفتن به محتوا</a>
+<header class="proc-top"><a class="proc-brand" href="{% if can_write %}{% url 'procurement_home' %}{% else %}{% url 'studio_procurement' %}{% endif %}" dir="ltr">ZAD<span>·</span></a><span class="proc-workspace-name">خرید و دورریز</span><details class="proc-account"><summary>{{ request.user.get_short_name|default:request.user.username }} <span aria-hidden="true">⌄</span></summary><div>{% if perms.main.view_studioproduct %}<a href="{% url 'studio_procurement' %}">گزارش مدیریت</a>{% endif %}<a href="{% url 'panel_home' %}?choose=1">فضاهای کاری من</a><form method="post" action="{% url 'studio_logout' %}">{% csrf_token %}<button type="submit">خروج از حساب</button></form></div></details></header>
+{% include 'main/components/workspace_switcher.html' %}
+<main id="proc-main" class="proc-main" tabindex="-1">
+{% for message in messages %}<div class="proc-notice {{ message.tags }}" role="{% if message.tags == 'error' %}alert{% else %}status{% endif %}">{{ message }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</main>
+<nav class="proc-nav{% if not can_write %} proc-nav-readonly{% endif %}" aria-label="منوی خرید و دورریز">
+{% if can_write %}
+<a href="{% url 'procurement_home' %}"{% if active == 'home' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='home' %}<span>نمای کلی</span></a>
+<a href="{% url 'procurement_purchase_add' %}"{% if active == 'purchase' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='purchase' %}<span>ثبت خرید</span></a>
+<a href="{% url 'procurement_waste_add' %}"{% if active == 'waste' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='waste' %}<span>ثبت دورریز</span></a>
+<a href="{% url 'procurement_materials' %}"{% if active == 'materials' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='materials' %}<span>کالاها</span></a>
+{% else %}<a href="{% url 'studio_procurement' %}">{% include 'main/procurement/icon.html' with name='report' %}<span>گزارش خرید و دورریز</span></a><a href="{% url 'studio_dashboard' %}">{% include 'main/procurement/icon.html' with name='home' %}<span>مدیریت استودیو</span></a>{% endif %}
+</nav>
+<div class="proc-sr" aria-live="polite" data-proc-announcer></div>
+</body></html>

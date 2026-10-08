@@ -3208,3 +3208,170 @@ class StudioSalesAudit(models.Model):
         permissions = [("use_sales_workspace", "دسترسی به پنل فروش")]
         verbose_name = "سابقهٔ اصلاح فروش"
         verbose_name_plural = "سوابق اصلاح فروش"
+
+
+class Material(TimeStampedModel):
+    """A purchasing definition, not a promise of tracked stock."""
+
+    name = models.CharField("نام کالا", max_length=120, unique=True)
+    base_unit = models.CharField("واحد پایه", max_length=30)
+    purchase_unit = models.CharField("واحد خرید", max_length=30)
+    units_per_purchase = models.DecimalField("تعداد واحد پایه در واحد خرید", max_digits=9, decimal_places=3, default=1)
+    default_unit_price = models.DecimalField("قیمت مرجع واحد خرید (تومان)", max_digits=15, decimal_places=0, default=0)
+    is_active = models.BooleanField("فعال", default=True)
+
+    class Meta:
+        ordering = ["name", "pk"]
+        default_permissions = ("view",)
+        permissions = [("use_procurement_workspace", "دسترسی به ثبت خرید و دورریز")]
+        verbose_name = "کالای خرید"
+        verbose_name_plural = "کالاهای خرید"
+        constraints = [
+            models.CheckConstraint(condition=Q(units_per_purchase__gt=0), name="material_conversion_positive"),
+            models.CheckConstraint(condition=Q(default_unit_price__gte=0), name="material_price_nonnegative"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class ProcurementDocument(TimeStampedModel):
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "ثبت‌شده"
+        VOID = "VOID", "باطل‌شده"
+
+    date = models.DateField("تاریخ", db_index=True)
+    notes = models.CharField("یادداشت", max_length=1000, blank=True)
+    submission_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="%(class)s_created")
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE, db_index=True)
+    void_reason = models.CharField("دلیل ابطال", max_length=500, blank=True)
+    voided_at = models.DateTimeField(null=True, blank=True)
+    voided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="%(class)s_voided")
+
+    class Meta:
+        abstract = True
+        ordering = ["-date", "-pk"]
+        default_permissions = ("view",)
+
+
+class PurchaseInvoice(ProcurementDocument):
+    supplier = models.CharField("فروشنده", max_length=120, blank=True)
+    reference = models.CharField("شماره فاکتور فروشنده", max_length=80, blank=True)
+    total = models.DecimalField("جمع فاکتور (تومان)", max_digits=18, decimal_places=0, default=0)
+
+    @property
+    def total_amount(self):
+        return self.total
+
+    class Meta(ProcurementDocument.Meta):
+        abstract = False
+        verbose_name = "فاکتور خرید"
+        verbose_name_plural = "فاکتورهای خرید"
+        constraints = [
+            models.CheckConstraint(condition=Q(total__gte=0), name="purchase_total_nonnegative"),
+            models.CheckConstraint(condition=Q(status="ACTIVE", voided_at__isnull=True, void_reason="") | (Q(status="VOID", voided_at__isnull=False) & ~Q(void_reason="")), name="purchase_void_consistent"),
+        ]
+
+
+class ProcurementLine(models.Model):
+    class UnitMode(models.TextChoices):
+        BASE = "base", "واحد پایه"
+        PURCHASE = "purchase", "واحد خرید"
+
+    material = models.ForeignKey(Material, on_delete=models.PROTECT, related_name="%(class)s_lines")
+    material_name = models.CharField(max_length=120)
+    base_unit = models.CharField(max_length=30)
+    unit_label = models.CharField(max_length=30)
+    unit_mode = models.CharField(max_length=8, choices=UnitMode.choices)
+    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+    conversion_factor = models.DecimalField(max_digits=9, decimal_places=3)
+    base_quantity = models.DecimalField(max_digits=21, decimal_places=6)
+
+    class Meta:
+        abstract = True
+        ordering = ["pk"]
+        default_permissions = ("view",)
+        constraints = [
+            models.CheckConstraint(condition=Q(quantity__gt=0), name="%(class)s_quantity_positive"),
+            models.CheckConstraint(condition=Q(conversion_factor__gt=0), name="%(class)s_factor_positive"),
+            models.CheckConstraint(condition=Q(base_quantity__gt=0), name="%(class)s_base_positive"),
+            models.CheckConstraint(condition=Q(unit_mode="purchase") | Q(unit_mode="base", conversion_factor=1), name="%(class)s_unit_valid"),
+        ]
+
+
+class PurchaseLine(ProcurementLine):
+    invoice = models.ForeignKey(PurchaseInvoice, on_delete=models.PROTECT, related_name="lines")
+    unit_price = models.DecimalField("قیمت واحد (تومان)", max_digits=15, decimal_places=0)
+    total = models.DecimalField("جمع ردیف (تومان)", max_digits=18, decimal_places=0)
+
+    class Meta(ProcurementLine.Meta):
+        abstract = False
+        verbose_name = "ردیف خرید"
+        verbose_name_plural = "ردیف‌های خرید"
+        constraints = ProcurementLine.Meta.constraints + [
+            models.CheckConstraint(condition=Q(unit_price__gte=0, total__gte=0), name="purchase_line_price_valid"),
+        ]
+
+
+class WasteEntry(ProcurementDocument):
+    class Reason(models.TextChoices):
+        WILTED = "wilted", "پژمردگی"
+        DAMAGED = "damaged", "آسیب‌دیدگی"
+        EXPIRED = "expired", "گذشت زمان نگهداری"
+        OTHER = "other", "سایر"
+
+    reason = models.CharField("علت دورریز", max_length=12, choices=Reason.choices, default=Reason.WILTED)
+    estimated_total = models.DecimalField("ارزش برآوردی دورریز (تومان)", max_digits=18, decimal_places=0, default=0)
+
+    @property
+    def total(self):
+        return self.estimated_total
+
+    class Meta(ProcurementDocument.Meta):
+        abstract = False
+        verbose_name = "ثبت دورریز"
+        verbose_name_plural = "ثبت‌های دورریز"
+        constraints = [
+            models.CheckConstraint(condition=Q(estimated_total__gte=0), name="waste_total_nonnegative"),
+            models.CheckConstraint(condition=Q(status="ACTIVE", voided_at__isnull=True, void_reason="") | (Q(status="VOID", voided_at__isnull=False) & ~Q(void_reason="")), name="waste_void_consistent"),
+        ]
+
+
+class WasteLine(ProcurementLine):
+    class CostSource(models.TextChoices):
+        PURCHASE = "purchase", "آخرین خرید ثبت‌شده تا تاریخ دورریز"
+        REFERENCE = "reference", "قیمت مرجع کالا"
+
+    entry = models.ForeignKey(WasteEntry, on_delete=models.PROTECT, related_name="lines")
+    unit_cost = models.DecimalField("بهای هر واحد پایه", max_digits=24, decimal_places=6)
+    estimated_cost = models.DecimalField("ارزش برآوردی (تومان)", max_digits=18, decimal_places=0)
+    cost_source = models.CharField(max_length=12, choices=CostSource.choices)
+    purchase_line = models.ForeignKey(PurchaseLine, null=True, blank=True, on_delete=models.PROTECT, related_name="waste_cost_snapshots")
+
+    class Meta(ProcurementLine.Meta):
+        abstract = False
+        verbose_name = "ردیف دورریز"
+        verbose_name_plural = "ردیف‌های دورریز"
+        constraints = ProcurementLine.Meta.constraints + [
+            models.CheckConstraint(condition=Q(unit_cost__gte=0, estimated_cost__gte=0), name="waste_line_price_valid"),
+            models.CheckConstraint(condition=Q(cost_source="purchase", purchase_line__isnull=False) | Q(cost_source="reference", purchase_line__isnull=True), name="waste_cost_source_valid"),
+        ]
+
+
+class ProcurementAudit(models.Model):
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    actor_name = models.CharField(max_length=150)
+    target_type = models.CharField(max_length=20)
+    target_id = models.PositiveBigIntegerField()
+    action = models.CharField(max_length=20)
+    before = models.JSONField(default=dict)
+    after = models.JSONField(default=dict)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        default_permissions = ("view",)
+        verbose_name = "سابقهٔ خرید و دورریز"
+        verbose_name_plural = "سوابق خرید و دورریز"
+        indexes = [models.Index(fields=["target_type", "target_id"], name="procurement_audit_target")]

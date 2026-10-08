@@ -100,16 +100,10 @@ class SameDayAdminScopeTests(TestCase):
             Product.CatalogScope.SAME_DAY,
         )
 
-    def test_same_day_admin_has_full_delete_and_no_remove_membership_action(self):
+    def test_same_day_admin_keeps_publication_actions_only(self):
         model_admin = admin.site._registry[SameDayFlower]
         actions = model_admin.get_actions(self.request)
-
-        self.assertIn("delete_selected", actions)
-        self.assertEqual(
-            actions["delete_selected"][2],
-            "حذف کامل محصولات انتخاب‌شده",
-        )
-        self.assertNotIn("remove_from_same_day", actions)
+        self.assertEqual(set(actions), {"publish_selected_products", "draft_selected_products"})
 
     def test_legacy_same_day_marker_is_not_available_as_a_tag(self):
         class ConcreteProductAdminForm(ProductAdminForm):

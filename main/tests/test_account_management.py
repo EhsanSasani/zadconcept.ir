@@ -193,3 +193,23 @@ class AccountManagementTests(TestCase):
         with self.assertRaises(PermissionDenied):
             save_account(actor=self.manager, data=form.cleaned_data)
         self.assertFalse(get_user_model().objects.filter(username='new-colleague').exists())
+
+    def test_edit_preserves_limited_manager_permissions(self):
+        self.user.user_permissions.add(Permission.objects.get(codename='view_studioproduct'))
+        self.assertEqual(self.edit(roles=['manager', 'sales'], first_name='نام جدید').status_code, 302)
+        fresh = get_user_model().objects.get(pk=self.user.pk)
+        self.assertTrue(fresh.has_perm('main.view_studioproduct'))
+        self.assertTrue(fresh.has_perm('main.use_sales_workspace'))
+        self.assertFalse(fresh.has_perm('main.manage_studio_accounts'))
+        self.assertFalse(fresh.has_perm('main.change_studioproduct'))
+
+    def test_reactivating_limited_manager_keeps_assigned_permissions(self):
+        group = Group.objects.create(name='Legacy read-only manager')
+        group.permissions.add(Permission.objects.get(codename='view_studioproduct'))
+        self.user.groups.add(group)
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        self.assertEqual(self.edit(roles=['manager'], is_active='on').status_code, 302)
+        fresh = get_user_model().objects.get(pk=self.user.pk)
+        self.assertTrue(fresh.has_perm('main.view_studioproduct'))
+        self.assertFalse(fresh.has_perm('main.manage_studio_accounts'))

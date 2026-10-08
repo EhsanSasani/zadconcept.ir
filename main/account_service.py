@@ -7,8 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
-from .account_roles import (ROLE_GROUPS, ROLE_PERMISSIONS, account_snapshot,
-                            account_version, editable_account)
+from .account_roles import (MANAGER_PERMISSIONS, ROLE_GROUPS, ROLE_PERMISSIONS, account_snapshot,
+                            account_version, editable_account, assigned_manager_permissions)
 from .models import Florist
 
 
@@ -32,6 +32,10 @@ def save_account(*, actor, data, user_id=None):
     if User.objects.filter(username__iexact=data['username']).exclude(pk=user_id).exists():
         raise ValidationError('این نام کاربری قبلاً استفاده شده است.')
     before = account_snapshot(user) if user_id else {}
+    # Saving names/passwords must not silently promote a legacy limited manager.
+    retained_manager = None
+    if user_id and 'manager' in roles and 'manager' in before['roles']:
+        retained_manager = assigned_manager_permissions(user)
     for field in ('username', 'first_name', 'last_name', 'email', 'is_active'):
         setattr(user, field, data[field])
     if data.get('password1'):
@@ -48,6 +52,10 @@ def save_account(*, actor, data, user_id=None):
         content_type__app_label='main', codename__in=[name.split('.')[1] for name in ROLE_PERMISSIONS]))
     for role, (name, codenames) in ROLE_GROUPS.items():
         if role not in roles:
+            continue
+        if role == 'manager' and retained_manager is not None and retained_manager != MANAGER_PERMISSIONS:
+            user.user_permissions.add(*Permission.objects.filter(
+                content_type__app_label='main', codename__in=retained_manager))
             continue
         group, _ = Group.objects.get_or_create(name=name)
         existing = {f'{p.content_type.app_label}.{p.codename}' for p in group.permissions.select_related('content_type')}

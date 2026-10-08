@@ -5,6 +5,18 @@ DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 
 
 @register.filter
+def procurement_date(value):
+    from datetime import datetime
+    from django.utils import timezone
+    from main.persian_dates import format_persian_date
+    if not value:
+        return "—"
+    if isinstance(value, datetime):
+        value = timezone.localtime(value).date() if timezone.is_aware(value) else value.date()
+    return format_persian_date(value)
+
+
+@register.filter
 def jalali_date(value):
     from django.utils import timezone
     from main.persian_dates import format_persian_date
@@ -38,6 +50,8 @@ def percent(part, total):
 @register.filter
 def type_label(value):
     from main.models import StudioProduct
+    if value == "misc":
+        return "شاخه و متفرقه"
     return dict(StudioProduct.ProductType.choices).get(value, value)
 
 

@@ -39,29 +39,20 @@ class DeletionRegressionTests(TestCase):
     product = group_fixtures.GroupWorkflowTests.product
     reply = group_fixtures.GroupWorkflowTests.reply
 
-    def test_admin_bulk_confirmation_and_delete_keeps_tombstone(self):
+    def test_admin_bulk_delete_cannot_remove_operational_stock(self):
         self.send(photo())
         product = self.product()
         user = get_user_model().objects.create_superuser('delete-admin', 'admin@example.com', 'password')
-        self.client.force_login(user)
-        # This client is intentionally for the admin flow (webhook fixture enforces CSRF).
         from django.test import Client
         client = Client()
         client.force_login(user)
         url = reverse('admin:main_samedayflower_changelist')
-        data = {'action': 'delete_selected', '_selected_action': [str(product.pk)]}
-        confirmation = client.post(url, data)
-        self.assertEqual(confirmation.status_code, 200)
-        self.assertFalse(confirmation.context['protected'])
-        self.assertContains(confirmation, 'name="post"')
-        self.assertEqual(client.post(url, {**data, 'post': 'yes'}).status_code, 302)
-        self.assertFalse(Product.objects.filter(pk=product.pk).exists())
+        data = {'action': 'delete_selected', '_selected_action': [str(product.pk)], 'post': 'yes'}
+        self.assertEqual(client.post(url, data).status_code, 302)
+        self.assertTrue(Product.objects.filter(pk=product.pk).exists())
         post = TelegramSameDayPost.objects.get()
-        self.assertIsNone(post.product_id)
-        self.assertIsNotNone(post.deleted_at)
-        self.send(photo('3000', update_id=40, edited=True))
-        self.send(self.reply('۴۰۰۰', update_id=50))
-        self.assertFalse(Product.objects.exists())
+        self.assertEqual(post.product_id, product.pk)
+        self.assertIsNone(post.deleted_at)
 
     def test_individual_proxy_delete_preserves_identity(self):
         self.send(photo())

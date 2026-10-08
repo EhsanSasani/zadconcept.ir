@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from main.models import Florist
+from main.account_roles import ROLE_GROUPS
 
 
 class Command(BaseCommand):
@@ -18,12 +19,13 @@ class Command(BaseCommand):
         parser.add_argument("username")
         parser.add_argument("--florist", help="Existing florist code to link to this account")
         parser.add_argument("--sales", action="store_true", help="Grant only the sales workspace permission")
+        parser.add_argument("--procurement", action="store_true", help="Grant the purchase and waste workspace")
         parser.add_argument("--manager", action="store_true", help="Grant Studio manager permissions (not Django Admin)")
         parser.add_argument("--reset-password", action="store_true", help="Prompt for a replacement password on an existing account")
 
     def handle(self, *args, **options):
-        if not options["florist"] and not options["manager"] and not options["sales"]:
-            raise CommandError("Choose --florist CODE, --sales and/or --manager.")
+        if not options["florist"] and not any(options[role] for role in ROLE_GROUPS):
+            raise CommandError("Choose --florist CODE, --sales, --procurement and/or --manager.")
         User = get_user_model()
         username = User.normalize_username(options["username"].strip())
         try:
@@ -68,18 +70,12 @@ class Command(BaseCommand):
                     raise CommandError("This florist was linked by another request; no changes saved.")
                 florist.user = user
                 florist.save(update_fields=["user", "updated_at"])
-            if options["sales"]:
-                permission = Permission.objects.filter(content_type__app_label="main", codename="use_sales_workspace").first()
-                if permission is None:
-                    raise CommandError("Sales permission missing. Run migrate first.")
-                group, _ = Group.objects.get_or_create(name="Studio sales")
-                group.permissions.add(permission)
-                user.groups.add(group)
-            if options["manager"]:
-                group, _ = Group.objects.get_or_create(name="Studio managers")
-                codenames = {"view_studioproduct", "add_studioproduct", "change_studioproduct",
-                             "view_florist", "add_florist", "change_florist", "manage_studio_accounts",
-                             "change_studioingestionissue"}
+            for role, (group_name, codenames) in ROLE_GROUPS.items():
+                if not options[role]:
+                    continue
+                group, _ = Group.objects.get_or_create(name=group_name)
+                if set(group.permissions.values_list('content_type__app_label', 'codename')) - {('main', code) for code in codenames}:
+                    raise CommandError("Role group has unrelated permissions; review it before granting access.")
                 permissions = Permission.objects.filter(content_type__app_label="main", codename__in=codenames)
                 if set(permissions.values_list("codename", flat=True)) != codenames:
                     raise CommandError("Studio permissions are missing. Run migrate first; no changes saved.")

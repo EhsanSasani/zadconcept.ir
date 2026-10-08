@@ -33,6 +33,10 @@ class AccountForm(forms.Form):
                 'roles': assigned_roles(user), 'version': account_version(user),
                 'florist': Florist.objects.filter(user=user, is_active=True).first()}
         super().__init__(*args, **kwargs)
+        if user and 'manager' in assigned_roles(user):
+            from .account_roles import MANAGER_PERMISSIONS, assigned_manager_permissions
+            if assigned_manager_permissions(user) != MANAGER_PERMISSIONS:
+                self.fields['roles'].help_text = 'دسترسی مدیریتی این حساب محدود است؛ با حفظ گزینهٔ مدیر، همان مجوزهای فعلی حفظ می‌شوند.'
         available = Q(user__isnull=True)
         if user:
             available |= Q(user=user)

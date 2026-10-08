@@ -6,12 +6,26 @@ from . import views
 from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
 from . import studio_views, sales_views
-from . import panel, misc_sales
+from . import panel, misc_sales, procurement_views
 from .studio_notification_views import admin_notifications
 
 urlpatterns = [
     path("panel/", panel.home, name="panel_home"),
     path("panel/select/", panel.select, name="panel_select"),
+    path("procurement/", procurement_views.home, name="procurement_home"),
+    path("procurement/materials/", procurement_views.materials, name="procurement_materials"),
+    path("procurement/materials/options/", procurement_views.material_options, name="procurement_material_options"),
+    path("procurement/materials/add/", procurement_views.material_form, name="procurement_material_add"),
+    path("procurement/materials/<int:pk>/", procurement_views.material_form, name="procurement_material_edit"),
+    path("procurement/purchases/", procurement_views.ledger, {'kind': 'purchase'}, name="procurement_purchases"),
+    path("procurement/purchases/add/", procurement_views.entry_form, {'kind': 'purchase'}, name="procurement_purchase_add"),
+    path("procurement/purchases/<int:pk>/", procurement_views.detail, {'kind': 'purchase'}, name="procurement_purchase_detail"),
+    path("procurement/purchases/<int:pk>/void/", procurement_views.void, {'kind': 'purchase'}, name="procurement_purchase_void"),
+    path("procurement/wastes/", procurement_views.ledger, {'kind': 'waste'}, name="procurement_wastes"),
+    path("procurement/wastes/add/", procurement_views.entry_form, {'kind': 'waste'}, name="procurement_waste_add"),
+    path("procurement/wastes/<int:pk>/", procurement_views.detail, {'kind': 'waste'}, name="procurement_waste_detail"),
+    path("procurement/wastes/<int:pk>/void/", procurement_views.void, {'kind': 'waste'}, name="procurement_waste_void"),
+    path("studio/procurement/", procurement_views.manager_report, name="studio_procurement"),
     path("sales/", sales_views.home, name="sales_home"),
     path("sales/misc/", misc_sales.counter, name="sales_misc"),
     path("sales/misc/<int:pk>/", misc_sales.counter, name="sales_misc_edit"),

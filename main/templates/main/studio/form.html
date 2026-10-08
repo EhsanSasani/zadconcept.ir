@@ -3,7 +3,7 @@
 <div class="editor-layout"><section class="panel form-panel"><form method="post" enctype="multipart/form-data" data-editor-form>{% csrf_token %}
   <div class="form-heading"><h2>{% if is_florist_form %}اطلاعات فلوریست{% else %}اطلاعات محصول{% endif %}</h2><p>فیلدهای دارای * الزامی هستند.</p></div>
   {% if form.non_field_errors %}<div class="form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-  <div class="form-grid">{% for field in form %}<div class="form-field{% if field.name == 'notes' or field.name == 'image' or field.name == 'photo' %} form-wide{% endif %}{% if field.errors %} has-error{% endif %}{% if field.name == 'image' or field.name == 'photo' %} upload-field{% endif %}">
+  <div class="form-grid">{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}{% for field in form.visible_fields %}<div class="form-field{% if field.name == 'notes' or field.name == 'image' or field.name == 'photo' %} form-wide{% endif %}{% if field.errors %} has-error{% endif %}{% if field.name == 'image' or field.name == 'photo' %} upload-field{% endif %}">
     <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span aria-label="الزامی">*</span>{% endif %}</label>
     {{ field }}{% if field.help_text %}<small id="{{ field.auto_id }}_helptext">{{ field.help_text }}</small>{% endif %}
     {% if field.errors %}<div id="{{ field.auto_id }}_error" role="alert">{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>{% endif %}
