@@ -4,14 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#182d44">
+  <meta name="theme-color" content="#0c1422">
   <link rel="manifest" href="{% url 'team_manifest' %}">
   <link rel="apple-touch-icon" href="{% static 'main/team/apple-touch-icon.png' %}">
   <title>{% block title %}پنل زاد{% endblock %} · ZAD</title>
   <link rel="icon" href="{% static 'main/team/app-icon.svg' %}" type="image/svg+xml">
   <link rel="stylesheet" href="{% static 'main/css/pages/panel/index.css' %}">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-theme.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=4">
 </head>
-<body class="panel-page">
+<body class="panel-page panel-ui">
   <a class="panel-skip" href="#panel-main">رفتن به محتوا</a>
   <div class="panel-shell">
     <header class="panel-header">

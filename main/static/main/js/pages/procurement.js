@@ -41,11 +41,11 @@
   function updateLabels(row) {
     const item = materialFor(row);
     const mode = field(row, 'unit_mode');
-    for (const option of mode.options) option.textContent = item ? (option.value === 'base' ? item.base_unit : item.purchase_unit) : (option.value === 'base' ? 'واحد پایه' : 'واحد خرید');
+    for (const option of mode.options) option.textContent = item ? (option.value === 'base' ? item.base_unit : item.purchase_unit) : (option.value === 'base' ? 'پایه' : 'خرید');
     const pack = mode.value === 'purchase';
     const factorWrapper = row.querySelector('[data-proc-factor-wrap]');
     // Keep invalid inputs visible so server validation is always actionable.
-    factorWrapper.hidden = !pack && !factorWrapper.querySelector('.errorlist');
+    factorWrapper.hidden = (!pack || (form.dataset.kind === 'purchase' && !item)) && !factorWrapper.querySelector('.errorlist');
     row.querySelector('[data-proc-factor-label]').textContent = item ? `تعداد ${item.base_unit} در هر ${item.purchase_unit}` : 'تعداد در هر واحد خرید';
     row.querySelector('[data-proc-factor-help]').textContent = item ? `خالی بماند: ${numberFormat.format(Number(item.units_per_purchase))} ${item.base_unit}` : 'مثلاً تعداد شاخه در هر بسته';
     const priceLabel = row.querySelector('[data-proc-price-label]');
@@ -93,6 +93,7 @@
       const pack = field(row, 'unit_mode').value === 'purchase';
       const factor = pack ? (field(row, 'conversion_factor').value.trim() === '' ? Number(item?.units_per_purchase) : parse(field(row, 'conversion_factor').value)) : 1;
       const conversion = row.querySelector('[data-proc-conversion-preview]');
+      if (form.dataset.kind === 'waste') row.querySelector('.proc-line-bottom').hidden = !(item && quantity > 0 && factor > 0);
       conversion.textContent = item && quantity > 0 && factor > 0 ? `معادل ${numberFormat.format(quantity * factor)} ${item.base_unit}` : 'مقدار بر اساس واحد انتخاب‌شده ثبت می‌شود.';
       const price = field(row, 'unit_price');
       const lineTotal = row.querySelector('[data-proc-line-total]');
@@ -130,6 +131,20 @@
     else recalculate();
   });
   container.addEventListener('input', recalculate);
+  // Enter continues the batch instead of saving it before all rows are entered.
+  container.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || event.isComposing) return;
+    const row = event.target.closest('[data-proc-line]');
+    const lastField = form.dataset.kind === 'purchase' ? 'unit_price' : 'quantity';
+    if (!row || event.target !== field(row, lastField)) return;
+    event.preventDefault();
+    if (!materialFor(row)) { field(row, 'material').focus(); return; }
+    if (!(parse(field(row, 'quantity').value) > 0)) { field(row, 'quantity').focus(); return; }
+    if (lastField === 'unit_price' && lineAmount(field(row, 'quantity').value, event.target.value) === null) return;
+    const next = visibleRows()[visibleRows().indexOf(row) + 1];
+    if (next) field(next, 'material').focus();
+    else if (!add.disabled) add.click();
+  });
   container.addEventListener('click', event => {
     const button = event.target.closest('[data-proc-remove]');
     if (!button) return;

@@ -436,9 +436,47 @@ class ProcurementViewTests(TestCase):
         self.assertEqual(report['waste_count'], 1)
         self.assertEqual(response.context['period']['start'], date(2026, 10, 6))
         ledger = self.client.get(reverse('procurement_purchases'), period)
-        listed_ids = {item.pk for item in ledger.context['page']}
+        listed_ids = {item.pk for day in ledger.context['page'] for item in day['records']}
         self.assertIn(voided.pk, listed_ids)
         self.assertNotIn(excluded.pk, listed_ids)
+        day = ledger.context['page'][0]
+        self.assertEqual(day['amount'], 250000)
+        self.assertEqual(day['active_count'], 1)
+        self.assertEqual(day['void_count'], 1)
+
+    def test_daily_purchase_ledger_keeps_all_documents_of_one_day_together(self):
+        records = [self.service_purchase(price=1000) for _ in range(31)]
+        response = self.client.get(reverse('procurement_purchases'), {'period': '30'})
+        page = response.context['page']
+        self.assertEqual(page.paginator.count, 1)
+        self.assertEqual(page.paginator.num_pages, 1)
+        self.assertEqual(page[0]['amount'], 31000)
+        self.assertEqual(page[0]['active_count'], 31)
+        self.assertEqual({item.pk for item in page[0]['records']}, {item.pk for item in records})
+        self.assertTrue(all(item.line_count == 1 for item in page[0]['records']))
+
+    def test_daily_waste_ledger_excludes_void_cost_but_keeps_its_details(self):
+        from main.procurement_service import void_waste
+        first = self.service_waste()
+        second = self.service_waste()
+        void_waste(actor=self.buyer, pk=second.pk, expected_version=record_version(second), reason='تکراری')
+        response = self.client.get(reverse('procurement_wastes'), {'period': '30'})
+        day = response.context['page'][0]
+        self.assertEqual(day['amount'], first.estimated_total)
+        self.assertEqual(day['active_count'], 1)
+        self.assertEqual(day['void_count'], 1)
+        self.assertEqual({item.pk for item in day['records']}, {first.pk, second.pk})
+
+    def test_daily_ledger_paginates_days_without_losing_older_records(self):
+        for offset in range(31):
+            self.service_purchase(day=date(2026, 10, 7) - timedelta(days=offset), price=1000)
+        first = self.client.get(reverse('procurement_purchases'), {'period': '90'}).context['page']
+        second = self.client.get(reverse('procurement_purchases'), {'period': '90', 'page': '2'}).context['page']
+        self.assertEqual(first.paginator.count, 31)
+        self.assertEqual(len(first), 30)
+        self.assertEqual(len(second), 1)
+        self.assertEqual(second[0]['date'], date(2026, 9, 7))
+        self.assertEqual(sum(day['amount'] for day in [*first, *second]), 31000)
 
     def test_private_pages_are_not_cached_and_writes_require_csrf(self):
         for name in ('procurement_home', 'procurement_materials', 'procurement_purchase_add', 'procurement_waste_add'):

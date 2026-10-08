@@ -2,8 +2,7 @@
 {% block title %}{% if account %}ویرایش کاربر{% else %}افزودن کاربر{% endif %}{% endblock %}{% block crumb %}کاربران{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/accounts/index.css' %}">{% endblock %}
 {% block content %}
-<a class="accounts-back" href="{% url 'studio_accounts' %}">→ همهٔ کاربران</a>
-<div class="accounts-heading"><div><p class="eyebrow">حساب و دسترسی</p><h1>{% if account %}{{ account.get_full_name|default:account.username }}{% else %}همکار جدید{% endif %}</h1><p>{% if account %}اطلاعات و فضاهای کاری این حساب را مدیریت کنید.{% else %}حساب بسازید و مشخص کنید همکارتان به کدام فضاها دسترسی دارد.{% endif %}</p></div></div>
+<div class="accounts-heading"><div><p class="eyebrow">حساب و دسترسی</p><div class="panel-title-row"><h1>{% if account %}{{ account.get_full_name|default:account.username }}{% else %}همکار جدید{% endif %}</h1><a class="panel-back" href="{% url 'studio_accounts' %}" aria-label="بازگشت به کاربران" title="بازگشت به کاربران">{% include 'main/components/back_icon.html' %}</a></div><p>{% if account %}اطلاعات و فضاهای کاری این حساب را مدیریت کنید.{% else %}حساب بسازید و مشخص کنید همکارتان به کدام فضاها دسترسی دارد.{% endif %}</p></div></div>
 <form method="post" class="account-form" autocomplete="off">
 {% csrf_token %}{{ form.version }}
 {% if form.errors %}<div class="account-errors" role="alert"><strong>تغییرات هنوز ذخیره نشده است.</strong>{{ form.non_field_errors }}<p>موارد مشخص‌شده را بررسی کنید.</p></div>{% endif %}

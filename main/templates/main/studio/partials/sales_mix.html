@@ -1,2 +1,16 @@
 {% load studio_ui %}
-<section class="panel" style="padding:20px;margin-block:20px"><h2>فروش به تفکیک نوع · تومان</h2><div class="app-summary-strip"><span>ارسال روز <b>{{ stats.daily_sales|fa_number }}</b></span><span>سفارشی <b>{{ stats.custom_sales|fa_number }}</b></span><span>شاخه و متفرقه <b>{{ stats.misc_sales|fa_number }}</b></span></div></section>
+<section class="panel app-sales-mix" aria-label="فروش به تفکیک نوع">
+  <div class="panel-head"><h2>فروش به تفکیک نوع · تومان</h2><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div>
+  <div class="app-sales-category app-sales-daily">
+    <span class="app-sales-label"><span class="app-sales-icon"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span>ارسال روز</span><strong>{{ stats.daily_sales|fa_number }}</strong>
+    <div class="app-sales-track" aria-hidden="true"><span style="width:{% widthratio stats.daily_sales stats.sold_value 100 %}%"></span></div>
+  </div>
+  <div class="app-sales-category app-sales-custom">
+    <span class="app-sales-label"><span class="app-sales-icon"><svg class="icon" aria-hidden="true"><use href="#i-flower"/></svg></span>سفارشی</span><strong>{{ stats.custom_sales|fa_number }}</strong>
+    <div class="app-sales-track" aria-hidden="true"><span style="width:{% widthratio stats.custom_sales stats.sold_value 100 %}%"></span></div>
+  </div>
+  <div class="app-sales-category app-sales-misc">
+    <span class="app-sales-label"><span class="app-sales-icon"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></span>شاخه و متفرقه</span><strong>{{ stats.misc_sales|fa_number }}</strong>
+    <div class="app-sales-track" aria-hidden="true"><span style="width:{% widthratio stats.misc_sales stats.sold_value 100 %}%"></span></div>
+  </div>
+</section>
