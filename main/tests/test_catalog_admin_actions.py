@@ -228,38 +228,18 @@ class ProductBulkDeleteAdminTests(TestCase):
         self.assertContains(response, 'data-toman-price-input="true"')
         self.assertContains(response, "main/js/admin/product-price-input.js")
 
-    def test_same_day_list_exposes_confirmed_full_delete(self):
+    def test_same_day_list_rejects_raw_inventory_and_delete_actions(self):
         self.product.catalog_scope = Product.CatalogScope.SAME_DAY
         self.product.save(update_fields=["catalog_scope", "updated_at"])
         url = reverse("admin:main_samedayflower_changelist")
         model_admin = admin.site._registry[SameDayFlower]
-
         actions = model_admin.get_actions(self._request(url))
-
-        self.assertIn("delete_selected", actions)
-        self.assertNotIn("remove_from_same_day", actions)
-
-        confirmation = self.client.post(
-            url,
-            {
-                "action": "delete_selected",
-                "_selected_action": [str(self.product.pk)],
-                "index": "0",
-            },
-        )
-        self.assertEqual(confirmation.status_code, 200)
-        self.assertTrue(Product.objects.filter(pk=self.product.pk).exists())
-
-        completed = self.client.post(
-            url,
-            {
-                "action": "delete_selected",
-                "_selected_action": [str(self.product.pk)],
-                "post": "yes",
-            },
-        )
-        self.assertEqual(completed.status_code, 302)
-        self.assertFalse(Product.objects.filter(pk=self.product.pk).exists())
+        for action in ("delete_selected", "mark_in_stock", "mark_out_of_stock"):
+            self.assertNotIn(action, actions)
+            response = self.client.post(url, {"action": action,
+                "_selected_action": [str(self.product.pk)], "post": "yes"})
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(Product.objects.filter(pk=self.product.pk).exists())
 
 
 class TagDeletionSafetyTests(TestCase):

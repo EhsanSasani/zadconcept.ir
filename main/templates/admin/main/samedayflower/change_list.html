@@ -1,0 +1,6 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if perms.main.add_studioproduct %}<li><a href="{% url 'studio_product_add' %}">ثبت محصول در استودیو</a></li>{% endif %}
+  {% if perms.main.use_sales_workspace %}<li><a href="{% url 'sales_home' %}">موجودی و فروش</a></li>{% endif %}
+{% endblock %}

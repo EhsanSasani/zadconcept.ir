@@ -18,6 +18,10 @@ def can_use_sales(user):
     return bool(user.is_authenticated and user.is_active and user.has_perm("main.use_sales_workspace"))
 
 
+def can_use_procurement(user):
+    return bool(user.is_authenticated and user.is_active and user.has_perm("main.use_procurement_workspace"))
+
+
 def can_manage_studio(user):
     return bool(user.is_authenticated and user.is_active and user.has_perm("main.view_studioproduct"))
 

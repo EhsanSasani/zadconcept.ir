@@ -121,3 +121,33 @@ class MiscSalesTests(TestCase):
         for query in [str(first.pk), '۳ شاخه رز']:
             response = self.client.get(reverse('sales_home'), {'tab': 'misc', 'q': query})
             self.assertEqual([row.pk for row in response.context['page']], [first.pk])
+
+    def test_misc_sale_is_not_a_florist_product_or_photo_notification(self):
+        from django.test import override_settings
+        from main.models import Florist, StudioAdminNotification
+        Florist.objects.create(name="فروشنده و فلوریست", code="both", user=self.seller)
+        with override_settings(STUDIO_ADMIN_NOTIFICATIONS_ENABLED=True, TELEGRAM_STUDIO_ADMIN_CHAT_ID="12345"):
+            record = self.create()
+            self.assertFalse(StudioAdminNotification.objects.exists())
+            self.assertEqual(self.client.post(reverse('sales_misc_edit', args=[record.pk]),
+                self.data(reverse('sales_misc_edit', args=[record.pk]), price='2500000')).status_code, 302)
+            self.assertFalse(StudioAdminNotification.objects.exists())
+        self.assertEqual(self.client.get(reverse('team_product_detail', args=[record.pk])).status_code, 404)
+        page = self.client.get(reverse('team_products'))
+        self.assertEqual(page.context['page_obj'].paginator.count, 0)
+        self.assertNotIn('MISC', dict(page.context['production_choices']))
+        self.assertContains(self.client.get(reverse('sales_history')), 'ثبت فروش شاخه و متفرقه')
+
+    def test_misc_has_separate_analytics_group_from_other_production(self):
+        from main.models import Florist
+        record = self.create()
+        florist = Florist.objects.create(name='همکار', code='other-maker')
+        StudioProduct.objects.create(factor_code='OTHER-1', florist=florist, product_type='other',
+            production_type='CUSTOM', status='SOLD', sold_at=record.sold_at, produced_at=record.sold_at,
+            price=100000, image='test.webp', source='DASHBOARD')
+        self.seller.user_permissions.add(Permission.objects.get(codename='view_studioproduct'))
+        response = self.client.get(reverse('studio_analytics'), {'period': 'today', 'sort': 'type'})
+        rows = {row['product_type']: row for row in response.context['by_type']}
+        self.assertEqual(rows['misc']['sold_value'], 2300000)
+        self.assertEqual(rows['other']['sold_value'], 100000)
+        self.assertEqual(response.context['stats']['sold_value'], 2400000)

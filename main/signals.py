@@ -233,6 +233,14 @@ def sync_studio_public_projection(sender, instance, raw=False, using=None, **kwa
             )
             return
         changes = []
+        if record.status in {StudioProduct.Status.SOLD, StudioProduct.Status.WITHDRAWN,
+                             StudioProduct.Status.CANCELLED} and public.status == Product.Status.AVAILABLE:
+            # Reopening requires the sales command, which also reconciles the
+            # retirement job and the Telegram identity. A catalog save cannot do it.
+            Product.objects.using(using).filter(pk=public.pk).update(
+                status=Product.Status.SOLD if record.status == StudioProduct.Status.SOLD else Product.Status.WITHDRAWN,
+                stock_status=Product.StockStatus.OUT_OF_STOCK,
+            )
         if public.price is not None and public.price > 0 and record.price != public.price:
             record.price = public.price
             changes.append("price")

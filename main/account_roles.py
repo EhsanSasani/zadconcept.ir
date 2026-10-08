@@ -1,8 +1,10 @@
-"""Three operational roles; technical/admin permissions are outside this editor."""
+"""Independent operational roles; technical permissions stay outside this editor."""
 import hashlib
 import json
 
 from .models import Florist
+from django.contrib.auth.models import Permission
+from django.db.models import Q
 
 MANAGER_PERMISSIONS = frozenset({
     "view_studioproduct", "add_studioproduct", "change_studioproduct",
@@ -10,10 +12,20 @@ MANAGER_PERMISSIONS = frozenset({
     "change_studioingestionissue",
 })
 SALES_PERMISSIONS = frozenset({"use_sales_workspace"})
-ROLE_PERMISSIONS = {f"main.{name}" for name in MANAGER_PERMISSIONS | SALES_PERMISSIONS}
+PROCUREMENT_PERMISSIONS = frozenset({"use_procurement_workspace"})
+ROLE_PERMISSIONS = {f"main.{name}" for name in MANAGER_PERMISSIONS | SALES_PERMISSIONS | PROCUREMENT_PERMISSIONS}
 ROLE_GROUPS = {"manager": ("Studio managers", MANAGER_PERMISSIONS),
-               "sales": ("Studio sales", SALES_PERMISSIONS)}
-ROLE_CHOICES = [("manager", "مدیر"), ("sales", "فروش"), ("florist", "فلوریست")]
+               "sales": ("Studio sales", SALES_PERMISSIONS),
+               "procurement": ("Studio procurement", PROCUREMENT_PERMISSIONS)}
+ROLE_CHOICES = [("manager", "مدیر"), ("sales", "فروش"), ("florist", "فلوریست"),
+                ("procurement", "خرید و دورریز")]
+
+
+def assigned_manager_permissions(user):
+    # Assigned grants survive account deactivation; has_perm() intentionally does not.
+    return set(Permission.objects.filter(
+        Q(user=user) | Q(group__user=user), content_type__app_label='main',
+        codename__in=MANAGER_PERMISSIONS).values_list('codename', flat=True))
 
 
 def assigned_roles(user):
@@ -27,6 +39,8 @@ def assigned_roles(user):
         roles.append('sales')
     if Florist.objects.filter(user=user, is_active=True).exists():
         roles.append('florist')
+    if user.is_superuser or ('main', 'use_procurement_workspace') in permissions:
+        roles.append('procurement')
     return roles
 
 

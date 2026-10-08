@@ -15,8 +15,9 @@
 </div></section>
 <section class="account-section"><div class="account-section-title"><span>۲</span><div><h2>فضاهای کاری</h2><p>یک یا چند دسترسی انتخاب کنید.</p></div></div>
 <fieldset class="account-role-options"><legend class="sr-only">دسترسی‌های کاربر</legend>
-{% for checkbox in form.roles %}<label class="account-role-option" for="{{ checkbox.id_for_label }}">{{ checkbox.tag }}<span><strong>{{ checkbox.choice_label }}</strong><small>{% if checkbox.data.value == 'manager' %}آمار، مدیریت استودیو و مدیریت کاربران{% elif checkbox.data.value == 'sales' %}موجودی، فروش و اصلاح اطلاعات محصول{% else %}ثبت محصول و کارنامهٔ شخصی{% endif %}</small></span></label>{% endfor %}
+{% for checkbox in form.roles %}<label class="account-role-option" for="{{ checkbox.id_for_label }}">{{ checkbox.tag }}<span><strong>{{ checkbox.choice_label }}</strong><small>{% if checkbox.data.value == 'manager' %}آمار، مدیریت استودیو و مدیریت کاربران{% elif checkbox.data.value == 'sales' %}موجودی، فروش و اصلاح اطلاعات محصول{% elif checkbox.data.value == 'procurement' %}تعریف کالا، ثبت فاکتور خرید و دورریز روزانه{% else %}ثبت محصول و کارنامهٔ شخصی{% endif %}</small></span></label>{% endfor %}
 </fieldset>{% for error in form.roles.errors %}<p class="account-field-error">{{ error }}</p>{% endfor %}
+{% if form.roles.help_text %}<p class="account-hint">{{ form.roles.help_text }}</p>{% endif %}
 <p class="account-hint">کاربر تک‌دسترسی مستقیم وارد پنل خودش می‌شود؛ کاربر چنددسترسی فضای کاری را انتخاب می‌کند.</p>
 <div class="account-profile">{% include 'main/pages/accounts/field.html' with field=form.florist %}<p class="account-hint">فقط برای دسترسی فلوریست: پروفایل قبلی را انتخاب کنید تا کارنامه حفظ شود. اگر پروفایلی ندارد، گزینهٔ ساخت پروفایل جدید را نگه دارید. برداشتن دسترسی، محصولات و کارنامه را حذف نمی‌کند.</p></div>
 </section>

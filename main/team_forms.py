@@ -3,11 +3,7 @@ import re
 import uuid
 
 from django import forms
-from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
-from django.db import transaction
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .models import Florist, StudioProduct
@@ -93,47 +89,3 @@ class TeamProfileForm(forms.ModelForm):
             return normalize_admin_image(self.cleaned_data.get("photo"), max_dimension=800)
         except ImageUploadError as error:
             raise forms.ValidationError(str(error)) from error
-
-
-class StudioAccountForm(forms.Form):
-    florist = forms.ModelChoiceField(label="فلوریست", queryset=Florist.objects.none())
-    username = forms.CharField(label="نام کاربری", max_length=150, widget=forms.TextInput(attrs={
-        "autocomplete": "off", "autocapitalize": "none", "dir": "ltr"}))
-    password1 = forms.CharField(label="رمز عبور اولیه", strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
-    password2 = forms.CharField(label="تکرار رمز عبور", strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["florist"].queryset = Florist.objects.filter(is_active=True, user__isnull=True)
-
-    def clean_username(self):
-        username = get_user_model().normalize_username(self.cleaned_data["username"])
-        for validator in get_user_model()._meta.get_field("username").validators:
-            validator(username)
-        if get_user_model().objects.filter(username__iexact=username).exists():
-            raise forms.ValidationError("این نام کاربری قبلاً استفاده شده است.")
-        return username
-
-    def clean(self):
-        cleaned = super().clean()
-        password = cleaned.get("password1")
-        if password and password != cleaned.get("password2"):
-            self.add_error("password2", "تکرار رمز عبور یکسان نیست.")
-        if password:
-            candidate = get_user_model()(username=cleaned.get("username", ""))
-            try:
-                validate_password(password, candidate)
-            except ValidationError as error:
-                self.add_error("password1", error)
-        return cleaned
-
-    @transaction.atomic
-    def save(self):
-        florist = Florist.objects.select_for_update().get(pk=self.cleaned_data["florist"].pk)
-        if florist.user_id or not florist.is_active:
-            raise ValidationError("این فلوریست دیگر برای ساخت حساب در دسترس نیست؛ صفحه را تازه کنید.")
-        user = get_user_model().objects.create_user(username=self.cleaned_data["username"],
-                                                     password=self.cleaned_data["password1"])
-        florist.user = user
-        florist.save(update_fields=["user", "updated_at"])
-        return user

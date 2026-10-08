@@ -1,12 +1,13 @@
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.text import slugify
+from django.urls import reverse
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
 from .admin_content import PageContentBlockAdminForm
@@ -2040,12 +2041,34 @@ class SameDayFlowerAdmin(FlowerAdmin):
         "is_active",
     )
     actions = (
-        "mark_in_stock",
-        "mark_out_of_stock",
         "publish_selected_products",
         "draft_selected_products",
     )
-    fieldsets = FlowerAdmin.fieldsets + (("وضعیت فروش ارسال روز", {"fields": ("status",)}),)
+    fieldsets = (("مدیریت عملیاتی", {"fields": ("operational_record",)}),) + FlowerAdmin.fieldsets + (("وضعیت فروش ارسال روز", {"fields": ("status",)}),)
+
+    @admin.display(description="پروندهٔ محصول")
+    def operational_record(self, obj):
+        record = getattr(obj, "studio_record", None)
+        if record is None:
+            return "این محصول پروندهٔ استودیو ندارد؛ پیش از تغییر موجودی، اتصال آن باید توسط مدیر بررسی شود."
+        return format_html('<a href="{}">مشاهدهٔ محصول در استودیو</a>',
+                           reverse("studio_product_detail", args=[record.pk]))
+
+    def has_add_permission(self, request):
+        # Operational stock must have a maker, invoice and ledger entry.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        return (*super().get_readonly_fields(request, obj), "status", "stock_status",
+                "price", "price_usd", "pricing_type", "cover_image", "name", "operational_record")
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        if request.method == "GET":
+            self.message_user(request, "ثبت محصول، اصلاح قیمت و عکس و تغییر موجودی از پنل استودیو یا فروش انجام می‌شود.", level=messages.INFO)
+        return super().change_view(request, object_id, form_url, extra_context)
 
     @admin.display(description="برچسب‌ها")
     def tags_summary(self, obj):

@@ -64,7 +64,7 @@ def queue_admin_notification(record, event):
     """Create a DB outbox row; Telegram never runs inside the product request."""
     if not admin_notifications_enabled():
         return None
-    if record.source not in NOTIFIED_SOURCES:
+    if record.source not in NOTIFIED_SOURCES or record.production_type == StudioProduct.ProductionType.MISC:
         return None
     chat_id = _admin_chat_id()
     if chat_id is None:

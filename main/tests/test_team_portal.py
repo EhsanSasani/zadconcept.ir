@@ -274,41 +274,22 @@ class TeamPortalTests(TestCase):
         self.owner.refresh_from_db()
         self.assertTrue(self.owner.check_password("A new private password 953!"))
 
-    def test_account_manager_creates_only_unprivileged_user(self):
-        unlinked = Florist.objects.create(name="سارا", code="sara")
+    def test_legacy_account_posts_redirect_without_mutation(self):
         self.client.force_login(self.owner)
         self.assertEqual(self.client.get(reverse("studio_accounts")).status_code, 403)
         self.client.force_login(self.manager)
-        response = self.client.post(reverse("studio_accounts"), {"action": "create", "florist": unlinked.pk,
-            "username": "sara-team", "password1": self.password, "password2": self.password,
-            "is_staff": "on", "is_superuser": "on"})
-        self.assertRedirects(response, reverse("studio_accounts"), fetch_redirect_response=False)
-        unlinked.refresh_from_db()
-        self.assertFalse(unlinked.user.is_staff)
-        self.assertFalse(unlinked.user.is_superuser)
-        self.assertFalse(unlinked.user.get_all_permissions())
-
-    def test_account_reset_cannot_take_over_inactive_privileged_user(self):
-        self.peer_user.user_permissions.add(Permission.objects.get(content_type__app_label="main", codename="view_studioproduct"))
-        self.peer_user.is_active = False
-        self.peer_user.save(update_fields=["is_active"])
-        self.client.force_login(self.manager)
-        for action in ("password", "enable", "disable"):
-            response = self.client.post(reverse("studio_accounts"), {"action": action, "florist_id": self.peer.pk,
-                "new_password1": self.password, "new_password2": self.password})
-            self.assertEqual(response.status_code, 403)
-        self.assertEqual(self.client.post(reverse("studio_accounts"), {"action": "disable", "florist_id": "bad"}).status_code, 404)
-
-    def test_account_disable_revokes_existing_portal_session_and_logout_is_post(self):
-        florist_client = Client()
-        florist_client.force_login(self.owner)
-        self.client.force_login(self.manager)
-        response = self.client.post(reverse("studio_accounts"), {"action": "disable", "florist_id": self.florist.pk})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(florist_client.get(reverse("team_home")).status_code, 302)
+        original_password = self.owner.password
+        for action in ("create", "password", "disable", "enable"):
+            response = self.client.post(reverse("studio_accounts"), {
+                "action": action, "florist_id": self.florist.pk, "username": "legacy-new",
+                "password1": self.password, "password2": self.password})
+            self.assertRedirects(response, reverse("studio_accounts"), fetch_redirect_response=False)
+        self.owner.refresh_from_db()
+        self.assertTrue(self.owner.is_active)
+        self.assertEqual(self.owner.password, original_password)
+        self.assertFalse(get_user_model().objects.filter(username="legacy-new").exists())
         self.assertEqual(self.client.get(reverse("studio_logout")).status_code, 405)
         self.assertEqual(self.client.post(reverse("studio_logout")).status_code, 302)
-        self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_account_command_prompts_password_and_preserves_admin_separation(self):
         stdout = StringIO()

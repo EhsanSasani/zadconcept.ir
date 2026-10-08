@@ -42,7 +42,7 @@
     <div class="brand"><a href="{% url 'studio_dashboard' %}" aria-label="ZAD Studio Operations"><span class="brand-mark">ZAD<svg class="icon brand-petal" aria-hidden="true"><use href="#i-flower"/></svg></span><span class="brand-sub">STUDIO OPERATIONS</span></a><p>مدیریت تولید و عملکرد استودیو گل</p></div>
     <div class="nav-label">فضای کاری</div>
     <nav class="studio-nav" aria-label="منوی استودیو">
-      {% for key,label,url in nav %}{% if key != 'add' or perms.main.add_studioproduct %}<a href="{% url url %}"{% if active == key %} class="active" aria-current="page"{% endif %}><svg class="icon"><use href="#i-{% if key == 'dashboard' %}grid{% elif key == 'products' %}box{% elif key == 'florists' %}users{% elif key == 'analytics' %}chart{% elif key == 'add' %}plus{% else %}settings{% endif %}"/></svg><span>{{ label }}</span>{% if key == 'add' %}<span class="nav-plus">+</span>{% endif %}</a>{% endif %}{% endfor %}
+      {% for key,label,url in nav %}{% if key != 'add' or perms.main.add_studioproduct %}<a href="{% url url %}"{% if active == key %} class="active" aria-current="page"{% endif %}><svg class="icon"><use href="#i-{% if key == 'dashboard' %}grid{% elif key == 'products' %}box{% elif key == 'florists' %}users{% elif key == 'analytics' %}chart{% elif key == 'procurement' %}bag{% elif key == 'add' %}plus{% else %}settings{% endif %}"/></svg><span>{{ label }}</span>{% if key == 'add' %}<span class="nav-plus">+</span>{% endif %}</a>{% endif %}{% endfor %}
     </nav>
     <div class="sidebar-bottom"><svg class="icon botanical" aria-hidden="true"><use href="#i-flower"/></svg><p>هر گل، حاصل یک تلاش.</p><span>MADE WITH CARE · ZAD</span>{% if perms.main.manage_studio_accounts %}<a class="site-link" href="{% url 'studio_accounts' %}">مدیریت کاربران <svg class="icon" aria-hidden="true"><use href="#i-users"/></svg></a>{% endif %}
     {% if request.user.studio_florist.is_active %}<a class="site-link" href="{% url 'team_home' %}">پنل شخصی من <svg class="icon" aria-hidden="true"><use href="#i-flower"/></svg></a>{% endif %}
@@ -61,7 +61,7 @@
   </div>
 </div>
 <nav class="mobile-nav app-tabbar" aria-label="بخش‌های اصلی مدیریت">
-{% for key,label,url,icon in mobile_nav %}<a href="{% url url %}"{% if active == key or active == 'add' and key == 'products' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-{{ icon }}"/></svg><span>{{ label }}</span></a>{% endfor %}
+{% for key,label,url,icon in mobile_nav %}<a href="{% url url %}"{% if active == key or active == 'add' and key == 'products' or active == 'procurement' and key == 'settings' %} class="active" aria-current="page"{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-{{ icon }}"/></svg><span>{{ label }}</span></a>{% endfor %}
 </nav>
 <div class="sr-only" aria-live="polite" data-announcer></div>
 <dialog class="photo-dialog" id="photo-dialog" aria-label="تصویر محصول"><button class="icon-button" type="button" data-close-dialog aria-label="بستن تصویر"><svg class="icon"><use href="#i-close"/></svg></button><img alt="" data-dialog-photo><p data-dialog-caption></p></dialog>

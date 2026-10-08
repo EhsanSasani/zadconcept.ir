@@ -462,84 +462,11 @@ class AdminImageFormIntegrationTests(TestCase):
                 self.assertTrue(cleaned.name.endswith(".webp"))
                 self.assertEqual(cleaned.content_type, "image/webp")
 
-    def test_same_day_product_form_uses_content_aware_upload_field(self):
-        model_admin = admin.site._registry[SameDayFlower]
-        form_class = model_admin.get_form(self.request)
-
-        self.assertIsInstance(
-            form_class.base_fields["cover_image"],
-            AdminImageUploadField,
-        )
-        accept = form_class.base_fields["cover_image"].widget.attrs["accept"]
-        self.assertIn("image/*", accept)
-        self.assertIn(".heic", accept)
-        self.assertIn(".heif", accept)
-
-        form = form_class(
-            data=self.product_data(),
-            files={
-                "cover_image": uploaded_image(
-                    "seller-edited.jpeg",
-                    encoded_image("JPEG", progressive=True),
-                    "application/octet-stream",
-                )
-            },
-        )
-        self.assertTrue(form.is_valid(), form.errors.as_text())
-        self.assertEqual(form.cleaned_data["cover_image"].content_type, "image/webp")
-
-    def test_same_day_admin_http_post_saves_heif_as_webp(self):
+    def test_same_day_stock_must_be_created_through_operational_form(self):
         add_url = reverse("admin:main_samedayflower_add")
-        get_response = self.client.get(add_url)
-        self.assertEqual(get_response.status_code, 200)
-        inline_prefix = get_response.context["inline_admin_formsets"][0].formset.prefix
-
-        data = self.product_data()
-        data.update(
-            {
-                "name": "HTTP HEIF product",
-                "slug": "http-heif-product",
-                "tags": [],
-                "cover_image": uploaded_image(
-                    "iphone-camera.HEIF",
-                    encoded_image("HEIF", quality=95),
-                    "application/octet-stream",
-                ),
-                f"{inline_prefix}-TOTAL_FORMS": "0",
-                f"{inline_prefix}-INITIAL_FORMS": "0",
-                f"{inline_prefix}-MIN_NUM_FORMS": "0",
-                f"{inline_prefix}-MAX_NUM_FORMS": "1000",
-                "_save": "Save",
-            }
-        )
-
-        with TemporaryDirectory() as media_root, override_settings(
-            MEDIA_ROOT=media_root
-        ):
-            response = self.client.post(add_url, data)
-            if response.status_code != 302:
-                errors = response.context["adminform"].form.errors.as_text()
-                inline_errors = [
-                    {
-                        "errors": item.formset.errors,
-                        "non_form_errors": list(item.formset.non_form_errors()),
-                    }
-                    for item in response.context["inline_admin_formsets"]
-                ]
-                self.fail(
-                    f"Admin POST returned {response.status_code}: {errors}; "
-                    f"inlines={inline_errors}"
-                )
-
-            product = Product.objects.get(slug="http-heif-product")
-            self.assertEqual(
-                product.catalog_scope,
-                Product.CatalogScope.SAME_DAY,
-            )
-            self.assertTrue(product.cover_image.name.endswith(".webp"))
-            self.assertTrue(Path(product.cover_image.path).exists())
-            with Image.open(product.cover_image.path) as image:
-                self.assertEqual(image.format, "WEBP")
+        self.assertEqual(self.client.get(add_url).status_code, 403)
+        self.assertEqual(self.client.post(add_url, self.product_data()).status_code, 403)
+        self.assertFalse(Product.objects.filter(catalog_scope=Product.CatalogScope.SAME_DAY).exists())
 
     def test_every_registered_admin_image_field_uses_the_pipeline_field(self):
         covered_fields = []
