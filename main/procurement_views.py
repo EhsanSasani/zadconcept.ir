@@ -9,6 +9,7 @@ from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError
+from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -169,10 +170,26 @@ def entry_form(request, kind):
 def ledger(request, kind):
     period = _period(request)
     model = PurchaseInvoice if kind == 'purchase' else WasteEntry
-    rows = model.objects.filter(date__range=(period['start'], period['end'])).select_related('created_by').order_by('-date', '-pk')
+    rows = model.objects.filter(date__range=(period['start'], period['end']))
+    amount_field = 'total' if kind == 'purchase' else 'estimated_total'
+    days = rows.values('date').annotate(
+        amount=Sum(amount_field, filter=Q(status='ACTIVE')),
+        active_count=Count('pk', filter=Q(status='ACTIVE')),
+        void_count=Count('pk', filter=Q(status='VOID')),
+    ).order_by('-date')
+    page = Paginator(days, 30).get_page(request.GET.get('page'))
+    grouped = {day['date']: day for day in page.object_list}
+    for day in grouped.values():
+        day['amount'] = day['amount'] or 0
+        day['records'] = []
+    # Paginate whole days so one day's documents are never split across pages.
+    for record in rows.filter(date__in=grouped).select_related('created_by').annotate(
+            line_count=Count('lines')).order_by('-date', '-pk'):
+        grouped[record.date]['records'].append(record)
+    page.object_list = list(grouped.values())
     return render(request, 'main/procurement/ledger.html', {
         **_context(request, kind), 'kind': kind, 'period': period,
-        'page': Paginator(rows, 30).get_page(request.GET.get('page')),
+        'page': page,
     })
 
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="theme-color" content="#f5f4f0">
+  <meta name="theme-color" content="#0c1422">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="زاد · تیم">
   <title>{% block title %}فضای تیم{% endblock %} · زاد</title>
@@ -16,8 +16,10 @@
   <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
 {% block extra_head %}{% endblock %}
 <link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-theme.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=4">
 </head>
-<body data-team-page="{{ active }}" data-team-user="{{ request.user.pk|default:'' }}"{% if active == 'login' %} class="login-page"{% endif %}>
+<body data-team-page="{{ active }}" data-team-user="{{ request.user.pk|default:'' }}" class="panel-ui team-app{% if active == 'login' %} login-page{% endif %}">
 {% include 'main/team/partials/icons.html' %}
 <a class="skip-link" href="#team-main">رفتن به محتوای اصلی</a>
 {% if active != 'login' %}

@@ -2,18 +2,20 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f7f4f0">
+  <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c1422">
   <title>{% block title %}داشبورد{% endblock %} | ZAD Studio Operations</title>
   <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=5">
   <link rel="stylesheet" href="{% static 'main/css/pages/manager-app.css' %}?v=1">
-  <script src="{% static 'main/js/pages/manager-app.js' %}?v=1" defer></script>
+  <script src="{% static 'main/js/pages/manager-app.js' %}?v=3" defer></script>
   <script src="{% static 'main/js/pages/studio.js' %}?v=4" defer></script>
   <script src="{% static 'main/js/pages/team.js' %}?v=3" defer></script>
 <link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
 {% block extra_head %}{% endblock %}
+<link rel="stylesheet" href="{% static 'main/css/components/panel-theme.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=4">
 </head>
-<body class="manager-app" data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
+<body class="manager-app panel-ui" data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
 <svg focusable="false" class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></symbol>

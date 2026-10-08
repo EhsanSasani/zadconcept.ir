@@ -54,19 +54,38 @@
   if(!rows.length)return;
   const ns='http://www.w3.org/2000/svg';
   const make=(tag,attrs,text)=>{const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;return el;};
-  const w=Math.max(320,rows.length*30+40),h=220,baseline=175,top=24;
-  const max=Math.max(1,...rows.map(r=>Number(r.value)||0));
+  const money=plot.dataset.money==='true';
+  const compact=rows.length<=7;
+  plot.classList.toggle('app-metric-plot-fit',compact);
+  let lastWidth=0;
+  function render(){
+  const availableWidth=plot.clientWidth;
+  if(!availableWidth || availableWidth===lastWidth)return;
+  lastWidth=availableWidth;
+  const left=compact?36:58,right=8,h=240,baseline=190,top=38;
+  const w=compact?availableWidth:Math.max(320,availableWidth,rows.length*(money?64:42)+left+right);
+  const peak=Math.max(1,...rows.map(r=>Number(r.value)||0));
+  const tick=Math.max(1,Math.ceil(peak/3)),max=tick*3;
+  const format=value=>value>=1000000?`${(value/1000000).toLocaleString('fa-IR',{maximumFractionDigits:1})} م`:value>=1000?`${(value/1000).toLocaleString('fa-IR',{maximumFractionDigits:1})} ه`:value.toLocaleString('fa-IR');
   const svg=make('svg',{viewBox:`0 0 ${w} ${h}`,width:w,height:h,role:'img','aria-label':'نمودار روزانه؛ مقادیر دقیق در جدول زیر نمودار'});
-  for(let i=0;i<=3;i++)svg.append(make('line',{x1:20,x2:w-20,y1:top+(baseline-top)*i/3,y2:top+(baseline-top)*i/3,class:'plot-grid'}));
-  const step=(w-40)/rows.length;
+  for(let i=0;i<=3;i++){
+    const y=top+(baseline-top)*i/3;
+    svg.append(make('line',{x1:left,x2:w-right,y1:y,y2:y,class:'plot-grid'}));
+    svg.append(make('text',{x:left-10,y:y+4,'text-anchor':'end',class:'plot-axis'},format(max-i*tick)));
+  }
+  const step=(w-left-right)/rows.length;
   const dates=new Intl.DateTimeFormat('fa-IR',{month:'2-digit',day:'2-digit',timeZone:'Asia/Tehran'});
   rows.forEach((r,i)=>{
-    const value=Number(r.value)||0,bh=value/max*(baseline-top),x=20+i*step;
-    const bar=make('rect',{x:x+step*.18,y:baseline-bh,width:step*.64,height:bh,rx:3,class:'plot-bar'});
+    const value=Number(r.value)||0,bh=value/max*(baseline-top),x=left+i*step;
+    const barWidth=Math.min(40,step*.56);
+    const bar=make('rect',{x:x+(step-barWidth)/2,y:baseline-bh,width:barWidth,height:bh,rx:6,class:'plot-bar'});
     const date=dates.format(new Date(r.day+'T12:00:00Z'));
     bar.append(make('title',{},`${date}: ${value.toLocaleString('fa-IR')}`));svg.append(bar);
-    if(rows.length<=8)svg.append(make('text',{x:x+step/2,y:Math.max(16,baseline-bh-8),'text-anchor':'middle'},value.toLocaleString('fa-IR')));
-    if(i%Math.max(1,Math.ceil(rows.length/14))===0)svg.append(make('text',{x:x+step/2,y:205,'text-anchor':'middle'},date));
+    svg.append(make('text',{x:x+step/2,y:Math.max(20,baseline-bh-10),'text-anchor':'middle',class:'plot-value'},format(value)));
+    svg.append(make('text',{x:x+step/2,y:219,'text-anchor':'middle',class:'plot-date'},date));
   });
-  plot.append(svg);
+  plot.replaceChildren(svg);
+  }
+  render();
+  new ResizeObserver(render).observe(plot);
 })();

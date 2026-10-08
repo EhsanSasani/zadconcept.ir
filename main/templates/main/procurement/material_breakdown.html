@@ -1,0 +1,14 @@
+{% load studio_ui %}
+<section class="proc-panel proc-material-summary">
+  <div class="proc-section-head"><div><p class="proc-eyebrow">به تفکیک کالا</p><h2>کجا بیشتر هزینه می‌کنیم؟</h2></div><small>مبلغ‌ها به تومان</small></div>
+  <div class="proc-material-scroll" tabindex="0" role="region" aria-label="خرید و دورریز به تفکیک کالا">
+    <table class="proc-material-table">
+      <thead><tr><th scope="col">کالا</th><th scope="col">خرید</th><th scope="col">دورریز برآوردی</th></tr></thead>
+      <tbody>{% for row in report.material_breakdown %}
+        <tr><th scope="row"><strong>{{ row.name }}</strong><small>{{ row.base_unit }}</small></th>
+          <td><strong>{{ row.purchase_total|fa_number }}</strong><small>{{ row.purchased_quantity|floatformat:"-6"|fa_decimal }} {{ row.base_unit }}</small></td>
+          <td><strong>{{ row.waste_estimated_total|fa_number }}</strong><small>{{ row.waste_quantity|floatformat:"-6"|fa_decimal }} {{ row.base_unit }}</small></td></tr>
+      {% empty %}<tr><td colspan="3" class="proc-empty">برای این بازه داده‌ای نداریم؛ پس از ثبت خرید یا دورریز، جزئیات کالاها اینجا نمایش داده می‌شود.</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>

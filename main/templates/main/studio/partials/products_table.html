@@ -25,7 +25,7 @@
               <form method="post" action="{% url 'studio_product_delete' row.pk %}" class="product-delete-form" data-factor="{{ row.display_id }}">{% csrf_token %}<label for="delete-reason-{{ row.pk }}">علت حذف</label><input id="delete-reason-{{ row.pk }}" name="reason" maxlength="500" required placeholder="مثلاً ثبت اشتباه محصول"><button class="btn btn-outline" type="submit">حذف مدیریتی</button></form>
             {% endif %}
           </div></details>
-        {% else %}<span class="muted">—</span>{% endif %}
+        {% else %}<span class="muted app-no-actions">—</span>{% endif %}
       {% else %}<span class="muted">سابقه محفوظ است</span>{% endif %}
     </td>
   </tr>{% empty %}<tr><td colspan="9"><div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg><strong>محصولی پیدا نشد</strong><p>بازه یا فیلترها را تغییر دهید.</p><a class="btn btn-outline" href="{% url 'studio_products' %}">بازنشانی فیلترها</a></div></td></tr>{% endfor %}</tbody>

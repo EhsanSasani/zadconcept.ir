@@ -34,6 +34,8 @@ def _period(request, default="30"):
     error = ""
     if choice == "today":
         start, end = today, today
+    elif choice == "yesterday":
+        start = end = today - timedelta(days=1)
     elif choice == "7":
         start, end = today - timedelta(days=6), today
     elif choice == "90":
@@ -209,8 +211,14 @@ def dashboard(request):
     chart = _chart(qs, period)
     latest, table_sort = _sort_products(request, qs)
     florist_rows = []
-    for florist in Florist.objects.filter(is_active=True):
-        florist_rows.append({"florist": florist, "stats": _stats(qs.filter(florist=florist), period)})
+    team_activity = qs.exclude(production_type=StudioProduct.ProductionType.MISC)
+    participating_florists = team_activity.filter(
+        _event_filter("produced_at", period)
+        | (Q(status=StudioProduct.Status.SOLD) & _event_filter("sold_at", period))
+    ).values_list("florist_id", flat=True)
+    # Historical activity remains visible even if a florist is now inactive.
+    for florist in Florist.objects.filter(pk__in=participating_florists):
+        florist_rows.append({"florist": florist, "stats": _stats(team_activity.filter(florist=florist), period)})
     missing_count = TelegramSameDayPost.objects.filter(product__isnull=False, product__studio_record__isnull=True).count()
     issue_count = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).count()
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
