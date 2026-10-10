@@ -1,19 +1,24 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-flowers-landing page-{{ section }}-landing{% if section != "flowers" %} page-zad-v2{% endif %}{% endblock %}
+{% block body_class %}page-flowers-landing page-{{ section }}-landing{% if section == "bakery" or section == "flowers" %} page-shop-display{% endif %}{% if section != "flowers" %} page-zad-v2{% endif %}{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=6">
   <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/flower-studio.css' %}?v=1">
   {% if section != "flowers" %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">{% endif %}
+  {% if section == 'bakery' or section == 'flowers' %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/shop-display.css' %}?v=2">{% endif %}
+  {% if section == 'bakery' %}<link rel="stylesheet" href="{% static 'main/css/pages/catalog/sweetbar.css' %}?v=1">{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="flowers-shell">
 
-  <section class="flowers-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" id="{{ section }}-top" data-page-hero-slider>
+  {% if section == 'bakery' %}
+    {% include 'main/components/sweetbar_hero.html' %}
+  {% else %}
+  <section class="flowers-hero {% if section == 'flowers' %}shop-display-hero {% endif %}hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" id="{{ section }}-top" data-page-hero-slider>
   {% if page_hero_slides %}
     {% for slide in page_hero_slides %}
       <div class="flowers-hero__media{% if forloop.first %} is-active{% endif %}" data-page-hero-slide data-hero-title="{{ slide.title }}" data-hero-kicker="{{ slide.kicker }}" data-hero-text="{{ slide.text }}" data-hero-style-class="{{ slide.style_class }}" data-hero-position="{{ slide.content_position }}" data-hero-mobile-position="{{ slide.mobile_content_position }}" aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}">
@@ -57,8 +62,16 @@
     </div>
   {% endif %}
 </section>
+  {% endif %}
 
   <div class="zad-scroll-content">
+{% if section == 'bakery' %}
+<header class="sweetbar-intro flowers-container">
+  <span class="sweetbar-intro__kicker">{{ landing_hero_eyebrow|default:"ZAD SWEET BAR" }}</span>
+  <h1>{{ landing_hero_title|default:"سوییت بار زاد" }}</h1>
+  <p>{{ landing_hero_text|default:"طعم‌های شیرین برای لحظه‌های گرم و به‌یادماندنی" }}</p>
+</header>
+{% endif %}
 <section class="flowers-collection" id="flowers-collection">
   <div class="flowers-container">
     {% if directory_only %}

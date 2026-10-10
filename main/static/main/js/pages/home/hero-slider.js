@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let heroIsVisible = true;
   let touchStartX = 0;
   let touchStartY = 0;
+  let framesReady = false;
+  const frameTransitionTimers = new WeakMap();
 
   function clearPlaybackTimer() {
     if (playbackTimer === null) return;
@@ -42,9 +44,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     currentFrame = Math.min(Math.max(index, 0), frames.length - 1);
+    window.clearTimeout(frameTransitionTimers.get(slide));
     frames.forEach((frame, frameIndex) => {
-      frame.classList.toggle("is-active", frameIndex === currentFrame);
+      const active = frameIndex === currentFrame;
+      const leaving = frame.classList.contains("is-active") && !active;
+      frame.classList.toggle("is-leaving", leaving);
+      frame.classList.toggle("is-active", active);
     });
+    // Keep the outgoing frame opaque underneath the incoming frame so that
+    // the hero background cannot flash through during the crossfade.
+    frameTransitionTimers.set(slide, window.setTimeout(() => {
+      frames.forEach((frame) => frame.classList.remove("is-leaving"));
+    }, 950));
   }
 
   function resetFrames() {
@@ -55,6 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function canAutoPlay() {
     return (
       !reducedMotion.matches &&
+      framesReady &&
       !document.hidden &&
       heroIsVisible
     );
@@ -112,7 +124,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }, { passive: true });
 
   hero.addEventListener("touchend", (event) => {
-    if (slides.length < 2) return;
+    if (slides.length < 2) {
+      schedulePlayback();
+      return;
+    }
     const touch = event.changedTouches[0];
     const dx = touch.clientX - touchStartX;
     const dy = touch.clientY - touchStartY;
@@ -148,4 +163,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   window.addEventListener("pagehide", clearPlaybackTimer, { once: true });
   showSlide(0);
+  // Decode the sequence before starting playback, including its first loop.
+  const frameImages = slides.flatMap(getFrames);
+  Promise.all(frameImages.map((frame) =>
+    typeof frame.decode === "function" ? frame.decode() : Promise.resolve()
+  )).then(() => {
+    framesReady = true;
+    schedulePlayback();
+  }).catch(() => {
+    // Retain the initial image if a sequence asset cannot be loaded.
+  });
 });

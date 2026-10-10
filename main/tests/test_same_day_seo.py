@@ -91,8 +91,10 @@ class SameDaySeoTests(TestCase):
                 html=response.content.decode()
                 self.assertEqual(html.count('<h1'),1)
                 self.assertIn('<h1>خرید گل آماده برای ارسال امروز در مشهد</h1>',html)
+                self.assertTemplateUsed(response, 'main/components/same_day_hero.html')
+                self.assertIn('zad-display-v1-1672.webp', html)
                 if hero and hero['page_hero_title']:
-                    self.assertIn('عنوان سفارشی',html)
+                    self.assertNotIn('عنوان سفارشی',html)
 
     def test_product_offer_keeps_real_toman_to_rial_conversion(self):
         node=product_node(self.low)

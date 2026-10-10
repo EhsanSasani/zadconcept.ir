@@ -10,6 +10,7 @@
 
 @media (min-width: 761px) {
   body.page-home {
+    --home-hero-height: clamp(340px, min(50vw, calc(100svh - 148px)), 820px);
     --home-responsive-shell: 1280px;
     --home-responsive-gutter: 48px;
     --home-responsive-section-space: clamp(58px, 5.4vw, 86px);
@@ -69,7 +70,7 @@
   body.page-home .site-main .home-hero,
   body.page-home .site-main .home-hero .hero-slides {
     width: 100% !important;
-    height: clamp(430px, 46vw, 680px) !important;
+    height: var(--home-hero-height) !important;
     min-height: 0 !important;
     max-height: none !important;
     margin: 0 !important;
@@ -87,24 +88,21 @@
 
   body.page-home .site-main .home-hero .hero-slide img {
     object-fit: cover !important;
-    object-position: center 54% !important;
+    object-position: center 46% !important;
   }
 
-  .page-home .home-hero-sequence__frame {
-    background-position: center 54%;
-    background-size: cover;
+  /* Cap the scene's aspect ratio on ultrawide and short-height screens.
+     All frames share this geometry; no focal-point jump at breakpoints. */
+  body.page-home .site-main .home-hero {
+    background: var(--home-ivory);
   }
 
-  /* Wide screens crop the 4:3 production frames more aggressively. Move the
-     shared focal point upward so the ZAD mark stays fully inside the Hero. */
-  @media (min-width: 1600px) {
-    body.page-home .site-main .home-hero .hero-slide img {
-      object-position: center 42% !important;
-    }
-
-    .page-home .home-hero-sequence__frame {
-      background-position: center 42%;
-    }
+  body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame {
+    width: min(100%, calc(var(--home-hero-height) * 2.4)) !important;
+    right: 0;
+    left: 0;
+    margin-inline: auto;
+    object-position: center 46% !important;
   }
 
   /* Stories */
@@ -357,11 +355,6 @@
     --home-responsive-section-space: 54px;
   }
 
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: clamp(410px, 52vw, 500px) !important;
-  }
-
   .page-home .home-explore__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -431,11 +424,6 @@
     --home-responsive-section-space: clamp(68px, 4.8vw, 92px);
   }
 
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: clamp(620px, 39vw, 720px) !important;
-  }
-
   .page-home .home-product-card {
     flex-basis: calc((100% - 56px) / 5);
   }
@@ -452,11 +440,6 @@
     --home-responsive-gutter: 88px;
     --home-responsive-section-space: 94px;
     --home-responsive-radius: 16px;
-  }
-
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: clamp(680px, 36vw, 820px) !important;
   }
 
   .page-home .home-product-card {
@@ -485,11 +468,6 @@
     --home-responsive-gutter: 120px;
     --home-responsive-section-space: 112px;
     --home-responsive-radius: 18px;
-  }
-
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: clamp(760px, 31vw, 900px) !important;
   }
 
   .page-home .home-section__head h2 {
@@ -563,11 +541,6 @@
     --home-responsive-gutter: 160px;
     --home-responsive-section-space: 132px;
     --home-responsive-radius: 20px;
-  }
-
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: 980px !important;
   }
 
   .page-home .home-section__head h2 {
@@ -679,14 +652,6 @@
 
   .page-home .home-brand-note__inner p {
     font-size: .84rem;
-  }
-}
-
-/* Short-height laptops: do not let the Hero consume the whole viewport. */
-@media (min-width: 761px) and (max-height: 700px) {
-  body.page-home .site-main .home-hero,
-  body.page-home .site-main .home-hero .hero-slides {
-    height: clamp(380px, 58svh, 500px) !important;
   }
 }
 

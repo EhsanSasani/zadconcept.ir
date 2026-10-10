@@ -44,7 +44,8 @@ class ScrollSurfaceTests(TestCase):
     def test_all_nested_hero_pages_have_one_unbroken_cover_until_shell_end(self):
         cases = (
             ("index", "home-hero"), ("flowers", "flowers-hero"),
-            ("bakery", "flowers-hero"), ("gifts", "flowers-hero"),
+            ("bakery", "sweetbar-hero"), ("gifts", "flowers-hero"),
+            ("flowers_same_day", "same-day-hero"),
             ("weddings", "weddings-hero"), ("about", "about-hero"),
             ("events", "wsr-hero"),
             ("international_orders", "io-hero"),
