@@ -1,5 +1,5 @@
 {% load static %}
-{% if not suppress_default_hero and not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
+{% if not is_same_day_page and not suppress_default_hero and not is_home and page_type != "home" and page_type != "flowers_landing" and page_type != "workshops" and page_type != "about" %}
   <section class="page-hero hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" data-page-hero-slider>
     <div class="page-hero__slides">
       {% if page_hero_slides %}

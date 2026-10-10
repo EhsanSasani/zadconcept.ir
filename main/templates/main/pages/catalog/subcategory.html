@@ -1,7 +1,7 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-subcategory page-catalog-subcategory page-zad-v2{% if is_same_day_page %} page-same-day{% endif %}{% endblock %}
+{% block body_class %}page-subcategory page-catalog-subcategory page-zad-v2{% if is_same_day_page %} page-same-day page-shop-display{% endif %}{% endblock %}
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/components/editorial-guides.css' %}?v=1">
@@ -9,10 +9,14 @@
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
-  {% if is_same_day_page %}<link rel="stylesheet" href="{% static 'main/css/pages/catalog/same-day-seo.css' %}?v=2">{% endif %}
+  {% if is_same_day_page %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/shop-display.css' %}?v=1"><link rel="stylesheet" href="{% static 'main/css/pages/catalog/same-day-seo.css' %}?v=6">{% endif %}
 {% endblock %}
 
 {% block content %}
+{% if is_same_day_page %}
+  {% include "main/components/same_day_hero.html" %}
+  <div class="zad-scroll-content">
+{% endif %}
 {% include "main/components/breadcrumbs.html" %}
 
 {% if show_category_split_hero %}
@@ -141,6 +145,7 @@
 
 {% if is_same_day_page %}{% include "main/components/same_day_guide.html" %}{% endif %}
 {% include "main/components/editorial_guides.html" %}
+{% if is_same_day_page %}</div>{% endif %}
 {% endblock %}
 
 {% block extra_js %}

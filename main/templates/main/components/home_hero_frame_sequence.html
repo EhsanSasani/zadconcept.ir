@@ -1,5 +1,6 @@
-<div class="home-hero-sequence" data-hero-frame-sequence data-frame-duration="2000" aria-hidden="true">
-  <span class="home-hero-sequence__frame home-hero-sequence__frame--start is-active" data-hero-frame></span>
-  <span class="home-hero-sequence__frame home-hero-sequence__frame--making" data-hero-frame></span>
-  <span class="home-hero-sequence__frame home-hero-sequence__frame--finished" data-hero-frame></span>
+{% load static %}
+<div class="home-hero-sequence" data-hero-frame-sequence data-frame-duration="3500">
+  <img class="home-hero-sequence__frame is-active" src="{% static 'main/img/home/hero-sequence/worktable-01.webp' %}" alt="استودیو گل زاد" width="1448" height="1086" fetchpriority="high" decoding="async" data-hero-frame>
+  <img class="home-hero-sequence__frame" src="{% static 'main/img/home/hero-sequence/worktable-02.webp' %}" alt="" width="1448" height="1086" decoding="async" data-hero-frame>
+  <img class="home-hero-sequence__frame" src="{% static 'main/img/home/hero-sequence/worktable-03.webp' %}" alt="" width="1448" height="1086" decoding="async" data-hero-frame>
 </div>

@@ -1263,42 +1263,37 @@ body.page-home.has-scroll-pinned-home-hero .home-hero-pin-spacer + .zad-stories 
   display: block;
   overflow: hidden;
   pointer-events: none;
-  transform: scale(1);
-  transition: transform 6s cubic-bezier(.16, 1, .3, 1);
 }
 
-.page-home .hero-slide.has-mobile-frame-sequence.is-active .home-hero-sequence {
-  transform: scale(1.012);
-}
-
-.page-home .home-hero-sequence__frame {
-  position: absolute;
+/* Use identical image geometry for every frame, including the initial one.
+   This specificity also overrides the shared mobile hero image policy. */
+body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame {
+  position: absolute !important;
   inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  transform: none !important;
   z-index: 0;
   display: block;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  opacity: 0;
-  transition: opacity 360ms cubic-bezier(.22, 1, .36, 1);
+  opacity: 0 !important;
+  transition: opacity 900ms ease-in-out;
 }
 
-.page-home .home-hero-sequence__frame.is-active {
+body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame.is-leaving {
   z-index: 1;
-  opacity: 1;
+  opacity: 1 !important;
 }
 
-.page-home .home-hero-sequence__frame--making {
-  background-image: url("../../../img/home/hero-sequence/worktable-02.webp");
-}
-
-.page-home .home-hero-sequence__frame--finished {
-  background-image: url("../../../img/home/hero-sequence/worktable-03.webp");
+body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame.is-active {
+  z-index: 2;
+  opacity: 1 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .page-home .hero-slide.has-mobile-frame-sequence .home-hero-sequence,
-  .page-home .home-hero-sequence__frame {
+  body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame {
     transform: none !important;
     transition: none !important;
   }

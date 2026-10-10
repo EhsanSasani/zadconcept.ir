@@ -1,0 +1,112 @@
+/* Match Home's native sticky hero and opaque rounded scroll surface. */
+body.page-shop-display {
+  overflow-x: clip;
+}
+
+body.page-shop-display .site-main {
+  overflow: visible !important;
+  isolation: isolate;
+  margin-top: 0;
+  padding-top: 0;
+  border-radius: 0;
+}
+
+body.page-shop-display .site-main section.shop-display-hero {
+  --shop-display-hero-height: clamp(340px, min(50vw, calc(100svh - 148px)), 820px);
+  position: sticky !important;
+  top: var(--zad-header-height, 68px) !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  height: var(--shop-display-hero-height) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  margin: 0 !important;
+  background: #fbf7f0;
+  overflow: hidden;
+}
+
+body.page-shop-display .shop-display-hero .page-hero__slides,
+body.page-shop-display .shop-display-hero .flowers-hero__media,
+body.page-shop-display .shop-display-hero .page-hero__slide,
+body.page-shop-display .shop-display-hero picture,
+body.page-shop-display .shop-display-hero img {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+body.page-shop-display .shop-display-hero .page-hero__slide picture {
+  display: block;
+  width: min(100%, calc(var(--shop-display-hero-height) * 2.4)) !important;
+  margin-inline: auto;
+}
+
+/* The studio uses its existing slider media, with the same crop envelope. */
+body.page-shop-display .shop-display-hero .flowers-hero__media {
+  width: min(100%, calc(var(--shop-display-hero-height) * 2.4)) !important;
+  inset-inline: 0;
+  margin-inline: auto;
+}
+
+body.page-shop-display .shop-display-hero .page-hero__slide img,
+body.page-shop-display .shop-display-hero .flowers-hero__media img {
+  object-fit: cover !important;
+  object-position: center 46% !important;
+  transform: none !important;
+}
+
+body.page-shop-display .site-main .zad-scroll-content {
+  --zad-scroll-radius: 34px;
+  background: #fbf7f0;
+}
+
+/* Let the foreground's Home-style corners remain visible. */
+body.page-shop-display .zad-scroll-content > :first-child {
+  border-radius: inherit;
+}
+
+body.page-shop-display .zad-scroll-content > .flowers-collection {
+  margin-top: 0;
+  border-radius: inherit;
+}
+
+@media (max-width: 760px) {
+  body.page-shop-display .site-header {
+    margin-bottom: calc(var(--zad-mobile-header-height, 40px) * -1) !important;
+  }
+
+  body.page-shop-display .site-main section.shop-display-hero {
+    top: var(--zad-mobile-header-height, 40px) !important;
+    height: clamp(170px, 43vw, 220px) !important;
+  }
+
+  body.page-shop-display .shop-display-hero .page-hero__slide picture {
+    width: 100% !important;
+  }
+  body.page-shop-display .shop-display-hero .flowers-hero__media {
+    width: 100% !important;
+  }
+
+  body.page-shop-display .shop-display-hero .page-hero__slide img,
+  body.page-shop-display .shop-display-hero .flowers-hero__media img {
+    object-position: center !important;
+  }
+
+  body.page-shop-display .site-main .zad-scroll-content {
+    --zad-scroll-radius: 24px;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  body.page-shop-display .site-main section.shop-display-hero {
+    height: calc(56.25vw + 76px) !important;
+  }
+}
+
+@media (max-width: 390px) and (orientation: landscape) {
+  body.page-shop-display .site-main section.shop-display-hero {
+    height: clamp(160px, 44vw, 185px) !important;
+  }
+}

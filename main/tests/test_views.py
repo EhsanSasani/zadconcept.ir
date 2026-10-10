@@ -1293,7 +1293,12 @@ class MainViewsTests(TestCase):
                 response = self.client.get(reverse(route_name))
                 self.assertTemplateUsed(response, "main/pages/catalog/landing.html")
                 self.assertTemplateUsed(response, "main/components/catalog_filter.html")
-                self.assertContains(response, 'class="flowers-hero ')
+                if route_name == "bakery":
+                    self.assertTemplateUsed(response, "main/components/sweetbar_hero.html")
+                    self.assertContains(response, "zad-sweetbar-v1-1672.webp")
+                    self.assertContains(response, 'class="sweetbar-intro flowers-container"')
+                else:
+                    self.assertContains(response, 'class="flowers-hero ')
                 self.assertContains(response, 'data-filter-count="2"')
                 self.assertContains(response, '>همه<')
                 self.assertContains(response, f'data-filter="{category.slug}"')

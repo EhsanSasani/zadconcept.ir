@@ -1,0 +1,64 @@
+/* Sweet Bar shares Home's hero geometry through shop-display.css. */
+body.page-bakery-landing .flowers-shell {
+  overflow: visible;
+  isolation: isolate;
+  background: #fbf7f0;
+}
+body.page-bakery-landing .flowers-collection {
+  margin-top: 0;
+  border-radius: 0;
+  padding-top: 0;
+  background: #fbf7f0;
+}
+body.page-bakery-landing .sweetbar-intro {
+  width: min(calc(100% - 40px), 1040px);
+  margin-inline: auto;
+  padding: clamp(34px, 4vw, 60px) 0 30px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid rgba(21, 63, 76, .13);
+  text-align: center;
+  font-family: var(--font-fa);
+}
+.sweetbar-intro__kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #9b6842;
+  font-family: var(--font-ui-en);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+}
+.sweetbar-intro__kicker::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+body.page-bakery-landing .sweetbar-intro h1 {
+  margin: 0 auto;
+  max-width: 28ch;
+  color: #153f4c;
+  font-size: clamp(1.6rem, 3vw, 2.7rem);
+  font-weight: 650;
+  line-height: 1.65;
+  text-wrap: balance;
+}
+body.page-bakery-landing .sweetbar-intro p {
+  max-width: 58ch;
+  margin: 12px auto 0;
+  color: #71685f;
+  font-size: clamp(.82rem, 1vw, .95rem);
+  line-height: 2;
+  text-wrap: pretty;
+}
+@media (max-width: 760px) {
+  body.page-bakery-landing .sweetbar-intro {
+    width: calc(100% - 32px);
+    padding: 32px 0 24px;
+    margin-bottom: 24px;
+  }
+  body.page-bakery-landing .sweetbar-intro p { max-width: 38ch; }
+}
