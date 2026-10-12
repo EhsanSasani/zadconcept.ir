@@ -292,6 +292,18 @@ body.page-flowers-landing .flowers-btn:focus-visible {
   color: var(--fs-navy);
 }
 
+body.page-flowers-landing .flowers-cta .flowers-btn--ghost {
+  border-color: rgba(251, 247, 240, .45);
+  background: transparent;
+  color: var(--fs-paper);
+}
+
+body.page-flowers-landing .flowers-cta .flowers-btn--ghost:hover,
+body.page-flowers-landing .flowers-cta .flowers-btn--ghost:focus-visible {
+  background: rgba(251, 247, 240, .12);
+  color: var(--fs-paper);
+}
+
 body.page-flowers-landing .flowers-cta__media {
   min-height: 0;
   overflow: visible;

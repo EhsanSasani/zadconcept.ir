@@ -63,7 +63,7 @@
               data-product-name="{{ product.name|default:'' }}"
               data-product-stock="{{ product.stock_status_label }}"
             >
-              <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main" data-zad-modal-card>
+              <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main">
                 <div class="flowers-product-card__media">
                   {% if product.cover_image %}
                     <img

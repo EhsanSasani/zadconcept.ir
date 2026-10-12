@@ -41,6 +41,20 @@ class Document(HTMLParser):
 
 
 class ScrollSurfaceTests(TestCase):
+    def test_product_details_and_recommendations_share_one_cover(self):
+        from main.models import Category, Product
+
+        category = Category.objects.create(name="Scroll bouquet", slug="scroll-bouquet", section="flowers")
+        product = Product.objects.create(category=category, name="Scroll flower", publish_status="published")
+        doc = Document(self.client.get(product.get_absolute_url()).content.decode())
+        cover = next(n for n in doc.elements if n.has_class("item-detail__foreground"))
+        media = next(n for n in doc.elements if n.has_class("item-detail__media"))
+        self.assertTrue(cover.has_class("zad-scroll-content"))
+        self.assertIs(media.parent, cover.parent)
+        self.assertEqual(cover.parent.children, [media, cover])
+        self.assertTrue(cover.children[0].has_class("item-detail__info"))
+        self.assertTrue(cover.children[1].has_class("item-detail__after-details"))
+
     def test_all_nested_hero_pages_have_one_unbroken_cover_until_shell_end(self):
         cases = (
             ("index", "home-hero"), ("flowers", "flowers-hero"),

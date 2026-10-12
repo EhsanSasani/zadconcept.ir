@@ -147,7 +147,7 @@ class ProposalCollectionFilterTests(TestCase):
         )
         self.assertContains(original, self.hand_product.product_code)
         detail = self.client.get(self.hand_product.get_absolute_url())
-        self.assertContains(detail, self.birthday.name)
+        self.assertNotContains(detail, 'class="item-detail__tags"')
         self.assertNotContains(detail, self.selection.name)
         self.assertEqual(
             set(self.hand_product.tags.values_list("slug", flat=True)),

@@ -1319,16 +1319,16 @@ class MainViewsTests(TestCase):
         for response in (birthday, condolence, flower_birthday):
             with self.subTest(path=response.request["PATH_INFO"]):
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(
-                    response.context["page_hero_image"],
-                    "main/img/occasion-detail-hero-v1.webp",
-                )
-                self.assertEqual(
-                    response.context["page_hero_mobile_image"],
-                    "main/img/occasion-detail-hero-mobile-v1.webp",
-                )
-                self.assertContains(response, 'class="page-hero__content container"')
-                self.assertContains(response, 'media="(max-width: 760px)"')
+                self.assertTrue(response.context["suppress_default_hero"])
+                self.assertContains(response, 'class="collection-header occasion-header"')
+                self.assertContains(response, '<h1 id="occasion-title">', count=1)
+                self.assertNotContains(response, 'class="page-hero__slides"')
+                self.assertContains(response, response.context["occasion_header_image"])
+
+        self.assertNotEqual(
+            birthday.context["occasion_header_image"],
+            condolence.context["occasion_header_image"],
+        )
 
         self.assertContains(birthday, "برای لحظه‌ای که باید با گل، رنگ و یک یاد شیرین ماندگار شود.")
         self.assertContains(condolence, "برای ابراز همدلی؛ باوقار، آرام و محترمانه.")

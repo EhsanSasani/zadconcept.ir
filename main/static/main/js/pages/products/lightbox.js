@@ -85,6 +85,9 @@
     trigger.setAttribute('aria-expanded', 'true');
     overlays.open(lightbox, { focus: closeButton, onClose: closeLightbox, opener: trigger });
   }
+  document.querySelector('[data-gallery-previous]')?.addEventListener('click', () => select(selected - 1));
+  document.querySelector('[data-gallery-next]')?.addEventListener('click', () => select(selected + 1));
+  if (thumbs.length < 2) document.querySelectorAll('[data-gallery-previous], [data-gallery-next]').forEach(button => { button.hidden = true; });
   labelTrigger();
   thumbs.forEach((thumb, index) => thumb.addEventListener('click', (event) => {
     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;

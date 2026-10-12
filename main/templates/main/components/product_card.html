@@ -13,7 +13,7 @@
     data-product-stock="{{ product.stock_status_label }}"
     data-product-description="{{ product.description|default:'' }}"
   >
-    <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main" data-zad-modal-card>
+    <a href="{{ product.get_absolute_url }}" class="flowers-product-card__main">
       <div class="flowers-product-card__media">
         {% if product.cover_image %}
           <img
