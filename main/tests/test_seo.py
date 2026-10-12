@@ -471,9 +471,9 @@ class SeoContractTests(TestCase):
 
         self.assertEqual(catalog.content.decode().count("<main"), 1)
         self.assertNotContains(about, "product-dialog.css")
-        self.assertContains(catalog, "product-dialog.css")
-        self.assertContains(catalog, 'aria-label="بستن پنجره محصول"')
-        self.assertContains(catalog, 'aria-labelledby="zad-product-modal-title"')
+        self.assertNotContains(catalog, "product-dialog.css")
+        self.assertNotContains(catalog, 'data-product-modal')
+        self.assertNotContains(catalog, "product-dialog.js")
 
     def test_rendered_public_pages_reserve_image_dimensions(self):
         for route in ("index", "flowers", "events", "about", "faq"):

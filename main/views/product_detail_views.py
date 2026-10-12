@@ -1,3 +1,5 @@
+from itertools import zip_longest
+
 from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -10,6 +12,7 @@ from ..page_context import _default_context
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
 from ..seo import product_node
 from ..editorial_links import guides_for_product
+from ..product_recommendations import complementary_groups
 
 
 def _telegram_href():
@@ -170,20 +173,24 @@ def _item_detail_context(request, product):
         hero_data = db_hero
 
     context.update(hero_data)
+    groups = complementary_groups(product)
+    complementary_items = [
+        item
+        for row in zip_longest(*(group["products"] for group in groups))
+        for item in row
+        if item is not None
+    ]
     context.update(
         {
             "product": product,
             "editorial_guides": guides_for_product(product),
-            "product_tags": product.tags.filter(is_active=True).order_by(
-                "sort_order",
-                "name",
-            ),
             "category_name": category_name,
             "section_label": section_label,
             "category_url": category_url,
             "subcategory_url": subcategory_url,
             "subcategory_label": subcategory_label,
             "similar_items": similar_items,
+            "complementary_items": complementary_items,
             "item_telegram_href": _item_telegram_href(request, product),
             "item_call_text": "تماس",
             "item_telegram_text": "تلگرام",

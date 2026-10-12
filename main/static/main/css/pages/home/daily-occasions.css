@@ -237,3 +237,34 @@
   .page-home .zad-shop .zad-shop-card__media > img { transition: none; }
   .page-home .zad-shop-card:hover img { transform: none; }
 }
+
+/* A complete heading stack keeps the daily selection readable on small screens. */
+.page-home .zad-shop .zad-shop__heading {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 10px;
+  width: min(100%, 640px);
+  margin: 0 auto 28px;
+  padding-inline: 8px;
+  text-align: center;
+}
+.page-home .zad-shop .zad-shop__eyebrow { margin: 0; font-size: .6rem; letter-spacing: .14em; }
+.page-home .zad-shop .zad-shop__heading h2 { font-size: clamp(1.3rem, 4.6vw, 2.15rem); line-height: 1.7; text-wrap: balance; }
+.page-home .zad-shop .zad-shop__heading p { max-width: 38ch; font-size: .82rem; line-height: 2; text-wrap: pretty; }
+.page-home .zad-shop .zad-shop__all {
+  justify-self: center;
+  justify-content: center;
+  max-width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 20px;
+  border: 1px solid #d6c9b9;
+  border-radius: 999px;
+  background: #f1e8dc;
+  color: var(--shop-navy);
+  font-size: .76rem;
+  white-space: normal;
+  transition: background .2s, border-color .2s;
+}
+.page-home .zad-shop .zad-shop__all:hover { background: #e8dbc9; border-color: #bba68e; }
+.page-home .zad-shop .zad-shop__all:focus-visible { outline: 2px solid var(--shop-navy); outline-offset: 4px; }

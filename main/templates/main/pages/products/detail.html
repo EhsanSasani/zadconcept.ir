@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{% static 'main/css/components/editorial-guides.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/core.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
-  <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'main/css/pages/products/detail.css' %}?v=8">
   <link rel="stylesheet" href="{% static 'main/css/pages/products/lightbox.css' %}?v=3">
 {% endblock %}
 
@@ -28,11 +28,12 @@
         {% else %}
           <div class="item-detail__placeholder"><span>ZAD</span>تصویر هنوز اضافه نشده</div>
         {% endif %}
+        {% if gallery %}
+          <button class="item-detail__gallery-step item-detail__gallery-step--previous" type="button" data-gallery-previous aria-label="تصویر قبلی">‹</button>
+          <button class="item-detail__gallery-step item-detail__gallery-step--next" type="button" data-gallery-next aria-label="تصویر بعدی">›</button>
+        {% endif %}
       </div>
 
-      {% if product.cover_image or gallery %}
-        <p class="item-detail__gallery-hint"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>برای دیدن جزئیات، تصویر را لمس کنید</p>
-      {% endif %}
       {% if gallery %}
         <div class="item-detail__thumbs" aria-label="تصاویر محصول">
           {% if product.cover_image %}
@@ -50,6 +51,7 @@
     </article>
     {% endwith %}
 
+    <div class="zad-scroll-content item-detail__foreground">
     <aside class="item-detail__info">
       <p class="item-detail__eyebrow">zad {{ section_label|default:"Collection" }}</p>
 
@@ -116,16 +118,6 @@
         <p>{{ page_content.before_order.body|default:"رنگ گل‌ها، جزئیات چیدمان، بسته‌بندی و بعضی آیتم‌ها ممکن است براساس موجودی تازه همان روز کمی تغییر کند. پیش از ثبت نهایی سفارش، تیم زاد موجودی، زمان ارسال و جزئیات سفارش را با شما هماهنگ می‌کند." }}</p>
       </details>
 
-      {% with tags=product_tags %}
-        {% if tags %}
-          <div class="item-detail__tags" aria-label="برچسب‌های محصول">
-            {% for tag in tags %}
-              <span>{{ tag.name }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
-      {% endwith %}
-
       <div class="inline-links item-detail__links">
         {% if category_url %}
           <a href="{{ category_url }}">{{ section_label|default:"Collection" }}</a>
@@ -138,27 +130,23 @@
         <a href="{{ mashhad_order_url }}">Mashhad</a>
       </div>
     </aside>
-  </div>
-</section>
-
-{% if similar_items %}
-<section class="container section-block featured-products-section item-detail-related">
+    <div class="item-detail__after-details">
+{% if complementary_items %}
+<section class="container section-block featured-products-section item-detail-related" aria-labelledby="related-products-title">
   <div class="section-head featured-products-section__head featured-products-section__head--center catalog-section-head">
-    <div>
-      <h2 class="section-title-en">{{ page_content.related.title|default:"Related" }}</h2>
-    </div>
-    {% if category_url %}
-      <a href="{{ category_url }}" class="section-link">View All</a>
-    {% endif %}
+    <div><h2 id="related-products-title" class="section-title-en">محصولات مرتبط</h2></div>
   </div>
-
-  {% include "main/components/product_rail.html" with products=similar_items %}
+  {% include "main/components/product_rail.html" with products=complementary_items %}
 </section>
 {% endif %}
 {% include "main/components/editorial_guides.html" %}
+    </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
   <script src="{% static 'main/js/components/product-rail.js' %}?v=10000"></script>
-  <script src="{% static 'main/js/pages/products/lightbox.js' %}?v=2"></script>
+  <script src="{% static 'main/js/pages/products/lightbox.js' %}?v=3"></script>
 {% endblock %}

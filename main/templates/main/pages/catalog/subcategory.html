@@ -1,7 +1,7 @@
 {% extends "main/layout/base.html" %}
 {% load static %}
 
-{% block body_class %}page-subcategory page-catalog-subcategory page-zad-v2{% if is_same_day_page %} page-same-day page-shop-display{% endif %}{% endblock %}
+{% block body_class %}page-subcategory page-catalog-subcategory page-zad-v2{% if show_category_split_hero %} page-collection-header{% endif %}{% if is_same_day_page %} page-same-day page-shop-display{% endif %}{% endblock %}
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/components/editorial-guides.css' %}?v=1">
@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{% static 'main/css/pages/catalog/landing.css' %}?v=10">
   <link rel="stylesheet" href="{% static 'main/css/components/catalog-filter.css' %}?v=2">
   <link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">
+  {% if show_category_split_hero %}<link rel="stylesheet" href="{% static 'main/css/pages/catalog/collection-header.css' %}?v=3">{% endif %}
   {% if is_same_day_page %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/shop-display.css' %}?v=1"><link rel="stylesheet" href="{% static 'main/css/pages/catalog/same-day-seo.css' %}?v=6">{% endif %}
 {% endblock %}
 
@@ -20,22 +21,24 @@
 {% include "main/components/breadcrumbs.html" %}
 
 {% if show_category_split_hero %}
-<section class="category-split-hero" aria-labelledby="category-hero-title">
-  <div class="flowers-container category-split-hero__card">
-    <div class="category-split-hero__copy">
-      <span class="category-split-hero__kicker">
-        {% if category_parent_label %}{{ category_parent_label }} · ZAD{% else %}ZAD FLOWERS{% endif %}
-      </span>
-      <h1 id="category-hero-title">{{ collection_title }}</h1>
-      {% if collection_intro %}<p>{{ collection_intro }}</p>{% endif %}
-      <a href="{% url 'flowers' %}" class="category-split-hero__back">
-        <span aria-hidden="true">→</span>
-        همه دسته‌بندی‌های گل
+<section class="collection-header" aria-labelledby="category-hero-title">
+  <div class="collection-header__inner">
+    <div class="collection-header__copy">
+      <span class="collection-header__kicker">{{ category_section_kicker }}</span>
+      <div class="collection-header__story">
+        <h1 id="category-hero-title">{{ collection_title }}</h1>
+        {% if collection_intro %}<p>{{ collection_intro }}</p>{% endif %}
+        {% if category_parent_label %}<span class="collection-header__parent">{{ category_parent_label }}</span>{% endif %}
+      </div>
+      <a href="{{ category_section_url }}" class="collection-header__back">
+        <span aria-hidden="true">→</span> {{ category_section_label }}
       </a>
     </div>
 
-    <figure class="category-split-hero__media">
-      {% if category_hero_image|slice:":7" == "/media/" %}
+    <figure class="collection-header__media">
+      {% if collection_preview %}
+        <img src="{{ collection_preview.cover_image.url }}" alt="{{ collection_preview.seo_name }}" width="720" height="900" fetchpriority="high" decoding="async">
+      {% elif category_hero_image|slice:":7" == "/media/" %}
         <img src="{{ category_hero_image }}" alt="{{ collection_title }}" width="720" height="900" fetchpriority="high" decoding="async">
       {% else %}
         <img src="{% static category_hero_image %}" alt="{{ collection_title }}" width="720" height="900" fetchpriority="high" decoding="async">
@@ -50,7 +53,7 @@
   <div class="flowers-container">
     <header class="flowers-directory__head flowers-directory__head--compact">
       <span>{% if subcategory_slug == "wedding" %}WEDDING COLLECTIONS{% else %}COLLECTIONS{% endif %}</span>
-      {% if is_flower_category_page %}
+      {% if show_category_split_hero or is_flower_category_page %}
         <h2>انتخاب مجموعه</h2>
       {% else %}
         {% if has_managed_site_hero %}<h2>{% else %}<h1>{% endif %}{{ collection_title }}{% if has_managed_site_hero %}</h2>{% else %}</h1>{% endif %}
@@ -110,7 +113,7 @@
         <h2 class="section-title-en hero-brand-text">محصولات {{ collection_title }}</h2>
       </div>
     </div>
-  {% elif is_flower_category_page %}
+  {% elif show_category_split_hero or is_flower_category_page %}
     <h2 class="sr-only">محصولات {{ collection_title }}</h2>
   {% else %}
   <div class="section-head section-head--center catalog-detail-head">

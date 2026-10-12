@@ -152,6 +152,10 @@ def flower_occasion(request, slug):
     context.update(
         {
             "occasion": occasion,
+            "suppress_default_hero": True,
+            "occasion_header_image": (
+                (db_hero or {}).get("page_hero_image") or _occasion_card(occasion)["image"]
+            ),
             "products": products,
             "filter_links": _filter_links_for_categories(
                 base_url,
@@ -284,6 +288,10 @@ def occasion_detail(request, slug):
     context.update(
         {
             "occasion": occasion,
+            "suppress_default_hero": True,
+            "occasion_header_image": (
+                (db_hero or {}).get("page_hero_image") or _occasion_card(occasion)["image"]
+            ),
             "products": products,
             "filter_links": _filter_links_for_categories(
                 reverse("occasion_detail", args=[occasion.slug]),

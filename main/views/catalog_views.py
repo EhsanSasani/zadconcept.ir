@@ -243,6 +243,11 @@ def _section_subcategory(request, section, subcategory_slug):
         tags__is_active=True,
     ).distinct()
     has_unique_products = unique_products_qs.exists()
+    collection_preview = (
+        products_qs.exclude(cover_image="")
+        .order_by("-featured", "sort_order", "-created_at", "pk")
+        .first()
+    )
 
     if selected_tag == UNIQUE_TAG_SLUG:
         products_qs = unique_products_qs
@@ -270,7 +275,7 @@ def _section_subcategory(request, section, subcategory_slug):
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
         content_page="subcategory",
-        suppress_default_hero=is_flower_category_page and not db_hero,
+        suppress_default_hero=not db_hero,
     )
 
     hero_data = _hero_from_key(
@@ -293,7 +298,15 @@ def _section_subcategory(request, section, subcategory_slug):
             "collection_title": category.name,
             "collection_intro": content["intro"],
             "is_flower_category_page": is_flower_category_page,
-            "show_category_split_hero": is_flower_category_page and not db_hero,
+            "show_category_split_hero": not db_hero,
+            "category_section_url": reverse(section),
+            "category_section_label": {
+                Category.Section.FLOWERS: "همه دسته‌بندی‌های گل",
+                Category.Section.BAKERY: "همه دسته‌بندی‌های سوییت‌بار",
+                Category.Section.GIFTS: "همه دسته‌بندی‌های کانسپت‌استور",
+            }[section],
+            "category_section_kicker": f"ZAD {section.upper()}",
+            "collection_preview": collection_preview,
             "category_hero_image": (
                 category.cover_image.url if category.cover_image else content["image"]
             ),

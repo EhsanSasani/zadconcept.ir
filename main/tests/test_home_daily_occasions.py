@@ -52,7 +52,7 @@ class HomeDailyOccasionsTests(SimpleTestCase):
             "data-product-stock": product.stock_status_label,
         }.items():
             self.assertEqual(card[key], value)
-        link = next(attrs for _, attrs in elements if "data-zad-modal-card" in attrs)
+        link = next(attrs for _, attrs in elements if "zad-shop-card__link" in attrs.get("class", ""))
         self.assertEqual(link["href"], product.get_absolute_url)
         image = next(attrs for _, attrs in elements if "data-product-image" in attrs)
         self.assertEqual(image["src"], product.cover_image.url)
