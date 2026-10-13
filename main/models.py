@@ -2948,7 +2948,7 @@ class StudioProduct(TimeStampedModel):
     """Complete production ledger; public Product is an optional daily projection."""
 
     class ProductionType(models.TextChoices):
-        DAILY = "DAILY", "روزانه"
+        DAILY = "DAILY", "آماده"
         CUSTOM = "CUSTOM", "سفارشی"
         MISC = "MISC", "شاخه و متفرقه"
 
@@ -2961,7 +2961,7 @@ class StudioProduct(TimeStampedModel):
 
     class Source(models.TextChoices):
         PORTAL = "PORTAL", "پنل فلوریست"
-        TELEGRAM_DAILY = "TELEGRAM_DAILY", "تلگرام روزانه"
+        TELEGRAM_DAILY = "TELEGRAM_DAILY", "تلگرام آماده"
         TELEGRAM_CUSTOM = "TELEGRAM_CUSTOM", "تلگرام سفارشی"
         DASHBOARD = "DASHBOARD", "داشبورد"
         ADMIN = "ADMIN", "ادمین"
@@ -2976,7 +2976,7 @@ class StudioProduct(TimeStampedModel):
         CAR = "car", "ماشین عروس"
         OTHER = "other", "سایر"
 
-    factor_code = models.CharField("شماره فاکتور", max_length=40, unique=True)
+    factor_code = models.CharField("شماره فاکتور", max_length=40, blank=True)
     florist = models.ForeignKey(Florist, on_delete=models.PROTECT, related_name="studio_products", null=True, blank=True)
     product_type = models.CharField("نوع محصول", max_length=16, choices=ProductType.choices)
     production_type = models.CharField("نوع تولید", max_length=8, choices=ProductionType.choices, db_index=True)
@@ -3014,7 +3014,7 @@ class StudioProduct(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=["telegram_chat_id", "telegram_message_id"],
                                     name="studio_telegram_identity"),
-            models.UniqueConstraint(Lower("factor_code"), name="studio_factor_ci_unique"),
+            models.UniqueConstraint(Lower("factor_code"), condition=~Q(factor_code=""), name="studio_factor_ci_unique"),
             models.CheckConstraint(condition=Q(price__gt=0), name="studio_price_positive"),
             models.CheckConstraint(condition=Q(image__gt="") | Q(product__isnull=False) | Q(production_type="MISC"),
                                    name="studio_image_or_public_product"),
@@ -3038,7 +3038,7 @@ class StudioProduct(TimeStampedModel):
 
     @property
     def display_id(self):
-        return self.pk if self.production_type == self.ProductionType.MISC else self.factor_code
+        return self.pk if self.production_type == self.ProductionType.MISC else f"ST-{self.pk}"
 
     @property
     def display_name(self):
@@ -3063,7 +3063,7 @@ class StudioProduct(TimeStampedModel):
         if self.production_type == self.ProductionType.CUSTOM and self.product_id:
             errors["product"] = "محصول سفارشی نباید در کاتالوگ عمومی ثبت شود."
         if self.source == self.Source.TELEGRAM_DAILY and self.production_type != self.ProductionType.DAILY:
-            errors["production_type"] = "منبع تلگرام روزانه فقط برای تولید روزانه است."
+            errors["production_type"] = "منبع تلگرام آماده فقط برای تولید آماده است."
         if self.source == self.Source.TELEGRAM_CUSTOM and self.production_type != self.ProductionType.CUSTOM:
             errors["production_type"] = "منبع تلگرام سفارشی فقط برای سفارش سفارشی است."
         if self.status == self.Status.SOLD and not self.sold_at:

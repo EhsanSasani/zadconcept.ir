@@ -100,7 +100,7 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
                 for name in ('factor_code', 'florist', 'product_type', 'price', 'notes'):
                     if name in values:
                         setattr(current, name, values[name])
-                if not re.fullmatch(r'[A-Z0-9-]{1,40}', current.factor_code):
+                if current.factor_code and not re.fullmatch(r'[A-Z0-9-]{1,40}', current.factor_code):
                     raise ValidationError('شماره فاکتور باید عدد، حروف انگلیسی یا خط تیره باشد.')
                 if values.get('image'):
                     current.image = values['image']

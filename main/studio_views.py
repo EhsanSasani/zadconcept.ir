@@ -28,7 +28,7 @@ def _access(request, permission="view_studioproduct"):
     require_studio_permission(request, permission)
 
 
-def _period(request, default="30"):
+def _period(request, default="today"):
     today = timezone.localdate()
     choice = request.GET.get("period", default)
     error = ""
@@ -140,7 +140,7 @@ def _choice_order(field, choices):
 
 
 def _sort_products(request, qs):
-    fields = {"product": "type_label", "factor": "factor_code", "florist": "florist__name",
+    fields = {"product": "type_label", "factor": "pk", "florist": "florist__name",
               "production": "production_label", "price": "price", "status": "status_label",
               "produced": "produced_at", "result": "result_at"}
     state = _sort_state(request, fields, "produced")
@@ -301,7 +301,8 @@ def products(request):
     if q:
         matching_types = [key for key, label in StudioProduct.ProductType.choices
                           if q in label or q.casefold() in key.casefold()]
-        matching = ((Q(factor_code__icontains=q) & ~Q(production_type="MISC")) | Q(florist__name__icontains=q) |
+        from .studio_identity import identity_query
+        matching = (identity_query(q) | Q(florist__name__icontains=q) |
                        Q(florist__code__icontains=q) | Q(product__name__icontains=q) |
                        Q(product_type__in=matching_types) | Q(production_type="MISC", notes__icontains=q))
         if q.isdecimal() and len(q) < 19:
@@ -464,6 +465,8 @@ class ProductForm(forms.ModelForm):
         self.fields["florist"].label = "فلوریست سازنده"
         self.fields["florist"].empty_label = "فلوریست را انتخاب کنید"
         self.fields["image"].required = True
+        self.fields["factor_code"].label = "شماره فاکتور (اختیاری)"
+        self.fields["factor_code"].help_text = "شناسهٔ محصول پس از ثبت خودکار ساخته می‌شود؛ فاکتور فقط در صورت وجود وارد شود."
 
     def clean_price(self):
         value = self.cleaned_data["price"]
@@ -483,7 +486,7 @@ class ProductForm(forms.ModelForm):
     def clean_factor_code(self):
         import re
         value = self.cleaned_data["factor_code"].strip().upper()
-        if not re.fullmatch(r"[A-Z0-9-]{1,40}", value):
+        if value and not re.fullmatch(r"[A-Z0-9-]{1,40}", value):
             raise forms.ValidationError("فقط حروف لاتین، عدد و خط تیره مجاز است.")
         return value
 
@@ -561,7 +564,7 @@ def product_add(request):
             return redirect("studio_products")
     return render(request, "main/studio/form.html", {
         **_base(request, "add"), "form": form, "title": "ثبت محصول", "submit_label": "ثبت محصول",
-        "help_text": "محصول روزانهٔ موجود در سایت و گروه آماده‌ها منتشر می‌شود؛ محصول سفارشی فقط در دفتر تولید می‌ماند."})
+        "help_text": "محصول آمادهٔ موجود در سایت و گروه آماده‌ها منتشر می‌شود؛ محصول سفارشی فقط در دفتر تولید می‌ماند."})
 
 
 @never_cache
@@ -588,7 +591,7 @@ def product_edit(request, pk):
             messages.success(request, "اطلاعات محصول اصلاح شد.")
             return redirect("studio_products")
     return render(request, "main/studio/form.html", {
-        **_base(request, "products"), "form": form, "title": f"ویرایش فاکتور {record.factor_code}",
+        **_base(request, "products"), "form": form, "title": f"ویرایش محصول {record.display_id}",
         "submit_label": "ذخیره تغییرات", "preview_url": record.photo_url,
         "help_text": "این فرم فقط رکوردهای دستیِ موجود را اصلاح می‌کند."})
 
@@ -616,7 +619,7 @@ def product_status(request, pk):
         }:
             messages.error(request, "تغییر وضعیت مجاز نیست.")
         elif record.product_id:
-            messages.error(request, "وضعیت محصول روزانهٔ تلگرام از همان پیام یا مدیریت کاتالوگ تغییر می‌کند.")
+            messages.error(request, "وضعیت محصول آمادهٔ تلگرام از همان پیام یا مدیریت کاتالوگ تغییر می‌کند.")
         else:
             record.status = value
             if value == StudioProduct.Status.SOLD:
@@ -716,8 +719,9 @@ def deliveries(request):
         qs = qs.filter(status=state)
     q = request.GET.get("q", "").strip()[:40]
     if q:
-        qs = qs.filter(record__factor_code__icontains=q)
-    fields = {"factor": "record__factor_code", "action": "action", "status": "status", "attempts": "attempts", "date": "created_at"}
+        from .studio_identity import identity_query
+        qs = qs.filter(identity_query(q, "record__"))
+    fields = {"factor": "record__pk", "action": "action", "status": "status", "attempts": "attempts", "date": "created_at"}
     table_sort = _sort_state(request, fields, "date")
     qs = qs.order_by(("-" if table_sort["direction"] == "desc" else "") + fields[table_sort["key"]], "-pk")
     return render(request, "main/studio/deliveries.html", {

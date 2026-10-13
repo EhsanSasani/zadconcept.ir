@@ -35,14 +35,14 @@ class StudioUITests(TestCase):
                 product_type='box', production_type='DAILY', price=(26-i)*100000,
                 source='DASHBOARD', image='studio/test.webp', produced_at=timezone.now()-timedelta(days=i%4))
         url = reverse('studio_products')
-        response = self.client.get(url, {'q':'UI-', 'sort':'price', 'dir':'asc'})
+        response = self.client.get(url, {'q':'UI-', 'sort':'price', 'dir':'asc', 'period':'30'})
         prices = [int(row.price) for row in response.context['page']]
         self.assertEqual(prices, list(range(100000, 2000001, 100000)))
         self.assertContains(response, 'aria-sort="ascending"')
         self.assertContains(response, 'q=UI-')
-        response = self.client.get(url, {'q':'UI-', 'sort':'price', 'dir':'asc', 'page':2})
+        response = self.client.get(url, {'q':'UI-', 'sort':'price', 'dir':'asc', 'page':2, 'period':'30'})
         self.assertEqual(int(response.context['page'][0].price), 2100000)
-        response = self.client.get(url, {'sort':'price', 'dir':'desc'})
+        response = self.client.get(url, {'sort':'price', 'dir':'desc', 'period':'30'})
         self.assertEqual(int(response.context['page'][0].price), 2600000)
         response = self.client.get(reverse('studio_florist_profile', args=[self.florist.pk]), {'sort':'factor','dir':'asc'})
         self.assertEqual(response.context['page'][0].factor_code, 'UI-000')

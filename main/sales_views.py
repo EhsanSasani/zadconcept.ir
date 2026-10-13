@@ -40,7 +40,7 @@ class SalesEditForm(forms.Form):
     version = forms.CharField(widget=forms.HiddenInput)
     image = forms.FileField(label='عکس جدید محصول', required=False,
         widget=forms.FileInput(attrs={'accept':'image/*,.heic,.heif,.avif','data-preview-input':''}))
-    factor_code = forms.CharField(label='شماره فاکتور',max_length=40,widget=forms.TextInput(attrs={'dir':'ltr','autocapitalize':'characters'}))
+    factor_code = forms.CharField(label='شماره فاکتور (اختیاری)',required=False,max_length=40,widget=forms.TextInput(attrs={'dir':'ltr','autocapitalize':'characters'}))
     florist = forms.ModelChoiceField(label='فلوریست سازنده',queryset=Florist.objects.none(),empty_label='انتخاب فلوریست')
     product_type = forms.ChoiceField(label='نوع محصول',choices=StudioProduct.ProductType.choices)
     price = forms.DecimalField(label='قیمت (تومان)',max_digits=12,decimal_places=0,min_value=1,
@@ -85,7 +85,8 @@ def home(request):
     q = latin_digits(request.GET.get('q','').strip())[:100]
     records = records.filter(filters[tab])
     if q:
-        matching = (Q(factor_code__icontains=q) & ~Q(production_type="MISC"))|Q(florist__name__icontains=q)|Q(florist__code__icontains=q)|(Q(production_type="MISC",notes__icontains=q)|Q(production_type="MISC",notes__icontains=request.GET.get("q", "").strip()[:100]))
+        from .studio_identity import identity_query
+        matching = identity_query(q)|Q(florist__name__icontains=q)|Q(florist__code__icontains=q)|(Q(production_type="MISC",notes__icontains=q)|Q(production_type="MISC",notes__icontains=request.GET.get("q", "").strip()[:100]))
         if q.isascii() and q.isdigit() and len(q) < 19:
             matching |= Q(production_type='MISC', pk=int(q))
         records = records.filter(matching)

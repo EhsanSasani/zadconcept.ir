@@ -54,6 +54,57 @@ class StudioPublishingTests(TestCase):
         values.update(overrides)
         return create_portal_record(**values)
 
+    def test_optional_invoice_keeps_generated_identity_and_public_code(self):
+        first, created = self.create(factor_code="")
+        second, _ = self.create(factor_code="")
+        self.assertTrue(created)
+        self.assertNotEqual(first.display_id, second.display_id)
+        self.assertEqual(first.product.product_code, first.display_id)
+        self.assertEqual(first.factor_code, "")
+        self.assertIn(f"شناسه محصول: ST-{first.pk}", product_caption(first))
+        self.assertNotIn("فاکتور:", product_caption(first))
+        from main.studio_identity import identity_query
+        for query in (str(first.pk), first.display_id, str(first.pk).translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))):
+            self.assertIn(first, StudioProduct.objects.filter(identity_query(query)))
+
+    def test_invoice_is_separate_caption_metadata_and_searchable(self):
+        record, _ = self.create(factor_code="INV-123")
+        self.assertNotEqual(record.display_id, record.factor_code)
+        self.assertIn("فاکتور: INV-123", product_caption(record))
+        from main.studio_identity import identity_query
+        self.assertIn(record, StudioProduct.objects.filter(identity_query("inv-123")))
+        with self.assertRaises(ValidationError):
+            self.create(factor_code="INV-123")
+
+    def test_custom_product_without_invoice_uses_same_caption_identity(self):
+        from main.studio_delivery import pending_caption_matches
+        record, _ = self.create(factor_code="", production_type="CUSTOM")
+        self.assertIsNone(record.product_id)
+        self.assertTrue(pending_caption_matches(record, product_caption(record)))
+        self.assertFalse(pending_caption_matches(record, product_caption(record).replace(record.display_id, "ST-999999")))
+        self.assertEqual(record.deliveries.get().chat_id, -5182713369)
+
+    def test_optional_invoice_forms_and_search_in_all_workspaces(self):
+        from django.urls import reverse
+        from main.team_forms import TeamProductForm
+        from main.studio_views import ProductForm
+        from main.sales_views import SalesEditForm
+        self.assertFalse(TeamProductForm().fields["factor_code"].required)
+        self.assertFalse(ProductForm().fields["factor_code"].required)
+        record, _ = self.create(factor_code="SEARCH-99")
+        self.assertFalse(SalesEditForm(record=record).fields["factor_code"].required)
+        self.client.force_login(self.manager)
+        for route, page_key in (("studio_products", "page"), ("sales_home", "page")):
+            for query in (record.display_id, "SEARCH-99"):
+                response = self.client.get(reverse(route), {"q": query, "tab": "all", "period": "today"})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(record.pk, [row.pk for row in response.context[page_key]])
+        self.client.force_login(self.user)
+        for query in (record.display_id, "SEARCH-99"):
+            response = self.client.get(reverse("team_products"), {"q": query})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(record.pk, [row.pk for row in response.context["page_obj"]])
+
     def publish(self):
         record, _ = self.create()
         job = process_next_delivery()
@@ -316,7 +367,7 @@ class StudioPublishingTests(TestCase):
         args = self.send.call_args.args
         self.assertEqual(args[0], GROUP)
         self.assertTrue(args[1].startswith(b"\xff\xd8\xff"))
-        self.assertEqual(args[2], "قیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
+        self.assertEqual(args[2], f"شناسه محصول: {record.display_id}\nقیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
         post = TelegramSameDayPost.objects.get()
         self.assertEqual(post.product_id, record.product_id)
         self.assertEqual((record.telegram_chat_id, record.telegram_message_id), (GROUP, 812))
@@ -359,7 +410,7 @@ class StudioPublishingTests(TestCase):
             job = process_next_delivery()
         self.assertEqual(job.outcome, "caption_marked")
         self.delete.assert_not_called()
-        self.assertEqual(self.edit.call_args.args[2], "فروخته شد\nقیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
+        self.assertEqual(self.edit.call_args.args[2], f"فروخته شد\nشناسه محصول: {record.display_id}\nقیمت: 2,400,000 تومان\nفاکتور: PORTAL-123")
 
     def test_permanent_delete_error_uses_caption_fallback(self):
         record, _ = self.publish()

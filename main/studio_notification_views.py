@@ -70,8 +70,9 @@ def admin_notifications(request):
         qs = qs.filter(status=state)
     query = request.GET.get("q", "").strip()[:40]
     if query:
-        qs = qs.filter(record__factor_code__icontains=query)
-    fields = {"factor": "record__factor_code", "event": "event", "status": "status", "attempts": "attempts", "date": "created_at"}
+        from .studio_identity import identity_query
+        qs = qs.filter(identity_query(query, "record__"))
+    fields = {"factor": "record__pk", "event": "event", "status": "status", "attempts": "attempts", "date": "created_at"}
     table_sort = _sort_state(request, fields, "date")
     qs = qs.order_by(("-" if table_sort["direction"] == "desc" else "") + fields[table_sort["key"]], "-pk")
     page = Paginator(qs, 20).get_page(request.GET.get("page"))

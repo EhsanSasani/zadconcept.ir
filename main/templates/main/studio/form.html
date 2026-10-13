@@ -15,7 +15,7 @@
   <p class="eyebrow">LIVE PREVIEW</p><h2>پیش‌نمایش {% if is_florist_form %}پروفایل{% else %}رکورد{% endif %}</h2>
   <div class="preview-photo" data-preview-photo>{% if preview_url %}<img src="{{ preview_url }}" alt="تصویر فعلی">{% else %}<svg class="icon" aria-hidden="true"><use href="#i-{% if is_florist_form %}users{% else %}camera{% endif %}"/></svg><span>انتخاب تصویر</span>{% endif %}</div><p class="upload-feedback" data-upload-feedback role="status"></p>
   {% if is_florist_form %}<h3 data-preview-name>نام فلوریست</h3><p dir="ltr" data-preview-code>—</p><span class="badge badge-custom" data-preview-active>فعال</span>
-  {% else %}<div class="preview-details"><span>شماره فاکتور</span><strong dir="ltr" data-preview-factor>—</strong></div><div class="preview-details"><span>فلوریست</span><strong data-preview-florist>—</strong></div><div class="preview-details"><span>نوع محصول</span><strong data-preview-type>—</strong></div><div class="preview-details"><span>قیمت · تومان</span><strong data-preview-price>—</strong></div>{% endif %}
+  {% else %}<div class="preview-details"><span>شماره فاکتور (اختیاری)</span><strong dir="ltr" data-preview-factor>—</strong></div><div class="preview-details"><span>فلوریست</span><strong data-preview-florist>—</strong></div><div class="preview-details"><span>نوع محصول</span><strong data-preview-type>—</strong></div><div class="preview-details"><span>قیمت · تومان</span><strong data-preview-price>—</strong></div>{% endif %}
   <p class="preview-note">تغییرات پس از زدن دکمهٔ ذخیره ثبت می‌شوند.</p>
 </aside></div>
 {% endblock %}

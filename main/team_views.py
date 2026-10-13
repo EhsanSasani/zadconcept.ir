@@ -221,7 +221,8 @@ def team_products(request):
         production = ""
     if q:
         from .team_forms import latin_digits
-        products = products.filter(factor_code__icontains=latin_digits(q))
+        from .studio_identity import identity_query
+        products = products.filter(identity_query(q))
     return render(request, "main/team/products.html", {
         **portal_context(request, "products"), "page_obj": Paginator(products, 18).get_page(request.GET.get("page")),
         "status_filter": status, "production_filter": production, "q": q,
