@@ -10,6 +10,7 @@ from . import panel, misc_sales, procurement_views
 from .studio_notification_views import admin_notifications
 
 urlpatterns = [
+    path("procurement/prices/", procurement_views.daily_prices, name="procurement_daily_prices"),
     path("panel/", panel.home, name="panel_home"),
     path("panel/select/", panel.select, name="panel_select"),
     path("procurement/", procurement_views.home, name="procurement_home"),

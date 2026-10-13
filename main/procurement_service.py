@@ -11,7 +11,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
+from .models import MaterialDailyPrice, Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
 
 
 def record_version(record):
@@ -63,7 +63,7 @@ def _snapshot(record):
     fields = ('name', 'base_unit', 'purchase_unit', 'units_per_purchase', 'default_unit_price', 'is_active') if isinstance(record, Material) else (
         'date', 'notes', 'status', 'created_by_id', 'void_reason', 'voided_at', 'voided_by_id')
     if isinstance(record, PurchaseInvoice):
-        fields += ('supplier', 'reference', 'total')
+        fields += ('supplier', 'reference', 'total', 'image')
     elif isinstance(record, WasteEntry):
         fields += ('reason', 'estimated_total')
     result = {field: getattr(record, field) for field in fields}
@@ -202,12 +202,14 @@ def create_waste(*, actor, data, lines, submission_key):
     total = Decimal(0)
     for line, material in materials:
         values = _line_values(line, material)
-        source = PurchaseLine.objects.filter(material=material, invoice__status='ACTIVE', invoice__date__lte=entry.date).order_by('-invoice__date', '-invoice_id', '-pk').first()
-        raw_cost = source.unit_price / source.conversion_factor if source else material.default_unit_price / material.units_per_purchase
+        source = MaterialDailyPrice.objects.filter(material=material, date=entry.date).first()
+        if source is None or source.base_unit != material.base_unit:
+            raise ValidationError(f'قیمت روز «{material.name}» برای تاریخ دورریز ثبت نشده است؛ ابتدا قیمت‌های روز را تکمیل کنید.')
+        raw_cost = source.price
         unit_cost = raw_cost.quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
         estimated_cost = (raw_cost * values['base_quantity']).quantize(Decimal(1), rounding=ROUND_HALF_UP)
         row = WasteLine(entry=entry, unit_cost=unit_cost, estimated_cost=estimated_cost,
-            cost_source='purchase' if source else 'reference', purchase_line=source, **values)
+            cost_source='daily', daily_price=source, **values)
         row.full_clean()
         row.save()
         total += estimated_cost
@@ -249,3 +251,51 @@ def void_purchase(*, actor, pk, expected_version, reason):
 @transaction.atomic
 def void_waste(*, actor, pk, expected_version, reason):
     return _void(WasteEntry, actor=actor, pk=pk, expected_version=expected_version, reason=reason)
+
+
+@transaction.atomic
+def save_daily_price(*, actor, data):
+    author = _author(actor)
+    material = Material.objects.select_for_update().filter(pk=data['material'].pk, is_active=True).first()
+    if material is None:
+        raise ValidationError('کالا دیگر فعال نیست؛ صفحه را تازه کنید.')
+    day = _date(data['date'])
+    price = _number(data['price'], places=0, label='قیمت روز')
+    record = MaterialDailyPrice.objects.filter(material=material, date=day).first()
+    before = dict(price=str(record.price), base_unit=record.base_unit) if record else {}
+    if record is None:
+        record = MaterialDailyPrice(material=material, date=day)
+    record.price, record.base_unit, record.updated_by = price, material.base_unit, author
+    record.full_clean()
+    record.save()
+    ProcurementAudit.objects.create(actor=author, actor_name=author.get_username(), target_type='materialdailyprice', target_id=record.pk, action='price', before=before, after=dict(price=str(price), base_unit=material.base_unit, date=day.isoformat()))
+    return record
+
+
+@transaction.atomic
+def create_receipt(*, actor, data, submission_key):
+    author = _author(actor)
+    key = _key(submission_key)
+    previous = _existing(PurchaseInvoice, key, author)
+    if previous:
+        return previous, False
+    supplier = str(data.get('supplier') or '').strip()
+    if not supplier or not data.get('image'):
+        raise ValidationError('تأمین‌کننده و تصویر فاکتور لازم‌اند.')
+    record = PurchaseInvoice(date=_date(data['date']), supplier=supplier,
+        total=_number(data['total'], places=0, positive=True, max_digits=18, label='مبلغ فاکتور'),
+        submission_key=key, created_by=author)
+    record.full_clean()
+    from .image_pipeline import normalize_admin_image, ImageUploadError
+    try:
+        record.image = normalize_admin_image(data['image'])
+    except ImageUploadError as error:
+        raise ValidationError(str(error)) from error
+    try:
+        record.save()
+        _audit(author, record, 'create', {})
+    except Exception:
+        if record.image and record.image._committed:
+            record.image.storage.delete(record.image.name)
+        raise
+    return record, True

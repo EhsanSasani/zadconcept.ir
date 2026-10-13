@@ -18,9 +18,10 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from . import procurement_queries as queries, procurement_service as service
-from .models import Material, ProcurementAudit, PurchaseInvoice, WasteEntry
+from .procurement_catalog import SUPPLIERS
+from .models import MaterialDailyPrice, Material, ProcurementAudit, PurchaseInvoice, WasteEntry
 from .persian_dates import format_persian_date
-from .procurement_forms import (MaterialForm, PurchaseForm, PurchaseLineFormSet,
+from .procurement_forms import (DailyPriceForm, MaterialForm, PurchaseForm, PurchaseLineFormSet,
                                 VoidForm, WasteForm, WasteLineFormSet)
 from .studio_access import can_manage_studio, can_use_procurement
 from .studio_views import _base as studio_context, _period
@@ -134,6 +135,8 @@ def material_form(request, pk=None):
 @require_http_methods(['GET', 'POST'])
 def entry_form(request, kind):
     is_purchase = kind == 'purchase'
+    if is_purchase:
+        return purchase_receipt(request)
     header_class, line_class = (PurchaseForm, PurchaseLineFormSet) if is_purchase else (WasteForm, WasteLineFormSet)
     initial = {'date': format_persian_date(timezone.localdate()), 'token': _token(request.user, kind)}
     form = header_class(request.POST if request.method == 'POST' else None, initial=initial)
@@ -171,6 +174,9 @@ def ledger(request, kind):
     period = _period(request)
     model = PurchaseInvoice if kind == 'purchase' else WasteEntry
     rows = model.objects.filter(date__range=(period['start'], period['end']))
+    if kind == 'purchase':
+        page = Paginator(rows.select_related('created_by').order_by('-date', '-pk'), 25).get_page(request.GET.get('page'))
+        return render(request, 'main/procurement/purchase_list.html', {**_context(request, kind), 'period': period, 'page': page})
     amount_field = 'total' if kind == 'purchase' else 'estimated_total'
     days = rows.values('date').annotate(
         amount=Sum(amount_field, filter=Q(status='ACTIVE')),
@@ -240,3 +246,35 @@ def manager_report(request):
         **studio_context(request, 'procurement', period), **_context(request, 'procurement'),
         'report': queries.report(period),
     })
+
+
+@workspace_required
+@require_http_methods(['GET', 'POST'])
+def daily_prices(request):
+    initial = {'date': format_persian_date(timezone.localdate())}
+    form = DailyPriceForm(request.POST if request.method == 'POST' else None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            service.save_daily_price(actor=request.user, data=form.cleaned_data)
+        except ValidationError as error:
+            _errors(form, error)
+        else:
+            messages.success(request, 'قیمت روز ذخیره شد؛ مبالغ دورریزهای قبلی تغییر نمی‌کنند.')
+            return redirect('procurement_daily_prices')
+    rows = MaterialDailyPrice.objects.select_related('material').order_by('-date', 'material__name')
+    return render(request, 'main/procurement/daily_prices.html', {**_context(request, 'prices'), 'form': form, 'page': Paginator(rows, 30).get_page(request.GET.get('page'))})
+
+
+def purchase_receipt(request):
+    form = PurchaseForm(request.POST if request.method == 'POST' else None, request.FILES or None,
+        initial={'date': format_persian_date(timezone.localdate()), 'token': _token(request.user, 'purchase')})
+    if request.method == 'POST' and form.is_valid():
+        try:
+            key, _ = _submission_key(request, 'purchase', form.cleaned_data['token'])
+            record, created = service.create_receipt(actor=request.user, data=form.cleaned_data, submission_key=key)
+        except ValidationError as error:
+            _errors(form, error)
+        else:
+            messages.success(request, 'فاکتور خرید ثبت شد.' if created else 'این فاکتور قبلاً ثبت شده است.')
+            return redirect('procurement_purchase_add' if request.POST.get('submit') == 'another' else 'procurement_purchases')
+    return render(request, 'main/procurement/purchase_form.html', {**_context(request, 'purchase'), 'form': form, 'suppliers': SUPPLIERS}, status=400 if request.method == 'POST' else 200)

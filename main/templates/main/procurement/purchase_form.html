@@ -1,0 +1,4 @@
+{% extends 'main/procurement/base.html' %}{% block title %}ثبت فاکتور خرید{% endblock %}{% block content %}
+<div class="proc-heading"><div><p class="proc-eyebrow">دفتر خرید</p><h1>ثبت فاکتور خرید</h1><p>تاریخ، تأمین‌کننده، مبلغ و تصویر فاکتور.</p></div><a class="proc-text-link" href="{% url 'procurement_purchases' %}">سوابق خرید ←</a></div>
+<section class="proc-panel"><form method="post" enctype="multipart/form-data">{% csrf_token %}<datalist id="supplier-options">{% for supplier in suppliers %}<option value="{{ supplier }}"></option>{% endfor %}</datalist>{{ form.non_field_errors }}{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}<div class="proc-form-grid">{% for field in form.visible_fields %}{% include 'main/procurement/field.html' %}{% endfor %}</div><button type="submit" class="proc-btn proc-primary">ثبت فاکتور</button></form></section>
+{% endblock %}

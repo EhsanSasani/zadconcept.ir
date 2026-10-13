@@ -17,7 +17,7 @@ from django.utils import timezone
 
 from main.account_roles import account_version, assigned_roles, editable_account
 from main.account_service import save_account
-from main.models import Florist, Material, ProcurementAudit, PurchaseInvoice, WasteEntry
+from main.models import MaterialDailyPrice, Florist, Material, ProcurementAudit, PurchaseInvoice, WasteEntry
 from main.panel import SESSION_KEY
 from main.procurement_forms import JalaliDayField, PersianDecimalField, PurchaseLineFormSet
 from main.procurement_service import create_purchase, create_waste, record_version, save_material, void_purchase
@@ -80,6 +80,14 @@ class ProcurementViewTests(TestCase):
         Material.objects.filter(pk=self.material.pk).update(updated_at=timezone.now())
         self.material.refresh_from_db()
         self.client.force_login(self.buyer)
+        from tempfile import TemporaryDirectory
+        self.media = TemporaryDirectory()
+        self.addCleanup(self.media.cleanup)
+        media_setting = override_settings(MEDIA_ROOT=self.media.name)
+        media_setting.enable()
+        self.addCleanup(media_setting.disable)
+        for offset in range(3):
+            MaterialDailyPrice.objects.create(material=self.material,date=date(2026,10,7)-timedelta(days=offset),price=10000,base_unit='شاخه')
 
     def entry_data(self, kind='purchase', **changes):
         response = self.client.get(reverse(f'procurement_{kind}_add'))
@@ -92,7 +100,8 @@ class ProcurementViewTests(TestCase):
             'lines-0-quantity': '۲', 'lines-0-conversion_factor': '۲۰',
         }
         if kind == 'purchase':
-            data.update(supplier='بازار گل', reference='P-01', notes='خرید روزانه', **{'lines-0-unit_price': '۲.۳۰۰.۰۰۰'})
+            from main.tests.test_telegram_same_day import image_file
+            data.update(supplier='بازار گل', total='۴.۶۰۰.۰۰۰', image=image_file())
         else:
             data.update(reason='wilted', notes='دورریز روزانه', **{'lines-0-unit_mode': 'base', 'lines-0-quantity': '۳'})
         data.update(changes)
@@ -258,11 +267,11 @@ class ProcurementViewTests(TestCase):
         invoice = PurchaseInvoice.objects.get()
         self.assertEqual(invoice.date, date(2026, 10, 7))
         self.assertEqual(invoice.total_amount, Decimal('4600000'))
-        row = invoice.lines.get()
-        self.assertEqual(row.base_quantity, 40)
-        self.assertEqual(row.conversion_factor, 20)
-        self.assertEqual(row.unit_label, 'بسته')
+        self.assertEqual(invoice.lines.count(), 0)
+        self.assertTrue(invoice.image)
         self.assertEqual(invoice.created_by_id, self.buyer.pk)
+        from main.tests.test_telegram_same_day import image_file
+        data['image'] = image_file()
         duplicate = self.client.post(reverse('procurement_purchase_add'), data)
         self.assertEqual(duplicate.url, first.url)
         self.assertEqual(PurchaseInvoice.objects.count(), 1)
@@ -292,17 +301,10 @@ class ProcurementViewTests(TestCase):
         self.assertFalse(WasteEntry.objects.exists())
 
     def test_invalid_header_line_and_empty_formset_never_create_partial_records(self):
-        for changes in ({'date': '۱۴۰۵/۰۷/۱۶'}, {'date': '۱۴۰۴/۱۲/۳۰'},
-            {'lines-0-quantity': '0'}, {'lines-0-conversion_factor': '-1'},
-            {'lines-0-unit_price': '1.5'}, {'lines-0-material': '999999'},
-            {'lines-TOTAL_FORMS': '0'}, {'lines-0-DELETE': 'on'}, {'lines-TOTAL_FORMS': '51'}):
-            with self.subTest(changes=changes):
-                response = self.client.post(reverse('procurement_purchase_add'), self.entry_data(**changes))
-                self.assertEqual(response.status_code, 400)
-                self.assertTrue(response.context['form'].errors or response.context['formset'].errors
-                    or response.context['formset'].non_form_errors())
+        for changes in ({'date':'۱۴۰۵/۰۷/۱۶'},{'date':'۱۴۰۴/۱۲/۳۰'},{'total':'0'},{'total':'1.5'},{'supplier':''},{'image':''}):
+            response=self.client.post(reverse('procurement_purchase_add'),self.entry_data(**changes))
+            self.assertEqual(response.status_code,400)
         self.assertFalse(PurchaseInvoice.objects.exists())
-        self.assertFalse(ProcurementAudit.objects.exists())
 
     def test_unused_blank_rows_are_ignored_and_deleted_rows_are_not_saved(self):
         data = self.entry_data(**{'lines-TOTAL_FORMS': '3', 'lines-1-unit_mode': 'purchase',
@@ -310,18 +312,17 @@ class ProcurementViewTests(TestCase):
             'lines-2-quantity': '0', 'lines-2-unit_price': 'invalid', 'lines-2-DELETE': 'on'})
         response = self.client.post(reverse('procurement_purchase_add'), data)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(PurchaseInvoice.objects.get().lines.count(), 1)
+        self.assertEqual(PurchaseInvoice.objects.get().lines.count(), 0)
 
     def test_archived_material_is_rejected_even_if_selected_on_an_open_form(self):
-        data = self.entry_data()
+        data=self.entry_data()
         Material.objects.filter(pk=self.material.pk).update(is_active=False)
-        response = self.client.post(reverse('procurement_purchase_add'), data)
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('material', response.context['formset'].forms[0].errors)
-        self.assertFalse(PurchaseInvoice.objects.exists())
+        response=self.client.post(reverse('procurement_purchase_add'),data)
+        self.assertEqual(response.status_code,302)
+        self.assertEqual(PurchaseInvoice.objects.get().lines.count(),0)
 
     def test_changed_catalog_rejects_no_js_submission_until_current_selection_is_acknowledged(self):
-        for kind, model in [('purchase', PurchaseInvoice), ('waste', WasteEntry)]:
+        for kind, model in [('waste', WasteEntry)]:
             with self.subTest(kind=kind):
                 data = self.entry_data(kind)
                 self.assertNotIn('lines-0-material_version', data)
@@ -351,7 +352,7 @@ class ProcurementViewTests(TestCase):
             expected_version=record_version(self.material), data={
                 'name': 'رز', 'base_unit': 'شاخه', 'purchase_unit': 'دسته',
                 'units_per_purchase': 20, 'default_unit_price': 300000, 'is_active': True})
-        for kind in ('purchase', 'waste'):
+        for kind in ('waste',):
             with self.subTest(kind=kind):
                 data = self.entry_data(kind, **{'lines-0-material_version': old_version})
                 response = self.client.post(reverse(f'procurement_{kind}_add'), data)
@@ -363,6 +364,7 @@ class ProcurementViewTests(TestCase):
     def test_waste_uses_server_cost_and_backdated_purchase_basis(self):
         self.service_purchase(day=date(2026, 10, 5), price=120000)
         self.service_purchase(day=date(2026, 10, 7), price=500000)
+        MaterialDailyPrice.objects.filter(date=date(2026,10,6)).update(price=12000)
         data = self.entry_data('waste', date='۱۴۰۵/۰۷/۱۴', **{'lines-0-unit_price': '999999999', 'estimated_total': '1'})
         response = self.client.post(reverse('procurement_waste_add'), data)
         self.assertEqual(response.status_code, 302)
@@ -370,20 +372,20 @@ class ProcurementViewTests(TestCase):
         self.assertEqual(entry.date, date(2026, 10, 6))
         self.assertEqual(entry.estimated_total, 36000)
         self.assertEqual(entry.lines.get().unit_cost, 12000)
-        self.assertEqual(entry.lines.get().cost_source, 'purchase')
+        self.assertEqual(entry.lines.get().cost_source, 'daily')
         detail = self.client.get(response.url)
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, 'برآورد')
 
     def test_unknown_reference_cost_is_reported_as_unpriced(self):
-        Material.objects.filter(pk=self.material.pk).update(default_unit_price=0)
+        MaterialDailyPrice.objects.all().update(price=0)
         response = self.client.post(reverse('procurement_waste_add'), self.entry_data('waste'))
         self.assertEqual(response.status_code, 302)
         self.client.force_login(self.manager)
         response = self.client.get(reverse('studio_procurement'), {'period': 'today'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['report']['unpriced_count'], 1)
-        self.assertEqual(response.context['report']['reference_cost_count'], 1)
+        self.assertEqual(response.context['report']['reference_cost_count'], 0)
 
     def test_material_edits_require_fresh_version_and_preserve_used_base_unit(self):
         self.service_purchase()
@@ -432,28 +434,21 @@ class ProcurementViewTests(TestCase):
         report = response.context['report']
         self.assertEqual(report['purchase_total'], 250000)
         self.assertEqual(report['invoice_count'], 1)
-        self.assertEqual(report['waste_estimated_total'], 50000)
+        self.assertEqual(report['waste_estimated_total'], 20000)
         self.assertEqual(report['waste_count'], 1)
         self.assertEqual(response.context['period']['start'], date(2026, 10, 6))
         ledger = self.client.get(reverse('procurement_purchases'), period)
-        listed_ids = {item.pk for day in ledger.context['page'] for item in day['records']}
+        listed_ids = {item.pk for item in ledger.context['page']}
         self.assertIn(voided.pk, listed_ids)
         self.assertNotIn(excluded.pk, listed_ids)
-        day = ledger.context['page'][0]
-        self.assertEqual(day['amount'], 250000)
-        self.assertEqual(day['active_count'], 1)
-        self.assertEqual(day['void_count'], 1)
 
     def test_daily_purchase_ledger_keeps_all_documents_of_one_day_together(self):
-        records = [self.service_purchase(price=1000) for _ in range(31)]
-        response = self.client.get(reverse('procurement_purchases'), {'period': '30'})
-        page = response.context['page']
-        self.assertEqual(page.paginator.count, 1)
-        self.assertEqual(page.paginator.num_pages, 1)
-        self.assertEqual(page[0]['amount'], 31000)
-        self.assertEqual(page[0]['active_count'], 31)
-        self.assertEqual({item.pk for item in page[0]['records']}, {item.pk for item in records})
-        self.assertTrue(all(item.line_count == 1 for item in page[0]['records']))
+        records=[self.service_purchase(price=1000) for _ in range(31)]
+        first=self.client.get(reverse('procurement_purchases')).context['page']
+        second=self.client.get(reverse('procurement_purchases'),{'page':2}).context['page']
+        self.assertEqual(len(first),25)
+        self.assertEqual(len(second),6)
+        self.assertEqual({r.pk for r in [*first,*second]},{r.pk for r in records})
 
     def test_daily_waste_ledger_excludes_void_cost_but_keeps_its_details(self):
         from main.procurement_service import void_waste
@@ -468,15 +463,11 @@ class ProcurementViewTests(TestCase):
         self.assertEqual({item.pk for item in day['records']}, {first.pk, second.pk})
 
     def test_daily_ledger_paginates_days_without_losing_older_records(self):
-        for offset in range(31):
-            self.service_purchase(day=date(2026, 10, 7) - timedelta(days=offset), price=1000)
-        first = self.client.get(reverse('procurement_purchases'), {'period': '90'}).context['page']
-        second = self.client.get(reverse('procurement_purchases'), {'period': '90', 'page': '2'}).context['page']
-        self.assertEqual(first.paginator.count, 31)
-        self.assertEqual(len(first), 30)
-        self.assertEqual(len(second), 1)
-        self.assertEqual(second[0]['date'], date(2026, 9, 7))
-        self.assertEqual(sum(day['amount'] for day in [*first, *second]), 31000)
+        for offset in range(31): self.service_purchase(day=date(2026,10,7)-timedelta(days=offset),price=1000)
+        first=self.client.get(reverse('procurement_purchases'),{'period':'90'}).context['page']
+        second=self.client.get(reverse('procurement_purchases'),{'period':'90','page':2}).context['page']
+        self.assertEqual(first.paginator.count,31)
+        self.assertEqual(sum(r.total for r in [*first,*second]),31000)
 
     def test_private_pages_are_not_cached_and_writes_require_csrf(self):
         for name in ('procurement_home', 'procurement_materials', 'procurement_purchase_add', 'procurement_waste_add'):

@@ -9,7 +9,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
-from main.models import Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
+from main.models import MaterialDailyPrice, Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
 from main.procurement_queries import report, summary
 from main.procurement_service import (create_purchase, create_waste, record_version,
                                       save_material, void_purchase, void_waste)
@@ -24,6 +24,10 @@ class ProcurementDomainTests(TestCase):
         cls.material = Material.objects.create(name='رز', base_unit='شاخه', purchase_unit='بسته',
             units_per_purchase=10, default_unit_price=100000)
         cls.today = timezone.localdate()
+
+    def setUp(self):
+        for offset in range(4):
+            MaterialDailyPrice.objects.create(material=self.material, date=self.today-timedelta(days=offset), price=10000, base_unit='شاخه')
 
     def purchase(self, **kwargs):
         arguments = dict(actor=self.actor, data={'date': self.today, 'supplier': 'گلستان'},
@@ -61,21 +65,16 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(invoice.total, 40000)
 
     def test_waste_cost_uses_latest_eligible_purchase_and_its_conversion(self):
-        self.purchase(data={'date': self.today - timedelta(days=2)}, lines=[dict(material=self.material, quantity=1, conversion_factor=10, unit_price=100000)])
-        newest = self.purchase(data={'date': self.today - timedelta(days=1)}, lines=[dict(material=self.material, quantity=1, conversion_factor=20, unit_price=300000)])
         self.purchase(lines=[dict(material=self.material, quantity=1, conversion_factor=10, unit_price=900000)])
-        entry = self.waste(data={'date': self.today - timedelta(days=1), 'reason': 'damaged'})
-        row = entry.lines.get()
-        self.assertEqual(row.purchase_line.invoice, newest)
-        self.assertEqual(row.unit_cost, 15000)
-        self.assertEqual(row.estimated_cost, 45000)
-        self.assertEqual(entry.estimated_total, 45000)
+        MaterialDailyPrice.objects.filter(date=self.today-timedelta(days=1)).update(price=15000)
+        entry = self.waste(data={'date': self.today-timedelta(days=1),'reason':'damaged'})
+        self.assertIsNone(entry.lines.get().purchase_line)
+        self.assertEqual(entry.estimated_total,45000)
 
     def test_fallback_reference_cost_is_explicit(self):
-        row = self.waste().lines.get()
-        self.assertEqual(row.cost_source, 'reference')
-        self.assertIsNone(row.purchase_line)
-        self.assertEqual(row.estimated_cost, 30000)
+        MaterialDailyPrice.objects.all().delete()
+        with self.assertRaises(ValidationError): self.waste()
+        self.assertFalse(WasteEntry.objects.exists())
 
     def test_waste_purchase_mode_uses_its_variable_ratio(self):
         row = self.waste(lines=[dict(material=self.material, unit_mode='purchase', quantity='0.5', conversion_factor=20)]).lines.get()
@@ -87,9 +86,9 @@ class ProcurementDomainTests(TestCase):
         old_waste = self.waste()
         void_purchase(actor=self.actor, pk=purchase.pk, expected_version=record_version(purchase), reason='فاکتور تکراری')
         new_waste = self.waste()
-        self.assertEqual(new_waste.lines.get().cost_source, 'reference')
+        self.assertEqual(new_waste.lines.get().cost_source, 'daily')
         old_waste.refresh_from_db()
-        self.assertEqual(old_waste.lines.get().cost_source, 'purchase')
+        self.assertEqual(old_waste.lines.get().cost_source, 'daily')
         self.assertEqual(old_waste.estimated_total, 30000)
         self.assertEqual(report({'start': self.today, 'end': self.today})['purchase_total'], 0)
 
@@ -226,11 +225,11 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(result['day_breakdown'][0]['date'], self.today)
 
     def test_report_unknown_reference_cost_is_counted(self):
-        Material.objects.filter(pk=self.material.pk).update(default_unit_price=0)
+        MaterialDailyPrice.objects.all().update(price=0)
         self.waste()
         result = report({'start': self.today, 'end': self.today})
         self.assertEqual(result['unpriced_count'], 1)
-        self.assertEqual(result['reference_cost_count'], 1)
+        self.assertEqual(result['reference_cost_count'], 0)
 
     def test_database_checks_reject_invalid_quantities_and_voids(self):
         invoice = self.purchase()
@@ -260,15 +259,15 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(ProcurementAudit.objects.get(target_type='purchaseinvoice', action='create').actor_name, 'former_buyer')
 
     def test_fractional_base_cost_rounds_only_final_amount(self):
-        self.purchase(lines=[dict(material=self.material, quantity=1, conversion_factor=3, unit_price=100)])
-        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity=3)])
-        self.assertEqual(entry.lines.get().unit_cost, Decimal('33.333333'))
-        self.assertEqual(entry.estimated_total, 100)
+        MaterialDailyPrice.objects.filter(date=self.today).update(price=33)
+        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='1.5')])
+        self.assertEqual(entry.lines.get().unit_cost,33)
+        self.assertEqual(entry.estimated_total,50)
 
     def test_small_conversion_large_unit_cost_is_supported(self):
-        self.purchase(lines=[dict(material=self.material, quantity='0.001', conversion_factor='0.001', unit_price='999999999999999')])
+        MaterialDailyPrice.objects.filter(date=self.today).update(price=999999999999999)
         entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='0.001')])
-        self.assertEqual(entry.estimated_total, Decimal('999999999999999'))
+        self.assertEqual(entry.estimated_total,Decimal('1000000000000'))
 
     def test_stale_material_version_rejects_purchase_and_waste_atomically(self):
         previous_version = record_version(self.material)
@@ -307,7 +306,7 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(invoice.lines.get().base_quantity, 20)
 
     def test_summary_counts_unpriced_rows_only_in_active_in_period_documents(self):
-        Material.objects.filter(pk=self.material.pk).update(default_unit_price=0)
+        MaterialDailyPrice.objects.all().update(price=0)
         self.waste(data={'date': self.today - timedelta(days=1)})
         self.waste()
         voided = self.waste()
