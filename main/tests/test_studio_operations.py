@@ -227,7 +227,7 @@ class StudioIntegrationTests(TestCase):
         response = self.client.get(reverse("studio_dashboard"))
         self.assertEqual(response.context["stats"]["produced"], 1)
         detail = self.client.get(reverse("studio_metric", args=["produced"]))
-        self.assertContains(detail, "1234")
+        self.assertContains(detail, record.display_id)
         listing = self.client.get(reverse("studio_products"), {"q": "1234"})
         self.assertEqual(listing.context["summary"]["produced"], 1)
         self.assertEqual(listing.context["page"].paginator.count, 1)

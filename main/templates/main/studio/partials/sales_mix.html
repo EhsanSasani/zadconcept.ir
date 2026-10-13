@@ -2,7 +2,7 @@
 <section class="panel app-sales-mix" aria-label="فروش به تفکیک نوع">
   <div class="panel-head"><h2>فروش به تفکیک نوع · تومان</h2><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></div>
   <div class="app-sales-category app-sales-daily">
-    <span class="app-sales-label"><span class="app-sales-icon"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span>ارسال روز</span><strong>{{ stats.daily_sales|fa_number }}</strong>
+    <span class="app-sales-label"><span class="app-sales-icon"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg></span>آماده</span><strong>{{ stats.daily_sales|fa_number }}</strong>
     <div class="app-sales-track" aria-hidden="true"><span style="width:{% widthratio stats.daily_sales stats.sold_value 100 %}%"></span></div>
   </div>
   <div class="app-sales-category app-sales-custom">

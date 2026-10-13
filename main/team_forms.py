@@ -45,7 +45,7 @@ class TeamProductForm(forms.Form):
         error_messages={"required": "مشخص کنید محصول آماده روز است یا سفارش اختصاصی."},
     )
     product_type = forms.ChoiceField(label="نوع محصول", choices=StudioProduct.ProductType.choices)
-    factor_code = forms.CharField(label="شماره فاکتور", max_length=40, widget=forms.TextInput(attrs={
+    factor_code = forms.CharField(label="شماره فاکتور (اختیاری)", required=False, max_length=40, widget=forms.TextInput(attrs={
         "autocomplete": "off", "autocapitalize": "characters", "dir": "ltr", "placeholder": "مثلاً ۱۰۲۴"}))
     price = forms.DecimalField(label="قیمت (تومان)", max_digits=12, decimal_places=0, min_value=1,
                               widget=forms.TextInput(attrs={"inputmode": "numeric", "autocomplete": "off", "dir": "ltr"}))
@@ -63,9 +63,9 @@ class TeamProductForm(forms.Form):
 
     def clean_factor_code(self):
         value = self.cleaned_data["factor_code"].strip().upper()
-        if not re.fullmatch(r"[A-Z0-9-]{1,40}", value):
+        if value and not re.fullmatch(r"[A-Z0-9-]{1,40}", value):
             raise forms.ValidationError("شماره فاکتور فقط می‌تواند شامل عدد، حروف لاتین و خط تیره باشد.")
-        if StudioProduct.objects.filter(factor_code__iexact=value).exists():
+        if value and StudioProduct.objects.filter(factor_code__iexact=value).exists():
             raise forms.ValidationError("این شماره فاکتور قبلاً ثبت شده؛ شماره را بررسی کنید.")
         return value
 

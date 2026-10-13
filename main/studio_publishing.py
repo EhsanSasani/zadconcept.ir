@@ -62,7 +62,7 @@ def _clean_failed_file(record):
 def _create_daily_projection(record, category, group_id, *, slug):
     """Create the public same-day row and one durable Telegram outbox job."""
     product = Product.objects.create(
-        name=record.get_product_type_display(), slug=slug,
+        name=record.get_product_type_display(), slug=slug, product_code=record.display_id,
         category=category, catalog_scope=Product.CatalogScope.SAME_DAY,
         pricing_type=Product.PricingType.FIXED, price=record.price,
         cover_image=record.image.name, publish_status=Product.PublishStatus.PUBLISHED,
@@ -174,7 +174,7 @@ def update_dashboard_record(record, *, changed_fields, actor=None, expected_vers
         raise
 
 
-def create_portal_record(*, user, florist, image, factor_code, product_type,
+def create_portal_record(*, user, florist, image, factor_code="", product_type,
                          production_type, price, submission_key, notes=""):
     """Return (record, created); a repeated key never republishes or reuploads."""
     if not getattr(user, "is_authenticated", False) or not user.is_active:
@@ -196,7 +196,7 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
     if not Florist.objects.filter(pk=florist.pk, is_active=True).exists():
         raise ValidationError({"florist": "فلوریست انتخاب‌شده دیگر فعال نیست؛ فرد دیگری را انتخاب کنید."})
     factor = str(factor_code or "").translate(DIGITS).strip().upper()
-    if not re.fullmatch(r"[A-Z0-9-]{1,40}", factor):
+    if factor and not re.fullmatch(r"[A-Z0-9-]{1,40}", factor):
         raise ValidationError({"factor_code": "شماره فاکتور را با عدد یا حروف انگلیسی وارد کنید."})
     try:
         amount = Decimal(str(price))
@@ -241,7 +241,7 @@ def create_portal_record(*, user, florist, image, factor_code, product_type,
             existing = _existing_submission(key, user, owner)
             if existing:
                 return existing, False
-            if StudioProduct.objects.filter(factor_code__iexact=factor).exists():
+            if factor and StudioProduct.objects.filter(factor_code__iexact=factor).exists():
                 raise ValidationError({"factor_code": "این شماره فاکتور قبلاً ثبت شده است."})
             record.full_clean()
             record.save()

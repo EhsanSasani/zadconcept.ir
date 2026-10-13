@@ -46,7 +46,7 @@ class StudioAdminNotificationTests(TestCase):
         self.assertEqual(jobs[0].event, StudioAdminNotification.Event.CREATED)
         self.assertEqual(
             jobs[0].caption,
-            "کد: A-123\nقیمت: 2,500,000 تومان\nوضعیت: موجود",
+            f"شناسه محصول: {record.display_id}\nفاکتور: A-123\nقیمت: 2,500,000 تومان\nوضعیت: موجود",
         )
         self.assertNotIn("مهدی", jobs[0].caption)
 

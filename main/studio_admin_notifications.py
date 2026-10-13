@@ -54,8 +54,9 @@ def _admin_chat_id():
 
 def customer_caption(record):
     return (
-        f"کد: {record.factor_code}\n"
-        f"قیمت: {record.price:,.0f} تومان\n"
+        f"شناسه محصول: {record.display_id}\n"
+        + (f"فاکتور: {record.factor_code}\n" if record.factor_code else "")
+        + f"قیمت: {record.price:,.0f} تومان\n"
         f"وضعیت: {record.get_status_display()}"
     )
 

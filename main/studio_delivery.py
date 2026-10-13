@@ -29,7 +29,10 @@ def _lock_record(record_id):
 
 
 def product_caption(record):
-    return f"قیمت: {record.price:,.0f} تومان\nفاکتور: {record.factor_code}"
+    caption = f"شناسه محصول: {record.display_id}\nقیمت: {record.price:,.0f} تومان"
+    if record.factor_code:
+        caption += f"\nفاکتور: {record.factor_code}"
+    return caption
 
 
 def pending_caption_matches(record, caption):
@@ -41,7 +44,9 @@ def pending_caption_matches(record, caption):
     if not isinstance(caption, str) or len(caption) > 1024:
         return False
     return bool(re.fullmatch(
-        rf"قیمت: [0-9,]+ تومان\nفاکتور: {re.escape(record.factor_code)}", caption,
+        rf"(?:شناسه محصول: {re.escape(str(record.display_id))}\nقیمت: [0-9,]+ تومان"
+        rf"(?:\nفاکتور: {re.escape(record.factor_code)})?"
+        rf"|قیمت: [0-9,]+ تومان\nفاکتور: {re.escape(record.factor_code)})", caption,
     ))
 
 
@@ -74,7 +79,7 @@ def delivery_summary(record):
         return {"state": "sent", "label": f"از {group_label} خارج شد", "detail": "سابقهٔ محصول در پنل محفوظ است."}
     if job.outcome == "not_available":
         return {"state": "sent", "label": "ارسال لازم نبود", "detail": "پیش از ارسال به تلگرام، محصول از موجودی خارج شد."}
-    return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شمارهٔ فاکتور در گروه ثبت شده است."}
+    return {"state": "sent", "label": f"به {group_label} ارسال شد", "detail": "عکس، قیمت و شناسهٔ محصول در گروه ثبت شده است."}
 
 
 def _retirement_due_at(record, now):

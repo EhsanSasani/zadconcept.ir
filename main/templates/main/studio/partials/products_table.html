@@ -1,12 +1,21 @@
 {% load studio_ui %}
-{% include 'main/studio/partials/mobile_sort.html' %}
+<div class="app-product-table" data-quick-product-table>
+<div class="app-table-tools">
+  <div class="app-quick-filter" data-quick-filter hidden role="group" aria-label="فیلتر سریع نوع تولید در این صفحه">
+    <button type="button" data-production-filter="all" aria-pressed="true">همه</button>
+    <button type="button" data-production-filter="CUSTOM" aria-pressed="false">سفارشی</button>
+    <button type="button" data-production-filter="DAILY" aria-pressed="false">آماده</button>
+  </div>
+  {% include 'main/studio/partials/mobile_sort.html' %}
+</div>
+<p class="app-quick-result" data-quick-result hidden aria-live="polite"></p>
 <p class="table-hint"><svg class="icon" aria-hidden="true"><use href="#i-sort"/></svg> برای مرتب‌سازی روی عنوان ستون بزنید؛ دوباره بزنید تا جهت عوض شود.</p>
 <div class="table-scroll" tabindex="0" role="region" aria-label="جدول محصولات؛ در نمایشگر کوچک به طرفین بکشید">
 <table class="studio-table product-table">
-  <thead><tr>{% sort_header 'product' 'محصول' %}{% sort_header 'factor' 'فاکتور' %}{% sort_header 'florist' 'فلوریست' %}{% sort_header 'production' 'نوع تولید' %}{% sort_header 'price' 'قیمت · تومان' %}{% sort_header 'status' 'وضعیت' %}{% sort_header 'produced' 'زمان تولید' %}{% sort_header 'result' 'زمان نتیجه' %}<th scope="col">عملیات</th></tr></thead>
-  <tbody>{% for row in rows %}<tr>
-    <td data-label="محصول"><div class="product-cell">{% if row.photo_url %}<button type="button" class="product-image" data-photo="{{ row.photo_url }}" data-caption="{{ row.display_name }} · {{ row.display_id }}" aria-label="نمایش عکس {{ row.display_name }}، فاکتور {{ row.display_id }}"><img src="{{ row.photo_url }}" alt="" loading="lazy" width="52" height="52"></button>{% else %}<span class="product-image"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg></span>{% endif %}<span><a class="app-record-title" href="{% url 'studio_product_detail' row.pk %}">{{ row.display_name }} <svg class="icon"><use href="#i-arrow"/></svg></a><small>{{ row.get_source_display }}</small></span></div></td>
-    <td data-label="فاکتور"><span class="factor" dir="ltr">#{{ row.display_id }}</span></td>
+  <thead><tr>{% sort_header 'product' 'محصول' %}{% sort_header 'factor' 'شناسه' %}{% sort_header 'florist' 'فلوریست' %}{% sort_header 'production' 'نوع تولید' %}{% sort_header 'price' 'قیمت · تومان' %}{% sort_header 'status' 'وضعیت' %}{% sort_header 'produced' 'زمان تولید' %}{% sort_header 'result' 'زمان نتیجه' %}<th scope="col">عملیات</th></tr></thead>
+  <tbody>{% for row in rows %}<tr data-production-type="{{ row.production_type }}">
+    <td data-label="محصول"><div class="product-cell">{% if row.photo_url %}<button type="button" class="product-image" data-photo="{{ row.photo_url }}" data-caption="{{ row.display_name }} · {{ row.display_id }}" aria-label="نمایش عکس {{ row.display_name }}، شناسه {{ row.display_id }}"><img src="{{ row.photo_url }}" alt="" loading="lazy" width="52" height="52"></button>{% else %}<span class="product-image"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg></span>{% endif %}<span><a class="app-record-title" href="{% url 'studio_product_detail' row.pk %}">{{ row.display_name }} <svg class="icon"><use href="#i-arrow"/></svg></a><small>{{ row.get_source_display }}</small></span></div></td>
+    <td data-label="شناسه"><span class="factor" dir="ltr">#{{ row.display_id }}</span></td>
     <td data-label="فلوریست">{% if row.florist_id %}<a class="table-person" href="{% url 'studio_florist_profile' row.florist_id %}">{% include 'main/studio/partials/avatar.html' with florist=row.florist avatar_class='avatar-small' %}<span>{{ row.florist.name }}</span></a>{% else %}شاخه و متفرقه{% endif %}</td>
     <td data-label="نوع تولید"><span class="badge badge-{% if row.production_type == 'DAILY' %}daily{% else %}custom{% endif %}">{{ row.get_production_type_display }}</span></td>
     <td data-label="قیمت · تومان" class="numeric"><strong>{{ row.price|fa_number }}</strong></td>
@@ -30,3 +39,5 @@
     </td>
   </tr>{% empty %}<tr><td colspan="9"><div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#i-box"/></svg><strong>محصولی پیدا نشد</strong><p>بازه یا فیلترها را تغییر دهید.</p><a class="btn btn-outline" href="{% url 'studio_products' %}">بازنشانی فیلترها</a></div></td></tr>{% endfor %}</tbody>
 </table></div>
+<p class="app-quick-empty" data-quick-empty hidden>در این صفحه محصولی با این نوع تولید نیست.</p>
+</div>

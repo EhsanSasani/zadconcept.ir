@@ -235,8 +235,8 @@
       const selected = deleting ? null : $("select[name=status]", form)?.selectedOptions[0];
       if (!deleting && !selected?.value) return;
       const description = deleting
-        ? `فاکتور ${form.dataset.factor} با علت «${reason?.value || ""}» حذف مدیریتی شود؟`
-        : `فاکتور ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
+        ? `محصول ${form.dataset.factor} با علت «${reason?.value || ""}» حذف مدیریتی شود؟`
+        : `محصول ${form.dataset.factor} با وضعیت «${selected.textContent}» ثبت شود؟`;
       if (!statusDialog?.showModal || !confirmButton) {
         if (window.confirm(description)) submitAction(form);
         return;

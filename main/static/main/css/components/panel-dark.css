@@ -288,3 +288,11 @@ body.panel-ui.panel-ui progress::-moz-progress-bar{background:#80b5ff}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:last-child:has(>.app-no-actions){display:none}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .row-actions summary{min-height:44px}
 }
+
+/* Editor surfaces follow the panel palette, including native upload controls. */
+body.panel-ui.panel-ui .form-panel .upload-field{background:#101d30;border:1px dashed #405674;border-radius:14px;padding:16px}
+body.panel-ui.panel-ui .form-panel .upload-field label{color:#edf4ff}
+body.panel-ui.panel-ui .upload-field input::file-selector-button{background:#294769;color:#edf4ff;border:1px solid #405674;border-radius:10px}
+body.panel-ui.panel-ui .form-panel .form-hint{background:#13243a;color:#c4d5eb;border:1px solid #304761;border-radius:12px;padding:14px;line-height:1.9}
+body.panel-ui.panel-ui .record-preview .preview-photo{background:#101d30;color:#b8cde5;border:1px dashed #405674}
+body.panel-ui.panel-ui .form-panel .form-actions{background:#17263b;border-color:#304761}

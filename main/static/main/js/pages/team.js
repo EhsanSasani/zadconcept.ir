@@ -233,10 +233,10 @@
     const productionType = form.elements.production_type.value;
     const copy = $("[data-publish-copy]");
     if (productionType === "CUSTOM") {
-      copy.textContent = "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شماره فاکتور به گروه سفارشی‌ها می‌رود.";
+      copy.textContent = "در کارنامه فلوریست ثبت می‌شود؛ عکس، قیمت و شناسه محصول به گروه سفارشی‌ها می‌رود.";
       if (!submitting) submitLabel.textContent = "ثبت سفارش اختصاصی";
     } else if (productionType === "DAILY") {
-      copy.textContent = "در سایت منتشر می‌شود؛ عکس، قیمت و شماره فاکتور به گروه آماده‌ها می‌رود.";
+      copy.textContent = "در سایت منتشر می‌شود؛ عکس، قیمت و شناسه محصول به گروه آماده‌ها می‌رود.";
       if (!submitting) submitLabel.textContent = "ثبت و انتشار محصول";
     } else {
       copy.textContent = "برای ادامه، محل استفاده محصول را انتخاب کنید.";

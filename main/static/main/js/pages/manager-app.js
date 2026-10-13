@@ -89,3 +89,38 @@
   render();
   new ResizeObserver(render).observe(plot);
 })();
+(() => {
+  const initialize = root => {
+    const tables = [...root.querySelectorAll('[data-quick-product-table]')];
+    if (root.matches?.('[data-quick-product-table]')) tables.push(root);
+    tables.forEach(container => {
+      const controls = container.querySelector('[data-quick-filter]');
+      if (!controls || controls.dataset.ready) return;
+      controls.dataset.ready = 'true';
+      controls.hidden = false;
+      controls.addEventListener('click', event => {
+        const button = event.target.closest('button[data-production-filter]');
+        if (!button) return;
+        const selected = button.dataset.productionFilter;
+        let visible = 0;
+        const rows = [...container.querySelectorAll('tr[data-production-type]')];
+        rows.forEach(row => {
+          row.hidden = selected !== 'all' && row.dataset.productionType !== selected;
+          if (!row.hidden) visible++;
+        });
+        controls.querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        const result = container.querySelector('[data-quick-result]');
+        result.hidden = selected === 'all';
+        result.textContent = `${visible.toLocaleString('fa-IR')} محصول در این صفحه`;
+        container.querySelector('[data-quick-empty]').hidden = selected === 'all' || visible > 0 || rows.length === 0;
+      });
+    });
+  };
+  initialize(document);
+  const main = document.getElementById('studio-main');
+  if (main) new MutationObserver(changes => {
+    for (const change of changes) for (const node of change.addedNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE) initialize(node);
+    }
+  }).observe(main, {childList: true, subtree: true});
+})();
