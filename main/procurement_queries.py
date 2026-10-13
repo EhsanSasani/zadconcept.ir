@@ -12,7 +12,7 @@ def summary(period):
     purchases = PurchaseInvoice.objects.filter(status='ACTIVE', date__range=bounds).aggregate(amount=Sum('total'), count=Count('pk'))
     wastes = WasteEntry.objects.filter(status='ACTIVE', date__range=bounds).aggregate(amount=Sum('estimated_total'), count=Count('pk'))
     unpriced_count = WasteLine.objects.filter(entry__status='ACTIVE', entry__date__range=bounds,
-        cost_source='reference', unit_cost=0).count() if wastes['count'] else 0
+        unit_cost=0).count() if wastes['count'] else 0
     return dict(purchase_total=purchases['amount'] or Decimal(0), invoice_count=purchases['count'],
                 waste_estimated_total=wastes['amount'] or Decimal(0), waste_count=wastes['count'],
                 unpriced_count=unpriced_count)
@@ -50,7 +50,7 @@ def report(period):
     return dict(invoice_count=purchase_totals['count'], purchase_total=purchase_totals['total'] or zero,
         waste_count=waste_totals['count'], waste_estimated_total=waste_totals['total'] or zero,
         reference_cost_count=wasted.filter(cost_source='reference').count(),
-        unpriced_count=wasted.filter(cost_source='reference', unit_cost=0).count(),
+        unpriced_count=wasted.filter(unit_cost=0).count(),
         active_material_count=Material.objects.filter(is_active=True).count(),
         material_breakdown=sorted(materials.values(), key=lambda row: (-row['waste_estimated_total'], -row['purchase_total'], row['name'])),
         day_breakdown=[days[day] for day in sorted(days)], invoices=invoices, wastes=wastes)

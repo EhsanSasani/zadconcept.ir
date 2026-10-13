@@ -67,10 +67,26 @@ class MaterialForm(forms.Form):
 class PurchaseForm(forms.Form):
     token = forms.CharField(widget=forms.HiddenInput)
     date = JalaliDayField()
-    supplier = forms.CharField(label='فروشنده / تأمین‌کننده', max_length=120, required=False)
-    reference = forms.CharField(label='شماره فاکتور فروشنده', max_length=80, required=False)
-    notes = forms.CharField(label='یادداشت', max_length=1000, required=False,
-        widget=forms.Textarea(attrs={'rows': 2}))
+    supplier = forms.CharField(label='تأمین‌کننده', max_length=120, widget=forms.TextInput(attrs={'list': 'supplier-options', 'autocomplete':'off'}))
+    total = PersianDecimalField(label='مبلغ فاکتور (تومان)', money=True, max_digits=18, decimal_places=0, min_value=1)
+    image = forms.FileField(label='تصویر فاکتور', widget=forms.FileInput(attrs={'accept': 'image/*,.heic,.heif,.avif'}))
+
+    def clean_image(self):
+        from .image_pipeline import normalize_admin_image, ImageUploadError
+        try:
+            return normalize_admin_image(self.cleaned_data['image'])
+        except ImageUploadError as error:
+            raise forms.ValidationError(str(error)) from error
+
+
+class DailyPriceForm(forms.Form):
+    date = JalaliDayField()
+    material = forms.ModelChoiceField(label='کالا', queryset=Material.objects.filter(is_active=True))
+    price = PersianDecimalField(label='قیمت هر واحد پایه (تومان)', money=True, max_digits=15, decimal_places=0, min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['material'].label_from_instance = lambda item: f'{item.name} · هر {item.base_unit}'
 
 
 class WasteForm(forms.Form):

@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0c1422">
 <title>{% block title %}خرید و دورریز{% endblock %} · زاد</title>
 <link rel="preload" href="{% static 'main/fonts/Estedad-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="{% static 'main/css/pages/procurement.css' %}?v=2"><link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
+<link rel="stylesheet" href="{% static 'main/css/pages/procurement.css' %}?v=3"><link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
 <script src="{% static 'main/js/pages/procurement.js' %}?v=4" defer></script>
 <link rel="stylesheet" href="{% static 'main/css/components/panel-theme.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=4">
@@ -21,6 +21,7 @@
 <a href="{% url 'procurement_purchase_add' %}"{% if active == 'purchase' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='purchase' %}<span>ثبت خرید</span></a>
 <a href="{% url 'procurement_waste_add' %}"{% if active == 'waste' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='waste' %}<span>ثبت دورریز</span></a>
 <a href="{% url 'procurement_materials' %}"{% if active == 'materials' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='materials' %}<span>کالاها</span></a>
+<a href="{% url 'procurement_daily_prices' %}"{% if active == 'prices' %} aria-current="page"{% endif %}>{% include 'main/procurement/icon.html' with name='report' %}<span>قیمت‌های روز</span></a>
 {% else %}<a href="{% url 'studio_procurement' %}">{% include 'main/procurement/icon.html' with name='report' %}<span>گزارش خرید و دورریز</span></a><a href="{% url 'studio_dashboard' %}">{% include 'main/procurement/icon.html' with name='home' %}<span>مدیریت استودیو</span></a>{% endif %}
 </nav>
 <div class="proc-sr" aria-live="polite" data-proc-announcer></div>

@@ -6,3 +6,8 @@
 @media(max-width:359px){.proc-top{gap:11px;padding-inline:14px}.proc-workspace-name{padding-right:10px;font-size:10px}.proc-brand{font-size:29px}.proc-account>summary{font-size:10px;max-width:100px}.proc-main{padding-inline:13px}.proc-panel{padding:16px}.proc-stat{padding:16px 12px}.proc-stat>span{font-size:10px}.proc-stat>strong{font-size:20px}.proc-stat>small{font-size:9px}.proc-submit-bar{gap:8px;padding:12px}.proc-submit-bar>.proc-btn{font-size:11px;padding:12px 10px}.proc-submit-bar>.proc-btn .proc-icon{display:none}.proc-submit-summary>strong{font-size:18px}.proc-day{gap:8px;font-size:10px}.proc-day-head{font-size:9px}.proc-record-amount>strong{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.proc-app *,.proc-report *{scroll-behavior:auto!important;transition:none!important}}
 @media(max-width:359px){.proc-stat>strong{font-size:16px}.proc-stat{padding-inline:10px}}
+
+.proc-form-grid{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:24px}
+.proc-form-grid input[type=file]{max-width:100%;padding:12px}
+.proc-nav:not(.proc-nav-readonly){grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:640px){.proc-form-grid{grid-template-columns:1fr}.proc-nav a span{font-size:10px}.proc-record{gap:10px}.proc-record-amount{flex-shrink:0}}
