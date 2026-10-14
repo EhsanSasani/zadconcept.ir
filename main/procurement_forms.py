@@ -69,7 +69,7 @@ class PurchaseForm(forms.Form):
     date = JalaliDayField()
     supplier = forms.CharField(label='تأمین‌کننده', max_length=120, widget=forms.TextInput(attrs={'list': 'supplier-options', 'autocomplete':'off'}))
     total = PersianDecimalField(label='مبلغ فاکتور (تومان)', money=True, max_digits=18, decimal_places=0, min_value=1)
-    image = forms.FileField(label='تصویر فاکتور', widget=forms.FileInput(attrs={'accept': 'image/*,.heic,.heif,.avif'}))
+    image = forms.FileField(label='تصویر فاکتور', widget=forms.FileInput(attrs={'accept': 'image/*,.heic,.heif,.avif', 'data-receipt-input': ''}))
 
     def clean_image(self):
         from .image_pipeline import normalize_admin_image, ImageUploadError

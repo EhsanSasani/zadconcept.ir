@@ -9,9 +9,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .account_forms import AccountForm
+from .account_forms import AccountForm, TechnicalFloristLinkForm
 from .account_roles import ROLE_CHOICES, assigned_roles, editable_account
-from .account_service import save_account
+from .account_service import save_account, save_technical_florist_link
 from .studio_access import require_studio_permission
 from .studio_views import _base
 
@@ -57,3 +57,26 @@ def edit(request, pk=None):
             return redirect('studio_accounts')
     return render(request, 'main/pages/accounts/form.html', {
         **_base(request, 'accounts'), 'form': form, 'account': user})
+
+
+@never_cache
+@login_required(login_url='studio_login')
+@require_http_methods(['GET','POST'])
+def technical_florist_link(request, pk):
+    require_studio_permission(request, 'manage_studio_accounts')
+    if not request.user.is_superuser:
+        raise PermissionDenied
+    user = get_object_or_404(get_user_model(), pk=pk)
+    if editable_account(user):
+        raise PermissionDenied
+    form = TechnicalFloristLinkForm(request.POST if request.method == 'POST' else None, user=user)
+    if request.method == 'POST' and form.is_valid():
+        try:
+            save_technical_florist_link(actor=request.user, user_id=user.pk, data=form.cleaned_data)
+        except (ValidationError, IntegrityError) as error:
+            form.add_error(None, error if isinstance(error,ValidationError) else 'اتصال پروفایل تغییر کرده؛ صفحه را تازه کنید.')
+        else:
+            messages.success(request, 'اتصال فلوریست ذخیره شد؛ مجوزها و اطلاعات فنی حساب محفوظ‌اند.')
+            return redirect('studio_accounts')
+    return render(request, 'main/pages/accounts/florist_link.html', {
+        **_base(request,'accounts'), 'form':form, 'account':user}, status=400 if form.is_bound and form.errors else 200)

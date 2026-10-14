@@ -69,10 +69,10 @@ class MiscSalesTests(TestCase):
             self.assertEqual(response.status_code, 200)
             stats = response.context['stats']
             self.assertEqual((stats['sold'], stats['sold_value'], stats['misc_sales']), (1, 2300000, 2300000))
-            self.assertEqual((stats['produced'], stats['total_value']), (0, 0))
+            self.assertEqual(stats['produced'], 0)
             self.assertEqual(response.context['chart'][-1]['sold'], 1)
             self.assertEqual(response.context['chart'][-1]['produced'], 0)
-        for metric, total in [('sold_value', 2300000), ('sold', 1), ('produced', 0), ('total_value', 0)]:
+        for metric, total in [('sold_value', 2300000), ('sold', 1), ('produced', 0)]:
             response = self.client.get(reverse('studio_metric', args=[metric]), {'period': 'today'})
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.context['total'], total)

@@ -72,3 +72,18 @@ class AccountForm(forms.Form):
         if self.user and not data.get('version'):
             raise ValidationError('صفحه را تازه کنید و دوباره تلاش کنید.')
         return data
+
+
+class TechnicalFloristLinkForm(forms.Form):
+    """Only a profile link; technical accounts stay outside AccountForm."""
+    version = forms.CharField(widget=forms.HiddenInput)
+    enabled = forms.BooleanField(label='فضای کاری فلوریست فعال باشد', required=False)
+    florist = forms.ModelChoiceField(label='پروفایل فلوریست', required=False,
+        queryset=Florist.objects.none(), empty_label='ساخت پروفایل جدید')
+
+    def __init__(self, *args, user, **kwargs):
+        linked = Florist.objects.filter(user=user).first()
+        kwargs.setdefault('initial', {'version':account_version(user),
+            'enabled':bool(linked and linked.is_active), 'florist':linked})
+        super().__init__(*args, **kwargs)
+        self.fields['florist'].queryset = Florist.objects.filter(Q(user__isnull=True, is_active=True)|Q(user=user))

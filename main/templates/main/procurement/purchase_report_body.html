@@ -1,0 +1,18 @@
+{% load studio_ui %}
+<section id="purchase-report" class="proc-report-section">
+{% if not supplier %}
+<div class="proc-section-head"><h2>خرید به تفکیک تأمین‌کننده</h2></div>
+<div class="proc-panel proc-suppliers proc-suppliers--compact">
+{% for row in report.supplier_breakdown %}
+<div class="proc-supplier-item">
+<a class="proc-supplier-link" href="{% studio_query supplier=row.key invoice_page='' %}">
+  <span class="proc-supplier-link__identity"><strong>{{ row.name }}</strong><small>{{ row.count|fa_number }} فاکتور · {{ row.share|fa_decimal }}٪</small></span>
+  <span class="proc-supplier-link__amount"><strong>{{ row.amount|fa_number }}</strong><small>تومان <span aria-hidden="true">←</span></small></span>
+</a>
+{% if row.variants|length > 1 %}<details class="proc-supplier-variants"><summary>نام‌های ثبت‌شده</summary><ul>{% for name in row.variants %}<li>{{ name|default:'بدون نام' }}</li>{% endfor %}</ul></details>{% endif %}
+</div>
+{% empty %}<p class="proc-empty">در این بازه خرید معتبری ثبت نشده است.</p>{% endfor %}
+</div>
+{% endif %}
+{% include 'main/procurement/purchase_report_invoices.html' %}
+</section>

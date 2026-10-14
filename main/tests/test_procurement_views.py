@@ -382,7 +382,7 @@ class ProcurementViewTests(TestCase):
         response = self.client.post(reverse('procurement_waste_add'), self.entry_data('waste'))
         self.assertEqual(response.status_code, 302)
         self.client.force_login(self.manager)
-        response = self.client.get(reverse('studio_procurement'), {'period': 'today'})
+        response = self.client.get(reverse('studio_procurement_wastes'), {'period': 'today'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['report']['unpriced_count'], 1)
         self.assertEqual(response.context['report']['reference_cost_count'], 0)

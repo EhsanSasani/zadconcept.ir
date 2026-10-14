@@ -219,9 +219,10 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(result['waste_count'], 1)
         self.assertEqual(result['waste_estimated_total'], 30000)
         row = result['material_breakdown'][0]
-        self.assertEqual(row['purchased_quantity'], 20)
+        self.assertNotIn('purchased_quantity', row)
         self.assertEqual(row['waste_quantity'], 3)
-        self.assertEqual(row['purchase_total'], 200000)
+        self.assertNotIn('purchase_total', row)
+        self.assertEqual(result['supplier_breakdown'][0]['amount'], 200000)
         self.assertEqual(result['day_breakdown'][0]['date'], self.today)
 
     def test_report_unknown_reference_cost_is_counted(self):

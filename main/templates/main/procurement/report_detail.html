@@ -1,0 +1,13 @@
+{% extends 'main/studio/base.html' %}{% load static studio_ui %}
+{% block title %}{{ report_title }}{% endblock %}{% block crumb %}{{ report_title }}{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/procurement.css' %}?v=4">{% endblock %}
+{% block content %}<div class="proc-report">
+<div class="page-heading"><div><div class="panel-title-row"><h1>{{ report_title }}</h1><a class="panel-back" href="{% if supplier %}{{ report_links.purchase }}{% else %}{{ report_links.overview }}{% endif %}" aria-label="{% if supplier %}بازگشت به تأمین‌کنندگان{% else %}بازگشت به انتخاب گزارش{% endif %}">{% include 'main/components/back_icon.html' %}</a></div><p>{% if report_kind == 'purchase' %}{% if supplier %}فاکتورهای این تأمین‌کننده در بازهٔ انتخابی.{% else %}تأمین‌کنندگان و فاکتورهای خرید در بازهٔ انتخابی.{% endif %}{% else %}مقدار، کالا و ارزش برآوردی دورریز در بازهٔ انتخابی.{% endif %}</p></div></div>
+{% include 'main/studio/partials/period.html' %}
+{% if report_kind == 'purchase' %}
+<div class="proc-stat proc-stat-dark"><span>مجموع خرید معتبر <small>تومان</small></span><strong>{{ report.purchase_total|fa_number }}</strong><small>{{ report.invoice_count|fa_number }} فاکتور{% if supplier %} · {{ supplier }}{% endif %}</small></div>
+{% include 'main/procurement/purchase_report_body.html' %}
+{% else %}
+<div class="proc-stat proc-stat-waste"><span>ارزش برآوردی دورریز <small>تومان</small></span><strong>{{ report.waste_estimated_total|fa_number }}</strong><small>{{ report.waste_count|fa_number }} ثبت معتبر</small></div>
+{% include 'main/procurement/waste_report_body.html' %}
+{% endif %}</div>{% endblock %}

@@ -6,10 +6,46 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 
 from .account_roles import (MANAGER_PERMISSIONS, ROLE_GROUPS, ROLE_PERMISSIONS, account_snapshot,
                             account_version, editable_account, assigned_manager_permissions)
 from .models import Florist
+
+
+@transaction.atomic
+def save_technical_florist_link(*, actor, user_id, data):
+    """An authenticated technical administrator may link a producer profile only."""
+    import uuid
+    User = get_user_model()
+    users = {u.pk:u for u in User.objects.select_for_update().filter(pk__in=[actor.pk,user_id]).order_by('pk')}
+    author, user = users.get(actor.pk), users.get(user_id)
+    if not author or not author.is_active or not author.is_superuser or not user or editable_account(user):
+        raise PermissionDenied
+    if data['version'] != account_version(user):
+        raise ValidationError('این حساب تغییر کرده است؛ صفحه را تازه کنید.')
+    before = account_snapshot(user)
+    selected = data.get('florist') if data.get('enabled') else None
+    candidates = Florist.objects.select_for_update().filter(Q(user=user)|Q(pk=selected.pk if selected else None)).order_by('pk')
+    profiles = list(candidates)
+    linked = next((p for p in profiles if p.user_id == user.pk), None)
+    if selected:
+        selected = next((p for p in profiles if p.pk == selected.pk), None)
+        if selected is None or selected.user_id not in (None,user.pk) or (not selected.is_active and selected.user_id != user.pk):
+            raise ValidationError('این پروفایل برای اتصال در دسترس نیست.')
+    elif data.get('enabled'):
+        selected = linked or Florist(name=user.get_full_name() or user.username, code='user-'+uuid.uuid4().hex[:18])
+    if linked and (not selected or linked.pk != selected.pk):
+        linked.user = None
+        linked.save(update_fields=['user','updated_at'])
+    if selected:
+        selected.user, selected.is_active = user, True
+        selected.save()
+    LogEntry.objects.create(user_id=author.pk, content_type=ContentType.objects.get_for_model(User),
+        object_id=str(user.pk), object_repr=user.username, action_flag=CHANGE,
+        change_message=json.dumps({'source':'technical_florist_link','before':before,
+            'after':account_snapshot(user)},ensure_ascii=False))
+    return user
 
 
 @transaction.atomic

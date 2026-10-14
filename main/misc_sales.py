@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -95,6 +96,10 @@ def counter(request, pk=None):
         except ValidationError as exc:
             form.add_error(None, exc)
     records = StudioProduct.objects.filter(production_type='MISC').exclude(status='DELETED').order_by('-pk')
+    from .studio_views import _period
+    period = _period(request)
+    records = records.filter(sold_at__gte=period['lower'], sold_at__lt=period['upper'])
+    filtered_total = records.filter(status='SOLD').aggregate(total=Sum('price'))['total'] or 0
     page = Paginator(records, 20).get_page(request.GET.get('page'))
-    return render(request, 'main/sales/misc.html', {'form': form, 'record': record, 'page': page, 'active': 'misc'},
+    return render(request, 'main/sales/misc.html', {'form': form, 'record': record, 'page': page, 'active': 'misc', 'period':period, 'filtered_total':filtered_total},
                   status=400 if form.is_bound and form.errors else 200)

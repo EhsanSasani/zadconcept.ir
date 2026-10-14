@@ -26,6 +26,16 @@ def jalali_date(value):
 
 
 @register.filter
+def jalali_datetime(value):
+    from django.utils import timezone
+    from main.persian_dates import format_persian_date
+    if not value:
+        return '—'
+    local = timezone.localtime(value)
+    return f"{format_persian_date(local.date())} · {local:%H:%M}".translate(DIGITS)
+
+
+@register.filter
 def fa_number(value):
     if value is None:
         return "—"
@@ -64,6 +74,11 @@ def studio_query(context, **changes):
         else:
             query[key] = value
     return "?" + query.urlencode()
+
+
+@register.simple_tag(takes_context=True)
+def report_page(context, key, number):
+    return studio_query(context, **{key: number})
 
 
 @register.inclusion_tag("main/studio/partials/sort_header.html", takes_context=True)

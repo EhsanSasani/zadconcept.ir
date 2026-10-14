@@ -18,6 +18,7 @@ from .studio_access import can_use_sales, can_manage_studio
 from .sales_service import apply_sales_action, version
 from .image_pipeline import normalize_admin_image, ImageUploadError
 from .team_forms import latin_digits
+from .procurement_forms import PersianDecimalField
 
 
 def sales_required(view):
@@ -65,6 +66,11 @@ class SalesEditForm(forms.Form):
             raise forms.ValidationError(str(error)) from error
 
 
+class SaleConfirmForm(forms.Form):
+    price = PersianDecimalField(label='مبلغ نهایی فروش (تومان)', money=True,
+        max_digits=12, decimal_places=0, min_value=1)
+
+
 @sales_required
 @require_http_methods(['GET'])
 def home(request):
@@ -91,8 +97,9 @@ def home(request):
             matching |= Q(production_type='MISC', pk=int(q))
         records = records.filter(matching)
     records = records.select_related('florist','product').order_by('-updated_at','-pk')
+    filtered_sold_total = records.filter(status='SOLD').aggregate(value=Sum('price'))['value'] or 0
     page = Paginator(records,24).get_page(request.GET.get('page'))
-    return render(request,'main/sales/home.html',{'page':page,'q':q,'tab':tab,'stats':stats,'active':'home'})
+    return render(request,'main/sales/home.html',{'page':page,'q':q,'tab':tab,'stats':stats,'filtered_sold_total':filtered_sold_total,'active':'home'})
 
 
 @sales_required
@@ -107,13 +114,18 @@ def detail(request, pk):
     data = request.POST.copy() if action=='edit' else None
     if data is not None:data['price']=latin_digits(data.get('price','')).replace(',','').replace('٬','').replace(' ','')
     form = SalesEditForm(data,request.FILES if action=='edit' else None,record=record,initial=initial)
+    sale_data = {'price': request.POST['sale_price']} if action == 'sell' and 'sale_price' in request.POST else None
+    sale_form = SaleConfirmForm(sale_data, initial={'price': record.price})
     error = None
     if request.method=='POST':
         valid = action != 'edit' or form.is_valid()
+        if sale_data is not None:
+            valid = sale_form.is_valid()
         if valid:
             try:
                 apply_sales_action(pk=record.pk,actor=request.user,expected_version=request.POST.get('version',''),
-                    action=action,reason=request.POST.get('reason',''),values=form.cleaned_data if action=='edit' else None)
+                    action=action,reason=request.POST.get('reason',''),values=form.cleaned_data if action=='edit'
+                        else sale_form.cleaned_data if sale_data is not None else None)
             except (ValidationError,IntegrityError) as exc:
                 error = 'این شماره فاکتور قبلاً ثبت شده است.' if isinstance(exc,IntegrityError) else ' '.join(exc.messages)
             else:
@@ -121,8 +133,9 @@ def detail(request, pk):
                 return redirect('sales_detail',pk=record.pk)
     jobs=record.deliveries.exclude(status='SENT').order_by('pk')
     return render(request,'main/sales/detail.html',{'record':record,'form':form,'error':error,
-        'edit_open':action=='edit','version':version(record),'jobs':jobs,
-        'audits':display_audits(record.sales_audits.select_related('actor')[:30]),'active':'home'},status=400 if error or (data is not None and form.errors) else 200)
+        'edit_open':action=='edit','sell_open':action=='sell','sale_form':sale_form,
+        'can_manage_record':can_manage_studio(request.user),'version':version(record),'jobs':jobs,
+        'audits':display_audits(record.sales_audits.select_related('actor')[:30]),'active':'home'},status=400 if error or (data is not None and form.errors) or (sale_data is not None and sale_form.errors) else 200)
 
 
 @never_cache
@@ -133,7 +146,10 @@ def history(request):
         raise PermissionDenied
     q=latin_digits(request.GET.get('q','').strip())[:100]
     audits=StudioSalesAudit.objects.select_related('record','actor')
-    if q:audits=audits.filter(Q(record__factor_code__icontains=q)|Q(before__factor_code__icontains=q)|Q(after__factor_code__icontains=q)|Q(actor_name__icontains=q)|Q(reason__icontains=q))
+    if q:
+        from .studio_identity import identity_query
+        record_ids = StudioProduct.objects.filter(identity_query(q)).values('pk')
+        audits=audits.filter(Q(record_id__in=record_ids)|Q(record__factor_code__icontains=q)|Q(before__factor_code__icontains=q)|Q(after__factor_code__icontains=q)|Q(actor_name__icontains=q)|Q(reason__icontains=q))
     page=Paginator(audits,30).get_page(request.GET.get('page'))
     page.object_list=display_audits(page.object_list)
     return render(request,'main/sales/history.html',{'page':page,'q':q,'active':'history'})
@@ -146,7 +162,7 @@ def display_audits(audits):
         'telegram_chat_id':'گروه تلگرام','telegram_message_id':'پیام تلگرام'}
     choices={'status':dict(StudioProduct.Status.choices),'product_type':dict(StudioProduct.ProductType.choices),
              'production_type':dict(StudioProduct.ProductionType.choices)}
-    from .templatetags.studio_ui import fa_number
+    from .templatetags.studio_ui import fa_number, jalali_datetime
     audits=list(audits)
     ids={v for a in audits for v in [a.before.get('florist_id'),a.after.get('florist_id')] if v and str(v).isdigit()}
     names={str(f.pk):f.name for f in Florist.objects.filter(pk__in=ids)}
@@ -158,7 +174,7 @@ def display_audits(audits):
             from decimal import Decimal
             return fa_number(Decimal(value))
         if key.endswith('_at'):
-            try:return timezone.localtime(datetime.fromisoformat(value)).strftime('%Y/%m/%d %H:%M')
+            try:return jalali_datetime(datetime.fromisoformat(value))
             except (ValueError,TypeError):return value
         if key=='image':return 'تصویر ثبت‌شده'
         return value
@@ -166,4 +182,6 @@ def display_audits(audits):
         audit.changes=[{'label':label,'before':display(key,audit.before.get(key)),
                        'after':display(key,audit.after.get(key))}
             for key,label in labels.items() if audit.before.get(key)!=audit.after.get(key)]
+        audit.summary_changes = [change for change in audit.changes
+            if change['label'] in {'قیمت (تومان)', 'وضعیت', 'فلوریست', 'نوع محصول'}][:3]
     return audits

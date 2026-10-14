@@ -3,6 +3,61 @@ from django.urls import reverse
 from main.tests.test_studio_event_statistics import StudioEventStatisticsTests
 
 class ManagerOverviewTests(StudioEventStatisticsTests):
+    def test_production_value_is_removed_and_old_bookmarks_go_to_production_count(self):
+        self.row()
+        for name in ('studio_dashboard','studio_products','studio_analytics'):
+            response=self.client.get(reverse(name))
+            self.assertEqual(response.status_code,200)
+            self.assertNotContains(response,'ارزش تولید')
+        dashboard=self.client.get(reverse('studio_dashboard'))
+        self.assertNotIn('total_value',dashboard.context['metric_links'])
+        self.assertNotIn('total_value',dashboard.context['stats'])
+        response=self.client.get(reverse('studio_metric',args=['total_value']),{'period':'7'})
+        self.assertEqual(response.status_code,302)
+        self.assertEqual(response.url,reverse('studio_metric',args=['produced'])+'?period=7')
+
+    def test_withdrawal_split_uses_withdrawal_date_and_current_status(self):
+        self.row(produced=self.clock-timedelta(days=20),status='WITHDRAWN',event=self.clock)
+        self.row(status='WITHDRAWN',event=self.clock)
+        self.row(production='CUSTOM',status='WITHDRAWN',event=self.clock)
+        self.row(status='WITHDRAWN',event=self.clock-timedelta(days=1))
+        self.row(status='SOLD',event=self.clock)
+        self.row()
+        response=self.client.get(reverse('studio_metric',args=['withdrawn']),{'period':'today'})
+        self.assertEqual(response.context['production_counts'],{'daily':2,'custom':1,'misc':0})
+        self.assertEqual(response.context['total'],3)
+        self.assertNotContains(response,'class="panel metric-chart"')
+        self.assertContains(response,'تفکیک تعداد محصولات کشیده‌شده در بازهٔ انتخابی')
+
+    def test_sales_split_counts_sale_events_and_includes_misc_without_old_sales(self):
+        from main.models import StudioProduct
+        self.row(produced=self.clock-timedelta(days=20),status='SOLD',event=self.clock)
+        self.row(production='CUSTOM',status='SOLD',event=self.clock)
+        self.row(status='SOLD',event=self.clock-timedelta(days=1))
+        self.row()
+        StudioProduct.objects.create(production_type='MISC',product_type='other',status='SOLD',
+            produced_at=self.clock,sold_at=self.clock,price=100,notes='متفرقه')
+        response=self.client.get(reverse('studio_metric',args=['sold']),{'period':'today'})
+        self.assertEqual(response.context['production_counts'],{'daily':1,'custom':1,'misc':1})
+        self.assertEqual(response.context['total'],3)
+        self.assertNotContains(response,'class="panel metric-chart"')
+        self.assertContains(response,'تفکیک تعداد فروش در بازهٔ انتخابی')
+
+    def test_production_split_counts_whole_period_and_keeps_misc_sales_out_of_production(self):
+        from main.models import StudioProduct
+        for _ in range(22): self.row()
+        self.row(production='CUSTOM',status='SOLD',event=self.clock)
+        self.row(produced=self.clock-timedelta(days=1))
+        StudioProduct.objects.create(production_type='MISC',product_type='other',status='SOLD',
+            produced_at=self.clock,sold_at=self.clock,price=100,notes='فروش متفرقه')
+        response=self.client.get(reverse('studio_metric',args=['produced']),{'period':'today','page':2})
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.context['production_counts'],{'daily':22,'custom':1,'misc':0})
+        self.assertEqual(response.context['total'],23)
+        self.assertEqual(len(response.context['page']),3)
+        self.assertNotContains(response,'class="panel metric-chart"')
+        self.assertContains(response,'تفکیک تعداد تولید در بازهٔ انتخابی')
+
     def test_dashboard_team_includes_only_production_or_valid_sales_in_period(self):
         from main.models import Florist
         idle = Florist.objects.create(name='بدون فعالیت', code='idle')
@@ -43,7 +98,7 @@ class ManagerOverviewTests(StudioEventStatisticsTests):
         self.assertEqual(response.context['stats']['available'], 1)
         self.assertNotContains(response, 'میانگین زمان فروش')
         self.assertNotContains(response, 'id="trend-chart"')
-        self.assertEqual(len(response.context['metric_links']), 6)
+        self.assertEqual(len(response.context['metric_links']), 5)
 
     def test_sale_drilldown_filters_sale_day_and_preserves_amount(self):
         row=self.row(produced=self.clock-timedelta(days=2), status='SOLD', event=self.clock, price=2500000)
@@ -60,7 +115,7 @@ class ManagerOverviewTests(StudioEventStatisticsTests):
 
     def test_all_metric_pages_render_and_full_period_chart(self):
         self.row()
-        for key in ['produced','sold','withdrawn','available','total_value','sold_value']:
+        for key in ['produced','sold','withdrawn','available','sold_value']:
             response=self.client.get(reverse('studio_metric',args=[key]),{'period':'90'})
             self.assertEqual(response.status_code,200)
             self.assertEqual(len(response.context['chart_rows']),0 if key=='available' else 90)
