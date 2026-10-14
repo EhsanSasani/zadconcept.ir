@@ -1,0 +1,10 @@
+{% load studio_ui %}
+<section id="waste-report" class="proc-report-section"><div class="proc-section-head"><div><p class="proc-eyebrow">مستقل از فاکتورهای خرید</p><h2>گزارش دورریز</h2></div></div>
+{% if report.reference_cost_count %}<p class="proc-notice warning">{{ report.reference_cost_count|fa_number }} ردیف قدیمی با قیمت مرجع کالا برآورد شده‌اند؛ اسناد جدید از قیمت همان روز استفاده می‌کنند.</p>{% endif %}
+{% if report.unpriced_count %}<p class="proc-notice warning">{{ report.unpriced_count|fa_number }} ردیف قیمت صفر دارند؛ برآورد این بخش کامل نیست.</p>{% endif %}
+{% include 'main/procurement/material_breakdown.html' %}
+<details class="proc-panel" open><summary>روند روزانه دورریز</summary><div class="proc-records">{% for row in report.day_breakdown %}<div class="proc-record"><time>{{ row.date|procurement_date }}</time><strong>{{ row.waste_estimated_total|fa_number }} <small>تومان برآوردی</small></strong></div>{% empty %}<p class="proc-empty">در این بازه داده‌ای نیست.</p>{% endfor %}</div></details>
+<section class="proc-panel"><div class="proc-section-head"><h2>تاریخچه دورریز بازه</h2><a href="{% url 'procurement_wastes' %}{% studio_query supplier='' %}">همهٔ دورریزها ←</a></div><div class="proc-records">{% for record in waste_page %}<a class="proc-record" href="{% url 'procurement_waste_detail' record.pk %}"><span class="proc-record-main"><strong>{{ record.get_reason_display }}</strong><small>{{ record.date|procurement_date }} · #{{ record.pk|fa_number }}</small></span><strong>{{ record.estimated_total|fa_number }} <small>تومان برآوردی</small></strong></a>{% empty %}<p class="proc-empty">دورریزی در این بازه نیست.</p>{% endfor %}</div>
+{% include 'main/procurement/report_pagination.html' with page=waste_page page_key='waste_page' anchor='waste-report' %}
+<div class="panel-report-total"><span>جمع ارزش برآوردی دورریز · کل بازه</span><strong>{{ report.waste_estimated_total|fa_number }} <small>تومان</small></strong></div></section>
+</section>

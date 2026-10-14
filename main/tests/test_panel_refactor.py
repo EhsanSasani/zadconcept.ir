@@ -52,7 +52,7 @@ class SupplierReportTests(TestCase):
         for _ in range(27): self.receipt('عالمی',100)
         self.receipt('دیگری',900)
         self.receipt('عالمی',9900,status='VOID',voided_at=timezone.now(),void_reason='باطل')
-        response=self.client.get(reverse('studio_procurement'),{'supplier':'عالمی','invoice_page':2})
+        response=self.client.get(reverse('studio_procurement_purchases'),{'supplier':'عالمی','invoice_page':2})
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.context['report']['purchase_total'],2700)
         self.assertEqual(len(response.context['invoice_page']),7)
@@ -61,6 +61,86 @@ class SupplierReportTests(TestCase):
         response=self.client.get(reverse('procurement_purchases'),{'supplier':'عالمی','page':2})
         self.assertEqual(response.context['filtered_total'],2700)
         self.assertEqual(response.context['page'].paginator.count,28)
+
+    def test_overview_is_only_an_entry_to_separate_reports_and_preserves_period(self):
+        self.receipt('عالمی',100)
+        query={'period':'custom','start':str(self.today-timedelta(days=6)),'end':str(self.today)}
+        response=self.client.get(reverse('studio_procurement'),query)
+        self.assertEqual(response.status_code,200)
+        self.assertContains(response,'proc-report-choices')
+        self.assertNotContains(response,'id="purchase-report"')
+        self.assertNotContains(response,'id="waste-report"')
+        from urllib.parse import urlsplit, parse_qs
+        for kind in ('purchase','waste'):
+            link=response.context['report_links'][kind]
+            self.assertEqual(parse_qs(urlsplit(link).query),{key:[value] for key,value in query.items()})
+            detail=self.client.get(link)
+            self.assertEqual(detail.status_code,200)
+            self.assertContains(detail,'id="'+kind+'-report"')
+            self.assertNotContains(detail,'id="'+('waste' if kind=='purchase' else 'purchase')+'-report"')
+
+    def test_legacy_report_links_redirect_to_the_correct_detail(self):
+        response=self.client.get(reverse('studio_procurement'),{'period':'7','supplier':'عالمی'})
+        self.assertEqual(response.status_code,302)
+        self.assertTrue(response.url.startswith(reverse('studio_procurement_purchases')))
+        response=self.client.get(reverse('studio_procurement'),{'period':'7','waste_page':'2'})
+        self.assertEqual(response.status_code,302)
+        self.assertTrue(response.url.startswith(reverse('studio_procurement_wastes')))
+
+    def test_both_detail_reports_enforce_manager_permission(self):
+        self.client.logout()
+        for name in ('studio_procurement_purchases','studio_procurement_wastes'):
+            self.assertEqual(self.client.get(reverse(name)).status_code,302)
+        user=get_user_model().objects.create_user('report-sales-only')
+        user.user_permissions.add(Permission.objects.get(codename='use_sales_workspace'))
+        self.client.force_login(user)
+        for name in ('studio_procurement_purchases','studio_procurement_wastes'):
+            self.assertEqual(self.client.get(reverse(name)).status_code,403)
+
+    def test_purchase_overview_removes_daily_trend_and_uses_supplier_row_links(self):
+        self.receipt('عالمی',100)
+        response=self.client.get(reverse('studio_procurement_purchases'))
+        self.assertContains(response,'class="proc-supplier-link"')
+        self.assertContains(response,'supplier=')
+        self.assertNotContains(response,'روند روزانه خرید')
+        self.assertNotContains(response,'مبلغ فاکتورهای معتبر')
+
+    def test_supplier_invoice_view_preserves_supplier_and_totals_across_periods(self):
+        self.receipt('عالمی',100)
+        self.receipt('عالمی',200,date=self.today-timedelta(days=1))
+        self.receipt('عالمی',300,date=self.today-timedelta(days=20))
+        self.receipt('دیگری',999)
+        url=reverse('studio_procurement_purchases')
+        for period,total in [('today',100),('yesterday',200),('7',300),('30',600)]:
+            with self.subTest(period=period):
+                response=self.client.get(url,{'supplier':'عالمی','period':period})
+                self.assertEqual(response.status_code,200)
+                self.assertEqual(response.context['report']['purchase_total'],total)
+                self.assertContains(response,'name="supplier" value="عالمی"')
+                self.assertContains(response,'فاکتورهای عالمی')
+                self.assertContains(response,'جمع خرید معتبر · تمام نتایج فیلترشده')
+                self.assertNotContains(response,'class="proc-supplier-link"')
+                self.assertNotContains(response,'روند روزانه خرید')
+                self.assertTrue(all(record.supplier=='عالمی' for record in response.context['invoice_page']))
+
+    def test_purchase_ledger_supplier_selector_counts_and_empty_period_are_clear(self):
+        self.receipt('گالري ايده آل',100)
+        self.receipt('گالری ایده آل',200)
+        self.receipt('گالری ایده آل',900,status='VOID',voided_at=timezone.now(),void_reason='باطل')
+        self.receipt('فروشنده قدیمی',50,date=self.today-timedelta(days=1))
+        response=self.client.get(reverse('procurement_purchases'),{'supplier':'گالری ایده آل'})
+        self.assertEqual(response.context['filtered_total'],300)
+        self.assertEqual(response.context['purchase_counts']['valid'],2)
+        self.assertEqual(response.context['purchase_counts']['void'],1)
+        self.assertContains(response,'id="purchase-supplier"')
+        self.assertContains(response,'فاکتور معتبر')
+        self.assertContains(response,'purchase-ledger-row--void')
+        self.assertIn('عالمی',response.context['supplier_options'])
+        self.assertContains(response,'name="supplier" value="گالری ایده آل"')
+        empty=self.client.get(reverse('procurement_purchases'),{'supplier':'فروشنده قدیمی','period':'today'})
+        self.assertEqual(empty.context['filtered_total'],0)
+        self.assertIn('فروشنده قدیمی',empty.context['supplier_options'])
+        self.assertContains(empty,'فاکتوری برای این انتخاب نیست.')
 
 
 class TechnicalFloristLinkTests(TestCase):

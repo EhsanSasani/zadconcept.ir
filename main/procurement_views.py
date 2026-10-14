@@ -2,6 +2,7 @@
 from functools import wraps
 from datetime import datetime
 from uuid import uuid4
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
@@ -175,11 +176,18 @@ def ledger(request, kind):
     model = PurchaseInvoice if kind == 'purchase' else WasteEntry
     rows = model.objects.filter(date__range=(period['start'], period['end']))
     if kind == 'purchase':
-        supplier = request.GET.get('supplier', '').strip()[:120]
+        supplier = queries.supplier_key(request.GET.get('supplier', '').strip()[:120])
+        supplier_options = sorted({queries.supplier_key(name) for name in SUPPLIERS}
+            | {queries.supplier_key(name) for name in rows.order_by().values_list('supplier', flat=True).distinct() if name.strip()}
+            | ({supplier} if supplier else set()))
         rows = queries.filter_supplier(rows, supplier)
-        total = rows.filter(status='ACTIVE').aggregate(total=Sum('total'))['total'] or 0
+        counts = rows.aggregate(total=Sum('total', filter=Q(status='ACTIVE')),
+            valid=Count('pk', filter=Q(status='ACTIVE')), void=Count('pk', filter=Q(status='VOID')))
+        total = counts['total'] or 0
         page = Paginator(rows.select_related('created_by').order_by('-date', '-pk'), 25).get_page(request.GET.get('page'))
-        return render(request, 'main/procurement/purchase_list.html', {**_context(request, kind), 'period': period, 'page': page, 'filtered_total': total, 'supplier': supplier})
+        return render(request, 'main/procurement/purchase_list.html', {**_context(request, kind),
+            'period': period, 'page': page, 'filtered_total': total, 'supplier': supplier,
+            'supplier_options': supplier_options, 'purchase_counts': counts})
     amount_field = 'total' if kind == 'purchase' else 'estimated_total'
     days = rows.values('date').annotate(
         amount=Sum(amount_field, filter=Q(status='ACTIVE')),
@@ -240,16 +248,29 @@ def void(request, kind, pk):
 
 @never_cache
 @require_GET
-def manager_report(request):
+def manager_report(request, kind=None):
     if not request.user.is_authenticated:
         return redirect_to_login(request.get_full_path(), reverse('studio_login'))
     if not can_manage_studio(request.user):
         raise PermissionDenied
     period = _period(request)
-    supplier = request.GET.get('supplier', '').strip()[:120]
+    period_query = urlencode({'period': period['choice'], 'start': period['start'], 'end': period['end']})
+    links = {key: reverse(route) + '?' + period_query for key, route in (
+        ('overview', 'studio_procurement'), ('purchase', 'studio_procurement_purchases'),
+        ('waste', 'studio_procurement_wastes'))}
+    context = {**studio_context(request, 'procurement', period), **_context(request, 'procurement'),
+        'report_links': links, 'report_kind': kind}
+    if kind is None:
+        # Preserve older supplier/pagination bookmarks without a combined detail page.
+        if request.GET.get('supplier') or request.GET.get('invoice_page'):
+            return redirect(reverse('studio_procurement_purchases') + '?' + request.GET.urlencode())
+        if request.GET.get('waste_page'):
+            return redirect(reverse('studio_procurement_wastes') + '?' + request.GET.urlencode())
+        return render(request, 'main/procurement/report.html', {**context, 'report': queries.summary(period)})
+    supplier = request.GET.get('supplier', '').strip()[:120] if kind == 'purchase' else ''
     report = queries.report(period, supplier=supplier)
-    return render(request, 'main/procurement/report.html', {
-        **studio_context(request, 'procurement', period), **_context(request, 'procurement'),
+    return render(request, 'main/procurement/report_detail.html', {
+        **context, 'report_title': ('خرید از ' + supplier) if supplier else 'گزارش خرید' if kind == 'purchase' else 'گزارش دورریز',
         'report': report, 'supplier': supplier,
         'invoice_page': Paginator(report['invoices'].order_by('-date', '-pk'), 20).get_page(request.GET.get('invoice_page')),
         'waste_page': Paginator(report['wastes'].order_by('-date', '-pk'), 20).get_page(request.GET.get('waste_page')),

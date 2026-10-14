@@ -1,0 +1,76 @@
+/* Manager workspace palette. Other workspaces keep their own theme. */
+body.manager-app.panel-ui.panel-ui{
+ --ui-canvas:#060f1f;--ui-surface:#0e2037;--ui-ink:#f0f5ff;
+ --ui-muted:#a9c2e9;--ui-line:#294567;--ui-navy:#b6d1ff;
+ --ui-tint:#162e4d;--ui-accent:#60a9ff;
+ --ui-shadow:0 8px 28px #02081535;
+ --canvas:var(--ui-canvas);--paper:var(--ui-surface);--ink:var(--ui-ink);
+ --sub:var(--ui-muted);--line:var(--ui-line);--surface:var(--ui-surface);
+ background:radial-gradient(ellipse at 0 0,#122c4b88,transparent 55%),#060f1f;
+ color:var(--ui-ink);color-scheme:dark;
+}
+body.manager-app.panel-ui.panel-ui :is(.studio-topbar,.app-tabbar){background:#081528f2;border-color:#294567;box-shadow:0 0 28px #02081555}
+body.manager-app.panel-ui.panel-ui .studio-sidebar{background:linear-gradient(180deg,#0d1e35,#071222);border-color:#294567}
+body.manager-app.panel-ui.panel-ui .workspace-bar{background:#0b192d;border-color:#243b59}
+body.manager-app.panel-ui.panel-ui :is(.workspace-change,.icon-button){background:linear-gradient(145deg,#1b3558,#132640);border:1px solid #2a476a;color:#bfd7ff}
+body.manager-app.panel-ui.panel-ui :is(.panel,.app-product-tile){background:linear-gradient(145deg,#12263e,#0b1b30);border-color:#294567;box-shadow:0 8px 28px #02081524}
+body.manager-app.panel-ui.panel-ui :is(.text-link,.app-stat-stock p){color:#75b0ff}
+body.manager-app.panel-ui.panel-ui .period-bar .segmented{background:#0b1d34;border:1px solid #294567;border-radius:17px;padding:4px;gap:4px}
+body.manager-app.panel-ui.panel-ui .period-chip{border-radius:12px;color:#b3ccef;min-height:44px}
+body.manager-app.panel-ui.panel-ui .period-chip.selected{background:linear-gradient(145deg,#31a9fa,#3265f4);border:1px solid #72c3ff;box-shadow:0 4px 18px #167fff35,inset 0 1px #c7e8ff33;color:#fff}
+body.manager-app.panel-ui.panel-ui .period-range{color:#9cbbe4}
+body.manager-app.panel-ui.panel-ui :is(.app-tabbar,.studio-nav) a.active{background:linear-gradient(145deg,#1a416b,#102744);color:#7bc4ff;border-color:#345d8b;box-shadow:inset 0 0 0 1px #345d8b,0 0 20px #2582ff16}
+body.manager-app.panel-ui.panel-ui .app-tabbar a.active{border-bottom:0}
+body.manager-app.panel-ui.panel-ui .app-tabbar a.active .icon{color:#67b7ff;filter:drop-shadow(0 0 7px #248bff99)}
+body.manager-app.panel-ui.panel-ui a:focus-visible{outline:2px solid #80c5ff;outline-offset:4px}
+
+/* Dashboard composition follows the blue floral reference with live data. */
+body.manager-app.panel-ui.panel-ui[data-studio-page="dashboard"] .app-home-heading{position:relative;isolation:isolate;min-height:158px;margin-bottom:8px;align-items:center}
+body.manager-app.panel-ui.panel-ui[data-studio-page="dashboard"] .app-home-heading::before{content:"";position:absolute;inset:-22px -10px -5px;z-index:-1;pointer-events:none;background:url('../../img/occasion-detail-hero-v1.webp') left 42%/cover no-repeat;filter:grayscale(1) sepia(1) saturate(3) hue-rotate(170deg);opacity:.15;mask-image:linear-gradient(to left,transparent 8%,#000 70%),linear-gradient(to bottom,transparent,#000 25%,#000 65%,transparent);mask-composite:intersect}
+body.manager-app.panel-ui.panel-ui .app-home-heading h1{font-size:clamp(25px,3vw,36px);line-height:1.7;color:#f3f6ff;text-shadow:0 2px 16px #020815}
+body.manager-app.panel-ui.panel-ui .app-greeting{color:#acc9f2}
+body.manager-app.panel-ui.panel-ui .app-metrics{gap:14px;margin-bottom:28px}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat{grid-column:span 2;grid-row:auto;flex-direction:column;align-items:stretch;padding:20px;min-height:142px;border-radius:20px;border:1px solid #2c5275;background:linear-gradient(130deg,#142c46,#0b1d32);box-shadow:inset 0 1px #c7e5ff06,0 8px 24px #02081530;gap:12px;transition:border-color .15s,box-shadow .15s}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat:hover{border-color:#638ec3;box-shadow:0 8px 28px #02081555}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat-revenue{grid-column:span 4;min-height:188px;background:radial-gradient(ellipse at 0 0,#2988ff77,transparent 70%),linear-gradient(130deg,#1d54b8,#112957 75%,#0c1f3c);border-color:#5489d4;box-shadow:inset 0 1px #c3e3ff35,0 8px 30px #073caa25}
+body.manager-app.panel-ui.panel-ui .app-stat>span{color:#b8cff0;font-size:13px;line-height:1.7}
+body.manager-app.panel-ui.panel-ui .app-stat>strong{color:#f4f7ff;font-size:32px;line-height:1.4;font-variant-numeric:tabular-nums}
+body.manager-app.panel-ui.panel-ui .app-stat-revenue>strong{font-size:clamp(26px,3.4vw,40px)}
+body.manager-app.panel-ui.panel-ui .app-stat-revenue small{display:block;font-size:12px;margin-top:4px}
+body.manager-app.panel-ui.panel-ui .app-stat-revenue p{align-self:flex-start;padding:6px 10px;border:1px solid #33778e;border-radius:13px;background:#09586755;color:#8ce5d5;font-size:11px;line-height:1.8}
+body.manager-app.panel-ui.panel-ui .app-stat .stat-icon{box-sizing:content-box;flex-shrink:0;width:22px;height:22px;padding:10px;border-radius:50%;background:#244570;color:#b9d6ff}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat-produced{background:linear-gradient(130deg,#123551,#0b1d32);border-color:#2d587a}
+body.manager-app.panel-ui.panel-ui .app-stat-produced .stat-icon{background:#1a496d;color:#7bcdff}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat-sold{background:linear-gradient(130deg,#272342,#151a31);border-color:#49416c}
+body.manager-app.panel-ui.panel-ui .app-stat-sold .stat-icon{background:#3a2f60;color:#d6bdff}
+body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat-withdrawn{background:linear-gradient(130deg,#302a29,#181e2b);border-color:#51443b}
+body.manager-app.panel-ui.panel-ui .app-stat-withdrawn .stat-icon{background:#553723;color:#ffb26e}
+body.manager-app.panel-ui.panel-ui .app-section{margin-top:28px}
+body.manager-app.panel-ui.panel-ui .app-section .panel-head{gap:12px;align-items:center;margin-bottom:16px}
+body.manager-app.panel-ui.panel-ui .app-section h2{color:#eff5ff;font-size:20px}
+body.manager-app.panel-ui.panel-ui .app-product-tile{border-radius:18px}
+body.manager-app.panel-ui.panel-ui .app-product-copy{background:linear-gradient(155deg,#10243e,#0b1a2d)}
+body.manager-app.panel-ui.panel-ui .app-product-copy :is(h3,.app-price){color:#f0f5ff}
+body.manager-app.panel-ui.panel-ui .app-product-copy :is(span,small){color:#acc8ed}
+body.manager-app.panel-ui.panel-ui .app-people-list{padding:0;background:transparent;border:0;box-shadow:none;gap:14px}
+body.manager-app.panel-ui.panel-ui .app-person-row{padding:18px;border:1px solid #294567;border-radius:18px;background:linear-gradient(140deg,#11263f,#0b1b30);min-width:0;margin-bottom:12px}
+body.manager-app.panel-ui.panel-ui .app-person-row:last-child{border-bottom:1px solid #294567}
+body.manager-app.panel-ui.panel-ui .app-cost-purchase{background:linear-gradient(130deg,#142e49,#0b1d32)}
+body.manager-app.panel-ui.panel-ui .app-cost-waste{background:linear-gradient(130deg,#302a29,#191f2c);border-color:#51443b}
+@media(max-width:700px){
+ body.manager-app.panel-ui.panel-ui .studio-main{padding-inline:16px}
+ body.manager-app.panel-ui.panel-ui .app-home-heading{min-height:138px}
+ body.manager-app.panel-ui.panel-ui .app-metrics{gap:10px}
+ body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat{padding:14px 12px;min-height:122px;border-radius:18px;gap:12px}
+ body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat-revenue{min-height:172px;padding:18px 16px}
+ body.manager-app.panel-ui.panel-ui .app-stat>span{font-size:11px;gap:5px;flex-wrap:wrap}
+ body.manager-app.panel-ui.panel-ui .app-stat .stat-icon{width:19px;height:19px;padding:8px}
+ body.manager-app.panel-ui.panel-ui .app-stat>strong{font-size:29px}
+ body.manager-app.panel-ui.panel-ui .app-stat-revenue>strong{font-size:clamp(23px,6vw,32px)}
+ body.manager-app.panel-ui.panel-ui .app-stat-stock p{font-size:10px;line-height:1.8}
+ body.manager-app.panel-ui.panel-ui .app-tabbar{padding-top:8px;border-radius:23px 23px 0 0}
+ body.manager-app.panel-ui.panel-ui .app-tabbar a{border-radius:17px;min-height:54px}
+ body.manager-app.panel-ui.panel-ui .app-section .text-link{font-size:11px}
+ body.manager-app.panel-ui.panel-ui .app-person-row{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){body.manager-app.panel-ui.panel-ui .app-metrics>.app-stat{transition:none}}

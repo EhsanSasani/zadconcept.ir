@@ -1,6 +1,23 @@
-{% extends 'main/procurement/base.html' %}{% load studio_ui %}{% block title %}سوابق خرید{% endblock %}{% block content %}
-<div class="proc-heading"><div><p class="proc-eyebrow">دفتر خرید</p><h1>سوابق خرید</h1></div>{% if can_write %}<a class="proc-btn proc-primary" href="{% url 'procurement_purchase_add' %}">ثبت فاکتور</a>{% endif %}</div>
+{% extends 'main/procurement/base.html' %}{% load studio_ui %}
+{% block title %}سوابق خرید{% endblock %}{% block content %}
+<div class="proc-heading purchase-ledger-heading"><div><h1>سوابق خرید</h1></div>{% if can_write %}<a class="proc-btn proc-primary" href="{% url 'procurement_purchase_add' %}">ثبت فاکتور</a>{% endif %}</div>
 {% include 'main/procurement/period.html' %}
-<section class="proc-panel">{% for record in page %}<a class="proc-record" href="{% url 'procurement_purchase_detail' record.pk %}"><span class="proc-record-main"><strong>{{ record.supplier|default:'فاکتور خرید' }}</strong><small>{{ record.date|procurement_date }} · #{{ record.pk|fa_number }}{% if record.status == 'VOID' %} · باطل‌شده{% endif %}</small></span><span class="proc-record-amount"><strong>{{ record.total|fa_number }} <small>تومان</small></strong></span>{% if record.image %}<img src="{{ record.image.url }}" alt="فاکتور" width="48" height="60" style="object-fit:cover;border-radius:8px" loading="lazy">{% endif %}</a>{% empty %}<p>در این بازه فاکتوری ثبت نشده است.</p>{% endfor %}</section>
-{% include 'main/procurement/pagination.html' %}<div class="panel-report-total"><span>جمع خرید معتبر · تمام نتایج فیلترشده{% if supplier %} · {{ supplier }}{% endif %}</span><strong>{{ filtered_total|fa_number }} <small>تومان</small></strong></div>
+<form method="get" class="purchase-supplier-filter">
+  <input type="hidden" name="period" value="{{ period.choice }}"><input type="hidden" name="start" value="{{ period.start|date:'Y-m-d' }}"><input type="hidden" name="end" value="{{ period.end|date:'Y-m-d' }}">
+  <label for="purchase-supplier">تأمین‌کننده</label><div><select id="purchase-supplier" name="supplier"><option value="">همهٔ تأمین‌کنندگان</option>{% for name in supplier_options %}<option value="{{ name }}"{% if name == supplier %} selected{% endif %}>{{ name }}</option>{% endfor %}</select><button class="proc-btn proc-secondary" type="submit">نمایش</button></div>
+</form>
+<section class="purchase-ledger-summary" aria-label="خلاصه خرید بازه"><div><small>جمع خرید معتبر{% if supplier %} · {{ supplier }}{% endif %}</small><strong>{{ filtered_total|fa_number }} <small>تومان</small></strong></div><p>{{ purchase_counts.valid|fa_number }} فاکتور معتبر{% if purchase_counts.void %} · {{ purchase_counts.void|fa_number }} باطل‌شده{% endif %}</p></section>
+<section class="proc-panel purchase-ledger-list" aria-label="فاکتورهای خرید">
+{% for record in page %}
+<a class="purchase-ledger-row{% if record.status == 'VOID' %} purchase-ledger-row--void{% endif %}" href="{% url 'procurement_purchase_detail' record.pk %}">
+  <span class="purchase-ledger-row__image">{% if record.image %}<img src="{{ record.image.url }}" alt="تصویر فاکتور {{ record.pk }}" width="38" height="46" loading="lazy">{% else %}<span aria-hidden="true">{% include 'main/procurement/icon.html' with name='purchase' %}</span>{% endif %}</span>
+  <span class="purchase-ledger-row__name">{{ record.supplier|default:'بدون نام تأمین‌کننده' }}</span>
+  <span class="purchase-ledger-row__amount"><strong>{{ record.total|fa_number }}</strong> <small>تومان</small></span>
+  <span class="purchase-ledger-row__meta"><time>{{ record.date|procurement_date }}</time><span>فاکتور {{ record.pk|fa_number }}</span></span>
+  <span class="purchase-ledger-row__status">{% if record.status == 'VOID' %}باطل‌شده{% else %}معتبر{% endif %}</span>
+</a>
+{% empty %}<div class="proc-empty"><strong>فاکتوری برای این انتخاب نیست.</strong><p>بازه یا تأمین‌کنندهٔ دیگری انتخاب کنید.</p></div>{% endfor %}
+</section>
+{% include 'main/procurement/pagination.html' %}
+<div class="panel-report-total"><span>جمع خرید معتبر · تمام نتایج فیلترشده{% if supplier %} · {{ supplier }}{% endif %}</span><strong>{{ filtered_total|fa_number }} <small>تومان</small></strong></div>
 {% endblock %}

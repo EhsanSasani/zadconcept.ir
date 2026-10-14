@@ -96,7 +96,6 @@ def _stats(qs, period):
         available=Count("pk", filter=produced & Q(status=StudioProduct.Status.AVAILABLE)),
         cancelled=Count("pk", filter=produced & Q(status=StudioProduct.Status.CANCELLED)),
         cohort_sold=Count("pk", filter=produced & Q(status=StudioProduct.Status.SOLD)),
-        total_value=Sum("price", filter=produced),
         sold_value=Sum("price", filter=sold), average_price=Avg("price", filter=produced),
         daily_sales=Sum("price", filter=sold & Q(production_type="DAILY")),
         custom_sales=Sum("price", filter=sold & Q(production_type="CUSTOM")),
@@ -109,7 +108,7 @@ def _stats(qs, period):
     values["outcome_total"] = sum(values[key] for key in ("sold", "withdrawn", "available", "cancelled"))
     duration = values["average_time"]
     values["average_days"] = round(duration.total_seconds() / 86400, 1) if duration else None
-    for key in ("total_value", "sold_value", "average_price", "daily_sales", "custom_sales", "misc_sales"):
+    for key in ("sold_value", "average_price", "daily_sales", "custom_sales", "misc_sales"):
         values[key] = values[key] or 0
     return values
 
@@ -204,7 +203,7 @@ def dashboard(request):
     stats["available"] = _vitrine().count()
     previous = _stats(_activity(_previous(period)), _previous(period))
     comparisons = {key: _delta(stats[key], previous[key]) for key in
-                   ("produced", "sold", "withdrawn", "available", "total_value", "sold_value")}
+                   ("produced", "sold", "withdrawn", "available", "sold_value")}
     comparisons["available"] = None
     breakdown = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     daily = breakdown.get(StudioProduct.ProductionType.DAILY, 0)
@@ -227,6 +226,10 @@ def dashboard(request):
                "procurement": procurement_summary(period),
                "procurement_url": reverse('studio_procurement') + '?' + urlencode({
                    'period': period['choice'], 'start': period['start'], 'end': period['end']}),
+               "procurement_purchase_url": reverse('studio_procurement_purchases') + '?' + urlencode({
+                   'period': period['choice'], 'start': period['start'], 'end': period['end']}),
+               "procurement_waste_url": reverse('studio_procurement_wastes') + '?' + urlencode({
+                   'period': period['choice'], 'start': period['start'], 'end': period['end']}),
                "daily": daily, "custom": custom, "chart": chart, "florists": florist_rows,
                "latest": latest[:5], "table_sort": table_sort,
                "missing_count": missing_count, "issue_count": issue_count,
@@ -242,7 +245,6 @@ METRICS = {
     "sold": ("فروخته شده", "sold_at", "SOLD", False),
     "withdrawn": ("کشیده شده", "withdrawn_at", "WITHDRAWN", False),
     "available": ("موجودی فعلی ویترین", None, "AVAILABLE", False),
-    "total_value": ("ارزش تولید", "produced_at", None, True),
     "sold_value": ("ارزش فروش", "sold_at", "SOLD", True),
 }
 
@@ -256,6 +258,8 @@ def _vitrine():
 @login_required(login_url="studio_login")
 def metric_detail(request, metric):
     _access(request)
+    if metric == 'total_value':
+        return redirect(reverse('studio_metric', args=['produced']) + '?' + request.GET.urlencode())
     from django.http import Http404
     if metric not in METRICS:
         raise Http404
@@ -268,8 +272,13 @@ def metric_detail(request, metric):
         qs = qs.filter(_event_filter(field, period))
         if status:
             qs = qs.filter(status=status)
-    if metric in {"produced", "total_value"}:
+    if metric == 'produced':
         qs = qs.exclude(production_type="MISC")
+    production_counts = qs.aggregate(
+        daily=Count('pk', filter=Q(production_type='DAILY')),
+        custom=Count('pk', filter=Q(production_type='CUSTOM')),
+        misc=Count('pk', filter=Q(production_type='MISC')),
+    ) if metric in {'produced', 'sold', 'withdrawn'} else {}
     total = (qs.aggregate(value=Sum("price"))["value"] or 0) if money else qs.count()
     by_florist = list(qs.values("florist__name").annotate(value=Sum("price") if money else Count("pk")).order_by("-value", "florist__name"))
     florist_peak = max((row["value"] or 0 for row in by_florist), default=0) or 1
@@ -290,7 +299,7 @@ def metric_detail(request, metric):
     return render(request, "main/studio/metric.html", {
         **_base(request, "dashboard", period), "metric": metric, "label": label,
         "money": money, "total": total, "chart_rows": chart, "by_florist": by_florist, "table_sort": table_sort,
-        "report_stats": _stats(qs, period),
+        "report_stats": _stats(qs, period), "production_counts": production_counts,
         "page": Paginator(qs, 20).get_page(request.GET.get("page"))})
 
 
