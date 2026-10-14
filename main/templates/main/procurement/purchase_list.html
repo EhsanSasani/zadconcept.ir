@@ -2,5 +2,5 @@
 <div class="proc-heading"><div><p class="proc-eyebrow">دفتر خرید</p><h1>سوابق خرید</h1></div>{% if can_write %}<a class="proc-btn proc-primary" href="{% url 'procurement_purchase_add' %}">ثبت فاکتور</a>{% endif %}</div>
 {% include 'main/procurement/period.html' %}
 <section class="proc-panel">{% for record in page %}<a class="proc-record" href="{% url 'procurement_purchase_detail' record.pk %}"><span class="proc-record-main"><strong>{{ record.supplier|default:'فاکتور خرید' }}</strong><small>{{ record.date|procurement_date }} · #{{ record.pk|fa_number }}{% if record.status == 'VOID' %} · باطل‌شده{% endif %}</small></span><span class="proc-record-amount"><strong>{{ record.total|fa_number }} <small>تومان</small></strong></span>{% if record.image %}<img src="{{ record.image.url }}" alt="فاکتور" width="48" height="60" style="object-fit:cover;border-radius:8px" loading="lazy">{% endif %}</a>{% empty %}<p>در این بازه فاکتوری ثبت نشده است.</p>{% endfor %}</section>
-{% include 'main/procurement/pagination.html' %}
+{% include 'main/procurement/pagination.html' %}<div class="panel-report-total"><span>جمع خرید معتبر · تمام نتایج فیلترشده{% if supplier %} · {{ supplier }}{% endif %}</span><strong>{{ filtered_total|fa_number }} <small>تومان</small></strong></div>
 {% endblock %}

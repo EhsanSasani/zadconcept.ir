@@ -175,8 +175,11 @@ def ledger(request, kind):
     model = PurchaseInvoice if kind == 'purchase' else WasteEntry
     rows = model.objects.filter(date__range=(period['start'], period['end']))
     if kind == 'purchase':
+        supplier = request.GET.get('supplier', '').strip()[:120]
+        rows = queries.filter_supplier(rows, supplier)
+        total = rows.filter(status='ACTIVE').aggregate(total=Sum('total'))['total'] or 0
         page = Paginator(rows.select_related('created_by').order_by('-date', '-pk'), 25).get_page(request.GET.get('page'))
-        return render(request, 'main/procurement/purchase_list.html', {**_context(request, kind), 'period': period, 'page': page})
+        return render(request, 'main/procurement/purchase_list.html', {**_context(request, kind), 'period': period, 'page': page, 'filtered_total': total, 'supplier': supplier})
     amount_field = 'total' if kind == 'purchase' else 'estimated_total'
     days = rows.values('date').annotate(
         amount=Sum(amount_field, filter=Q(status='ACTIVE')),
@@ -196,6 +199,7 @@ def ledger(request, kind):
     return render(request, 'main/procurement/ledger.html', {
         **_context(request, kind), 'kind': kind, 'period': period,
         'page': page,
+        'filtered_total': rows.filter(status='ACTIVE').aggregate(total=Sum(amount_field))['total'] or 0,
     })
 
 
@@ -203,7 +207,7 @@ def _detail(request, kind, record, *, void_form=None, status=200):
     version = service.record_version(record)
     return render(request, 'main/procurement/detail.html', {
         **_context(request, kind), 'kind': kind, 'record': record,
-        'lines': record.lines.select_related('purchase_line__invoice') if kind == 'waste' else record.lines.all(),
+        'lines': record.lines.select_related('purchase_line__invoice','daily_price') if kind == 'waste' else record.lines.all(),
         'version': version, 'void_form': void_form or VoidForm(initial={'version': version}),
         'audits': ProcurementAudit.objects.filter(target_type=record._meta.model_name, target_id=record.pk).order_by('-pk'),
     }, status=status)
@@ -242,9 +246,13 @@ def manager_report(request):
     if not can_manage_studio(request.user):
         raise PermissionDenied
     period = _period(request)
+    supplier = request.GET.get('supplier', '').strip()[:120]
+    report = queries.report(period, supplier=supplier)
     return render(request, 'main/procurement/report.html', {
         **studio_context(request, 'procurement', period), **_context(request, 'procurement'),
-        'report': queries.report(period),
+        'report': report, 'supplier': supplier,
+        'invoice_page': Paginator(report['invoices'].order_by('-date', '-pk'), 20).get_page(request.GET.get('invoice_page')),
+        'waste_page': Paginator(report['wastes'].order_by('-date', '-pk'), 20).get_page(request.GET.get('waste_page')),
     })
 
 

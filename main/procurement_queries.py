@@ -1,9 +1,26 @@
 """Read models for purchasing spend and estimated waste, never stock or profit."""
 from decimal import Decimal
+import re
+import unicodedata
 
 from django.db.models import Count, Sum
 
-from .models import Material, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
+from .models import Material, PurchaseInvoice, WasteEntry, WasteLine
+
+
+def supplier_key(name):
+    """Typography-only grouping; never rewrite historical suppliers or infer aliases."""
+    value = unicodedata.normalize('NFC', name or '').translate(str.maketrans('يك', 'یک'))
+    return re.sub(r'\s+', ' ', value.replace('\u200c', ' ')).strip()
+
+
+def filter_supplier(invoices, name):
+    if not name:
+        return invoices
+    key = supplier_key(name)
+    originals = [value for value in invoices.values_list('supplier', flat=True).distinct()
+                 if supplier_key(value) == key]
+    return invoices.filter(supplier__in=originals)
 
 
 def summary(period):
@@ -18,11 +35,10 @@ def summary(period):
                 unpriced_count=unpriced_count)
 
 
-def report(period):
+def report(period, *, supplier=''):
     start, end = period['start'], period['end']
-    invoices = PurchaseInvoice.objects.filter(status='ACTIVE', date__range=(start, end))
+    invoices = filter_supplier(PurchaseInvoice.objects.filter(status='ACTIVE', date__range=(start, end)), supplier)
     wastes = WasteEntry.objects.filter(status='ACTIVE', date__range=(start, end))
-    purchased = PurchaseLine.objects.filter(invoice__in=invoices)
     wasted = WasteLine.objects.filter(entry__in=wastes)
     zero = Decimal(0)
     purchase_totals = invoices.aggregate(total=Sum('total'), count=Count('pk'))
@@ -32,16 +48,22 @@ def report(period):
         key = (row['material_id'], row['base_unit'])
         if key not in materials:
             materials[key] = dict(material_id=row['material_id'], name=row['material__name'], base_unit=row['base_unit'],
-                purchased_quantity=zero, purchase_total=zero, waste_quantity=zero, waste_estimated_total=zero)
+                waste_quantity=zero, waste_estimated_total=zero)
         return materials[key]
-    for row in purchased.values('material_id', 'material__name', 'base_unit').annotate(quantity=Sum('base_quantity'), amount=Sum('total')).order_by():
-        item = material_row(row)
-        item['purchased_quantity'] += row['quantity']
-        item['purchase_total'] += row['amount']
     for row in wasted.values('material_id', 'material__name', 'base_unit').annotate(quantity=Sum('base_quantity'), amount=Sum('estimated_cost')).order_by():
         item = material_row(row)
         item['waste_quantity'] += row['quantity']
         item['waste_estimated_total'] += row['amount']
+    suppliers = {}
+    for row in invoices.values('supplier').annotate(amount=Sum('total'), count=Count('pk')).order_by():
+        key = supplier_key(row['supplier'])
+        item = suppliers.setdefault(key, dict(name=key or 'بدون نام تأمین‌کننده', key=key,
+            amount=zero, count=0, variants=[]))
+        item['amount'] += row['amount']
+        item['count'] += row['count']
+        item['variants'].append(row['supplier'])
+    for item in suppliers.values():
+        item['share'] = (item['amount'] * 100 / purchase_totals['total']).quantize(Decimal('.1')) if purchase_totals['total'] else zero
     days = {}
     for rows, amount_key in ((invoices.values('date').annotate(amount=Sum('total')).order_by('date'), 'purchase_total'),
                             (wastes.values('date').annotate(amount=Sum('estimated_total')).order_by('date'), 'waste_estimated_total')):
@@ -52,5 +74,6 @@ def report(period):
         reference_cost_count=wasted.filter(cost_source='reference').count(),
         unpriced_count=wasted.filter(unit_cost=0).count(),
         active_material_count=Material.objects.filter(is_active=True).count(),
-        material_breakdown=sorted(materials.values(), key=lambda row: (-row['waste_estimated_total'], -row['purchase_total'], row['name'])),
+        supplier_breakdown=sorted(suppliers.values(), key=lambda row: (-row['amount'], row['name'])),
+        material_breakdown=sorted(materials.values(), key=lambda row: (-row['waste_estimated_total'], row['name'])),
         day_breakdown=[days[day] for day in sorted(days)], invoices=invoices, wastes=wastes)

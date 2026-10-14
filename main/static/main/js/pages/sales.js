@@ -28,9 +28,4 @@
     }
   });
   preview?.addEventListener('error',()=>{preview.hidden=true;});
-  // Group thousands without moving the caret while the operator types.
-  const price = document.querySelector('[data-price-input]');
-  const normalize = value => value.replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))).replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/[,٬\s]/g,'');
-  const format = () => { const raw=normalize(price.value); if(/^\d+$/.test(raw)) price.value=raw.replace(/\B(?=(\d{3})+(?!\d))/g,','); };
-  if(price){format();price.addEventListener('blur',format);}
 })();

@@ -151,6 +151,8 @@ def set_portal_status(record, status, *, actor):
             return record
         if record.status != StudioProduct.Status.AVAILABLE:
             raise ValidationError("وضعیت نهایی این محصول قبلاً ثبت شده است.")
+        from .sales_service import snapshot, _audit
+        before = snapshot(record)
         now = timezone.now()
         record.status = status
         if status == StudioProduct.Status.SOLD:
@@ -168,6 +170,8 @@ def set_portal_status(record, status, *, actor):
                 updated_at=now,
             )
         queue_retirement(record)
+        _audit(record, actor, 'sell' if status == StudioProduct.Status.SOLD else 'withdraw'
+            if status == StudioProduct.Status.WITHDRAWN else 'cancel', 'تغییر وضعیت از مدیریت', before)
         return record
 
 
@@ -186,6 +190,8 @@ def soft_delete_product(record, *, actor, reason):
         if record.status == StudioProduct.Status.DELETED:
             return record
 
+        from .sales_service import snapshot, _audit
+        before = snapshot(record)
         now = timezone.now()
         record.status = StudioProduct.Status.DELETED
         record.deleted_at = now
@@ -207,6 +213,7 @@ def soft_delete_product(record, *, actor, reason):
             )
 
         queue_retirement(record)
+        _audit(record, actor, 'delete', reason, before)
         return record
 
 

@@ -280,7 +280,7 @@
       set("factor", field("factor_code")?.value.trim());
       set("florist", label("florist"));
       set("type", label("product_type"));
-      const price = field("price")?.value;
+      const price = field("price")?.value.replace(/[,٬\s]/g, '');
       set(
         "price",
         price && Number(price) > 0 ? Number(price).toLocaleString("fa-IR") : "",

@@ -10,4 +10,4 @@
 {% empty %}<div class="proc-panel proc-empty"><h2>در این بازه ثبت جدیدی نیست</h2><p>بازهٔ دیگری را انتخاب کن یا یک ثبت جدید اضافه کن.</p></div>{% endfor %}
 
 {% if page.paginator.num_pages > 1 %}<nav class="proc-pagination" aria-label="صفحه‌بندی">{% if page.has_previous %}<a class="proc-btn proc-secondary" href="{% studio_query page=page.previous_page_number %}">قبلی</a>{% endif %}<span>{{ page.number|fa_number }} از {{ page.paginator.num_pages|fa_number }}</span>{% if page.has_next %}<a class="proc-btn proc-secondary" href="{% studio_query page=page.next_page_number %}">بعدی</a>{% endif %}</nav>{% endif %}
-{% endblock %}
+<div class="panel-report-total"><span>جمع ارزش برآوردی دورریز · تمام نتایج بازه</span><strong>{{ filtered_total|fa_number }} <small>تومان</small></strong></div>{% endblock %}

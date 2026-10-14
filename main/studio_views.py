@@ -22,6 +22,7 @@ from .studio_access import require_studio_permission
 from .studio_admin_notifications import admin_notifications_enabled
 from .models import Florist, StudioDelivery, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 from .procurement_queries import summary as procurement_summary
+from .procurement_forms import PersianDecimalField
 
 
 def _access(request, permission="view_studioproduct"):
@@ -166,7 +167,7 @@ def _chart(qs, period):
         series[key] = {row["day"].isoformat(): row["count"] for row in rows.annotate(
             day=TruncDate(field, tzinfo=timezone.get_current_timezone())
         ).values("day").annotate(count=Count("pk"))}
-    days = min((period["end"] - period["start"]).days + 1, 31)
+    days = (period["end"] - period["start"]).days + 1
     start = period["end"] - timedelta(days=days - 1)
     return [{"label": (start + timedelta(days=i)).isoformat(),
              **{key: values.get((start + timedelta(days=i)).isoformat(), 0)
@@ -174,7 +175,7 @@ def _chart(qs, period):
 
 
 def _base(request, active, period=None):
-    keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir"}
+    keep = {"q", "florist", "production_type", "status", "product_type", "source", "sort", "dir", "view", "supplier", "ranking"}
     return {"active": active, "period": period,
             "private_notifications_enabled": admin_notifications_enabled(),
             "mobile_nav": [("dashboard", "خانه", "studio_dashboard", "grid"),
@@ -219,6 +220,7 @@ def dashboard(request):
     # Historical activity remains visible even if a florist is now inactive.
     for florist in Florist.objects.filter(pk__in=participating_florists):
         florist_rows.append({"florist": florist, "stats": _stats(team_activity.filter(florist=florist), period)})
+    florist_rows.sort(key=lambda row: (-row['stats']['sold_value'], row['florist'].name))
     missing_count = TelegramSameDayPost.objects.filter(product__isnull=False, product__studio_record__isnull=True).count()
     issue_count = StudioIngestionIssue.objects.filter(resolved_at__isnull=True).count()
     context = {**_base(request, "dashboard", period), "stats": stats, "comparisons": comparisons,
@@ -288,6 +290,7 @@ def metric_detail(request, metric):
     return render(request, "main/studio/metric.html", {
         **_base(request, "dashboard", period), "metric": metric, "label": label,
         "money": money, "total": total, "chart_rows": chart, "by_florist": by_florist, "table_sort": table_sort,
+        "report_stats": _stats(qs, period),
         "page": Paginator(qs, 20).get_page(request.GET.get("page"))})
 
 
@@ -333,8 +336,14 @@ def florists(request):
     period = _period(request)
     rows = [{"florist": florist, "stats": _stats(_activity(period, florist=florist), period)}
             for florist in Florist.objects.all()]
+    sort = request.GET.get('ranking', 'value')
+    if sort not in {'value', 'sold', 'rate'}:
+        sort = 'value'
+    field = {'value':'sold_value', 'sold':'sold', 'rate':'sell_through'}.get(sort, 'sold_value')
+    rows.sort(key=lambda row: (-row['stats'][field], row['florist'].name))
     return render(request, "main/studio/florists.html", {
-        **_base(request, "florists", period), "rows": rows})
+        **_base(request, "florists", period), "rows": rows, 'ranking': sort,
+        'team_sold_value': sum(row['stats']['sold_value'] for row in rows)})
 
 
 @never_cache
@@ -349,9 +358,10 @@ def florist_profile(request, pk):
     split = dict(qs.filter(_event_filter("produced_at", period)).values_list("production_type").annotate(count=Count("pk")))
     chart = _chart(qs, period)
     qs, table_sort = _sort_products(request, qs)
+    view = request.GET.get('view', 'products' if request.GET.get('page') else 'performance')
     return render(request, "main/studio/profile.html", {
         **_base(request, "florists", period), "florist": florist, "stats": _stats(qs, period),
-        "chart": chart, "table_sort": table_sort,
+        "chart": chart, "table_sort": table_sort, 'profile_view': 'products' if view == 'products' else 'performance',
         "breakdown": breakdown, "daily": split.get("DAILY", 0), "custom": split.get("CUSTOM", 0),
         "page": Paginator(qs, 15).get_page(request.GET.get("page"))})
 
@@ -393,9 +403,13 @@ def analytics(request):
 def product_detail(request, pk):
     _access(request)
     record = get_object_or_404(StudioProduct.objects.select_related("florist", "product", "created_by", "deleted_by"), pk=pk)
+    from .sales_views import display_audits
+    from .studio_access import can_use_sales
     return render(request, "main/studio/product_detail.html", {
         **_base(request, "products"), "record": record,
         "deliveries": record.deliveries.order_by("-created_at", "-pk")[:10],
+        'audits': display_audits(record.sales_audits.select_related('actor')[:30]),
+        'can_use_sales': can_use_sales(request.user),
         "can_edit_record": request.user.has_perm("main.change_studioproduct")
             and record.status == "AVAILABLE" and record.source in {"DASHBOARD", "ADMIN"},
     })
@@ -450,6 +464,7 @@ def florist_edit(request, pk):
 
 
 class ProductForm(forms.ModelForm):
+    price = PersianDecimalField(label='قیمت به تومان', money=True, max_digits=12, decimal_places=0, min_value=1)
     image = forms.FileField(label="تصویر محصول", required=True,
                             widget=forms.ClearableFileInput(attrs={"accept": "image/*,.heic,.heif,.avif"}))
 
@@ -621,12 +636,16 @@ def product_status(request, pk):
         elif record.product_id:
             messages.error(request, "وضعیت محصول آمادهٔ تلگرام از همان پیام یا مدیریت کاتالوگ تغییر می‌کند.")
         else:
+            from .sales_service import snapshot, _audit
+            before = snapshot(record)
             record.status = value
             if value == StudioProduct.Status.SOLD:
                 record.sold_at = timezone.now()
             elif value == StudioProduct.Status.WITHDRAWN:
                 record.withdrawn_at = timezone.now()
             record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
+            _audit(record, request.user, 'sell' if value == 'SOLD' else 'withdraw' if value == 'WITHDRAWN' else 'cancel',
+                   'تغییر وضعیت از مدیریت', before)
             messages.success(request, "وضعیت محصول ثبت شد.")
     return redirect("studio_products")
 

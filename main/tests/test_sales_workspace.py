@@ -415,3 +415,52 @@ class SalesWorkspaceTests(TestCase):
         self.edit.assert_called_once()
         new.refresh_from_db()
         self.assertEqual(new.status,'SENT')
+
+    def test_sale_confirmation_changes_price_status_projection_and_audit_atomically(self):
+        from django.urls import reverse
+        record=self.create()
+        self.client.force_login(self.actor)
+        url=reverse('sales_detail',args=[record.pk])
+        response=self.client.get(url)
+        self.assertContains(response,'name="sale_price"')
+        payload={'action':'sell','version':version(record),'reason':'فروش با تخفیف هماهنگ‌شده','sale_price':'۱٬۸۰۰٬۰۰۰'}
+        response=self.client.post(url,payload)
+        self.assertEqual(response.status_code,302)
+        record.refresh_from_db(); record.product.refresh_from_db()
+        self.assertEqual((record.price,record.status),(1800000,'SOLD'))
+        self.assertEqual(record.product.price,1800000)
+        self.assertEqual(record.product.status,'SOLD')
+        audit=record.sales_audits.get()
+        self.assertNotEqual(audit.before['price'],audit.after['price'])
+        self.assertEqual(audit.after['price'],'1800000')
+        self.assertEqual(audit.action,'sell')
+        self.assertEqual(record.deliveries.get(action='SYNC').status,'PENDING')
+        # Repeated requests cannot duplicate a sale or overwrite its price.
+        response=self.client.post(url,payload)
+        self.assertEqual(response.status_code,400)
+        self.assertEqual(record.sales_audits.count(),1)
+
+    def test_invalid_final_sale_price_or_reason_never_partially_updates_product(self):
+        from django.urls import reverse
+        record=self.create()
+        self.client.force_login(self.actor)
+        original=record.price
+        for price,reason in [('0','اصلاح'),('NaN','اصلاح'),('1.5','اصلاح'),('2000000','')]:
+            with self.subTest(price=price,reason=reason):
+                response=self.client.post(reverse('sales_detail',args=[record.pk]),
+                    {'action':'sell','version':version(record),'reason':reason,'sale_price':price})
+                self.assertEqual(response.status_code,400)
+                record.refresh_from_db(); record.product.refresh_from_db()
+                self.assertEqual(record.status,'AVAILABLE')
+                self.assertEqual(record.price,original)
+                self.assertEqual(record.product.price,original)
+                self.assertFalse(record.sales_audits.exists())
+
+    def test_price_corrections_remain_available_in_all_allowed_statuses(self):
+        for status in ['AVAILABLE','SOLD','WITHDRAWN']:
+            record=self.create()
+            if status!='AVAILABLE': self.act(record,'sell' if status=='SOLD' else 'withdraw')
+            self.act(record,'edit',values={'price':2700000})
+            record.refresh_from_db()
+            self.assertEqual((record.status,record.price),(status,2700000))
+            self.assertEqual(record.sales_audits.filter(action='edit').count(),1)

@@ -1,5 +1,6 @@
 """Sales actions: public-row -> ledger -> delivery locks, then audit in one commit."""
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
 import hashlib
 import json
 import re
@@ -121,16 +122,27 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
             elif action in {'sell','withdraw'}:
                 if current.status != StudioProduct.Status.AVAILABLE:
                     raise ValidationError('این محصول دیگر موجود نیست؛ صفحه را تازه کنید.')
+                if action == 'sell' and values is not None and 'price' in values:
+                    try:
+                        price = Decimal(str(values['price']))
+                    except (InvalidOperation, ValueError, TypeError):
+                        raise ValidationError('مبلغ نهایی فروش معتبر نیست.')
+                    if not price.is_finite() or not 0 < price < 10**12 or price != price.to_integral_value():
+                        raise ValidationError('مبلغ نهایی فروش باید مثبت، بدون اعشار و حداکثر ۱۲ رقم باشد.')
+                    current.price = price
                 current.status = StudioProduct.Status.SOLD if action == 'sell' else StudioProduct.Status.WITHDRAWN
                 current.sold_at = now if action == 'sell' else None
                 current.withdrawn_at = now if action == 'withdraw' else None
-                current.save(update_fields=['status','sold_at','withdrawn_at','updated_at'])
+                current.save(update_fields=['price','status','sold_at','withdrawn_at','updated_at'])
                 if current.product_id:
                     Product.objects.filter(pk=current.product_id).update(status=Product.Status.SOLD if action=='sell' else Product.Status.WITHDRAWN,
-                        stock_status=Product.StockStatus.OUT_OF_STOCK, updated_at=now)
+                        stock_status=Product.StockStatus.OUT_OF_STOCK, price=current.price,
+                        pricing_type=Product.PricingType.FIXED, updated_at=now)
                     TelegramSameDayPost.objects.filter(product_id=current.product_id).update(sold_at=current.sold_at,
                         withdrawn_at=current.withdrawn_at, updated_at=now)
                 # Legacy incoming posts have no outbound publication. Keep their existing behavior.
+                if action == 'sell' and before['price'] != str(current.price):
+                    queue_sync(current)
                 queue_retirement(current)
             else:
                 if current.production_type != StudioProduct.ProductionType.DAILY:
