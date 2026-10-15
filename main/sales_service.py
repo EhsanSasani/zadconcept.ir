@@ -1,5 +1,6 @@
 """Sales actions: public-row -> ledger -> delivery locks, then audit in one commit."""
-from datetime import timedelta
+from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 from decimal import Decimal, InvalidOperation
 import hashlib
 import json
@@ -98,6 +99,15 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
             now = timezone.now()
             if action == 'edit':
                 values = values or {}
+                if 'sold_date' in values:
+                    day = values['sold_date']
+                    zone = ZoneInfo('Asia/Tehran')
+                    if current.status != StudioProduct.Status.SOLD or not current.sold_at:
+                        raise ValidationError('تاریخ فروش فقط برای محصول فروخته‌شده قابل اصلاح است.')
+                    if type(day) is not date or day > now.astimezone(zone).date():
+                        raise ValidationError('تاریخ فروش معتبر و غیرآینده وارد کنید.')
+                    # Only move the reporting day; retain the local time of the sale.
+                    current.sold_at = datetime.combine(day, current.sold_at.astimezone(zone).time(), tzinfo=zone)
                 for name in ('factor_code', 'florist', 'product_type', 'price', 'notes'):
                     if name in values:
                         setattr(current, name, values[name])
@@ -107,6 +117,9 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
                     current.image = values['image']
                 current.full_clean()
                 current.save()
+                if 'sold_date' in values and current.product_id:
+                    TelegramSameDayPost.objects.filter(product_id=current.product_id).update(
+                        sold_at=current.sold_at, updated_at=now)
                 if current.product_id:
                     updates = dict(price=current.price,
                                    pricing_type=Product.PricingType.FIXED, updated_at=now)
