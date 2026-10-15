@@ -15,7 +15,7 @@
 <details class="proc-invoice-optional"{% if form.notes.value or form.notes.errors %} open{% endif %}><summary>افزودن توضیحات <svg class="proc-optional-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>{% include 'main/procurement/field.html' with field=form.notes %}</details>
 </section>
 {% endif %}
-<p class="proc-help"><a class="proc-text-link" href="{% url 'procurement_daily_prices' %}">ثبت و بررسی قیمت‌های روز ←</a></p><section class="proc-lines-section"><div class="proc-section-head"><h2>کالاها</h2><a class="proc-text-link" href="{% url 'procurement_material_add' %}" target="_blank" rel="noopener">تعریف کالای جدید <span class="proc-sr">در صفحهٔ جدید</span><span aria-hidden="true">↗</span></a></div><p class="proc-help proc-row-help">{% if kind == 'purchase' %}قیمت‌ها به تومان · تعداد داخل بسته در هر ردیف قابل تغییر است.{% else %}مقدار دورریز را وارد کن؛ هزینه با قیمت ثبت‌شدهٔ همان روز محاسبه می‌شود.{% endif %}</p>
+<section class="proc-lines-section"><div class="proc-section-head"><h2>کالاها</h2><a class="proc-text-link" href="{% url 'procurement_material_add' %}" target="_blank" rel="noopener">تعریف کالای جدید <span class="proc-sr">در صفحهٔ جدید</span><span aria-hidden="true">↗</span></a></div><p class="proc-help proc-row-help">{% if kind == 'purchase' %}قیمت‌ها به تومان · تعداد داخل بسته در هر ردیف قابل تغییر است.{% else %}مقدار و قیمت هر واحد انتخاب‌شده را دستی وارد کن؛ مبلغ دورریز از حاصل‌ضرب آن‌ها محاسبه می‌شود.{% endif %}</p>
 <div data-proc-lines>{% for line in formset %}{% include 'main/procurement/line_form.html' with line=line %}{% endfor %}</div>
 <template data-proc-empty>{% include 'main/procurement/line_form.html' with line=formset.empty_form %}</template>
 <button class="proc-btn proc-add-line" type="button" data-proc-add hidden>{% include 'main/procurement/icon.html' with name='plus' %} افزودن کالای بعدی<small class="proc-key-hint">Enter در فیلد {% if kind == 'purchase' %}قیمت{% else %}مقدار{% endif %}</small></button>
@@ -23,7 +23,7 @@
 </section>
 
 <label class="proc-check proc-batch-choice"><input type="checkbox" name="submit" value="another"{% if request.POST.submit == 'another' %} checked{% endif %}><span>{% if kind == 'purchase' %}بعد از ذخیره، فاکتور بعدی را ثبت می‌کنم{% else %}بعد از ذخیره، ثبت دیگری انجام می‌دهم{% endif %}</span></label>
-<div class="proc-submit-bar"><div class="proc-submit-summary">{% if kind == 'purchase' %}<span>جمع فاکتور <small>تومان</small></span><strong data-proc-total>—</strong>{% else %}<span>ثبت دورریز روزانه</span><small>مبلغ پس از ثبت برآورد می‌شود</small>{% endif %}<small data-proc-line-count></small></div><button class="proc-btn proc-primary" type="submit">{% include 'main/procurement/icon.html' with name='check' %}{% if kind == 'purchase' %}ثبت فاکتور{% else %}ثبت دورریز{% endif %}</button></div>
+<div class="proc-submit-bar"><div class="proc-submit-summary">{% if kind == 'purchase' %}<span>جمع فاکتور <small>تومان</small></span><strong data-proc-total>—</strong>{% else %}<span>جمع دورریز <small>تومان</small></span><strong data-proc-total>—</strong>{% endif %}<small data-proc-line-count></small></div><button class="proc-btn proc-primary" type="submit">{% include 'main/procurement/icon.html' with name='check' %}{% if kind == 'purchase' %}ثبت فاکتور{% else %}ثبت دورریز{% endif %}</button></div>
 </form>
 {{ material_data|json_script:'proc-material-data' }}
 {% endblock %}

@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from main.models import Material, MaterialDailyPrice, PurchaseInvoice, WasteEntry
-from main.procurement_service import create_waste, save_daily_price, create_receipt
+from main.procurement_service import create_waste, create_receipt
 from main.tests.test_telegram_same_day import image_file
 from main.persian_dates import format_persian_date
 from django.core.management import call_command, CommandError
@@ -26,22 +26,42 @@ class DailyPricingTests(TestCase):
         settings = override_settings(MEDIA_ROOT=self.media.name)
         settings.enable()
         self.addCleanup(settings.disable)
-    def waste(self):
-        return create_waste(actor=self.actor, data={'date':self.today,'reason':'wilted'}, lines=[{'material':self.material,'unit_mode':'base','quantity':3}], submission_key=uuid4())[0]
-    def test_missing_daily_price_does_not_use_reference_or_save_partial_entry(self):
-        with self.assertRaises(ValidationError): self.waste()
+    def waste(self, price=12000):
+        return create_waste(actor=self.actor, data={'date':self.today,'reason':'wilted'}, lines=[{'material':self.material,'unit_mode':'base','quantity':3,'unit_price':price}], submission_key=uuid4())[0]
+    def test_missing_or_invalid_manual_price_rolls_back_entire_entry(self):
+        for price in [None, '', -1, 'NaN', '1.5', '1000000000000000']:
+            with self.subTest(price=price), self.assertRaises(ValidationError): self.waste(price)
         self.assertFalse(WasteEntry.objects.exists())
-    def test_daily_price_updates_do_not_change_old_waste(self):
-        save_daily_price(actor=self.actor,data={'material':self.material,'date':self.today,'price':12000})
+    def test_manual_snapshot_ignores_daily_and_material_prices(self):
+        MaterialDailyPrice.objects.create(material=self.material, date=self.today, price=999, base_unit='شاخه')
         entry=self.waste()
         self.assertEqual(entry.estimated_total,36000)
-        self.assertIsNone(entry.lines.get().purchase_line)
-        self.assertEqual(entry.lines.get().cost_source,'daily')
-        save_daily_price(actor=self.actor,data={'material':self.material,'date':self.today,'price':15000})
+        row=entry.lines.get()
+        self.assertIsNone(row.purchase_line)
+        self.assertIsNone(row.daily_price)
+        self.assertEqual(row.cost_source,'manual')
+        self.assertEqual(row.manual_unit_price,12000)
+        MaterialDailyPrice.objects.all().update(price=15000)
         entry.refresh_from_db()
         self.assertEqual(entry.estimated_total,36000)
-        self.assertEqual(self.waste().estimated_total,45000)
-        self.assertEqual(MaterialDailyPrice.objects.count(),1)
+        self.assertEqual(self.waste(15000).estimated_total,45000)
+    def test_pack_price_snapshot_keeps_exact_entered_amount_and_rounds_final_total(self):
+        entry, _ = create_waste(actor=self.actor, data={'date':self.today,'reason':'wilted'},
+            lines=[{'material':self.material,'unit_mode':'purchase','conversion_factor':3,
+                'quantity':'1.5','unit_price':101}], submission_key=uuid4())
+        row=entry.lines.get()
+        self.assertEqual(row.manual_unit_price,101)
+        self.assertEqual(row.unit_cost,Decimal('33.666667'))
+        self.assertEqual(entry.estimated_total,152)
+        self.assertContains(self.client.get(reverse('procurement_waste_detail',args=[entry.pk])), 'قیمت واردشده هنگام ثبت')
+    def test_legacy_waste_snapshot_remains_readable(self):
+        entry=self.waste()
+        source=MaterialDailyPrice.objects.create(material=self.material,date=self.today,price=12000,base_unit='شاخه')
+        entry.lines.update(cost_source='daily',daily_price=source,manual_unit_price=None)
+        response=self.client.get(reverse('procurement_waste_detail',args=[entry.pk]))
+        self.assertEqual(response.status_code,200)
+        entry.refresh_from_db()
+        self.assertEqual(entry.estimated_total,36000)
     def test_purchase_form_and_list_need_no_material_lines(self):
         response=self.client.get(reverse('procurement_purchase_add'))
         self.assertEqual(set(response.context['form'].fields),{'token','date','supplier','total','image'})
@@ -63,10 +83,15 @@ class DailyPricingTests(TestCase):
         second,created=create_receipt(actor=self.actor,data=data,submission_key=key)
         self.assertFalse(created)
         self.assertEqual(first.pk,second.pk)
-    def test_daily_price_page_and_permission(self):
-        self.assertEqual(self.client.get(reverse('procurement_daily_prices')).status_code,200)
-        self.client.logout()
-        self.assertEqual(self.client.get(reverse('procurement_daily_prices')).status_code,302)
+    def test_daily_price_section_is_removed_and_waste_price_input_is_required(self):
+        self.assertEqual(self.client.get('/procurement/prices/').status_code,404)
+        for name in ['procurement_home','procurement_waste_add','procurement_purchases','procurement_materials']:
+            response=self.client.get(reverse(name))
+            self.assertNotContains(response,'قیمت‌های روز')
+            self.assertNotContains(response,'/procurement/prices/')
+        response=self.client.get(reverse('procurement_waste_add'))
+        self.assertTrue(response.context['formset'].forms[0].fields['unit_price'].required)
+        self.assertContains(response,'name="lines-0-unit_price"')
 
 class InitialPriceInstallationTests(TestCase):
     def test_confirmed_units_prices_and_repeat_are_preserved(self):

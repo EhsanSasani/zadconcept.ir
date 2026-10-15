@@ -1,6 +1,16 @@
 /* Scoped to the three workspaces being refined; florist UI stays unchanged. */
 body.panel-ui.panel-ui .app-metrics>.app-stat{grid-column:span 2;grid-row:auto}
 body.panel-ui.panel-ui .app-metrics>.app-stat-revenue{grid-column:span 4}
+body.proc-app.panel-ui.panel-ui .proc-nav:not(.proc-nav-readonly){grid-template-columns:repeat(4,minmax(0,1fr))}
+body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-unit-price{grid-column:1/-1;grid-row:2}
+body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-conversion{grid-column:1/-1;grid-row:3}
+body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-line-bottom{justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(min-width:800px){
+ body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-line-fields{grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr)) minmax(0,1.5fr)}
+ body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-unit-price{grid-column:4;grid-row:1}
+ body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-line-fields:has([data-proc-factor-wrap]:not([hidden])){grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr)) repeat(2,minmax(0,1.5fr))}
+ body.proc-app.panel-ui.panel-ui .proc-waste-entry .proc-conversion{grid-column:5;grid-row:1}
+}
 body.panel-ui.panel-ui .panel-report-total{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 0 4px;margin-top:18px;border-top:1px solid #30445e;color:#bdd0e8;font-size:13px}
 body.panel-ui.panel-ui .panel-report-total strong{font-size:20px;color:#edf4ff;font-variant-numeric:tabular-nums}
 body.panel-ui.panel-ui .panel-report-total small{font-size:12px;font-weight:400}

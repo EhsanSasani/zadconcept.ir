@@ -38,7 +38,7 @@ class ProcurementDomainTests(TestCase):
 
     def waste(self, **kwargs):
         arguments = dict(actor=self.actor, data={'date': self.today, 'reason': 'wilted'},
-            lines=[{'material': self.material, 'unit_mode': 'base', 'quantity': Decimal('3')}], submission_key=uuid4())
+            lines=[{'material': self.material, 'unit_mode': 'base', 'quantity': Decimal('3'), 'unit_price': 10000}], submission_key=uuid4())
         arguments.update(kwargs)
         return create_waste(**arguments)[0]
 
@@ -64,20 +64,21 @@ class ProcurementDomainTests(TestCase):
         self.assertEqual(invoice.lines.get().base_quantity, 4)
         self.assertEqual(invoice.total, 40000)
 
-    def test_waste_cost_uses_latest_eligible_purchase_and_its_conversion(self):
+    def test_manual_waste_cost_is_independent_of_purchase_and_daily_price(self):
         self.purchase(lines=[dict(material=self.material, quantity=1, conversion_factor=10, unit_price=900000)])
         MaterialDailyPrice.objects.filter(date=self.today-timedelta(days=1)).update(price=15000)
-        entry = self.waste(data={'date': self.today-timedelta(days=1),'reason':'damaged'})
+        entry = self.waste(data={'date': self.today-timedelta(days=1),'reason':'damaged'}, lines=[dict(material=self.material, unit_mode='base', quantity=3, unit_price=15000)])
         self.assertIsNone(entry.lines.get().purchase_line)
         self.assertEqual(entry.estimated_total,45000)
 
-    def test_fallback_reference_cost_is_explicit(self):
+    def test_manual_waste_needs_no_daily_price(self):
         MaterialDailyPrice.objects.all().delete()
-        with self.assertRaises(ValidationError): self.waste()
-        self.assertFalse(WasteEntry.objects.exists())
+        entry = self.waste()
+        self.assertEqual(entry.estimated_total, 30000)
+        self.assertEqual(entry.lines.get().cost_source, 'manual')
 
     def test_waste_purchase_mode_uses_its_variable_ratio(self):
-        row = self.waste(lines=[dict(material=self.material, unit_mode='purchase', quantity='0.5', conversion_factor=20)]).lines.get()
+        row = self.waste(lines=[dict(material=self.material, unit_mode='purchase', quantity='0.5', conversion_factor=20, unit_price=200000)]).lines.get()
         self.assertEqual(row.base_quantity, 10)
         self.assertEqual(row.estimated_cost, 100000)
 
@@ -86,9 +87,9 @@ class ProcurementDomainTests(TestCase):
         old_waste = self.waste()
         void_purchase(actor=self.actor, pk=purchase.pk, expected_version=record_version(purchase), reason='فاکتور تکراری')
         new_waste = self.waste()
-        self.assertEqual(new_waste.lines.get().cost_source, 'daily')
+        self.assertEqual(new_waste.lines.get().cost_source, 'manual')
         old_waste.refresh_from_db()
-        self.assertEqual(old_waste.lines.get().cost_source, 'daily')
+        self.assertEqual(old_waste.lines.get().cost_source, 'manual')
         self.assertEqual(old_waste.estimated_total, 30000)
         self.assertEqual(report({'start': self.today, 'end': self.today})['purchase_total'], 0)
 
@@ -227,7 +228,7 @@ class ProcurementDomainTests(TestCase):
 
     def test_report_unknown_reference_cost_is_counted(self):
         MaterialDailyPrice.objects.all().update(price=0)
-        self.waste()
+        self.waste(lines=[dict(material=self.material, unit_mode='base', quantity=3, unit_price=0)])
         result = report({'start': self.today, 'end': self.today})
         self.assertEqual(result['unpriced_count'], 1)
         self.assertEqual(result['reference_cost_count'], 0)
@@ -261,13 +262,13 @@ class ProcurementDomainTests(TestCase):
 
     def test_fractional_base_cost_rounds_only_final_amount(self):
         MaterialDailyPrice.objects.filter(date=self.today).update(price=33)
-        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='1.5')])
+        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='1.5', unit_price=33)])
         self.assertEqual(entry.lines.get().unit_cost,33)
         self.assertEqual(entry.estimated_total,50)
 
     def test_small_conversion_large_unit_cost_is_supported(self):
         MaterialDailyPrice.objects.filter(date=self.today).update(price=999999999999999)
-        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='0.001')])
+        entry = self.waste(lines=[dict(material=self.material, unit_mode='base', quantity='0.001', unit_price=999999999999999)])
         self.assertEqual(entry.estimated_total,Decimal('1000000000000'))
 
     def test_stale_material_version_rejects_purchase_and_waste_atomically(self):
@@ -308,9 +309,10 @@ class ProcurementDomainTests(TestCase):
 
     def test_summary_counts_unpriced_rows_only_in_active_in_period_documents(self):
         MaterialDailyPrice.objects.all().update(price=0)
-        self.waste(data={'date': self.today - timedelta(days=1)})
-        self.waste()
-        voided = self.waste()
+        zero = [dict(material=self.material, unit_mode='base', quantity=3, unit_price=0)]
+        self.waste(data={'date': self.today - timedelta(days=1)}, lines=zero)
+        self.waste(lines=zero)
+        voided = self.waste(lines=zero)
         void_waste(actor=self.actor, pk=voided.pk, expected_version=record_version(voided), reason='ثبت تکراری')
         result = summary({'start': self.today, 'end': self.today})
         self.assertEqual(result['unpriced_count'], 1)

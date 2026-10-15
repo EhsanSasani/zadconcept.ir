@@ -103,7 +103,7 @@ class ProcurementViewTests(TestCase):
             from main.tests.test_telegram_same_day import image_file
             data.update(supplier='بازار گل', total='۴.۶۰۰.۰۰۰', image=image_file())
         else:
-            data.update(reason='wilted', notes='دورریز روزانه', **{'lines-0-unit_mode': 'base', 'lines-0-quantity': '۳'})
+            data.update(reason='wilted', notes='دورریز روزانه', **{'lines-0-unit_mode': 'base', 'lines-0-quantity': '۳', 'lines-0-unit_price': '۱۰٬۰۰۰'})
         data.update(changes)
         return data
 
@@ -114,7 +114,7 @@ class ProcurementViewTests(TestCase):
 
     def service_waste(self, day=date(2026, 10, 7)):
         return create_waste(actor=self.buyer, data={'date': day, 'reason': 'wilted'},
-            lines=[{'material': self.material, 'unit_mode': 'base', 'quantity': 2}], submission_key=uuid4())[0]
+            lines=[{'material': self.material, 'unit_mode': 'base', 'quantity': 2, 'unit_price':10000}], submission_key=uuid4())[0]
 
     def test_new_role_is_independent_and_single_role_login_opens_workspace(self):
         self.assertEqual(assigned_roles(self.buyer), ['procurement'])
@@ -361,25 +361,25 @@ class ProcurementViewTests(TestCase):
         self.assertFalse(PurchaseInvoice.objects.exists())
         self.assertFalse(WasteEntry.objects.exists())
 
-    def test_waste_uses_server_cost_and_backdated_purchase_basis(self):
+    def test_waste_uses_entered_price_and_ignores_posted_total(self):
         self.service_purchase(day=date(2026, 10, 5), price=120000)
         self.service_purchase(day=date(2026, 10, 7), price=500000)
         MaterialDailyPrice.objects.filter(date=date(2026,10,6)).update(price=12000)
-        data = self.entry_data('waste', date='۱۴۰۵/۰۷/۱۴', **{'lines-0-unit_price': '999999999', 'estimated_total': '1'})
+        data = self.entry_data('waste', date='۱۴۰۵/۰۷/۱۴', **{'lines-0-unit_price': '۱۲٬۰۰۰', 'estimated_total': '1'})
         response = self.client.post(reverse('procurement_waste_add'), data)
         self.assertEqual(response.status_code, 302)
         entry = WasteEntry.objects.get()
         self.assertEqual(entry.date, date(2026, 10, 6))
         self.assertEqual(entry.estimated_total, 36000)
         self.assertEqual(entry.lines.get().unit_cost, 12000)
-        self.assertEqual(entry.lines.get().cost_source, 'daily')
+        self.assertEqual(entry.lines.get().cost_source, 'manual')
         detail = self.client.get(response.url)
         self.assertEqual(detail.status_code, 200)
         self.assertContains(detail, 'برآورد')
 
     def test_unknown_reference_cost_is_reported_as_unpriced(self):
         MaterialDailyPrice.objects.all().update(price=0)
-        response = self.client.post(reverse('procurement_waste_add'), self.entry_data('waste'))
+        response = self.client.post(reverse('procurement_waste_add'), self.entry_data('waste', **{'lines-0-unit_price':'0'}))
         self.assertEqual(response.status_code, 302)
         self.client.force_login(self.manager)
         response = self.client.get(reverse('studio_procurement_wastes'), {'period': 'today'})

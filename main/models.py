@@ -3353,12 +3353,14 @@ class WasteEntry(ProcurementDocument):
 
 class WasteLine(ProcurementLine):
     class CostSource(models.TextChoices):
+        MANUAL = "manual", "قیمت واردشده هنگام ثبت"
         DAILY = "daily", "قیمت روز"
         PURCHASE = "purchase", "آخرین خرید ثبت‌شده تا تاریخ دورریز"
         REFERENCE = "reference", "قیمت مرجع کالا"
 
     entry = models.ForeignKey(WasteEntry, on_delete=models.PROTECT, related_name="lines")
     unit_cost = models.DecimalField("بهای هر واحد پایه", max_digits=24, decimal_places=6)
+    manual_unit_price = models.DecimalField("قیمت واردشده هر واحد انتخابی", max_digits=15, decimal_places=0, null=True, blank=True)
     estimated_cost = models.DecimalField("ارزش برآوردی (تومان)", max_digits=18, decimal_places=0)
     cost_source = models.CharField(max_length=12, choices=CostSource.choices)
     purchase_line = models.ForeignKey(PurchaseLine, null=True, blank=True, on_delete=models.PROTECT, related_name="waste_cost_snapshots")
@@ -3370,7 +3372,7 @@ class WasteLine(ProcurementLine):
         verbose_name_plural = "ردیف‌های دورریز"
         constraints = ProcurementLine.Meta.constraints + [
             models.CheckConstraint(condition=Q(unit_cost__gte=0, estimated_cost__gte=0), name="waste_line_price_valid"),
-            models.CheckConstraint(condition=Q(cost_source="purchase", purchase_line__isnull=False) | Q(cost_source="reference", purchase_line__isnull=True) | Q(cost_source="daily", purchase_line__isnull=True, daily_price__isnull=False), name="waste_cost_source_valid"),
+            models.CheckConstraint(condition=Q(cost_source="purchase", purchase_line__isnull=False) | Q(cost_source="reference", purchase_line__isnull=True) | Q(cost_source="daily", purchase_line__isnull=True, daily_price__isnull=False) | Q(cost_source="manual", purchase_line__isnull=True, daily_price__isnull=True), name="waste_cost_source_valid"),
         ]
 
 

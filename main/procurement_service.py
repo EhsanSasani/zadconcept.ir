@@ -11,7 +11,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import MaterialDailyPrice, Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
+from .models import Material, ProcurementAudit, PurchaseInvoice, PurchaseLine, WasteEntry, WasteLine
 
 
 def record_version(record):
@@ -202,14 +202,12 @@ def create_waste(*, actor, data, lines, submission_key):
     total = Decimal(0)
     for line, material in materials:
         values = _line_values(line, material)
-        source = MaterialDailyPrice.objects.filter(material=material, date=entry.date).first()
-        if source is None or source.base_unit != material.base_unit:
-            raise ValidationError(f'قیمت روز «{material.name}» برای تاریخ دورریز ثبت نشده است؛ ابتدا قیمت‌های روز را تکمیل کنید.')
-        raw_cost = source.price
+        unit_price = _number(line.get('unit_price'), places=0, label='قیمت هر واحد دورریز')
+        raw_cost = unit_price / values['conversion_factor']
         unit_cost = raw_cost.quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
-        estimated_cost = (raw_cost * values['base_quantity']).quantize(Decimal(1), rounding=ROUND_HALF_UP)
+        estimated_cost = (unit_price * values['quantity']).quantize(Decimal(1), rounding=ROUND_HALF_UP)
         row = WasteLine(entry=entry, unit_cost=unit_cost, estimated_cost=estimated_cost,
-            cost_source='daily', daily_price=source, **values)
+            cost_source='manual', manual_unit_price=unit_price, **values)
         row.full_clean()
         row.save()
         total += estimated_cost
@@ -251,25 +249,6 @@ def void_purchase(*, actor, pk, expected_version, reason):
 @transaction.atomic
 def void_waste(*, actor, pk, expected_version, reason):
     return _void(WasteEntry, actor=actor, pk=pk, expected_version=expected_version, reason=reason)
-
-
-@transaction.atomic
-def save_daily_price(*, actor, data):
-    author = _author(actor)
-    material = Material.objects.select_for_update().filter(pk=data['material'].pk, is_active=True).first()
-    if material is None:
-        raise ValidationError('کالا دیگر فعال نیست؛ صفحه را تازه کنید.')
-    day = _date(data['date'])
-    price = _number(data['price'], places=0, label='قیمت روز')
-    record = MaterialDailyPrice.objects.filter(material=material, date=day).first()
-    before = dict(price=str(record.price), base_unit=record.base_unit) if record else {}
-    if record is None:
-        record = MaterialDailyPrice(material=material, date=day)
-    record.price, record.base_unit, record.updated_by = price, material.base_unit, author
-    record.full_clean()
-    record.save()
-    ProcurementAudit.objects.create(actor=author, actor_name=author.get_username(), target_type='materialdailyprice', target_id=record.pk, action='price', before=before, after=dict(price=str(price), base_unit=material.base_unit, date=day.isoformat()))
-    return record
 
 
 @transaction.atomic
