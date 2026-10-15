@@ -1,6 +1,6 @@
 {% extends 'main/studio/base.html' %}{% load static %}
 {% block title %}{% if account %}ویرایش کاربر{% else %}افزودن کاربر{% endif %}{% endblock %}{% block crumb %}کاربران{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/accounts/index.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'main/css/pages/accounts/index.css' %}?v=2">{% endblock %}
 {% block content %}
 <div class="accounts-heading"><div><p class="eyebrow">حساب و دسترسی</p><div class="panel-title-row"><h1>{% if account %}{{ account.get_full_name|default:account.username }}{% else %}همکار جدید{% endif %}</h1><a class="panel-back" href="{% url 'studio_accounts' %}" aria-label="بازگشت به کاربران" title="بازگشت به کاربران">{% include 'main/components/back_icon.html' %}</a></div><p>{% if account %}اطلاعات و فضاهای کاری این حساب را مدیریت کنید.{% else %}حساب بسازید و مشخص کنید همکارتان به کدام فضاها دسترسی دارد.{% endif %}</p></div></div>
 <form method="post" class="account-form" autocomplete="off">
@@ -27,4 +27,13 @@
 </section>
 <div class="account-actions"><button class="accounts-primary" type="submit">{% if account %}ذخیرهٔ تغییرات{% else %}ساخت حساب کاربری{% endif %}</button><a href="{% url 'studio_accounts' %}">انصراف</a></div>
 </form>
+{% if account and account.pk != request.user.pk %}
+<details class="account-delete"{% if delete_error %} open{% endif %}><summary>حذف حساب از کاربران جاری</summary>
+<p>ورود این حساب بسته و حساب به بایگانی منتقل می‌شود. محصولات، کارنامهٔ فلوریست و نام ثبت‌کننده در سوابق حفظ می‌شوند.</p>
+{% if delete_error %}<p class="account-field-error" role="alert">{{ delete_error }}</p>{% endif %}
+<form method="post" action="{% url 'studio_account_delete' account.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ form.version.value }}">
+<label for="delete-reason">علت حذف حساب</label><textarea id="delete-reason" name="reason" maxlength="500" rows="2" required>{{ request.POST.reason|default:'' }}</textarea>
+<label class="account-delete-confirm"><input type="checkbox" name="confirm" value="yes" required>حذف حساب {{ account.username }} از فهرست جاری و بستن ورود را تأیید می‌کنم.</label>
+<button type="submit">حذف و بایگانی حساب</button></form></details>
+{% endif %}
 {% endblock %}

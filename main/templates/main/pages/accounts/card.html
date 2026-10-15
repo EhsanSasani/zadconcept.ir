@@ -1,0 +1,10 @@
+<article class="account-card">
+  <div class="account-card-top"><span class="account-avatar" aria-hidden="true">{{ row.account.get_full_name|default:row.account.username|slice:':1' }}</span><div><h2>{{ row.account.get_full_name|default:row.account.username }}{% if row.account.pk == request.user.pk %}<small>شما</small>{% endif %}</h2><p dir="ltr">{{ row.account.username }}</p></div><span class="account-status{% if not row.account.is_active %} is-disabled{% endif %}">{% if archived %}بایگانی‌شده{% elif row.account.is_active %}فعال{% else %}ورود بسته{% endif %}</span></div>
+  <p class="account-hint">فضاهای کاری اختصاص‌داده‌شده</p>
+  <div class="account-roles" aria-label="فضاهای کاری">{% for role in row.roles %}<span>{{ role }}</span>{% empty %}<span>فضای کاری اختصاص داده نشده</span>{% endfor %}</div>
+  {% if row.editable %}<a class="account-edit" href="{% url 'studio_account_edit' row.account.pk %}" aria-label="ویرایش حساب {{ row.account.get_full_name|default:row.account.username }}">ویرایش حساب و دسترسی‌ها <span aria-hidden="true">←</span></a>
+  {% elif row.technical %}<div class="account-protection"><strong>{{ row.protection.title }}</strong><p>{{ row.protection.description }}</p>{% if row.protection.permissions %}<details><summary>مجوزهای ویژهٔ اختصاص‌داده‌شده</summary><ul>{% for permission in row.protection.permissions %}<li>{{ permission }}</li>{% endfor %}</ul></details>{% endif %}<p>این حساب به‌دلیل سطح دسترسی، از فرم معمول کاربران قابل ویرایش یا حذف نیست.</p></div>
+  {% if request.user.is_staff and perms.auth.change_user %}<a class="account-edit" href="{% url 'admin:auth_user_change' row.account.pk %}">مدیریت این حساب در پنل فنی ←</a>{% endif %}
+  {% if request.user.is_superuser %}<a class="account-edit" href="{% url 'studio_account_florist_link' row.account.pk %}">اتصال پروفایل فلوریست ←</a>{% endif %}
+  {% else %}<p class="account-hint">ورود این حساب بسته است؛ سوابق و پروفایل آن حفظ شده‌اند.</p>{% endif %}
+</article>

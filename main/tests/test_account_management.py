@@ -9,8 +9,8 @@ from django.urls import reverse
 
 from main.account_roles import account_version, assigned_roles
 from main.account_forms import AccountForm
-from main.account_service import save_account
-from main.models import Florist, StudioProduct
+from main.account_service import save_account, archive_account
+from main.models import Florist, StudioProduct, StudioAccountArchive
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
@@ -28,6 +28,52 @@ class AccountManagementTests(TestCase):
                 'password1': 'A-new-private-pass-634!', 'password2': 'A-new-private-pass-634!'}
         data.update(changes)
         return data
+
+    def test_archive_closes_existing_session_hides_account_and_preserves_profile_and_audit(self):
+        profile=Florist.objects.create(name='همکار',code='archive-florist',user=self.user)
+        colleague=Client()
+        colleague.force_login(self.user)
+        self.assertContains(self.client.get(reverse('studio_account_edit',args=[self.user.pk])), 'حذف و بایگانی حساب')
+        response=self.client.post(reverse('studio_account_delete',args=[self.user.pk]),
+            {'version':account_version(self.user),'confirm':'yes','reason':'پایان همکاری'})
+        self.assertRedirects(response,reverse('studio_accounts'))
+        self.user.refresh_from_db();profile.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertEqual(profile.user_id,self.user.pk)
+        self.assertTrue(StudioAccountArchive.objects.filter(user=self.user,archived_by=self.manager).exists())
+        self.assertNotContains(self.client.get(reverse('studio_accounts')),self.user.username)
+        self.assertContains(self.client.get(reverse('studio_accounts'),{'archived':'1'}),self.user.username)
+        self.assertFalse(colleague.get('/panel/').wsgi_request.user.is_authenticated)
+        audit=LogEntry.objects.get(object_id=str(self.user.pk))
+        self.assertEqual(json.loads(audit.change_message)['action'],'archive')
+        self.assertEqual(self.client.get(reverse('studio_account_edit',args=[self.user.pk])).status_code,403)
+
+    def test_archive_rejects_self_technical_stale_and_unauthorized_actions(self):
+        staff=get_user_model().objects.create_user('technical-user',is_staff=True)
+        for target in [self.manager,staff]:
+            with self.subTest(target=target.username), self.assertRaises((ValidationError,PermissionDenied)):
+                archive_account(actor=self.manager,user_id=target.pk,expected_version=account_version(target),reason='test')
+        old=account_version(self.user)
+        self.user.first_name='تغییر';self.user.save()
+        with self.assertRaises(ValidationError):
+            archive_account(actor=self.manager,user_id=self.user.pk,expected_version=old,reason='test')
+        with self.assertRaises(PermissionDenied):
+            archive_account(actor=self.user,user_id=self.manager.pk,expected_version=account_version(self.manager),reason='test')
+        url=reverse('studio_account_delete',args=[self.user.pk])
+        self.assertEqual(self.client.get(url).status_code,405)
+        self.assertEqual(self.client.post(url,{'version':account_version(self.user),'reason':'test'}).status_code,400)
+        self.assertFalse(StudioAccountArchive.objects.exists())
+
+    def test_protected_account_labels_explain_real_access_without_granting_edit(self):
+        get_user_model().objects.create_user('technical-staff',is_staff=True)
+        get_user_model().objects.create_superuser('technical-root',email='',password='test')
+        special=get_user_model().objects.create_user('special-account')
+        special.user_permissions.add(Permission.objects.get(codename='change_user',content_type__app_label='auth'))
+        response=self.client.get(reverse('studio_accounts'))
+        for label in ['مدیریت فنی و مجوزهای ویژه','مدیر کل سایت','دسترسی به مدیریت فنی','حساب دارای مجوز ویژه']:
+            self.assertContains(response,label)
+        self.assertNotContains(response,'حساب فنی سایت · مدیریت از Django Admin')
+        self.assertNotContains(response,'مدیریت این حساب در پنل فنی')
 
     def edit(self, user=None, **changes):
         user = user or self.user

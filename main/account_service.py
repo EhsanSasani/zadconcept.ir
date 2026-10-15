@@ -10,7 +10,37 @@ from django.db.models import Q
 
 from .account_roles import (MANAGER_PERMISSIONS, ROLE_GROUPS, ROLE_PERMISSIONS, account_snapshot,
                             account_version, editable_account, assigned_manager_permissions)
-from .models import Florist
+from .models import Florist, StudioAccountArchive
+
+
+@transaction.atomic
+def archive_account(*, actor, user_id, expected_version, reason):
+    User = get_user_model()
+    locked = {user.pk:user for user in User.objects.select_for_update().filter(
+        pk__in=[actor.pk,user_id]).order_by('pk')}
+    author, user = locked.get(actor.pk), locked.get(user_id)
+    if not author or not author.is_active or not author.has_perm('main.manage_studio_accounts'):
+        raise PermissionDenied
+    if not user or not editable_account(user):
+        raise PermissionDenied
+    if user.pk == author.pk:
+        raise ValidationError('نمی‌توانید حساب خودتان را حذف کنید.')
+    if StudioAccountArchive.objects.filter(user=user).exists():
+        raise ValidationError('این حساب قبلاً بایگانی شده است.')
+    if account_version(user) != expected_version:
+        raise ValidationError('این حساب تغییر کرده است؛ صفحه را تازه کنید.')
+    reason = (reason or '').strip()
+    if not reason or len(reason) > 500:
+        raise ValidationError('علت حذف حساب را بنویسید (حداکثر ۵۰۰ نویسه).')
+    before = account_snapshot(user)
+    user.is_active = False
+    user.save(update_fields=['is_active'])
+    StudioAccountArchive.objects.create(user=user,archived_by=author,reason=reason)
+    LogEntry.objects.create(user_id=author.pk,content_type=ContentType.objects.get_for_model(User),
+        object_id=str(user.pk),object_repr=user.username,action_flag=CHANGE,
+        change_message=json.dumps({'source':'studio_accounts','action':'archive','reason':reason,
+            'before':before,'after':account_snapshot(user)},ensure_ascii=False))
+    return user
 
 
 @transaction.atomic
@@ -60,6 +90,8 @@ def save_account(*, actor, data, user_id=None):
     user = locked.get(user_id) if user_id else User()
     if user_id and (user is None or not editable_account(user)):
         raise PermissionDenied
+    if user_id and StudioAccountArchive.objects.filter(user=user).exists():
+        raise ValidationError('این حساب بایگانی شده و قابل ویرایش نیست.')
     if user_id and data['version'] != account_version(user):
         raise ValidationError('این حساب در صفحهٔ دیگری تغییر کرده است؛ صفحه را تازه کنید.')
     roles = set(data['roles'])

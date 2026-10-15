@@ -3376,6 +3376,18 @@ class WasteLine(ProcurementLine):
         ]
 
 
+class StudioAccountArchive(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='studio_archive')
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='archived_studio_accounts')
+    reason = models.CharField(max_length=500)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        default_permissions = ()
+        verbose_name = 'حساب بایگانی‌شده'
+        verbose_name_plural = 'حساب‌های بایگانی‌شده'
+
+
 class ProcurementAudit(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     actor_name = models.CharField(max_length=150)
