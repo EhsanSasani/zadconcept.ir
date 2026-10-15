@@ -464,3 +464,58 @@ class SalesWorkspaceTests(TestCase):
             record.refresh_from_db()
             self.assertEqual((record.status,record.price),(status,2700000))
             self.assertEqual(record.sales_audits.filter(action='edit').count(),1)
+
+    def test_sale_date_edit_moves_totals_and_preserves_time_projection_and_audit(self):
+        from zoneinfo import ZoneInfo
+        from django.urls import reverse
+        from django.test import RequestFactory
+        from main.persian_dates import format_persian_date
+        from main.studio_views import _period, _activity, _stats
+        record = self.create()
+        self.act(record, 'sell')
+        record.refresh_from_db()
+        original = record.sold_at
+        zone = ZoneInfo('Asia/Tehran')
+        day = original.astimezone(zone).date() - timedelta(days=2)
+        produced_at = record.produced_at
+        retirement_due = record.deliveries.get(action='RETIRE').next_attempt_at
+        self.client.force_login(self.actor)
+        url = reverse('sales_detail', args=[record.pk])
+        self.assertContains(self.client.get(url), 'name="sold_date"')
+        response = self.client.post(url, {'action':'edit', 'version':version(record),
+            'factor_code':record.factor_code, 'florist':self.florist.pk,
+            'product_type':record.product_type, 'price':record.price, 'notes':record.notes,
+            'sold_date':format_persian_date(day), 'reason':'اصلاح تاریخ فروش'})
+        self.assertEqual(response.status_code, 302)
+        record.refresh_from_db()
+        self.assertEqual(record.sold_at.astimezone(zone).date(), day)
+        self.assertEqual(record.sold_at.astimezone(zone).time(), original.astimezone(zone).time())
+        self.assertEqual(record.produced_at, produced_at)
+        self.assertEqual(record.deliveries.get(action='RETIRE').next_attempt_at, retirement_due)
+        self.assertEqual(TelegramSameDayPost.objects.get(product=record.product).sold_at, record.sold_at)
+        audit = record.sales_audits.get(action='edit')
+        self.assertEqual(audit.before['sold_at'], str(original))
+        from datetime import datetime
+        self.assertEqual(datetime.fromisoformat(audit.after['sold_at']), record.sold_at)
+        for reporting_day, expected in [(day, record.price), (original.astimezone(zone).date(), 0)]:
+            period = _period(RequestFactory().get('/', {'period':'custom', 'start':reporting_day, 'end':reporting_day}))
+            self.assertEqual(_stats(_activity(period), period)['sold_value'], expected)
+        self.assertEqual(self.client.get(reverse('sales_home')).context['stats']['value'], 0)
+
+    def test_sale_date_cannot_be_added_to_unsold_record_or_set_in_future(self):
+        record = self.create()
+        day = timezone.localdate()
+        self.client.force_login(self.actor)
+        from django.urls import reverse
+        self.assertNotContains(self.client.get(reverse('sales_detail', args=[record.pk])), 'name="sold_date"')
+        with self.assertRaises(ValidationError):
+            self.act(record, 'edit', values={'sold_date': day})
+        self.act(record, 'sell')
+        record.refresh_from_db()
+        original = record.sold_at
+        for invalid in [day + timedelta(days=1), None, 'invalid']:
+            with self.subTest(invalid=invalid), self.assertRaises(ValidationError):
+                self.act(record, 'edit', values={'sold_date': invalid, 'price': 1})
+        record.refresh_from_db()
+        self.assertEqual((record.sold_at, record.price), (original, 2500000))
+        self.assertFalse(record.sales_audits.filter(action='edit').exists())

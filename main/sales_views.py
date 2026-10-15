@@ -18,7 +18,8 @@ from .studio_access import can_use_sales, can_manage_studio
 from .sales_service import apply_sales_action, version
 from .image_pipeline import normalize_admin_image, ImageUploadError
 from .team_forms import latin_digits
-from .procurement_forms import PersianDecimalField
+from .procurement_forms import PersianDecimalField, JalaliDayField
+from .persian_dates import format_persian_date
 
 
 def sales_required(view):
@@ -47,11 +48,20 @@ class SalesEditForm(forms.Form):
     price = forms.DecimalField(label='قیمت (تومان)',max_digits=12,decimal_places=0,min_value=1,
         widget=forms.TextInput(attrs={'inputmode':'numeric','dir':'ltr','data-price-input':''}))
     notes = forms.CharField(label='یادداشت داخلی',required=False,max_length=2000,widget=forms.Textarea(attrs={'rows':3}))
+    sold_date = JalaliDayField()
     reason = forms.CharField(label='علت اصلاح',max_length=500,widget=forms.Textarea(attrs={'rows':2,'placeholder':'مثلاً اصلاح قیمت پس از هماهنگی با مدیر'}))
 
     def __init__(self, *args, record, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['florist'].queryset = Florist.objects.filter(Q(is_active=True)|Q(pk=record.florist_id))
+        if record.status != StudioProduct.Status.SOLD:
+            self.fields.pop('sold_date')
+        else:
+            self.fields['sold_date'].label = 'تاریخ فروش (شمسی)'
+            self.fields['sold_date'].help_text = 'مبلغ فروش در جمع همین روز محاسبه می‌شود و از جمع روز قبلی خارج می‌شود.'
+            # Older open edit forms did not send this field; preserve their sale date.
+            if self.is_bound and 'sold_date' not in self.data:
+                self.fields.pop('sold_date')
     def clean_price(self):
         return self.cleaned_data['price']
     def clean_factor_code(self):
@@ -110,6 +120,8 @@ def detail(request, pk):
         return redirect('sales_misc_edit', pk=record.pk)
     initial = {name:getattr(record,name) for name in ('factor_code','product_type','price','notes')}
     initial.update(florist=record.florist_id,version=version(record))
+    if record.sold_at:
+        initial['sold_date'] = format_persian_date(record.sold_at.astimezone(ZoneInfo('Asia/Tehran')).date())
     action = request.POST.get('action') if request.method=='POST' else None
     data = request.POST.copy() if action=='edit' else None
     if data is not None:data['price']=latin_digits(data.get('price','')).replace(',','').replace('٬','').replace(' ','')
