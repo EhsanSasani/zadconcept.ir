@@ -246,13 +246,13 @@ class SalesWorkspaceTests(TestCase):
         self.assertEqual(self.send.call_count, 1)
         self.assertIsNone(process_next_delivery())
 
-    def test_unknown_values_cannot_escalate_status_or_change_production_type(self):
+    def test_type_correction_cannot_escalate_status_or_forge_message_identity(self):
         record = self.create()
         self.act(record, 'edit', values={'status':'DELETED', 'production_type':'CUSTOM',
             'telegram_message_id':12345, 'price':3200000})
         record.refresh_from_db()
         self.assertEqual(record.status, 'AVAILABLE')
-        self.assertEqual(record.production_type, 'DAILY')
+        self.assertEqual(record.production_type, 'CUSTOM')
         self.assertNotEqual(record.telegram_message_id, 12345)
 
     def test_routes_render_for_sales_and_deny_unrelated_user(self):
@@ -519,3 +519,163 @@ class SalesWorkspaceTests(TestCase):
         record.refresh_from_db()
         self.assertEqual((record.sold_at, record.price), (original, 2500000))
         self.assertFalse(record.sales_audits.filter(action='edit').exists())
+
+    def finish_transfer(self):
+        self.assertEqual(process_next_delivery().action,'RECLASS')
+        return process_next_delivery()
+
+    def test_correct_ready_to_custom_preserves_identity_status_and_moves_group_after_cleanup(self):
+        from django.urls import reverse
+        record=self.create()
+        original_pk,public_pk,old_message=record.pk,record.product_id,record.telegram_message_id
+        self.client.force_login(self.actor)
+        self.assertContains(self.client.get(reverse('sales_detail',args=[record.pk])), 'name="production_type"')
+        response=self.client.post(reverse('sales_detail',args=[record.pk]),{
+            'action':'edit','version':version(record),'reason':'ثبت اشتباه در آماده‌ها',
+            'factor_code':record.factor_code,'florist':self.florist.pk,'product_type':record.product_type,
+            'production_type':'CUSTOM','price':record.price,'notes':record.notes})
+        self.assertEqual(response.status_code,302)
+        record.refresh_from_db()
+        self.assertEqual((record.pk,record.production_type,record.status),(original_pk,'CUSTOM','AVAILABLE'))
+        self.assertIsNone(record.product_id)
+        self.assertEqual(record.parked_product_id,public_pk)
+        self.assertEqual(Product.objects.get(pk=public_pk).publish_status,'draft')
+        self.assertIsNone(record.telegram_message_id)
+        self.assertIsNotNone(TelegramSameDayPost.objects.get(telegram_chat_id=-5595039112,telegram_message_id=old_message).deleted_at)
+        self.assertEqual(self.send.call_count,1)
+        self.assertEqual(self.finish_transfer().status,'SENT')
+        self.delete.assert_called_once_with(-5595039112,old_message)
+        record.refresh_from_db()
+        self.assertEqual(record.telegram_chat_id,-5182713369)
+        self.assertEqual(self.send.call_args.args[0],-5182713369)
+        self.assertEqual(StudioProduct.objects.count(),1)
+        audit=record.sales_audits.get()
+        self.assertEqual((audit.before['production_type'],audit.after['production_type']),('DAILY','CUSTOM'))
+
+    def test_reverse_correction_reuses_catalog_and_keeps_original_source(self):
+        record=self.create()
+        public_pk=record.product_id
+        StudioProduct.objects.filter(pk=record.pk).update(source='TELEGRAM_DAILY')
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.finish_transfer()
+        self.act(record,'edit',values={'production_type':'DAILY'})
+        self.finish_transfer()
+        record.refresh_from_db();record.full_clean()
+        self.assertEqual(record.source,'TELEGRAM_DAILY')
+        self.assertEqual(record.product_id,public_pk)
+        self.assertIsNone(record.parked_product_id)
+        record.product.refresh_from_db()
+        self.assertEqual(record.product.publish_status,'published')
+        self.assertEqual(Product.objects.count(),1)
+        self.assertEqual(record.telegram_chat_id,-5595039112)
+        self.assertEqual(self.delete.call_count,2)
+
+    def test_correction_of_sold_product_moves_sales_split_without_changing_sale_date(self):
+        from django.test import RequestFactory
+        from main.studio_views import _stats,_activity,_period
+        record=self.create('CUSTOM')
+        original_sold=record.sold_at
+        self.act(record,'edit',values={'production_type':'DAILY'})
+        record.refresh_from_db()
+        self.assertEqual((record.status,record.sold_at),('SOLD',original_sold))
+        self.assertEqual(record.product.publish_status,'draft')
+        period=_period(RequestFactory().get('/'))
+        stats=_stats(_activity(period),period)
+        self.assertEqual((stats['daily_sales'],stats['custom_sales'],stats['sold_value']),(record.price,0,record.price))
+        job=self.finish_transfer()
+        self.assertEqual((job.status,job.outcome),('SENT','not_available'))
+        self.assertEqual(self.send.call_count,1)  # Already-sold ready stock is never advertised.
+
+    def test_failed_old_group_cleanup_blocks_new_send_and_further_edits(self):
+        record=self.create()
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.delete.side_effect=TelegramDeliveryError('rate_limited',retryable=True,retry_after=60)
+        self.assertEqual(process_next_delivery().status,'RETRY')
+        self.assertIsNone(process_next_delivery())
+        self.assertEqual(self.send.call_count,1)
+        with self.assertRaises(ValidationError):
+            self.act(record,'edit',values={'production_type':'DAILY'})
+        self.delete.side_effect=None
+        record.deliveries.filter(action='RECLASS').update(next_attempt_at=timezone.now()-timedelta(seconds=1))
+        self.assertEqual(self.finish_transfer().status,'SENT')
+
+    def test_old_message_delete_forbidden_uses_caption_tombstone_then_moves(self):
+        record=self.create()
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.delete.side_effect=TelegramDeliveryError('message_cannot_be_deleted')
+        caption=self.mock('main.studio_transport.edit_caption',return_value=True)
+        cleanup=process_next_delivery()
+        self.assertEqual(cleanup.outcome,'caption_marked')
+        self.assertIn('دیگر مرجع',caption.call_args.args[2])
+        self.assertEqual(process_next_delivery().status,'SENT')
+
+    def test_uncertain_destination_send_is_not_duplicated(self):
+        record=self.create()
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.assertEqual(process_next_delivery().action,'RECLASS')
+        self.send.side_effect=TelegramDeliveryError('transport_uncertain',uncertain=True)
+        self.assertEqual(process_next_delivery().status,'UNCERTAIN')
+        self.assertIsNone(process_next_delivery())
+        with self.assertRaises(ValidationError):self.act(record,'edit',values={'price':1})
+        self.assertEqual(self.send.call_count,2)
+
+    def test_invalid_destination_or_missing_configuration_rolls_back_projection_and_audit(self):
+        record=self.create()
+        original_product=record.product_id
+        for destination in ['MISC','invalid']:
+            with self.subTest(destination=destination), self.assertRaises(ValidationError):
+                self.act(record,'edit',values={'production_type':destination})
+        with override_settings(TELEGRAM_STUDIO_CUSTOM_GROUP_ID=''),self.assertRaises(ValidationError):
+            self.act(record,'edit',values={'production_type':'CUSTOM'})
+        record.refresh_from_db()
+        self.assertEqual((record.production_type,record.product_id),('DAILY',original_product))
+        self.assertFalse(record.sales_audits.exists())
+        self.assertFalse(record.deliveries.filter(action='RECLASS').exists())
+
+    def test_old_custom_message_cannot_reimport_or_update_corrected_product(self):
+        from main.studio_ingestion import process_custom
+        record=self.create('CUSTOM')
+        old_message=record.telegram_message_id
+        self.act(record,'edit',values={'production_type':'DAILY'})
+        message={'message_id':old_message,'chat':{'id':-5182713369,'type':'supergroup'},
+            'from':{'id':666,'is_bot':False},'date':int(timezone.now().timestamp()),
+            'photo':[{'file_id':'old'}],'caption':'invalid'}
+        self.assertEqual(process_custom(message,1000,[])['result'],'corrected_message_ignored')
+        message.update(message_id=old_message+100,text='قیمت: 1',reply_to_message={
+            'message_id':old_message,'chat':{'id':-5182713369}},photo=[])
+        self.assertEqual(process_custom(message,1001,[])['result'],'corrected_message_ignored')
+        record.refresh_from_db()
+        self.assertEqual((record.production_type,record.price),('DAILY',2500000))
+        self.assertEqual(StudioProduct.objects.count(),1)
+
+    def test_corrected_telegram_daily_source_accepts_reply_in_new_custom_group(self):
+        from main.studio_ingestion import process_custom
+        record=self.create()
+        StudioProduct.objects.filter(pk=record.pk).update(source='TELEGRAM_DAILY')
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.finish_transfer()
+        record.refresh_from_db()
+        message={'message_id':9999,'chat':{'id':-5182713369,'type':'supergroup'},
+            'from':{'id':666,'is_bot':False},'date':int(timezone.now().timestamp()),
+            'text':'قیمت: 3000000','reply_to_message':{'message_id':record.telegram_message_id,
+                'chat':{'id':-5182713369}}}
+        self.assertEqual(process_custom(message,1000,[])['result'],'price_updated')
+        record.refresh_from_db()
+        self.assertEqual((record.price,record.source),(3000000,'TELEGRAM_DAILY'))
+
+    def test_unpublished_correction_sends_once_and_future_ready_sale_requeues_retirement(self):
+        record=self.create(publish=False)
+        self.act(record,'edit',values={'production_type':'CUSTOM'})
+        self.assertFalse(record.deliveries.filter(action='RECLASS').exists())
+        self.assertEqual(process_next_delivery().status,'SENT')
+        self.assertEqual(self.send.call_count,1)
+        self.act(record,'edit',values={'production_type':'DAILY'})
+        self.finish_transfer()
+        record.refresh_from_db()
+        # Emulate a cancelled retirement from an earlier terminal lifecycle.
+        StudioDelivery.objects.update_or_create(record=record,action='RETIRE',defaults={
+            'chat_id':-5182713369,'message_id':123,'status':'SENT','outcome':'type_corrected'})
+        self.act(record,'sell')
+        retirement=record.deliveries.get(action='RETIRE')
+        self.assertEqual((retirement.status,retirement.chat_id,retirement.message_id),
+            ('RETRY',-5595039112,record.telegram_message_id))

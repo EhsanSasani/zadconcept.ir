@@ -2980,6 +2980,9 @@ class StudioProduct(TimeStampedModel):
     florist = models.ForeignKey(Florist, on_delete=models.PROTECT, related_name="studio_products", null=True, blank=True)
     product_type = models.CharField("نوع محصول", max_length=16, choices=ProductType.choices)
     production_type = models.CharField("نوع تولید", max_length=8, choices=ProductionType.choices, db_index=True)
+    production_type_corrected = models.BooleanField(default=False, editable=False)
+    parked_product = models.OneToOneField(Product, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='parked_studio_record', editable=False)
     price = models.DecimalField("قیمت به تومان", max_digits=12, decimal_places=0)
     status = models.CharField("وضعیت", max_length=12, choices=Status.choices, default=Status.AVAILABLE, db_index=True)
     image = models.ImageField("تصویر سفارشی / دستی", upload_to="studio/products/", blank=True)
@@ -3062,9 +3065,9 @@ class StudioProduct(TimeStampedModel):
             errors["telegram_chat_id"] = "شناسه پیام تلگرام باید کامل باشد."
         if self.production_type == self.ProductionType.CUSTOM and self.product_id:
             errors["product"] = "محصول سفارشی نباید در کاتالوگ عمومی ثبت شود."
-        if self.source == self.Source.TELEGRAM_DAILY and self.production_type != self.ProductionType.DAILY:
+        if not self.production_type_corrected and self.source == self.Source.TELEGRAM_DAILY and self.production_type != self.ProductionType.DAILY:
             errors["production_type"] = "منبع تلگرام آماده فقط برای تولید آماده است."
-        if self.source == self.Source.TELEGRAM_CUSTOM and self.production_type != self.ProductionType.CUSTOM:
+        if not self.production_type_corrected and self.source == self.Source.TELEGRAM_CUSTOM and self.production_type != self.ProductionType.CUSTOM:
             errors["production_type"] = "منبع تلگرام سفارشی فقط برای سفارش سفارشی است."
         if self.status == self.Status.SOLD and not self.sold_at:
             errors["sold_at"] = "زمان فروش لازم است."
@@ -3081,6 +3084,7 @@ class StudioDelivery(TimeStampedModel):
     """Durable, bounded outbox; an ambiguous photo send is never blindly repeated."""
 
     class Action(models.TextChoices):
+        RECLASS = "RECLASS", "خروج پیام پس از اصلاح نوع تولید"
         SYNC = "SYNC", "به‌روزرسانی پیام محصول"
         PUBLISH = "PUBLISH", "انتشار در تلگرام"
         RETIRE = "RETIRE", "خروج از گروه آماده‌ها"

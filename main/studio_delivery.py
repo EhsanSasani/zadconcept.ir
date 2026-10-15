@@ -8,7 +8,7 @@ from io import BytesIO
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from django.utils import timezone
 from PIL import Image
 
@@ -22,9 +22,8 @@ READY = (StudioDelivery.Status.PENDING, StudioDelivery.Status.RETRY)
 def _lock_record(record_id):
     # Product saves (including Django Admin) acquire the public row before the
     # ledger signal runs. Match that order in portal transitions and completion.
-    product_id = StudioProduct.objects.values_list("product_id", flat=True).get(pk=record_id)
-    if product_id:
-        Product.objects.select_for_update().filter(pk=product_id).first()
+    product_ids = StudioProduct.objects.values_list('product_id','parked_product_id').get(pk=record_id)
+    list(Product.objects.select_for_update().filter(pk__in=[pk for pk in product_ids if pk]).order_by('pk'))
     return StudioProduct.objects.select_for_update().get(pk=record_id)
 
 
@@ -53,6 +52,12 @@ def pending_caption_matches(record, caption):
 def delivery_summary(record):
     group_label = "گروه سفارشی‌ها" if record.production_type == StudioProduct.ProductionType.CUSTOM else "گروه آماده‌ها"
     jobs = list(record.deliveries.all())
+    moving = next((item for item in jobs if item.action == StudioDelivery.Action.RECLASS and item.status != StudioDelivery.Status.SENT),None)
+    if moving:
+        return {'state':'failed' if moving.status == StudioDelivery.Status.FAILED else 'pending',
+            'label':'انتقال گروه نیازمند رسیدگی' if moving.status == StudioDelivery.Status.FAILED else 'در صف اصلاح گروه تلگرام',
+            'detail':'پیام گروه قبلی باید از چرخه خارج شود؛ سپس ارسال به گروه درست انجام می‌شود.'}
+    jobs = [item for item in jobs if item.outcome != 'type_corrected']
     sync = next((item for item in jobs if item.action == StudioDelivery.Action.SYNC), None)
     retired = next((item for item in jobs if item.action == StudioDelivery.Action.RETIRE), None)
     if sync and sync.status != StudioDelivery.Status.SENT:
@@ -110,13 +115,13 @@ def queue_retirement(record):
     )
     # An older caption fallback may need to reflect a later terminal update. A
     # deleted message is already absent and must not be posted again.
-    if not created and job.status == StudioDelivery.Status.SENT and job.outcome in {"caption_marked", "restored"}:
+    if not created and job.status == StudioDelivery.Status.SENT and job.outcome in {"caption_marked", "restored", "type_corrected"}:
         StudioDelivery.objects.filter(
             pk=job.pk, status=StudioDelivery.Status.SENT, outcome=job.outcome,
         ).update(status=StudioDelivery.Status.RETRY, next_attempt_at=due_at,
                  chat_id=record.telegram_chat_id, message_id=record.telegram_message_id,
                  telegram_created_at=published.telegram_created_at,
-                 attempts=0 if job.outcome == "restored" else job.attempts,
+                 attempts=0 if job.outcome in {"restored","type_corrected"} else job.attempts,
                  last_error="", updated_at=now)
         job.refresh_from_db()
     elif not created and job.status in READY:
@@ -335,8 +340,10 @@ def claim_delivery():
     # does not provide row locks. No database transaction spans the HTTP call.
     busy_records = StudioDelivery.objects.filter(status__in=[StudioDelivery.Status.SENDING,
         StudioDelivery.Status.UNCERTAIN]).values("record_id")
+    moving_records = StudioDelivery.objects.filter(action=StudioDelivery.Action.RECLASS).exclude(
+        status=StudioDelivery.Status.SENT).values('record_id')
     for pk in StudioDelivery.objects.filter(status__in=READY, next_attempt_at__lte=now).exclude(
-            record_id__in=busy_records).values_list("pk", flat=True)[:20]:
+            record_id__in=busy_records).exclude(Q(record_id__in=moving_records) & ~Q(action=StudioDelivery.Action.RECLASS)).values_list("pk", flat=True)[:20]:
         token = uuid.uuid4()
         with transaction.atomic():
             record_id = StudioDelivery.objects.values_list("record_id", flat=True).get(pk=pk)
@@ -344,6 +351,10 @@ def claim_delivery():
             # Serialize claims with sales edits/restores, and never overlap jobs for a product.
             if StudioDelivery.objects.filter(record_id=record_id, status__in=[
                     StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN]).exists():
+                continue
+            if (StudioDelivery.objects.filter(record_id=record_id, action=StudioDelivery.Action.RECLASS)
+                    .exclude(status=StudioDelivery.Status.SENT).exists()
+                    and StudioDelivery.objects.get(pk=pk).action != StudioDelivery.Action.RECLASS):
                 continue
             changed = StudioDelivery.objects.filter(pk=pk, status__in=READY, next_attempt_at__lte=now).update(
                 status=StudioDelivery.Status.SENDING, locked_at=now, lock_token=token,
@@ -481,6 +492,35 @@ def _retire(job):
             _finish(job, "caption_marked")
 
 
+def _reclassify_message(job):
+    """Retire the old identity before publishing to the corrected destination."""
+    cutoff = timezone.now() - timedelta(seconds=max(90, int(getattr(settings,'STUDIO_DELIVERY_LOCK_SECONDS',120))))
+    if not StudioDelivery.objects.filter(pk=job.pk,status=StudioDelivery.Status.SENDING,
+            lock_token=job.lock_token,locked_at__gte=cutoff).exists():
+        return
+    try:
+        studio_transport.delete_message(job.chat_id,job.message_id)
+    except studio_transport.TelegramDeliveryError as error:
+        if error.code == 'message_not_found':
+            _finish(job,'already_absent')
+            return
+        if error.retryable or error.uncertain:
+            raise studio_transport.TelegramDeliveryError(error.code,retryable=True,retry_after=error.retry_after) from error
+        # Telegram may forbid deleting an old message; make it an explicit tombstone.
+        try:
+            studio_transport.edit_caption(job.chat_id,job.message_id,
+                f'نوع محصول اصلاح شد؛ این پیام دیگر مرجع ثبت فروش نیست.\nشناسه محصول: {job.record.display_id}')
+        except studio_transport.TelegramDeliveryError as fallback:
+            if fallback.code == 'message_not_found':
+                _finish(job,'already_absent')
+                return
+            raise studio_transport.TelegramDeliveryError(fallback.code,
+                retryable=fallback.retryable or fallback.uncertain,retry_after=fallback.retry_after) from fallback
+        _finish(job,'caption_marked')
+    else:
+        _finish(job,'deleted')
+
+
 def _record_error(job, *, code, retryable=False, uncertain=False):
     safe_code = code if isinstance(code, str) and re.fullmatch(r"[a-z0-9_]{1,64}", code) else "delivery_error"
     max_attempts = max(1, int(getattr(settings, "STUDIO_DELIVERY_MAX_ATTEMPTS", 6)))
@@ -510,6 +550,8 @@ def process_next_delivery():
             _publish(job)
         elif job.action == StudioDelivery.Action.SYNC:
             _sync_message(job)
+        elif job.action == StudioDelivery.Action.RECLASS:
+            _reclassify_message(job)
         else:
             _retire(job)
     except studio_transport.TelegramDeliveryError as error:
