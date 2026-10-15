@@ -15,7 +15,8 @@ from .studio_publishing import _daily_configuration, _clean_failed_file
 from .image_pipeline import create_responsive_image_variants
 
 FIELDS = ('factor_code', 'florist_id', 'product_type', 'production_type', 'price', 'status',
-          'image', 'notes', 'sold_at', 'withdrawn_at', 'produced_at', 'telegram_chat_id', 'telegram_message_id')
+          'image', 'notes', 'sold_at', 'withdrawn_at', 'produced_at', 'telegram_chat_id', 'telegram_message_id',
+          'source', 'parked_product_id', 'production_type_corrected')
 
 
 def snapshot(record):
@@ -69,6 +70,10 @@ def requeue_publication(record):
 
 
 def ensure_delivery_editable(jobs):
+    if any(j.action == StudioDelivery.Action.RECLASS and j.status != StudioDelivery.Status.SENT for j in jobs):
+        raise ValidationError('انتقال محصول بین گروه‌ها هنوز کامل نشده است؛ ابتدا وضعیت صف انتقال را بررسی کنید.')
+    if any(j.action == StudioDelivery.Action.PUBLISH and j.outcome == 'type_correction' and j.status != StudioDelivery.Status.SENT for j in jobs):
+        raise ValidationError('ارسال محصول به گروه جدید هنوز کامل نشده است؛ ابتدا وضعیت صف را بررسی کنید.')
     if any(j.status in {StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN} for j in jobs):
         raise ValidationError('ارسال تلگرام در حال انجام یا نیازمند بررسی است؛ پس از تعیین نتیجه دوباره اقدام کنید.')
     if any(j.last_error == 'worker_interrupted' and j.updated_at > timezone.now() - timedelta(seconds=180) for j in jobs):
@@ -115,6 +120,10 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
                     raise ValidationError('شماره فاکتور باید عدد، حروف انگلیسی یا خط تیره باشد.')
                 if values.get('image'):
                     current.image = values['image']
+                reclassified = values.get('production_type', current.production_type) != current.production_type
+                if reclassified:
+                    from .sales_reclassification import prepare_reclassification
+                    prepare_reclassification(current, values['production_type'])
                 current.full_clean()
                 current.save()
                 if 'sold_date' in values and current.product_id:
@@ -131,7 +140,8 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
                 if values.get('image'):
                     storage, name = current.image.storage, current.image.name
                     transaction.on_commit(lambda: create_responsive_image_variants(storage, name))
-                queue_sync(current)
+                if not reclassified:
+                    queue_sync(current)
             elif action in {'sell','withdraw'}:
                 if current.status != StudioProduct.Status.AVAILABLE:
                     raise ValidationError('این محصول دیگر موجود نیست؛ صفحه را تازه کنید.')

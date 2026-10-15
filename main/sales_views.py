@@ -45,6 +45,7 @@ class SalesEditForm(forms.Form):
     factor_code = forms.CharField(label='شماره فاکتور (اختیاری)',required=False,max_length=40,widget=forms.TextInput(attrs={'dir':'ltr','autocapitalize':'characters'}))
     florist = forms.ModelChoiceField(label='فلوریست سازنده',queryset=Florist.objects.none(),empty_label='انتخاب فلوریست')
     product_type = forms.ChoiceField(label='نوع محصول',choices=StudioProduct.ProductType.choices)
+    production_type = forms.ChoiceField(label='نوع تولید',choices=[('DAILY','آماده'),('CUSTOM','سفارشی')])
     price = forms.DecimalField(label='قیمت (تومان)',max_digits=12,decimal_places=0,min_value=1,
         widget=forms.TextInput(attrs={'inputmode':'numeric','dir':'ltr','data-price-input':''}))
     notes = forms.CharField(label='یادداشت داخلی',required=False,max_length=2000,widget=forms.Textarea(attrs={'rows':3}))
@@ -62,6 +63,10 @@ class SalesEditForm(forms.Form):
             # Older open edit forms did not send this field; preserve their sale date.
             if self.is_bound and 'sold_date' not in self.data:
                 self.fields.pop('sold_date')
+        if self.is_bound and 'production_type' not in self.data:
+            self.fields.pop('production_type')
+        elif 'production_type' in self.fields:
+            self.fields['production_type'].help_text = 'برای اصلاح ثبت اشتباه؛ شناسه، وضعیت و تاریخ فروش حفظ می‌شوند. سایت و گروه تلگرام متناسب با نوع جدید اصلاح می‌شوند.'
     def clean_price(self):
         return self.cleaned_data['price']
     def clean_factor_code(self):
@@ -118,7 +123,7 @@ def detail(request, pk):
     record = get_object_or_404(StudioProduct.objects.select_related('florist','product'),pk=pk)
     if record.production_type == 'MISC':
         return redirect('sales_misc_edit', pk=record.pk)
-    initial = {name:getattr(record,name) for name in ('factor_code','product_type','price','notes')}
+    initial = {name:getattr(record,name) for name in ('factor_code','product_type','production_type','price','notes')}
     initial.update(florist=record.florist_id,version=version(record))
     if record.sold_at:
         initial['sold_date'] = format_persian_date(record.sold_at.astimezone(ZoneInfo('Asia/Tehran')).date())

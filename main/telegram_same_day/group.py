@@ -2,6 +2,7 @@
 import logging
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
 from ..models import Product, StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
@@ -43,7 +44,7 @@ def sync_group(message, update_id, stored_files):
     if not (message.get("photo") or message.get("reply_to_message")):
         return "ignored"
     if (message.get("from", {}).get("is_bot") and StudioProduct.objects.filter(
-            source=StudioProduct.Source.PORTAL, telegram_chat_id=message["chat"]["id"],
+            Q(source=StudioProduct.Source.PORTAL)|Q(production_type_corrected=True), telegram_chat_id=message["chat"]["id"],
             telegram_message_id=message["message_id"]).exists()):
         return "portal_echo_ignored"
     if not _group_member(message):

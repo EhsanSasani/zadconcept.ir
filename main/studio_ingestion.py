@@ -3,10 +3,11 @@ import re
 from datetime import datetime, timezone as dt_timezone
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils import timezone
 
 from .image_pipeline import ImageUploadError, normalize_admin_image
-from .models import Florist, StudioIngestionIssue, StudioProduct
+from .models import Florist, StudioIngestionIssue, StudioProduct, TelegramSameDayPost
 from .telegram_same_day.client import download_photo
 from .telegram_same_day.price import DIGITS, PriceError, parse_price_command
 
@@ -170,6 +171,9 @@ def process_custom(message, update_id, stored_files):
         raise InvalidSource("unauthorized_custom_actor")
     chat_id, message_id = message["chat"]["id"], message["message_id"]
     reply = message.get("reply_to_message")
+    if TelegramSameDayPost.objects.filter(telegram_chat_id=chat_id,
+            telegram_message_id=reply['message_id'] if reply else message_id, deleted_at__isnull=False).exists():
+        return {'result':'corrected_message_ignored'}
     if not reply and not message.get("photo"):
         return {"result": "ignored"}
     if reply and not message.get("photo"):
@@ -186,9 +190,9 @@ def process_custom(message, update_id, stored_files):
                             "reply_to_message_id": message_id}
                 return {"result": "ignored"}
         record = StudioProduct.objects.select_for_update().filter(
+            Q(source__in=[StudioProduct.Source.TELEGRAM_CUSTOM,StudioProduct.Source.PORTAL]) | Q(production_type_corrected=True),
             telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
             production_type=StudioProduct.ProductionType.CUSTOM,
-            source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
         ).first()
         if not record and reply.get("photo") and reply.get("from", {}).get("is_bot"):
             # A sale can arrive before the publishing worker commits its message
@@ -205,9 +209,9 @@ def process_custom(message, update_id, stored_files):
                 raise SyncConfigurationError("portal_message_identity_pending")
             # The worker may commit between the first lookup and pending query.
             record = StudioProduct.objects.select_for_update().filter(
+                Q(source__in=[StudioProduct.Source.TELEGRAM_CUSTOM,StudioProduct.Source.PORTAL]) | Q(production_type_corrected=True),
                 telegram_chat_id=chat_id, telegram_message_id=reply["message_id"],
                 production_type=StudioProduct.ProductionType.CUSTOM,
-                source__in=[StudioProduct.Source.TELEGRAM_CUSTOM, StudioProduct.Source.PORTAL],
             ).first()
         if not record:
             return {"result": "unknown_reply_ignored"}
@@ -239,7 +243,7 @@ def process_custom(message, update_id, stored_files):
     identity = chat_id, message_id
     # A portal message has a deliberately minimal caption; never re-import it.
     if StudioProduct.objects.filter(telegram_chat_id=chat_id, telegram_message_id=message_id,
-                                    source=StudioProduct.Source.PORTAL).exists():
+                                    ).filter(Q(source=StudioProduct.Source.PORTAL)|Q(production_type_corrected=True)).exists():
         return {"result": "portal_message_ignored"}
     try:
         metadata = resolve_metadata(message.get("caption", ""), identity=identity)
