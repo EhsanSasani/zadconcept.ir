@@ -10,6 +10,7 @@ urlpatterns = [
     path("studio/accounts/", team_views.studio_accounts, name="studio_accounts"),
     path("studio/accounts/new/", account_views.edit, name="studio_account_add"),
     path("studio/accounts/<int:pk>/", account_views.edit, name="studio_account_edit"),
+    path("studio/accounts/<int:pk>/delete/", account_views.delete, name="studio_account_delete"),
     path("studio/accounts/<int:pk>/florist/", account_views.technical_florist_link, name="studio_account_florist_link"),
     path("team/", team_views.team_home, name="team_home"),
     path("team/products/", team_views.team_products, name="team_products"),

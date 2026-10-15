@@ -71,3 +71,23 @@
 @media(min-width:1300px){.accounts-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
+.accounts-tabs{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
+.accounts-tabs a{padding:10px 16px;border:1px solid #345172;border-radius:12px;color:#b9d3f5;background:#102039;text-decoration:none;font-size:13px}
+.accounts-tabs a[aria-current]{background:#1c4168;color:#f0f6ff;border-color:#6395cf}
+.accounts-section{margin:28px 0}
+.accounts-section>h2{font-size:19px;margin:0 0 8px}
+.accounts-section>.account-hint{margin-bottom:16px;line-height:2}
+.account-protection{padding:14px;margin-top:14px;background:#0b192b;border:1px solid #314863;border-radius:12px;font-size:12px;line-height:2;color:#bfd0e9}
+.account-protection strong{color:#f0f5ff;font-size:13px}
+.account-protection p{margin:6px 0}
+.account-protection summary{cursor:pointer;color:#8fc4ff}
+.account-protection ul{padding-inline-start:18px;overflow-wrap:anywhere}
+.account-delete{margin-top:28px;padding:20px;border:1px solid #815653;border-radius:16px;background:#2a2029;color:#f3d7d4;font-size:13px;line-height:2}
+.account-delete>summary{font-weight:600;cursor:pointer}
+.account-delete form{display:grid;gap:12px;margin-top:14px}
+.account-delete textarea{width:100%;box-sizing:border-box;border:1px solid #815653;border-radius:10px;background:#141b2a;color:#fff;padding:10px;font:inherit}
+.account-delete-confirm{display:flex;align-items:flex-start;gap:10px}
+.account-delete-confirm input{margin-top:7px;flex-shrink:0}
+.account-delete button{justify-self:start;padding:10px 18px;border:1px solid #b37972;border-radius:10px;background:#783d3e;color:#fff;font:inherit;cursor:pointer}
+.account-delete :is(button,textarea,input):focus-visible,.accounts-tabs a:focus-visible{outline:2px solid #8ac6ff;outline-offset:3px}
+
