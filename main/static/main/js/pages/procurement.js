@@ -62,7 +62,8 @@
     if (materialVersion) materialVersion.value = item.version || '';
     row.dataset.packFactor = String(factor);
     const price = field(row, 'unit_price');
-    if (price) price.value = String(Math.round(Number(item.default_unit_price) / (pack ? 1 : factor)));
+    if (price && form.dataset.kind === 'purchase') price.value = String(Math.round(Number(item.default_unit_price) / (pack ? 1 : factor)));
+    else if (price) price.value = '';
     updateLabels(row);
     recalculate();
   }
@@ -75,7 +76,8 @@
     const packFactor = pack ? (Number(row.dataset.packFactor) || Number(item?.units_per_purchase) || 1) : previousFactor;
     if (!pack) row.dataset.packFactor = String(previousFactor);
     const price = field(row, 'unit_price');
-    if (price && Number.isFinite(parse(price.value, true))) price.value = String(Math.round(parse(price.value, true) * (pack ? packFactor : 1 / packFactor)));
+    if (price && form.dataset.kind === 'waste') price.value = '';
+    else if (price && Number.isFinite(parse(price.value, true))) price.value = String(Math.round(parse(price.value, true) * (pack ? packFactor : 1 / packFactor)));
     factorField.value = pack ? String(packFactor) : '1';
     updateLabels(row);
     recalculate();
@@ -135,7 +137,7 @@
   container.addEventListener('keydown', event => {
     if (event.key !== 'Enter' || event.isComposing) return;
     const row = event.target.closest('[data-proc-line]');
-    const lastField = form.dataset.kind === 'purchase' ? 'unit_price' : 'quantity';
+    const lastField = 'unit_price';
     if (!row || event.target !== field(row, lastField)) return;
     event.preventDefault();
     if (!materialFor(row)) { field(row, 'material').focus(); return; }

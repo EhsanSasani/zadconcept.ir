@@ -1,7 +1,0 @@
-{% extends 'main/procurement/base.html' %}{% load studio_ui %}{% block title %}قیمت‌های روز{% endblock %}{% block content %}
-<div class="proc-heading"><div><p class="proc-eyebrow">مبنای محاسبه دورریز</p><h1>قیمت‌های روز</h1><p>قیمت هر واحد پایهٔ کالا را برای تاریخ موردنظر ثبت کنید؛ مثلاً قیمت یک شاخه، یک عدد یا یک متر.</p></div></div>
-<section class="proc-panel"><form method="post">{% csrf_token %}{{ form.non_field_errors }}<div class="proc-form-grid">{% for field in form %}{% include 'main/procurement/field.html' %}{% endfor %}</div><button class="proc-btn proc-primary" type="submit">ذخیره قیمت روز</button></form></section>
-<div class="proc-section-head"><h2>قیمت‌های ثبت‌شده</h2><a class="proc-text-link" href="{% url 'procurement_materials' %}">مدیریت کالاها ←</a></div>
-<section class="proc-panel">{% for row in page %}<div class="proc-record"><span class="proc-record-main"><strong>{{ row.material.name }}</strong><small>{{ row.date|procurement_date }} · هر {{ row.base_unit }}</small></span><span class="proc-record-amount"><strong>{{ row.price|fa_number }} <small>تومان</small></strong></span></div>{% empty %}<p>هنوز قیمت روزی ثبت نشده است.</p>{% endfor %}</section>
-{% include 'main/procurement/pagination.html' %}
-{% endblock %}

@@ -79,16 +79,6 @@ class PurchaseForm(forms.Form):
             raise forms.ValidationError(str(error)) from error
 
 
-class DailyPriceForm(forms.Form):
-    date = JalaliDayField()
-    material = forms.ModelChoiceField(label='کالا', queryset=Material.objects.filter(is_active=True))
-    price = PersianDecimalField(label='قیمت هر واحد پایه (تومان)', money=True, max_digits=15, decimal_places=0, min_value=0)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['material'].label_from_instance = lambda item: f'{item.name} · هر {item.base_unit}'
-
-
 class WasteForm(forms.Form):
     token = forms.CharField(widget=forms.HiddenInput)
     date = JalaliDayField()
@@ -115,7 +105,6 @@ class PurchaseLineForm(forms.Form):
 
 
 class WasteLineForm(PurchaseLineForm):
-    unit_price = None
     unit_mode = forms.ChoiceField(label='واحد', choices=[('base', 'واحد پایه'), ('purchase', 'واحد خرید')], initial='base')
 
 
