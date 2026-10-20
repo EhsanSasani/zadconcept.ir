@@ -3129,6 +3129,22 @@ class StudioDelivery(TimeStampedModel):
         )]
 
 
+class StudioPendingReply(models.Model):
+    """Authenticated commands waiting for reconciliation must not block the webhook."""
+    update_id = models.BigIntegerField(unique=True)
+    delivery = models.ForeignKey(StudioDelivery, on_delete=models.PROTECT, related_name='pending_replies')
+    kind = models.CharField(max_length=24)
+    message = models.JSONField()
+    reply_message_id = models.PositiveBigIntegerField()
+    state = models.CharField(max_length=12, default='WAITING', choices=[('WAITING','منتظر تطبیق پیام'),('APPLIED','پردازش‌شده'),('REVIEW','نیازمند بررسی')], db_index=True)
+    received_at = models.DateTimeField(default=timezone.now)
+    applied_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['update_id']
+        default_permissions = ()
+
+
 class StudioAdminNotification(TimeStampedModel):
     """Durable customer-safe photo notifications for the configured admin PV."""
 

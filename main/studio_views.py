@@ -740,6 +740,8 @@ def deliveries(request):
             messages.error(request, detail)
         return redirect("studio_deliveries")
 
+    from .models import StudioPendingReply
+    pending_replies=StudioPendingReply.objects.exclude(state='APPLIED').select_related('delivery__record')
     qs = StudioDelivery.objects.select_related("record", "record__florist")
     counts = dict(qs.values_list("status").annotate(total=Count("pk")))
     state = request.GET.get("status", "")
@@ -758,6 +760,7 @@ def deliveries(request):
         "waiting": sum(counts.get(key, 0) for key in ("PENDING", "SENDING", "RETRY")),
         "needs_review": sum(counts.get(key, 0) for key in ("UNCERTAIN", "FAILED")),
         "delivered": counts.get("SENT", 0),
+        "pending_replies":pending_replies[:30],
     })
 
 

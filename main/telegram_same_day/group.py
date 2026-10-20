@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from ..models import Product, StudioDelivery, StudioProduct, TelegramDiscussionMessage, TelegramSameDayPost
 from .price import PriceError, parse_group_price, parse_price_command
-from .service import InvalidSource, SyncConfigurationError, _is_sold, _is_withdrawn, _link, _lock_post, _post, _sell, _sync_product
+from .service import InvalidSource, SyncConfigurationError, PendingPortalIdentity, _is_sold, _is_withdrawn, _link, _lock_post, _post, _sell, _sync_product
 
 logger = logging.getLogger("main.telegram_same_day")
 
@@ -78,8 +78,11 @@ def sync_group(message, update_id, stored_files):
             chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
             status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
         ).select_related("record")
-        if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
-            raise SyncConfigurationError("portal_message_identity_pending")
+        matched = [job for job in pending if pending_caption_matches(job.record, reply.get('caption',''))]
+        if len(matched) == 1:
+            raise PendingPortalIdentity(matched[0].pk)
+        if matched:
+            raise SyncConfigurationError('portal_message_identity_pending')
         # The worker can commit between our first identity lookup and the
         # pending-job query. Re-read before acknowledging an unknown reply.
         mapped = TelegramSameDayPost.objects.filter(
