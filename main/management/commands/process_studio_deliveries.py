@@ -6,6 +6,7 @@ from django.db import close_old_connections
 
 from main.studio_delivery import process_next_delivery
 from main.studio_admin_notifications import admin_notifications_enabled, process_next_admin_notification
+from main.studio_pending_replies import process_pending_reply
 
 
 class Command(BaseCommand):
@@ -26,6 +27,13 @@ class Command(BaseCommand):
             while True:
                 close_old_connections()
                 processed = False
+                pending_reply = process_pending_reply()
+                if pending_reply:
+                    processed = True
+                    count += 1
+                    self.stdout.write(f'pending_reply={pending_reply.pk} state={pending_reply.state}')
+                    if not options['watch'] and count>=options['limit']:
+                        break
                 delivery = process_next_delivery()
                 if delivery:
                     processed = True

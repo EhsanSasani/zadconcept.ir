@@ -3,6 +3,7 @@
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">DELIVERY STATUS</p><h1>پیگیری تلگرام</h1><p>ثبت محصول در سایت مستقل از نتیجهٔ ارسال تلگرام است.</p></div><a class="btn btn-outline" href="{% url 'studio_settings' %}">وضعیت استودیو</a></div>
 {% if private_notifications_enabled %}<p><a class="btn btn-outline" href="{% url 'studio_admin_notifications' %}">پیگیری اعلان خصوصی ادمین</a></p>{% endif %}
+{% if pending_replies %}<section class="panel"><h2>فرمان‌های محفوظ، منتظر تطبیق پیام</h2><p>این فرمان‌ها ذخیره شده‌اند و دریافت فرمان‌های سایر محصولات را متوقف نمی‌کنند. ابتدا پیام واقعی محصول را در گروه با ارسال نامشخص تطبیق دهید.</p>{% for pending in pending_replies %}<p><a href="{% url 'studio_product_detail' pending.delivery.record_id %}">{{ pending.delivery.record.display_id }}</a> · پیام {{ pending.reply_message_id|fa_number }} · {{ pending.get_state_display }}</p>{% endfor %}</section>{% endif %}
 <div class="settings-grid" aria-label="خلاصهٔ ارسال‌ها">
   <section class="panel settings-card"><h2>در حال پیگیری</h2><strong class="settings-number">{{ waiting|fa_number }}</strong><p>در صف، در حال ارسال یا منتظر تلاش مجدد.</p></section>
   <section class="panel settings-card"><h2>نیازمند بررسی</h2><strong class="settings-number">{{ needs_review|fa_number }}</strong><p>ارسال ناموفق یا نتیجه‌ای که تأیید آن نرسیده است.</p></section>

@@ -1,5 +1,6 @@
 """Regression coverage for live replies, deletion history and delayed updates."""
 import copy
+import json
 import tempfile
 import uuid
 from unittest.mock import patch
@@ -34,6 +35,97 @@ CUSTOM_GROUP = -100775502
     PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
 )
 class StudioReplySafetyTests(TestCase):
+    @override_settings(TELEGRAM_WEBHOOK_SECRET='pending-reply-test')
+    def test_uncertain_reply_is_retained_once_without_blocking_other_products(self):
+        from main.models import StudioPendingReply
+        from main.studio_delivery import reconcile_delivery
+        from main.studio_pending_replies import process_pending_reply
+        from datetime import datetime,timezone as dt_timezone
+        record=self._portal_record(publish=False)
+        job=record.deliveries.get(action='PUBLISH')
+        job.status='UNCERTAIN';job.save(update_fields=['status'])
+        message=self._reply(record,'فروخته شد')
+        message['reply_to_message']['message_id']=9000
+        message['date']=self.clock-86400
+        update={'update_id':90000,'message':message}
+        def submit(payload):
+            return self.client.post('/api/telegram/webhook/',json.dumps(payload),content_type='application/json',
+                HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN='pending-reply-test')
+        for _ in range(2):
+            response=submit(update)
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(response.json()['result'],'awaiting_message_reconciliation')
+        self.assertEqual(StudioPendingReply.objects.count(),1)
+        record.refresh_from_db()
+        self.assertEqual(record.status,'AVAILABLE')
+        self.assertIsNone(record.telegram_message_id)  # Caption never establishes ownership.
+        self.assertIsNone(process_pending_reply())
+        other=self._portal_record()
+        response=submit({'update_id':90001,'message':self._reply(other,'کشیده شد')})
+        self.assertEqual(response.status_code,200)
+        other.refresh_from_db();self.assertEqual(other.status,'WITHDRAWN')
+        reconcile_delivery(job.pk,message['reply_to_message']['message_id'])
+        self.assertEqual(process_pending_reply().state,'APPLIED')
+        record.refresh_from_db()
+        self.assertEqual(record.status,'SOLD')
+        self.assertEqual(record.sold_at,datetime.fromtimestamp(message['date'],tz=dt_timezone.utc))
+        self.assertIsNone(process_pending_reply())
+
+    @override_settings(TELEGRAM_WEBHOOK_SECRET='pending-reply-test')
+    def test_custom_price_reply_waits_for_correct_mapping_and_wrong_mapping_requires_review(self):
+        from main.models import StudioPendingReply
+        from main.studio_delivery import reconcile_delivery
+        from main.studio_pending_replies import process_pending_reply
+        record=self._portal_record('CUSTOM',publish=False)
+        job=record.deliveries.get(action='PUBLISH');job.status='UNCERTAIN';job.save(update_fields=['status'])
+        message=self._reply(record,'قیمت: 3500000')
+        update={'update_id':90000,'message':message}
+        response=self.client.post('/api/telegram/webhook/',json.dumps(update),content_type='application/json',
+            HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN='pending-reply-test')
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(StudioPendingReply.objects.count(),1)
+        reconcile_delivery(job.pk,message['reply_to_message']['message_id']+10)
+        self.assertEqual(process_pending_reply().state,'REVIEW')
+        record.refresh_from_db();self.assertEqual(record.price,2400000)
+
+    @override_settings(TELEGRAM_WEBHOOK_SECRET='pending-reply-test')
+    def test_unauthorized_webhook_cannot_retain_pending_command(self):
+        from main.models import StudioPendingReply
+        record=self._portal_record(publish=False)
+        job=record.deliveries.get(action='PUBLISH');job.status='UNCERTAIN';job.save(update_fields=['status'])
+        response=self.client.post('/api/telegram/webhook/',json.dumps({'update_id':90000,
+            'message':self._reply(record,'فروخته شد')}),content_type='application/json')
+        self.assertEqual(response.status_code,403)
+        self.assertFalse(StudioPendingReply.objects.exists())
+
+    @override_settings(TELEGRAM_WEBHOOK_SECRET='pending-reply-test')
+    def test_pending_command_is_not_acknowledged_when_storage_fails(self):
+        from django.db import DatabaseError
+        from main.models import StudioPendingReply
+        record=self._portal_record(publish=False)
+        job=record.deliveries.get(action='PUBLISH');job.status='UNCERTAIN';job.save(update_fields=['status'])
+        with patch('main.studio_pending_replies.retain_pending_reply',side_effect=DatabaseError('private diagnostic')):
+            response=self.client.post('/api/telegram/webhook/',json.dumps({'update_id':90000,
+                'message':self._reply(record,'فروخته شد')}),content_type='application/json',
+                HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN='pending-reply-test')
+        self.assertEqual(response.status_code,503)
+        self.assertNotIn('private diagnostic',response.content.decode())
+        self.assertFalse(StudioPendingReply.objects.exists())
+
+    def test_retained_command_cannot_overwrite_newer_manual_correction(self):
+        from main.models import StudioSalesAudit
+        from main.studio_pending_replies import retain_pending_reply,process_pending_reply
+        from main.studio_delivery import reconcile_delivery
+        record=self._portal_record(publish=False)
+        job=record.deliveries.get(action='PUBLISH');job.status='UNCERTAIN';job.save(update_fields=['status'])
+        message=self._reply(record,'قیمت: 1000000');message['date']=self.clock-60
+        retain_pending_reply(update_id=90000,kind='message',message=message,delivery_id=job.pk)
+        reconcile_delivery(job.pk,message['reply_to_message']['message_id'])
+        StudioSalesAudit.objects.create(record=record,actor=self.manager,actor_name='manager',action='edit',
+            reason='اصلاح جدیدتر',before={},after={})
+        self.assertEqual(process_pending_reply().state,'REVIEW')
+        record.refresh_from_db();self.assertEqual(record.price,2400000)
+
     def setUp(self):
         media = tempfile.TemporaryDirectory()
         self.addCleanup(media.cleanup)

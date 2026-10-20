@@ -199,14 +199,17 @@ def process_custom(message, update_id, stored_files):
             # identity. Like the ready-group path, defer instead of losing it.
             from .models import StudioDelivery
             from .studio_delivery import pending_caption_matches
-            from .telegram_same_day.service import SyncConfigurationError
+            from .telegram_same_day.service import SyncConfigurationError, PendingPortalIdentity
             pending = StudioDelivery.objects.filter(
                 chat_id=chat_id, action=StudioDelivery.Action.PUBLISH,
                 record__production_type=StudioProduct.ProductionType.CUSTOM,
                 status__in=[StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN],
             ).select_related("record")
-            if any(pending_caption_matches(job.record, reply.get("caption", "")) for job in pending):
-                raise SyncConfigurationError("portal_message_identity_pending")
+            matched = [job for job in pending if pending_caption_matches(job.record, reply.get('caption',''))]
+            if len(matched) == 1:
+                raise PendingPortalIdentity(matched[0].pk)
+            if matched:
+                raise SyncConfigurationError('portal_message_identity_pending')
             # The worker may commit between the first lookup and pending query.
             record = StudioProduct.objects.select_for_update().filter(
                 Q(source__in=[StudioProduct.Source.TELEGRAM_CUSTOM,StudioProduct.Source.PORTAL]) | Q(production_type_corrected=True),
@@ -230,9 +233,11 @@ def process_custom(message, update_id, stored_files):
         if record.status != StudioProduct.Status.AVAILABLE:
             return {"result": "duplicate_ignored"}
         if sold:
-            record.status, record.sold_at = StudioProduct.Status.SOLD, timezone.now()
+            from .studio_pending_replies import command_time
+            record.status, record.sold_at = StudioProduct.Status.SOLD, command_time()
         else:
-            record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, timezone.now()
+            from .studio_pending_replies import command_time
+            record.status, record.withdrawn_at = StudioProduct.Status.WITHDRAWN, command_time()
         record.save(update_fields=["status", "sold_at", "withdrawn_at", "updated_at"])
         from .studio_delivery import queue_retirement
         queue_retirement(record)

@@ -18,6 +18,12 @@ class SyncConfigurationError(Exception):
     pass
 
 
+class PendingPortalIdentity(SyncConfigurationError):
+    def __init__(self, delivery_id):
+        self.delivery_id = delivery_id
+        super().__init__('portal_message_identity_pending')
+
+
 class InvalidSource(Exception):
     pass
 
@@ -232,10 +238,11 @@ def _can_sell(message, *, channel=False):
 
 def _sell(post, *, withdrawn=False):
     from ..studio_ingestion import sync_daily_status
+    from ..studio_pending_replies import command_time
     if withdrawn:
         if post.withdrawn_at:
             return "duplicate_ignored"
-        post.withdrawn_at = timezone.now()
+        post.withdrawn_at = command_time()
         post.save(update_fields=["withdrawn_at", "updated_at"])
         if post.product_id:
             Product.objects.filter(pk=post.product_id).update(
@@ -250,7 +257,7 @@ def _sell(post, *, withdrawn=False):
     if post.sold_at:
         logger.info("duplicate ignored sold chat_id=%s message_id=%s", post.telegram_chat_id, post.telegram_message_id)
         return "duplicate_ignored"
-    post.sold_at = timezone.now()
+    post.sold_at = command_time()
     post.save(update_fields=["sold_at", "updated_at"])
     if post.product_id:
         Product.objects.filter(pk=post.product_id).update(
