@@ -2,13 +2,17 @@
   window.dataLayer = window.dataLayer || [];
 
   function pushEvent(eventName, params) {
+    var eventParams = Object.assign({
+      traffic_source: aiTrafficSource,
+      ai_source: aiTrafficSource,
+    }, params || {});
     if (typeof window.gtag === "function") {
-      var gtagParams = Object.assign({}, params || {});
+      var gtagParams = Object.assign({}, eventParams);
       window.gtag("event", eventName, gtagParams);
       return;
     }
 
-    var payload = Object.assign({ event: eventName }, params || {});
+    var payload = Object.assign({ event: eventName }, eventParams);
     window.dataLayer.push(payload);
   }
 
@@ -30,24 +34,71 @@
   window.zadAnalytics = window.zadAnalytics || {};
   window.zadAnalytics.track = pushEvent;
 
+  var aiSourceDomains = {
+    "chatgpt.com": "chatgpt", "openai.com": "chatgpt",
+    "perplexity.ai": "perplexity", "claude.ai": "claude",
+    "gemini.google.com": "gemini", "copilot.microsoft.com": "copilot",
+    "copilot.com": "copilot",
+  };
+  var aiStorageKey = "zad_ai_source_v1";
+  var aiAttributionWindow = 30 * 60 * 1000;
+
+  function sourceForHost(host) {
+    return Object.keys(aiSourceDomains).reduce(function (found, domain) {
+      return found || (host === domain || host.endsWith("." + domain) ? aiSourceDomains[domain] : null);
+    }, null);
+  }
+
+  function forgetAiSource() {
+    try { window.sessionStorage.removeItem(aiStorageKey); } catch (error) { /* Storage can be blocked. */ }
+  }
+
+  function rememberAiSource(source) {
+    try {
+      // Store only an allowlisted label and time, never a URL, prompt or identifier.
+      window.sessionStorage.setItem(aiStorageKey, JSON.stringify({ source: source, at: Date.now() }));
+    } catch (error) { /* Analytics must not interfere with browsing. */ }
+    return source;
+  }
+
   function trafficSource() {
-    var referrer = (document.referrer || "").toLowerCase();
-    if (referrer.indexOf("chatgpt.com") !== -1 || referrer.indexOf("openai.com") !== -1) {
-      return "chatgpt";
+    var currentUrl;
+    var referrer;
+    try { currentUrl = new URL(window.location.href); } catch (error) { return null; }
+    var campaign = currentUrl.searchParams.get("utm_source");
+    if (campaign) {
+      var normalized = campaign.trim().toLowerCase();
+      var campaignSource = sourceForHost(normalized) || (
+        ["chatgpt", "perplexity", "claude", "gemini", "copilot"].indexOf(normalized) !== -1 ? normalized : null
+      );
+      if (campaignSource) { return rememberAiSource(campaignSource); }
+      forgetAiSource();
+      return null;
     }
-    if (referrer.indexOf("perplexity.ai") !== -1) {
-      return "perplexity";
+    try { referrer = document.referrer ? new URL(document.referrer) : null; } catch (error) { referrer = null; }
+    var source = referrer && /^https?:$/.test(referrer.protocol) ? sourceForHost(referrer.hostname) : null;
+    if (source) { return rememberAiSource(source); }
+    if (referrer && referrer.origin !== currentUrl.origin) {
+      forgetAiSource();
+      return null;
     }
-    if (referrer.indexOf("claude.ai") !== -1) {
-      return "claude";
-    }
+    try {
+      var saved = JSON.parse(window.sessionStorage.getItem(aiStorageKey) || "null");
+      if (saved && Object.values(aiSourceDomains).indexOf(saved.source) !== -1 &&
+          typeof saved.at === "number" && saved.at <= Date.now() && Date.now() - saved.at < aiAttributionWindow) {
+        return saved.source;
+      }
+    } catch (error) { /* Missing or malformed session data is not a page error. */ }
+    forgetAiSource();
     return null;
   }
+
+  var aiTrafficSource = trafficSource();
 
   var initialPageParams = {
     page_type: currentPageType(),
     item_id: currentItemId(),
-    traffic_source: trafficSource(),
+    traffic_source: aiTrafficSource,
   };
   pushEvent("zad_page_view", initialPageParams);
 
