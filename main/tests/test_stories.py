@@ -140,6 +140,12 @@ class StoryPresentationTests(TestCase):
         self.assertNotIn(queued.source_video.url, body)
         self.assertNotIn(inactive.optimized_video.url, body)
 
+        from main.management.commands.audit_seo import SeoHTMLParser
+
+        parser = SeoHTMLParser()
+        parser.feed(body)
+        self.assertEqual(parser.images_missing_dimensions, [])
+
     def test_story_without_ready_clip_is_not_rendered(self):
         empty_story = Story.objects.create(title="هنوز آماده نیست")
         StoryClip.objects.create(

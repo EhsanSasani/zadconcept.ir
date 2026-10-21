@@ -1,0 +1,15 @@
+{% if collection_guide and catalog_pagination.number == 1 and not selected_product_tag %}
+<section class="container section-block collection-guide" aria-labelledby="collection-guide-title" dir="rtl">
+  <h2 id="collection-guide-title">{{ collection_guide.title }}</h2>
+  <p>{{ collection_guide.intro }}</p>
+  <div class="collection-guide__questions">
+    {% for question, answer in collection_guide.questions %}
+      <details><summary>{{ question }}</summary><p>{{ answer }}</p></details>
+    {% endfor %}
+  </div>
+  <nav class="collection-guide__links" aria-label="راهنمای انتخاب و ارسال گل">
+    {% for link in collection_guide.links %}<a href="{{ link.url }}">{{ link.label }}</a>{% endfor %}
+  </nav>
+  <a class="collection-guide__contact" href="{{ site_call_href }}" data-cta-position="collection_guide">تماس برای هماهنگی سفارش</a>
+</section>
+{% endif %}

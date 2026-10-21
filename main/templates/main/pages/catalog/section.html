@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-{% if has_managed_site_hero %}
+{% if has_managed_site_hero and page_hero_title %}
   <h2 class="sr-only">{{ meta_title|default:"کاتالوگ زاد" }}</h2>
 {% else %}
   <h1 class="sr-only">{{ meta_title|default:"کاتالوگ زاد" }}</h1>
