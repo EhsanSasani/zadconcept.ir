@@ -117,15 +117,19 @@ class Command(BaseCommand):
 
         state_path = Path(settings.INDEXNOW_STATE_FILE)
         state = self.read_state(state_path)
+        # Updates during URL collection must remain eligible on the next run.
+        submitted_at = timezone.now()
         current_urls = all_public_urls()
         previous_urls = set(state.get("known_urls", []))
+        added_urls = current_urls - previous_urls
         removed_urls = previous_urls - current_urls
 
         since = self.resolve_since(options.get("since"), state)
         if options["all"] or since is None:
             candidates = set(current_urls)
         else:
-            candidates = changed_public_urls(since)
+            candidates = changed_public_urls(since) & current_urls
+        candidates.update(added_urls)
         candidates.update(removed_urls)
         canonical_origin = urlsplit(settings.ZAD_SITE_URL)
         candidates = sorted(
@@ -145,7 +149,6 @@ class Command(BaseCommand):
                 self.stdout.write(url)
             return
 
-        submitted_at = timezone.now()
         for start in range(0, len(candidates), batch_size):
             batch = candidates[start : start + batch_size]
             self.submit_batch(batch, key)
