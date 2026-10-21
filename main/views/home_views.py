@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, render
+from django.templatetags.static import static
 from django.utils import timezone
 
 from ..catalog_selectors import (
@@ -60,6 +61,7 @@ def index(request):
         active_nav="home",
         meta_title="زاد | گل، سوئیت‌بار، هدیه و ورکشاپ در مشهد",
         meta_description="فروشگاه زاد در مشهد برای سفارش گل، سوئیت‌بار، هدیه، ورکشاپ و هماهنگی سریع ارسال.",
+        social_image=static('main/img/home/hero-sequence/worktable-01.webp'),
         enable_product_modal=True,
     )
 
@@ -87,6 +89,8 @@ def index(request):
             "hero_telegram_text": "تلگرام",
             "home_subtitle": "Premium flowers, bakery, and gifts with fast coordination in Mashhad",
             "is_homepage": True,
+            "social_image_width": 1448,
+            "social_image_height": 1086,
             "home_hero_slides": _get_active_home_hero_slides(),
             "home_events": home_events,
             "home_same_day_products": home_same_day_products,

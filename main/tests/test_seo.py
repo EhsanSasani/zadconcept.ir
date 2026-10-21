@@ -39,6 +39,18 @@ def graph_for(response):
 
 
 class SeoContractTests(TestCase):
+    @override_settings(ZAD_DEFAULT_SOCIAL_IMAGE='https://www.zadconcept.ir/static/main/img/hero-1.webp',
+        ZAD_DEFAULT_SOCIAL_IMAGE_WIDTH=1920,ZAD_DEFAULT_SOCIAL_IMAGE_HEIGHT=1080)
+    def test_homepage_preview_uses_current_hero_instead_of_legacy_default(self):
+        from django.templatetags.static import static
+        response=self.client.get(reverse('index'))
+        image=f"{settings.ZAD_SITE_URL.rstrip('/')}{static('main/img/home/hero-sequence/worktable-01.webp')}"
+        self.assertContains(response,f'<meta property="og:image" content="{image}">')
+        self.assertContains(response,f'<meta name="twitter:image" content="{image}">')
+        self.assertContains(response,'<meta property="og:image:width" content="1448">')
+        self.assertContains(response,'<meta property="og:image:height" content="1086">')
+        self.assertNotEqual(response.context['social_image_url'],settings.ZAD_DEFAULT_SOCIAL_IMAGE)
+
     def setUp(self):
         cache.clear()
         self.category = Category.objects.create(
