@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from django.conf import settings
@@ -39,6 +40,38 @@ def graph_for(response):
 
 
 class SeoContractTests(TestCase):
+    def test_catalog_headings_survive_managed_heroes_with_blank_titles(self):
+        for title in ("", "انتخاب‌های زاد"):
+            hero = {
+                "has_managed_site_hero": True,
+                "page_hero_style_class": "hero-style-site-test",
+                "page_hero_kicker": "",
+                "page_hero_title": title,
+                "page_hero_text": "",
+                "page_hero_image": "main/img/flowers-hero.webp",
+                "page_hero_mobile_image": "",
+            }
+            with patch("main.views.catalog_views._get_site_hero", return_value=hero):
+                for route in ("flowers", "bakery", "gifts", "flowers_all", "bakery_all", "gifts_all"):
+                    with self.subTest(title=title, route=route):
+                        response = self.client.get(reverse(route))
+                        self.assertEqual(response.status_code, 200)
+                        self.assertEqual(parse_html(response).h1_count, 1)
+
+    def test_all_product_pages_have_persian_distinct_metadata(self):
+        descriptions = set()
+        for route, label in (("flowers_all", "گل"), ("bakery_all", "سوئیت‌بار و شیرینی"), ("gifts_all", "هدیه")):
+            with self.subTest(route=route):
+                parser = parse_html(self.client.get(reverse(route)))
+                self.assertIn(label, parser.title)
+                self.assertIn("مشهد", parser.title)
+                self.assertIn(label, parser.description)
+                self.assertNotIn("Flowers", parser.title)
+                self.assertNotIn("Bakery", parser.title)
+                self.assertNotIn("Gifts", parser.title)
+                descriptions.add(parser.description)
+        self.assertEqual(len(descriptions), 3)
+
     @override_settings(ZAD_DEFAULT_SOCIAL_IMAGE='https://www.zadconcept.ir/static/main/img/hero-1.webp',
         ZAD_DEFAULT_SOCIAL_IMAGE_WIDTH=1920,ZAD_DEFAULT_SOCIAL_IMAGE_HEIGHT=1080)
     def test_homepage_preview_uses_current_hero_instead_of_legacy_default(self):
@@ -218,6 +251,10 @@ class SeoContractTests(TestCase):
         xml = response.content.decode()
 
         expected_paths = (
+            reverse("wedding_collection", args=["bridal-bouquets"]),
+            reverse("wedding_collection", args=["proposal-bouquets"]),
+            reverse("wedding_collection", args=["proposal-sweets"]),
+            reverse("wedding_collection", args=["wedding-cars"]),
             reverse("about"),
             reverse("occasions"),
             reverse("flowers_same_day"),

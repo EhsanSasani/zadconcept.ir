@@ -13,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+{% if section != 'bakery' and not landing_hero_title %}
+<h1 class="sr-only">{{ meta_title }}</h1>
+{% endif %}
 <div class="flowers-shell">
 
   {% if section == 'bakery' %}

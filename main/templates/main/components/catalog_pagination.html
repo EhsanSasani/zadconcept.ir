@@ -1,0 +1,7 @@
+{% if catalog_pagination.num_pages > 1 %}
+<nav class="container collection-pagination" aria-label="صفحه‌های محصولات">
+  {% if catalog_pagination.previous %}<a href="{{ catalog_pagination.previous }}" rel="prev">صفحهٔ قبل</a>{% endif %}
+  <span>صفحهٔ {{ catalog_pagination.number }} از {{ catalog_pagination.num_pages }}</span>
+  {% if catalog_pagination.next %}<a href="{{ catalog_pagination.next }}" rel="next">محصولات بیشتر</a>{% endif %}
+</nav>
+{% endif %}

@@ -609,8 +609,8 @@ class MainViewsTests(TestCase):
             configured,
             {
                 "label": "بوکت",
-                "meta_title": "بوکت گل خاص در مشهد | ZAD",
-                "meta_description": "بوکت‌های طراحی‌شده زاد برای انتخاب‌های خاص‌تر و لوکس‌تر.",
+                "meta_title": "بوکت گل در مشهد | انتخاب مدل و سفارش | زاد",
+                "meta_description": "مدل‌های بوکت گل زاد را برای هدیه و مناسبت‌های مختلف ببینید؛ فرم چیدمان، رنگ، بودجه و زمان ارسال در مشهد را با ما هماهنگ کنید.",
                 "intro": "چیدمانی طراحی‌شده‌تر برای وقتی که انتخاب باید خاص‌تر باشد.",
                 "image": "main/img/sub-bouquet.webp",
                 "hero_image": "main/img/hero-subcategory.webp",

@@ -6,7 +6,10 @@ from django.conf import settings
 from django.utils import timezone
 
 
-PAGINATED_ROUTE_NAMES = {"bakery", "gifts"}
+PAGINATED_ROUTE_NAMES = {
+    "bakery", "gifts", "flower_subcategory", "bakery_subcategory",
+    "gift_subcategory", "flowers_all", "bakery_all", "gifts_all",
+}
 
 
 def is_public_pagination(request):
@@ -341,7 +344,7 @@ def article_node(post):
     return node
 
 
-def item_list_node(products, canonical):
+def item_list_node(products, canonical, *, name="گل‌های آماده ارسال امروز در مشهد"):
     """Describe exactly the visible selection, preserving its display order."""
     items = [
         {"@type": "ListItem", "position": position,
@@ -349,5 +352,5 @@ def item_list_node(products, canonical):
         for position, product in enumerate(products, start=1)
     ]
     return {"@type": "ItemList", "@id": f"{canonical}#products",
-            "name": "گل‌های آماده ارسال امروز در مشهد",
+            "name": name,
             "numberOfItems": len(items), "itemListElement": items}

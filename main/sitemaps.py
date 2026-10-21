@@ -82,6 +82,19 @@ class CategorySitemap(CanonicalSitemap):
         return obj.updated_at
 
 
+class WeddingCollectionSitemap(CanonicalSitemap):
+    changefreq = "weekly"
+    priority = 0.7
+
+    def items(self):
+        from .views.wedding_views import WEDDING_COLLECTIONS
+
+        return sorted(WEDDING_COLLECTIONS)
+
+    def location(self, item):
+        return reverse("wedding_collection", args=[item])
+
+
 class OccasionSitemap(CanonicalSitemap):
     changefreq = "weekly"
     priority = 0.7
@@ -142,6 +155,7 @@ class BlogSitemap(CanonicalSitemap):
 sitemaps = {
     "static": StaticViewSitemap,
     "categories": CategorySitemap,
+    "wedding_collections": WeddingCollectionSitemap,
     "occasions": OccasionSitemap,
     "products": ProductSitemap,
     "events": EventSitemap,

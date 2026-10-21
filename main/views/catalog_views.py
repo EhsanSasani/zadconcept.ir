@@ -24,6 +24,7 @@ from ..managed_heroes import _get_site_hero
 from ..models import Category, Product
 from ..page_context import _default_context, _with_home
 from ..editorial_links import guides_for_category
+from ..catalog_guides import guide_for_category
 from ..page_presentation import SECTION_CONTENT, _hero_from_key
 
 
@@ -31,6 +32,12 @@ SECTION_ALL_ROUTE_NAMES = {
     Category.Section.FLOWERS: "flowers_all",
     Category.Section.BAKERY: "bakery_all",
     Category.Section.GIFTS: "gifts_all",
+}
+
+SECTION_PERSIAN_LABELS = {
+    Category.Section.FLOWERS: "گل",
+    Category.Section.BAKERY: "سوئیت‌بار و شیرینی",
+    Category.Section.GIFTS: "هدیه",
 }
 
 def _section_all_url(section):
@@ -134,11 +141,13 @@ def _section_all_products(request, section):
             return redirect(selected_category.get_absolute_url(), permanent=True)
         products_qs = products_qs.filter(category=selected_category)
 
-    items = list(products_qs[:48])
-    title = config["title"]
+    page_obj = _paginate_products(request, products_qs, page_size=48)
+    items = list(page_obj.object_list)
+    section_label = SECTION_PERSIAN_LABELS[section]
+    title = f"همه محصولات {section_label}"
 
     if selected_category:
-        title = f"{config['title']} / {selected_category.name}"
+        title = f"{selected_category.name}؛ محصولات {section_label}"
 
     breadcrumbs = _with_home(
         [
@@ -152,10 +161,11 @@ def _section_all_products(request, section):
         page_type="subcategory",
         active_nav=config["nav"],
         meta_title=f"{title} در مشهد | زاد",
-        meta_description=f"مشاهده و سفارش محصولات بخش {config['title']} زاد با هماهنگی ارسال در مشهد.",
+        meta_description=f"مشاهده مدل‌ها و قیمت محصولات {section_label} زاد؛ بررسی موجودی و هماهنگی سفارش و ارسال در مشهد.",
         breadcrumbs=breadcrumbs,
         enable_product_modal=True,
         content_page="subcategory",
+        schema_type="CollectionPage",
     )
 
     hero_data = _hero_from_key(
@@ -175,6 +185,7 @@ def _section_all_products(request, section):
             "collection_title": title,
             "collection_intro": config["intro"],
             "items": items,
+            "catalog_pagination": _catalog_pagination(request, page_obj),
             "filter_links": _filter_links_for_categories(
                 _section_all_url(section),
                 categories,
@@ -184,6 +195,8 @@ def _section_all_products(request, section):
             "lead_default_type": config["lead_type"],
         }
     )
+
+    _add_collection_schema(context, items, title)
 
     return render(request, "main/pages/catalog/subcategory.html", context)
 
@@ -252,9 +265,12 @@ def _section_subcategory(request, section, subcategory_slug):
     if selected_tag == UNIQUE_TAG_SLUG:
         products_qs = unique_products_qs
 
-    items = list(
-        products_qs.order_by("-featured", "sort_order", "-created_at")[:48]
+    page_obj = _paginate_products(
+        request,
+        products_qs.order_by("-featured", "sort_order", "-created_at", "pk"),
+        page_size=48,
     )
+    items = list(page_obj.object_list)
 
     breadcrumb_items = [{"name": config["title"], "url": reverse(section)}]
     if category.parent_id:
@@ -276,6 +292,7 @@ def _section_subcategory(request, section, subcategory_slug):
         enable_product_modal=True,
         content_page="subcategory",
         suppress_default_hero=not db_hero,
+        schema_type="CollectionPage",
     )
 
     hero_data = _hero_from_key(
@@ -293,6 +310,8 @@ def _section_subcategory(request, section, subcategory_slug):
     context.update(
         {
             "subcategory_slug": category.slug,
+            "catalog_pagination": _catalog_pagination(request, page_obj),
+            "collection_guide": guide_for_category(category),
             "editorial_guides": guides_for_category(category),
             "subcategory_label": category.name,
             "collection_title": category.name,
@@ -332,6 +351,8 @@ def _section_subcategory(request, section, subcategory_slug):
             "lead_default_type": config["lead_type"],
         }
     )
+
+    _add_collection_schema(context, items, category.name)
 
     return render(request, "main/pages/catalog/subcategory.html", context)
 
@@ -484,8 +505,8 @@ def _catalog_ordered_products(queryset, section):
 
     return queryset.order_by("-featured", "sort_order", "-created_at", "id")
 
-def _paginate_products(request, queryset):
-    paginator = Paginator(queryset, CATALOG_PAGE_SIZE)
+def _paginate_products(request, queryset, *, page_size=CATALOG_PAGE_SIZE):
+    paginator = Paginator(queryset, page_size)
     page_number = request.GET.get("page") or 1
 
     try:
@@ -496,6 +517,31 @@ def _paginate_products(request, queryset):
         raise Http404("Catalog page does not exist")
 
     return page_obj
+
+
+def _catalog_pagination(request, page_obj):
+    def page_url(number):
+        query = request.GET.copy()
+        query.pop("page", None)
+        if number > 1:
+            query["page"] = number
+        encoded = query.urlencode()
+        return request.path + (f"?{encoded}" if encoded else "")
+
+    return {
+        "number": page_obj.number,
+        "num_pages": page_obj.paginator.num_pages,
+        "previous": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else "",
+        "next": page_url(page_obj.next_page_number()) if page_obj.has_next() else "",
+    }
+
+
+def _add_collection_schema(context, products, title):
+    listing = item_list_node(products, context["canonical_url"], name=title)
+    for node in context["structured_data_graph"]:
+        if node.get("@type") == "CollectionPage":
+            node["mainEntity"] = {"@id": listing["@id"]}
+    context["structured_data_graph"].append(listing)
 
 def _collection_landing_page(
     request,
