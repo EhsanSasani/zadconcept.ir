@@ -69,11 +69,14 @@ def requeue_publication(record):
     job.save()
 
 
-def ensure_delivery_editable(jobs):
+def ensure_delivery_editable(jobs, *, allow_unconfirmed_publish=False):
     if any(j.action == StudioDelivery.Action.RECLASS and j.status != StudioDelivery.Status.SENT for j in jobs):
         raise ValidationError('انتقال محصول بین گروه‌ها هنوز کامل نشده است؛ ابتدا وضعیت صف انتقال را بررسی کنید.')
     if any(j.action == StudioDelivery.Action.PUBLISH and j.outcome == 'type_correction' and j.status != StudioDelivery.Status.SENT for j in jobs):
         raise ValidationError('ارسال محصول به گروه جدید هنوز کامل نشده است؛ ابتدا وضعیت صف را بررسی کنید.')
+    # Withdrawal hides stock without changing an in-flight/unknown publication.
+    # A later confirmed message is retired by the normal completion/reconciliation.
+    jobs = [j for j in jobs if not (allow_unconfirmed_publish and j.action == StudioDelivery.Action.PUBLISH)]
     if any(j.status in {StudioDelivery.Status.SENDING, StudioDelivery.Status.UNCERTAIN} for j in jobs):
         raise ValidationError('ارسال تلگرام در حال انجام یا نیازمند بررسی است؛ پس از تعیین نتیجه دوباره اقدام کنید.')
     if any(j.last_error == 'worker_interrupted' and j.updated_at > timezone.now() - timedelta(seconds=180) for j in jobs):
@@ -99,7 +102,7 @@ def apply_sales_action(*, pk, actor, expected_version, action, reason, values=No
             if current.status == StudioProduct.Status.DELETED:
                 raise ValidationError('محصول حذف مدیریتی شده؛ اصلاح آن از پنل فروش مجاز نیست.')
             jobs = list(current.deliveries.select_for_update())
-            ensure_delivery_editable(jobs)
+            ensure_delivery_editable(jobs, allow_unconfirmed_publish=action == 'withdraw')
             before = snapshot(current)
             now = timezone.now()
             if action == 'edit':
