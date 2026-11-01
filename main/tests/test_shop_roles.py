@@ -160,4 +160,3 @@ class ShopRoleTests(TestCase):
                 data={"version": account_version(customer), "enabled": True, "florist": None})
         self.client.force_login(root)
         self.assertEqual(self.client.get(reverse("studio_account_florist_link", args=[customer.pk])).status_code, 403)
-

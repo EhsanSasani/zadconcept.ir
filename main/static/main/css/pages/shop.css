@@ -64,6 +64,7 @@
 .shop-product__description p{font-size:13px;color:var(--shop-muted);line-height:2.1}
 .shop-button{display:inline-flex;align-items:center;justify-content:center;gap:14px;padding:12px 22px;min-height:48px;border:1px solid var(--shop-navy);background:var(--shop-navy);color:#fff;font:inherit;font-size:13px;font-weight:500;line-height:1.8;cursor:pointer;text-align:center;text-decoration:none;transition:background .15s ease}
 .shop-button:hover{background:#263b58;color:#fff}
+.shop-site a.shop-button:not(.shop-button--outline),.shop-panel a.shop-button:not(.shop-button--outline){color:#fff}
 .shop-button--outline{background:transparent;color:var(--shop-ink);border-color:#b9c2ca}
 .shop-button--outline:hover{background:#edf0f1;color:var(--shop-ink)}
 .shop-button:disabled{background:#d6dbe0;border-color:#d6dbe0;color:#59636e;cursor:not-allowed}
