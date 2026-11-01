@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from main.models import Florist
-from main.account_roles import ROLE_GROUPS
+from main.account_roles import ROLE_GROUPS, has_customer_profile
 
 
 class Command(BaseCommand):
@@ -20,12 +20,13 @@ class Command(BaseCommand):
         parser.add_argument("--florist", help="Existing florist code to link to this account")
         parser.add_argument("--sales", action="store_true", help="Grant only the sales workspace permission")
         parser.add_argument("--procurement", action="store_true", help="Grant the purchase and waste workspace")
+        parser.add_argument("--shop", action="store_true", help="Grant only the shop products, stock and orders workspace")
         parser.add_argument("--manager", action="store_true", help="Grant Studio manager permissions (not Django Admin)")
         parser.add_argument("--reset-password", action="store_true", help="Prompt for a replacement password on an existing account")
 
     def handle(self, *args, **options):
         if not options["florist"] and not any(options[role] for role in ROLE_GROUPS):
-            raise CommandError("Choose --florist CODE, --sales, --procurement and/or --manager.")
+            raise CommandError("Choose --florist CODE, --sales, --procurement, --shop and/or --manager.")
         User = get_user_model()
         username = User.normalize_username(options["username"].strip())
         try:
@@ -33,6 +34,8 @@ class Command(BaseCommand):
         except ValidationError as error:
             raise CommandError(" ".join(error.messages)) from error
         user = User.objects.filter(username__iexact=username).first()
+        if user and has_customer_profile(user):
+            raise CommandError("Customer identities cannot receive staff roles. Create a separate operational account.")
         is_new = user is None
         if user is None:
             user = User(username=username)

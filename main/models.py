@@ -701,6 +701,9 @@ class ProductQuerySet(models.QuerySet):
             | Q(category__parent__slug=WEDDING_ROOT_CATEGORY_SLUG)
         )
 
+    def for_shop(self):
+        return self.filter(catalog_scope="shop")
+
     def published(self):
         return self.filter(
             is_active=True,
@@ -714,7 +717,7 @@ class ProductQuerySet(models.QuerySet):
     def publicly_indexable(self):
         return self.published().filter(
             (
-                Q(catalog_scope__in=("general", "same_day"))
+                Q(catalog_scope__in=("general", "same_day", "shop"))
                 & ~Q(
                     category__section="flowers",
                     category__slug__in=FLOWER_PROTECTED_WEDDING_CATEGORY_SLUGS,
@@ -747,6 +750,7 @@ class Product(TimeStampedModel):
         GENERAL = "general", "کاتالوگ عمومی"
         SAME_DAY = "same_day", "ارسال روز"
         WEDDING = "wedding", "عروسی"
+        SHOP = "shop", "فروشگاه"
 
     class WeddingType(models.TextChoices):
         BRIDAL_BOUQUET = "bridal_bouquet", "دسته‌گل عروس"
@@ -937,7 +941,7 @@ class Product(TimeStampedModel):
             models.CheckConstraint(
                 condition=(
                     Q(
-                        catalog_scope__in=("general", "same_day"),
+                        catalog_scope__in=("general", "same_day", "shop"),
                         wedding_type="",
                         wedding_needs_review=False,
                     )
@@ -1127,6 +1131,23 @@ class Product(TimeStampedModel):
     def is_same_day(self):
         return self.catalog_scope == self.CatalogScope.SAME_DAY
 
+    @property
+    def is_shop(self):
+        return self.catalog_scope == self.CatalogScope.SHOP
+
+    @property
+    def shop_purchasable(self):
+        try:
+            inventory = self.shop_inventory
+        except ShopInventory.DoesNotExist:
+            return False
+        return bool(
+            self.is_shop and self.is_published and self.category.is_active
+            and self.status == self.Status.AVAILABLE
+            and self.stock_status == self.StockStatus.IN_STOCK
+            and self.has_price and self.price > 0 and inventory.quantity > 0
+        )
+
     def _final_product_code(self):
         if not self.pk:
             return ""
@@ -1155,9 +1176,18 @@ class Product(TimeStampedModel):
         if self.pricing_type == self.PricingType.FIXED and self.price is None:
             field_errors["price"] = "برای قیمت ثابت، وارد کردن قیمت الزامی است."
 
+        if self.is_shop and self.publish_status == self.PublishStatus.PUBLISHED and (
+            not self.has_price or self.price <= 0
+        ):
+            field_errors["price"] = "محصول منتشرشدهٔ فروشگاه باید قیمت ثابت و بیشتر از صفر داشته باشد."
+
+        if self.pk and not self.is_shop and ShopInventory.objects.filter(product_id=self.pk).exists():
+            invariant_errors.append("محصول دارای موجودی فروشگاه نمی‌تواند به کاتالوگ دیگری منتقل شود.")
+
         if self.catalog_scope in {
             self.CatalogScope.GENERAL,
             self.CatalogScope.SAME_DAY,
+            self.CatalogScope.SHOP,
         }:
             if self.wedding_type or self.wedding_needs_review:
                 invariant_errors.append(
@@ -1267,6 +1297,8 @@ class Product(TimeStampedModel):
             super().save(update_fields=update_fields)
 
     def get_absolute_url(self):
+        if self.is_shop:
+            return reverse("shop_product_detail", args=[self.slug])
         canonical_section = self.canonical_section or self.section
         canonical_category_slug = (
             self.canonical_category_slug
@@ -3424,3 +3456,8 @@ class ProcurementAudit(models.Model):
         verbose_name = "سابقهٔ خرید و دورریز"
         verbose_name_plural = "سوابق خرید و دورریز"
         indexes = [models.Index(fields=["target_type", "target_id"], name="procurement_audit_target")]
+
+
+# Keep these models registered with the existing single Django app.
+from .shop_models import ShopConfiguration, ShopInventory, ShopInventoryAudit, ShopOrder, ShopOrderLine, ShopPayment  # noqa: E402,F401
+from .customer_models import CustomerProfile, CustomerLoginRate  # noqa: E402,F401

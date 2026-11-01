@@ -2,7 +2,7 @@
 import hashlib
 import json
 
-from .models import Florist
+from .models import CustomerProfile, Florist
 from django.contrib.auth.models import Permission
 from django.db.models import Q
 
@@ -13,12 +13,14 @@ MANAGER_PERMISSIONS = frozenset({
 })
 SALES_PERMISSIONS = frozenset({"use_sales_workspace"})
 PROCUREMENT_PERMISSIONS = frozenset({"use_procurement_workspace"})
-ROLE_PERMISSIONS = {f"main.{name}" for name in MANAGER_PERMISSIONS | SALES_PERMISSIONS | PROCUREMENT_PERMISSIONS}
+SHOP_PERMISSIONS = frozenset({"manage_shop"})
+ROLE_PERMISSIONS = {f"main.{name}" for name in MANAGER_PERMISSIONS | SALES_PERMISSIONS | PROCUREMENT_PERMISSIONS | SHOP_PERMISSIONS}
 ROLE_GROUPS = {"manager": ("Studio managers", MANAGER_PERMISSIONS),
                "sales": ("Studio sales", SALES_PERMISSIONS),
-               "procurement": ("Studio procurement", PROCUREMENT_PERMISSIONS)}
+               "procurement": ("Studio procurement", PROCUREMENT_PERMISSIONS),
+               "shop": ("Shop operators", SHOP_PERMISSIONS)}
 ROLE_CHOICES = [("manager", "مدیر"), ("sales", "فروش"), ("florist", "فلوریست"),
-                ("procurement", "خرید و دورریز")]
+                ("procurement", "خرید و دورریز"), ("shop", "فروشگاه")]
 
 
 def assigned_manager_permissions(user):
@@ -41,11 +43,17 @@ def assigned_roles(user):
         roles.append('florist')
     if user.is_superuser or ('main', 'use_procurement_workspace') in permissions:
         roles.append('procurement')
+    if user.is_superuser or ('main', 'manage_shop') in permissions:
+        roles.append('shop')
     return roles
 
 
+def has_customer_profile(user):
+    return bool(user.pk and CustomerProfile.objects.filter(user_id=user.pk).exists())
+
+
 def editable_account(user):
-    if user.is_staff or user.is_superuser:
+    if user.is_staff or user.is_superuser or has_customer_profile(user):
         return False
     permissions = {f'{app}.{code}' for app, code in user.user_permissions.values_list(
         'content_type__app_label', 'codename')}

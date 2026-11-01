@@ -18,6 +18,8 @@ def workspaces(user):
     choices = []
     for key, label, description, route, allowed in (
         ("studio", "مدیریت", "نمای کلی امروز، عملکرد تیم و گزارش‌ها", "studio_dashboard", can_manage_studio(user)),
+        ("shop", "فروشگاه", "محصولات فروشگاه، موجودی و سفارش‌های آنلاین", "shop_manage",
+         bool(user.is_authenticated and user.is_active and (user.is_superuser or user.has_perm("main.manage_shop")))),
         ("sales", "فروش", "موجودی، ثبت فروش و پیگیری محصولات", "sales_home", can_use_sales(user)),
         ("team", "فلوریست", "ثبت محصول، کارنامه و فضای شخصی شما", "team_home", bool(get_active_florist(user))),
         ("procurement", "خرید و دورریز", "کالاها، فاکتورهای خرید و دورریز روزانه", "procurement_home", can_use_procurement(user)),

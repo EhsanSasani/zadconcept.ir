@@ -1,0 +1,41 @@
+{% extends 'main/shop/base.html' %}{% load studio_ui %}
+{% block shop_content %}
+<header class="shop-page-heading">
+  <p class="shop-eyebrow">قدم دوم / بررسی نهایی</p><h1>بررسی و پرداخت</h1>
+  <p>مشخصات تحویل‌گیرنده، روش دریافت و مبلغ نهایی را بررسی کنید.</p>
+</header>
+{% if not payment_enabled %}
+  <div class="shop-notice" role="status"><strong>پرداخت آنلاین فعلاً در دسترس نیست.</strong><p>سبد خریدتان حفظ شده است. برای هماهنگی خرید می‌توانید <a href="{{ site_call_href }}">با زاد تماس بگیرید</a>.</p></div>
+{% endif %}
+{% if quote_error %}<div class="shop-notice shop-notice--error" role="alert">{{ quote_error }}</div>{% endif %}
+{% if quote_reviewed %}<div class="shop-notice" role="status">مبلغ سفارش با روش دریافت انتخاب‌شده به‌روز شد. پیش از پرداخت، جمع نهایی را بررسی کنید.</div>{% endif %}
+<form method="post" class="shop-two-column" novalidate>
+  {% csrf_token %}
+  <section class="shop-checkout-form shop-surface">
+    {% include 'main/shop/_errors.html' %}<h2>مشخصات دریافت</h2>
+    {% include 'main/shop/_field.html' with field=form.recipient_name %}
+    {% include 'main/shop/_field.html' with field=form.recipient_phone %}
+    <fieldset class="shop-field shop-fulfillment">
+      <legend class="shop-field__label">روش دریافت</legend>{{ form.fulfillment }}
+      {% for error in form.fulfillment.errors %}<p class="shop-field__error">{{ error }}</p>{% endfor %}
+      {% if shop_configuration.pickup_enabled %}<p class="shop-help">دریافت حضوری: {{ site_address_text }}</p>{% endif %}
+      {% if shop_configuration.delivery_enabled %}<p class="shop-help">ارسال فقط در شهر مشهد است. پس از تغییر روش دریافت، مبلغ نهایی دوباره برای تأیید شما نمایش داده می‌شود.</p>{% else %}<p class="shop-help">برای هماهنگی ارسال در مشهد، <a href="{{ site_call_href }}">با زاد تماس بگیرید</a>.</p>{% endif %}
+      <button class="shop-button shop-button--outline" type="submit" name="action" value="review" formnovalidate>بررسی مبلغ</button>
+    </fieldset>
+    {% if shop_configuration.delivery_enabled %}{% include 'main/shop/_field.html' with field=form.recipient_address %}{% endif %}
+    {% include 'main/shop/_field.html' with field=form.customer_note %}
+  </section>
+  <aside class="shop-summary">
+    <p class="shop-eyebrow">مرور سفارش</p><h2>پیش از پرداخت</h2>
+    <ul class="shop-checkout-lines">{% for line in snapshot.lines %}<li><span>{{ line.product.display_name }} <small>× {{ line.quantity|fa_number }}</small></span><strong>{{ line.subtotal_toman|fa_number }} تومان</strong></li>{% endfor %}</ul>
+    <dl><div><dt>مجموع محصولات</dt><dd>{{ snapshot.total_toman|fa_number }} تومان</dd></div><div><dt>{% if selected_fulfillment == 'delivery' %}ارسال در مشهد{% else %}دریافت حضوری{% endif %}</dt><dd>{% if selected_fulfillment == 'delivery' %}{{ shipping_fee_toman|fa_number }} تومان{% else %}بدون هزینه ارسال{% endif %}</dd></div></dl>
+    <div class="shop-summary__total"><span>مبلغ پرداخت</span><strong>{{ total_toman|fa_number }} <small>تومان</small></strong></div>
+    <p class="shop-help">{% if selected_fulfillment == 'delivery' %}هزینه ارسال در مبلغ بالا محاسبه شده است.{% else %}برای دریافت حضوری، پس از تأیید پرداخت با زاد هماهنگ کنید.{% endif %}</p>
+    {{ form.expected_total }}{% for error in form.expected_total.errors %}<p class="shop-field__error">{{ error }}</p>{% endfor %}
+    <p class="shop-policy-links"><a href="{% url 'terms' %}" target="_blank" rel="noopener">شرایط خرید <span class="shop-sr-only">در صفحه جدید</span></a> و <a href="{% url 'refund_policy' %}" target="_blank" rel="noopener">لغو و بازپرداخت <span class="shop-sr-only">در صفحه جدید</span></a></p>
+    {% include 'main/shop/_field.html' with field=form.accept_terms %}
+    <button class="shop-button" type="submit" name="action" value="pay"{% if not payment_enabled or quote_error %} disabled{% endif %}>بررسی و ادامه به پرداخت <i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+    <a class="shop-text-link" href="{% url 'shop_cart' %}">ویرایش سبد خرید</a>
+  </aside>
+</form>
+{% endblock %}

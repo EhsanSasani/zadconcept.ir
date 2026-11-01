@@ -7,9 +7,17 @@ from .telegram_product_lookup import telegram_product_lookup
 from .telegram_same_day.webhook import telegram_webhook
 from . import studio_views, sales_views
 from . import panel, misc_sales, procurement_views
+from . import customer_views, shop_views
 from .studio_notification_views import admin_notifications
 
 urlpatterns = [
+    path("shop/login/", customer_views.login_view, name="customer_login"),
+    path("shop/register/", customer_views.register, name="customer_register"),
+    path("shop/account/", customer_views.account, name="customer_account"),
+    path("shop/account/password/", customer_views.change_password, name="customer_password"),
+    path("shop/logout/", customer_views.logout_view, name="customer_logout"),
+    path("payment/verify/", shop_views.payment_callback, name="payment_verify"),
+    path("", include("main.shop_urls")),
     path("panel/", panel.home, name="panel_home"),
     path("panel/select/", panel.select, name="panel_select"),
     path("procurement/", procurement_views.home, name="procurement_home"),

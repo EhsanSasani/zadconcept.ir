@@ -218,6 +218,9 @@ def _section_product_detail(request, section, category_slug, slug):
     except Product.DoesNotExist:
         product = get_object_or_404(products, product_code=slug)
 
+    if product.is_shop:
+        return redirect(product.get_absolute_url(), permanent=True)
+
     canonical_section = product.canonical_section or product.category.section
     canonical_category_slug = (
         product.canonical_category_slug or product.category.slug

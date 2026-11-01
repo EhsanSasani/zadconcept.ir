@@ -1,0 +1,11 @@
+{% extends 'main/shop/panel_base.html' %}
+{% block panel_content %}
+<header class="shop-page-heading"><p class="shop-eyebrow">تنظیمات فروشگاه</p><h1>روش‌های دریافت سفارش</h1><p>دریافت حضوری و ارسال در مشهد را مدیریت کنید. هزینه ارسال پیش از پرداخت به مشتری نمایش داده می‌شود.</p></header>
+<form method="post" class="shop-surface shop-settings-form" novalidate>
+  {% csrf_token %}{% include 'main/shop/_errors.html' %}
+  <h2>دریافت و ارسال</h2>
+  {% for field in form %}{% include 'main/shop/_field.html' %}{% endfor %}
+  <p class="shop-notice">حداقل یک روش دریافت باید فعال باشد. فعال‌شدن ارسال به تعیین صریح هزینه نیاز دارد؛ خالی‌بودن هزینه به معنی ارسال رایگان نیست.</p>
+  <button class="shop-button" type="submit">ذخیره تنظیمات <i class="bi bi-check2" aria-hidden="true"></i></button>
+</form>
+{% endblock %}

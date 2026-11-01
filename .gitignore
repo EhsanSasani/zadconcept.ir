@@ -17,3 +17,4 @@ htmlcov/
 /prod-data.json
 *.bundle
 *.zip
+/work/

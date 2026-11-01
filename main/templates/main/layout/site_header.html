@@ -29,6 +29,7 @@
 
     <nav class="zad-desktop-nav" aria-label="ناوبری اصلی">
       <a href="{% url 'flowers' %}" class="{% if active_nav == 'flowers' %}is-active{% endif %}">استودیو گل</a>
+      <a href="{% url 'shop_home' %}" class="{% if active_nav == 'shop' %}is-active{% endif %}">فروشگاه</a>
       <a href="{% url 'weddings' %}" class="{% if active_nav == 'weddings' %}is-active{% endif %}">عروسی</a>
       <a href="{% url 'bakery' %}" class="{% if active_nav == 'bakery' %}is-active{% endif %}">سوییت‌بار</a>
       <a href="{% url 'gifts' %}" class="{% if active_nav == 'gifts' %}is-active{% endif %}">کانسپت استور</a>
@@ -80,6 +81,7 @@
       <div class="zad-quick-search__links" data-site-search-list>
         <a href="{% url 'flowers' %}" data-search-text="استودیو گل گل flower studio flowers"><i class="bi bi-flower1"></i><span>استودیو گل</span></a>
         <a href="{% url 'flowers_same_day' %}" data-search-text="ارسال روز امروز same day"><i class="bi bi-truck"></i><span>ارسال روز</span></a>
+        <a href="{% url 'shop_home' %}" data-search-text="فروشگاه خرید آنلاین سبد خرید shop"><i class="bi bi-bag"></i><span>فروشگاه</span></a>
         <a href="{% url 'weddings' %}" data-search-text="عروسی wedding"><i class="bi bi-gem"></i><span>عروسی</span></a>
         <a href="{% url 'bakery' %}" data-search-text="سوییت بار شیرینی sweet bar bakery"><i class="bi bi-cake2"></i><span>سوییت‌بار</span></a>
         <a href="{% url 'gifts' %}" data-search-text="کانسپت استور هدیه gift concept store"><i class="bi bi-gift"></i><span>کانسپت استور</span></a>
@@ -106,6 +108,11 @@
     </header>
 
     <nav class="zad-site-menu__primary" aria-label="بخش‌های اصلی زاد">
+      <a href="{% url 'shop_home' %}">
+        <span class="zad-site-menu__nav-icon"><i class="bi bi-bag"></i></span>
+        <span class="zad-site-menu__label"><strong>فروشگاه</strong><small>Shop</small></span>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </a>
       <a href="{% url 'index' %}">
         <span class="zad-site-menu__nav-icon"><i class="bi bi-house"></i></span>
         <span class="zad-site-menu__label"><strong>خانه</strong><small>Home</small></span>

@@ -1,0 +1,13 @@
+{% extends 'main/shop/base.html' %}{% load studio_ui %}
+{% block shop_content %}
+<nav class="shop-breadcrumb" aria-label="مسیر صفحه"><a href="{% url 'shop_home' %}">فروشگاه</a><span aria-hidden="true">/</span><span>{{ product.category.name }}</span></nav>
+<article class="shop-product">
+  <div class="shop-product__media">{% if product.cover_image %}<img src="{{ product.cover_image.url }}" {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %} sizes="(max-width: 760px) 100vw, 50vw" alt="{{ product.display_name }}" width="800" height="1000" fetchpriority="high" decoding="async">{% else %}<span class="shop-image-empty">تصویر محصول</span>{% endif %}</div>
+  <div class="shop-product__info"><p class="shop-eyebrow">{{ product.category.name }} <span aria-hidden="true">/</span> کد <bdi>{{ product.product_code }}</bdi></p><h1>{{ product.display_name }}</h1><p class="shop-product__price">{{ product.display_price }}</p>
+    {% if product.shop_purchasable %}<p class="shop-available"><span aria-hidden="true">●</span> موجود و قابل افزودن به سبد</p><form class="shop-add-form" method="post" action="{% url 'shop_cart_update' %}">{% csrf_token %}<input type="hidden" name="product_id" value="{{ product.pk }}"><input type="hidden" name="action" value="add"><div class="shop-field"><label for="product-quantity">تعداد</label><input id="product-quantity" name="quantity" type="number" inputmode="numeric" min="1" max="{% if product.shop_inventory.quantity > 99 %}99{% else %}{{ product.shop_inventory.quantity }}{% endif %}" value="1" required></div><button class="shop-button" type="submit">افزودن به سبد خرید <i class="bi bi-bag-plus" aria-hidden="true"></i></button></form>{% else %}<div class="shop-notice">این محصول فعلاً برای خرید آنلاین موجود نیست.</div>{% endif %}
+    <div class="shop-product__delivery"><i class="bi bi-shop" aria-hidden="true"></i><div><strong>دریافت سفارش از زاد</strong><p>روش دریافت حضوری یا ارسال در مشهد و هزینه مربوط را در مرحله بررسی سفارش ببینید.</p></div></div>
+    {% if product.description %}<section class="shop-product__description"><h2>درباره این محصول</h2><div>{{ product.description|linebreaks }}</div></section>{% endif %}
+    <a class="shop-text-link" href="{% url 'shop_home' %}"><i class="bi bi-arrow-right" aria-hidden="true"></i> بازگشت به فروشگاه</a>
+  </div>
+</article>
+{% endblock %}

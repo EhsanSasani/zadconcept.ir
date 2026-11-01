@@ -1,0 +1,15 @@
+{% extends 'main/layout/base.html' %}{% load static %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'main/css/pages/shop.css' %}?v=1">{% endblock %}
+{% block body_class %}shop-site{% endblock %}
+{% block content %}
+<div class="shop-wrap">
+  <nav class="shop-toolbar" aria-label="فروشگاه زاد">
+    <a class="shop-wordmark" href="{% url 'shop_home' %}"><span lang="en" dir="ltr">ZAD / SHOP</span><strong>فروشگاه</strong></a>
+    <div class="shop-toolbar__actions">
+      <a href="{% if is_shop_customer %}{% url 'customer_account' %}{% else %}{% url 'customer_login' %}{% endif %}"><i class="bi bi-person" aria-hidden="true"></i><span>{% if is_shop_customer %}حساب من{% else %}ورود{% endif %}</span></a>
+      <a href="{% url 'shop_cart' %}"><i class="bi bi-bag" aria-hidden="true"></i><span>سبد خرید</span></a>
+    </div>
+  </nav>
+  {% block shop_content %}{% endblock %}
+</div>
+{% endblock %}

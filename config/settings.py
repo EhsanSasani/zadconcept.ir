@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+
 def env_bool(name, default=False):
     value = os.getenv(name)
     if value is None:
@@ -21,6 +22,13 @@ def env_bool(name, default=False):
 
 def env_list(name, default=""):
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+# Real payments stay disabled until an actual merchant adapter is configured.
+SHOP_PAYMENT_ENABLED = env_bool("SHOP_PAYMENT_ENABLED", False)
+SHOP_PAYMENT_BACKEND = os.getenv("SHOP_PAYMENT_BACKEND", "")
+# Enable only behind Nginx which overwrites X-Real-IP and proxies over loopback/socket.
+SHOP_TRUST_PROXY_IP = env_bool("SHOP_TRUST_PROXY_IP", False)
 
 
 def required_env(name):

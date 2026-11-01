@@ -1,0 +1,15 @@
+{% extends 'main/shop/base.html' %}{% load studio_ui %}
+{% block shop_content %}
+<header class="shop-intro"><div><p class="shop-eyebrow">فروشگاه آنلاین زاد</p><h1>انتخابی از زاد،<br>برای شما.</h1></div><p>محصولات این بخش را می‌توانید به سبد خرید اضافه کنید. موجودی و قیمت هر محصول را پیش از نهایی‌کردن سفارش بررسی کنید.</p></header>
+<form class="shop-filter" method="get" role="search" aria-label="جستجو در فروشگاه">
+  <div class="shop-filter__query"><label class="shop-sr-only" for="shop-search">نام یا کد محصول</label><i class="bi bi-search" aria-hidden="true"></i><input id="shop-search" type="search" name="q" value="{{ query }}" placeholder="نام یا کد محصول" maxlength="100"></div>
+  <label class="shop-sr-only" for="shop-category">دسته محصول</label><select id="shop-category" name="category"><option value="">همه دسته‌ها</option>{% for category in categories %}<option value="{{ category.pk }}"{% if selected_category == category.pk|stringformat:'s' %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select><button class="shop-button" type="submit">نمایش</button>
+</form>
+<div class="shop-results"><p>{{ result_count|fa_number }} محصول{% if query %} برای «{{ query }}»{% endif %}</p>{% if query or selected_category %}<a href="{% url 'shop_home' %}">پاک‌کردن فیلترها <span aria-hidden="true">×</span></a>{% endif %}</div>
+<div class="shop-grid">
+{% for product in products %}<article class="shop-card"><a href="{% url 'shop_product_detail' product.slug %}"><div class="shop-card__image">{% if product.cover_image %}<img src="{{ product.cover_image.url }}" {% if product.cover_srcset %}srcset="{{ product.cover_srcset }}"{% endif %} sizes="(max-width: 600px) 46vw, (max-width: 1000px) 31vw, 25vw" alt="{{ product.display_name }}" width="520" height="650" loading="lazy" decoding="async">{% else %}<span class="shop-image-empty">تصویر محصول</span>{% endif %}{% if not product.shop_purchasable %}<span class="shop-stock-badge">فعلاً ناموجود</span>{% endif %}</div><div class="shop-card__body"><span>{{ product.category.name }}</span><h2>{{ product.display_name }}</h2><p>{{ product.display_price }}</p><span class="shop-card__link">مشاهده محصول <i class="bi bi-arrow-left" aria-hidden="true"></i></span></div></a></article>
+{% empty %}<section class="shop-empty"> <i class="bi bi-bag" aria-hidden="true"></i><h2>{% if query or selected_category %}محصولی با این مشخصات پیدا نشد.{% else %}فروشگاه در حال آماده‌سازی است.{% endif %}</h2><p>{% if query or selected_category %}نام دیگری جستجو کنید یا فیلترها را بردارید.{% else %}محصولات پس از ثبت و انتشار توسط زاد، اینجا نمایش داده می‌شوند.{% endif %}</p>{% if query or selected_category %}<a class="shop-button" href="{% url 'shop_home' %}">همه محصولات</a>{% else %}<a class="shop-button shop-button--outline" href="{% url 'contact' %}">ارتباط با زاد</a>{% endif %}</section>{% endfor %}
+</div>
+{% include 'main/shop/_pagination.html' with page=products %}
+<div class="shop-footnote"><i class="bi bi-shop" aria-hidden="true"></i><p>روش دریافت و هزینه ارسال را پیش از پرداخت، در مرحله بررسی سفارش ببینید.</p></div>
+{% endblock %}

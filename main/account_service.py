@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Q
 
 from .account_roles import (MANAGER_PERMISSIONS, ROLE_GROUPS, ROLE_PERMISSIONS, account_snapshot,
-                            account_version, editable_account, assigned_manager_permissions)
+                            account_version, editable_account, assigned_manager_permissions, has_customer_profile)
 from .models import Florist, StudioAccountArchive
 
 
@@ -50,7 +50,8 @@ def save_technical_florist_link(*, actor, user_id, data):
     User = get_user_model()
     users = {u.pk:u for u in User.objects.select_for_update().filter(pk__in=[actor.pk,user_id]).order_by('pk')}
     author, user = users.get(actor.pk), users.get(user_id)
-    if not author or not author.is_active or not author.is_superuser or not user or editable_account(user):
+    if (not author or not author.is_active or not author.is_superuser or not user
+            or editable_account(user) or has_customer_profile(user)):
         raise PermissionDenied
     if data['version'] != account_version(user):
         raise ValidationError('این حساب تغییر کرده است؛ صفحه را تازه کنید.')

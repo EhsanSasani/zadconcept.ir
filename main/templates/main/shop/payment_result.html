@@ -1,0 +1,2 @@
+{% extends 'main/shop/base.html' %}
+{% block shop_content %}<section class="shop-empty shop-empty--contained"><i class="bi bi-credit-card" aria-hidden="true"></i><h1>نتیجه پرداخت نیاز به بررسی دارد.</h1><p>{{ result_error }}</p><p>اگر مبلغ از حسابتان کم شده، پیش از پرداخت دوباره با زاد پیگیری کنید.</p><div class="shop-action-row"><a class="shop-button" href="{% url 'customer_account' %}">سفارش‌های من</a><a class="shop-button shop-button--outline" href="{{ site_call_href }}">ارتباط با زاد</a></div></section>{% endblock %}
