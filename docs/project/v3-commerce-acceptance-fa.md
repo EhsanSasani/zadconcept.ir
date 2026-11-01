@@ -37,7 +37,7 @@
 ## آزمون‌های کاتالوگ، موجودی و پرداخت
 | ID | بررسی |
 |---|---|
-| C01 | POST مستقیم محصول catalog، inactive، unpublished، sold، withdrawn، preorder، قیمت صفر/استعلامی رد شود |
+| C01 | POST مستقیم محصول catalog، دستهٔ محافظت‌شدهٔ عروسی، بخش خارج از selector مجاز، inactive، unpublished، sold، withdrawn، preorder و قیمت صفر/استعلامی رد شود |
 | C02 | تغییر نام/slug یا افزودن tag، مجوز فروش را دور نزند |
 | C03 | افزودن تکراری همان کالای تک‌واحدی quantity=2 نسازد؛ merge نیز repeat-safe باشد |
 | C04 | قیمت و مبلغ تغییرکرده قبل از pay بازبینی شوند؛ قیمت client مرجع نباشد |
