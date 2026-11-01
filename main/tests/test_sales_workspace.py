@@ -201,6 +201,129 @@ class SalesWorkspaceTests(TestCase):
                 self.assertEqual(record.price, 2500000)
                 self.assertFalse(record.sales_audits.exists())
 
+    def assert_withdrawn_from_stock(self, record):
+        record.refresh_from_db()
+        record.product.refresh_from_db()
+        self.assertEqual(record.status, StudioProduct.Status.WITHDRAWN)
+        self.assertIsNotNone(record.withdrawn_at)
+        self.assertEqual(record.product.status, Product.Status.WITHDRAWN)
+        self.assertEqual(record.product.stock_status, Product.StockStatus.OUT_OF_STOCK)
+        self.assertFalse(Product.objects.published().for_same_day().filter(pk=record.product_id).exists())
+        audit = record.sales_audits.get()
+        self.assertEqual((audit.action, audit.actor, audit.reason),
+                         ('withdraw', self.actor, 'اصلاح درخواست مشتری'))
+        self.assertEqual((audit.before['status'], audit.after['status']), ('AVAILABLE', 'WITHDRAWN'))
+
+    def test_withdraw_before_publication_hides_stock_without_sending(self):
+        record = self.create(publish=False)
+        self.act(record, 'withdraw')
+        self.assert_withdrawn_from_stock(record)
+        self.assertEqual(record.deliveries.get(action='PUBLISH').status, 'PENDING')
+        self.assertEqual(process_next_delivery().outcome, 'not_available')
+        self.assertIsNone(process_next_delivery())
+        self.send.assert_not_called()
+        self.delete.assert_not_called()
+
+    def test_withdraw_during_publication_preserves_lease_and_retires_completed_message(self):
+        record = self.create(publish=False)
+
+        def withdraw_in_flight(chat_id, *args):
+            publish = record.deliveries.get(action='PUBLISH')
+            self.assertEqual(publish.status, 'SENDING')
+            before = StudioDelivery.objects.filter(pk=publish.pk).values().get()
+            self.act(record, 'withdraw')
+            self.assertEqual(StudioDelivery.objects.filter(pk=publish.pk).values().get(), before)
+            return self.message(chat_id, *args)
+
+        self.send.side_effect = withdraw_in_flight
+        self.assertEqual(process_next_delivery().status, 'SENT')
+        self.assert_withdrawn_from_stock(record)
+        retirement = record.deliveries.get(action='RETIRE')
+        self.assertEqual(retirement.message_id, record.telegram_message_id)
+        self.assertEqual(retirement.next_attempt_at, record.withdrawn_at + timedelta(minutes=45))
+        self.assertIsNone(process_next_delivery())
+        with patch('main.studio_delivery.timezone.now', return_value=retirement.next_attempt_at):
+            self.assertEqual(process_next_delivery().outcome, 'deleted')
+        self.delete.assert_called_once_with(-5595039112, record.telegram_message_id)
+        self.assertEqual(self.send.call_count, 1)
+
+    def test_withdraw_unknown_publication_keeps_uncertainty_until_verified_reconciliation(self):
+        from main.studio_delivery import reconcile_delivery
+        record = self.create(publish=False)
+        self.send.side_effect = TelegramDeliveryError('transport_uncertain', uncertain=True)
+        publish = process_next_delivery()
+        self.assertEqual(publish.status, 'UNCERTAIN')
+        before = StudioDelivery.objects.filter(pk=publish.pk).values().get()
+        self.act(record, 'withdraw')
+        self.assert_withdrawn_from_stock(record)
+        self.assertEqual(StudioDelivery.objects.filter(pk=publish.pk).values().get(), before)
+        self.assertIsNone(record.telegram_message_id)
+        self.assertFalse(record.deliveries.filter(action='RETIRE').exists())
+        self.assertIsNone(process_next_delivery())
+        self.assertEqual(self.send.call_count, 1)
+        self.delete.assert_not_called()
+
+        reconcile_delivery(publish.pk, 901)
+        record.refresh_from_db()
+        publish.refresh_from_db()
+        self.assertEqual((publish.status, record.telegram_message_id), ('SENT', 901))
+        retirement = record.deliveries.get(action='RETIRE')
+        self.assertEqual(retirement.next_attempt_at, record.withdrawn_at + timedelta(minutes=45))
+        with patch('main.studio_delivery.timezone.now', return_value=retirement.next_attempt_at):
+            self.assertEqual(process_next_delivery().outcome, 'deleted')
+        self.delete.assert_called_once_with(-5595039112, 901)
+        self.assertEqual(self.send.call_count, 1)
+
+    def test_withdraw_after_interrupted_publication_keeps_delivery_for_review(self):
+        record = self.create(publish=False)
+        record.deliveries.update(status='UNCERTAIN', last_error='worker_interrupted', updated_at=timezone.now())
+        before = record.deliveries.values().get()
+        self.act(record, 'withdraw')
+        self.assert_withdrawn_from_stock(record)
+        self.assertEqual(record.deliveries.values().get(), before)
+        self.assertIsNone(process_next_delivery())
+        self.send.assert_not_called()
+
+    def test_withdraw_does_not_bypass_other_delivery_or_group_correction_guards(self):
+        for action, status, error in (
+            ('SYNC', 'SENDING', ''), ('SYNC', 'UNCERTAIN', ''),
+            ('RETIRE', 'SENDING', ''), ('RETIRE', 'UNCERTAIN', ''),
+            ('SYNC', 'RETRY', 'worker_interrupted'), ('RECLASS', 'PENDING', ''),
+        ):
+            with self.subTest(action=action, status=status, error=error):
+                record = self.create(publish=False)
+                StudioDelivery.objects.create(record=record, action=action, status=status,
+                    chat_id=-5595039112, message_id=901, last_error=error)
+                with self.assertRaises(ValidationError):
+                    self.act(record, 'withdraw')
+                record.refresh_from_db()
+                self.assertEqual(record.status, 'AVAILABLE')
+                self.assertFalse(record.sales_audits.exists())
+        record = self.create(publish=False)
+        record.deliveries.update(status='UNCERTAIN', outcome='type_correction')
+        with self.assertRaises(ValidationError):
+            self.act(record, 'withdraw')
+        record.refresh_from_db()
+        self.assertEqual(record.status, 'AVAILABLE')
+        self.assertFalse(record.sales_audits.exists())
+
+    def test_unconfirmed_publication_still_blocks_sale_and_restore(self):
+        for action in ('sell', 'restore'):
+            for status in ('SENDING', 'UNCERTAIN'):
+                with self.subTest(action=action, status=status):
+                    record = self.create(publish=False)
+                    if action == 'restore':
+                        StudioProduct.objects.filter(pk=record.pk).update(
+                            status='WITHDRAWN', withdrawn_at=timezone.now())
+                    record.deliveries.update(status=status)
+                    record.refresh_from_db()
+                    before = record.status
+                    with self.assertRaises(ValidationError):
+                        self.act(record, action)
+                    record.refresh_from_db()
+                    self.assertEqual(record.status, before)
+                    self.assertFalse(record.sales_audits.exists())
+
     def test_sync_confirmed_absence_requeues_available_daily_only(self):
         record = self.create()
         original = record.telegram_message_id
