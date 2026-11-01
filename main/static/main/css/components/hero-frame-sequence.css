@@ -1,0 +1,50 @@
+/* The original Home sequence now belongs to Flower Studio. */
+body.page-shop-display .flower-studio-hero .hero-slide,
+.flower-studio-hero .hero-frame-sequence {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+
+.flower-studio-hero .hero-frame-sequence {
+  pointer-events: none;
+}
+
+body.page-shop-display .flower-studio-hero img.hero-frame-sequence__frame {
+  position: absolute;
+  inset: 0;
+  width: min(100%, calc(var(--shop-display-hero-height) * 2.4)) !important;
+  height: 100% !important;
+  margin-inline: auto;
+  object-fit: cover !important;
+  object-position: center 46% !important;
+  transform: none !important;
+  z-index: 0;
+  display: block;
+  opacity: 0 !important;
+  transition: opacity 900ms ease-in-out;
+}
+
+body.page-shop-display .flower-studio-hero img.hero-frame-sequence__frame.is-leaving {
+  z-index: 1;
+  opacity: 1 !important;
+}
+
+body.page-shop-display .flower-studio-hero img.hero-frame-sequence__frame.is-active {
+  z-index: 2;
+  opacity: 1 !important;
+}
+
+@media (max-width: 760px) {
+  body.page-shop-display .flower-studio-hero img.hero-frame-sequence__frame {
+    width: 100% !important;
+    object-position: center !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.page-shop-display .flower-studio-hero img.hero-frame-sequence__frame {
+    transition: none;
+  }
+}

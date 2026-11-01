@@ -1115,7 +1115,7 @@ class MainViewsTests(TestCase):
         self.assertEqual(fallback_result["page_hero_title"], generic_hero.title)
         self.assertIsNone(no_fallback_result)
 
-    def test_retired_home_hero_fields_do_not_override_the_approved_sequence(self):
+    def test_retired_home_hero_fields_do_not_override_the_approved_artwork(self):
         slide = HomeHeroSlide.objects.create(
             title="Admin Home Hero",
             kicker="ADMIN KICKER",
@@ -1131,8 +1131,8 @@ class MainViewsTests(TestCase):
         response = self.client.get(reverse("index"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "main/img/home/hero-sequence/worktable-01.webp")
-        self.assertContains(response, "data-hero-frame-sequence")
+        self.assertContains(response, "main/img/home/hero-autumn/zad-concept-1440.webp")
+        self.assertNotContains(response, "data-hero-frame-sequence")
         for retired_value in (
             "/media/heroes/home/desktop.jpg",
             "/media/heroes/home/mobile/mobile.jpg",
@@ -1252,7 +1252,7 @@ class MainViewsTests(TestCase):
         self.assertIsNone(inquiry_product.price)
         self.assertIn("استعلام قیمت", inquiry_product.order_contact_text)
 
-    def test_collection_landing_uses_page_hero_from_admin(self):
+    def test_flower_studio_sequence_keeps_retired_admin_hero_data_intact(self):
         SiteHero.objects.create(
             title="Admin Flowers Hero",
             kicker="ADMIN FLOWERS",
@@ -1271,9 +1271,10 @@ class MainViewsTests(TestCase):
             response.context["landing_hero_mobile_image"],
             "/media/heroes/pages/mobile/flowers.jpg",
         )
-        self.assertContains(response, "Admin flowers description")
-        self.assertContains(response, "/media/heroes/pages/flowers.jpg")
-        self.assertContains(response, "/media/heroes/pages/mobile/flowers.jpg")
+        self.assertContains(response, "data-hero-frame>", count=3)
+        self.assertNotContains(response, "Admin flowers description")
+        self.assertNotContains(response, "/media/heroes/pages/flowers.jpg")
+        self.assertNotContains(response, "/media/heroes/pages/mobile/flowers.jpg")
 
     def test_category_page_contains_filter_fallback_link(self):
         response = self.client.get(reverse("bakery"))
@@ -2286,8 +2287,8 @@ class MainViewsTests(TestCase):
             [slide["title"] for slide in response.context["home_hero_slides"]],
             ["First managed slide", "Second managed slide"],
         )
-        self.assertContains(response, 'class="hero-slide hero-slide--1', count=1)
-        self.assertContains(response, "data-hero-frame>", count=3)
+        self.assertContains(response, 'class="home-hero__artwork"', count=1)
+        self.assertNotContains(response, "data-hero-frame>")
 
     def test_workshop_copy_keeps_only_the_latest_active_record(self):
         first = WorkshopPageContent.objects.create(story_title="First", is_active=True)

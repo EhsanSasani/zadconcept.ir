@@ -3,8 +3,11 @@ from html.parser import HTMLParser
 from types import SimpleNamespace
 
 from django.template.loader import render_to_string
+from django.templatetags.static import static
 from django.test import SimpleTestCase
 from django.urls import reverse
+
+from main.occasion_presentation import _occasion_card, HOME_EDITORIAL_OCCASIONS
 
 
 class Elements(HTMLParser):
@@ -75,7 +78,7 @@ class HomeDailyOccasionsTests(SimpleTestCase):
         self.assertIn('data-product-price="استعلام قیمت"', html)
         self.assertNotIn('class="zad-shop-card__price"', html)
         image = next(attrs for _, attrs in Elements(html).items if "data-product-image" in attrs)
-        self.assertEqual(image["src"], "/static/main/img/sub-bouquet.webp")
+        self.assertEqual(image["src"], static("main/img/sub-bouquet.webp"))
 
     def test_all_managed_occasion_links_and_remote_media_are_preserved(self):
         images = ["/media/occasions/birthday.webp", "https://cdn.example.com/anniversary.webp", "main/img/occasions/special.webp"]
@@ -87,7 +90,7 @@ class HomeDailyOccasionsTests(SimpleTestCase):
             self.assertIn(item["url"], links)
         for image in images[:2]:
             self.assertIn(image, sources)
-        self.assertIn("/static/" + images[2], sources)
+        self.assertIn(static(images[2]), sources)
         self.assertIn(reverse("occasions"), links)
 
     def test_empty_sections_have_working_catalog_links_without_false_stock(self):
@@ -96,3 +99,29 @@ class HomeDailyOccasionsTests(SimpleTestCase):
         self.assertNotIn('class="zad-shop-card__badge"', html)
         self.assertIn(f'href="{reverse("flowers")}"', html)
         self.assertIn(f'href="{reverse("occasions")}"', html)
+
+    def test_approved_home_artwork_keeps_managed_media_on_other_pages(self):
+        for slug in HOME_EDITORIAL_OCCASIONS:
+            with self.subTest(slug=slug):
+                tag = SimpleNamespace(
+                    slug=slug, name=slug, description="",
+                    cover_image=SimpleNamespace(url=f"/media/{slug}.webp"),
+                )
+                home_card = _occasion_card(tag, for_home=True)
+                detail_card = _occasion_card(tag)
+                self.assertFalse(detail_card["home_artwork"])
+                self.assertEqual(detail_card["image"], tag.cover_image.url)
+                html = self.render(occasions=[home_card])
+                self.assertIn(f"zad-occasion-artwork--{slug}", html)
+                self.assertIn(static("main/img/occasions/editorial-autumn-v1/approved-artwork.png"), html)
+                self.assertIn(f'href="{home_card["url"]}"', html)
+                self.assertNotIn(f'src="{tag.cover_image.url}"', html)
+
+    def test_other_home_occasions_still_use_managed_media(self):
+        tag = SimpleNamespace(
+            slug="apology", name="دلجویی", description="",
+            cover_image=SimpleNamespace(url="/media/apology.webp"),
+        )
+        html = self.render(occasions=[_occasion_card(tag, for_home=True)])
+        self.assertIn('src="/media/apology.webp"', html)
+        self.assertNotIn("editorial-autumn-v1/approved-artwork", html)

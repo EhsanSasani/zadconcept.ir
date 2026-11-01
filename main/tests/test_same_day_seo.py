@@ -92,7 +92,7 @@ class SameDaySeoTests(TestCase):
                 self.assertEqual(html.count('<h1'),1)
                 self.assertIn('<h1>خرید گل آماده برای ارسال امروز در مشهد</h1>',html)
                 self.assertTemplateUsed(response, 'main/components/same_day_hero.html')
-                self.assertIn('zad-display-v1-1672.webp', html)
+                self.assertIn('zad-autumn-v6-1671.webp', html)
                 if hero and hero['page_hero_title']:
                     self.assertNotIn('عنوان سفارشی',html)
 

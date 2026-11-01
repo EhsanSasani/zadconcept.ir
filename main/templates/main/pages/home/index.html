@@ -5,21 +5,28 @@
 
 {% block page_css %}
   <link rel="stylesheet" href="{% static 'main/css/components/story-viewer.css' %}?v=7">
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=41">
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/responsive-desktop.css' %}?v=3">
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/moments-discover.css' %}?v=4">
-  <link rel="stylesheet" href="{% static 'main/css/pages/home/daily-occasions.css' %}?v=3">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/index.css' %}?v=42">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/responsive-desktop.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/hero-artwork.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/moments-discover.css' %}?v=5">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/daily-occasions.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'main/css/pages/home/same-day-spacing.css' %}?v=1">
   <link rel="stylesheet" href="{% static 'main/css/pages/home/international-feature.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <h1 class="sr-only">زاد؛ استودیو گل، سوئیت‌بار و هدیه در مشهد</h1>
-<section class="global-hero home-hero" aria-label="استودیو گل زاد">
-  <div class="hero-slides" id="heroSlides">
-    <article class="hero-slide hero-slide--1 has-mobile-frame-sequence is-active" aria-hidden="false">
-      {% include "main/components/home_hero_frame_sequence.html" %}
-    </article>
-  </div>
+<section class="global-hero home-hero home-hero--triptych" aria-label="زاد؛ استودیو گل، سوییت‌بار و کانسپت‌استور">
+  <picture class="home-hero__artwork">
+    <source media="(max-width: 760px)"
+            srcset="{% static 'main/img/home/hero-autumn/zad-concept-mobile-tall-v3-640.webp' %} 640w, {% static 'main/img/home/hero-autumn/zad-concept-mobile-tall-v3-960.webp' %} 960w, {% static 'main/img/home/hero-autumn/zad-concept-mobile-tall-v3-1536.webp' %} 1536w"
+            sizes="100vw" width="1619" height="972">
+    <img src="{% static 'main/img/home/hero-autumn/zad-concept-1440.webp' %}"
+         srcset="{% static 'main/img/home/hero-autumn/zad-concept-640.webp' %} 640w, {% static 'main/img/home/hero-autumn/zad-concept-960.webp' %} 960w, {% static 'main/img/home/hero-autumn/zad-concept-1440.webp' %} 1440w, {% static 'main/img/home/hero-autumn/zad-concept-1944.webp' %} 1944w"
+         sizes="100vw"
+         alt="سه قاب پاییزی از فضای داخلی زاد؛ استودیو گل، ویترین سوییت‌بار و قفسه‌های کانسپت‌استور با نشان ZAD CONCEPT در مرکز"
+         width="1944" height="809" fetchpriority="high" decoding="async">
+  </picture>
 </section>
 
 <div class="zad-scroll-content">
@@ -35,7 +42,6 @@
 
 {% block extra_js %}
   <script src="{% static 'main/js/pages/home/daily-rail.js' %}?v=1" defer></script>
-<script src="{% static 'main/js/pages/home/hero-slider.js' %}?v=13"></script>
   <script src="{% static 'main/js/pages/home/home-motion.js' %}?v=1"></script>
   <script src="{% static 'main/js/pages/home/moments-rail.js' %}?v=2"></script>
   {% if home_stories %}<script src="{% static 'main/js/components/story-viewer.js' %}?v=4"></script>{% endif %}

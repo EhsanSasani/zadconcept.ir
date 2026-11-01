@@ -1,3 +1,8 @@
+/* Breadcrumbs precede this visible surface, so :first-child cannot round it. */
+body.page-same-day .zad-scroll-content > .same-day-catalog {
+  border-radius: var(--zad-scroll-radius) var(--zad-scroll-radius) 0 0;
+}
+
 /* Editorial introduction: quiet typography and a distinct live-stock panel. */
 .page-same-day .same-day-intro {
   display: grid;

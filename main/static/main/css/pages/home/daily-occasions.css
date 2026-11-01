@@ -177,6 +177,43 @@
   direction: ltr;
 }
 .page-home .zad-shop .zad-occasion-grid .zad-shop-card__media > img { aspect-ratio: 1.2 / 1 !important; }
+/* Frame the exact approved artwork without regenerating the photos. The shared
+   source is fetched once; only its six photo regions are visible, never its UI.
+   Coordinates refer to the original 1219 x 1290 approval image. */
+.page-home .zad-occasion-artwork {
+  aspect-ratio: 1.05 / 1;
+  --art-width: 326.810992%; /* 1219 / 373 */
+  --art-height: 377.192982%; /* 1290 / 342 */
+  --art-x: -2.789171%; /* x = 34 */
+  --art-y: -17.906977%; /* y = 231 */
+}
+.page-home .zad-occasion-artwork--romantic,
+.page-home .zad-occasion-artwork--formal-visit {
+  --art-width: 336.740331%; /* width = 362; x = 429 */
+  --art-x: -35.192781%;
+}
+.page-home .zad-occasion-artwork--congratulation,
+.page-home .zad-occasion-artwork--no-occasion {
+  --art-width: 327.688172%; /* width = 372; x = 813 */
+  --art-x: -66.694011%;
+}
+.page-home .zad-occasion-artwork--condolence,
+.page-home .zad-occasion-artwork--formal-visit,
+.page-home .zad-occasion-artwork--no-occasion {
+  --art-height: 362.359551%; /* height = 356; y = 702 */
+  --art-y: -54.418605%;
+}
+.page-home .zad-shop .zad-occasion-grid .zad-occasion-artwork > img {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: var(--art-width) !important;
+  height: var(--art-height) !important;
+  max-width: none !important;
+  aspect-ratio: auto !important;
+  object-fit: fill !important;
+  transform: translate(var(--art-x), var(--art-y));
+  transition: none;
+}
 .page-home .zad-occasion-grid .zad-shop-card__body { grid-template-columns: minmax(0, 1fr) 30px; padding-inline: 10px 7px; }
 .page-home .zad-occasion-grid .zad-shop-card__arrow { width: 28px; height: 28px; font-size: .9rem; }
 .page-home .zad-shop__browse {
@@ -214,7 +251,7 @@
   .page-home .zad-shop__eyebrow { font-size: .65rem; }
   .page-home .zad-shop__all { font-size: .78rem; }
   .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 36px) / 2.25); }
-  .page-home .zad-occasion-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .page-home .zad-occasion-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .page-home .zad-shop-card__body,
   .page-home .zad-occasion-grid .zad-shop-card__body { min-height: 78px; grid-template-columns: minmax(0, 1fr) 38px; padding: 12px 14px 12px 16px; }
   .page-home .zad-shop-card__copy strong { font-size: 1rem; }
@@ -227,7 +264,6 @@
 }
 @media (min-width: 1024px) {
   .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 36px) / 3); }
-  .page-home .zad-occasion-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 }
 @media (min-width: 1360px) {
   .page-home .zad-daily-rail > .zad-shop-card { flex-basis: calc((100% - 54px) / 4); }

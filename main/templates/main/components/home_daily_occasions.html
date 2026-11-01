@@ -56,8 +56,10 @@
     <div class="zad-occasion-grid">
       {% for item in home_occasion_cards %}
         <a class="zad-shop-card" href="{{ item.url }}">
-          <div class="zad-shop-card__media">
-            {% if item.image|slice:':7' == '/media/' or item.image|slice:':8' == 'https://' or item.image|slice:':7' == 'http://' %}
+          <div class="zad-shop-card__media{% if item.home_artwork %} zad-occasion-artwork zad-occasion-artwork--{{ item.slug }}{% endif %}">
+            {% if item.home_artwork %}
+              <img src="{% static 'main/img/occasions/editorial-autumn-v1/approved-artwork.png' %}" alt="{{ item.label }}" width="1219" height="1290" loading="lazy" decoding="async">
+            {% elif item.image|slice:':7' == '/media/' or item.image|slice:':8' == 'https://' or item.image|slice:':7' == 'http://' %}
               <img src="{{ item.image }}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">
             {% else %}
               <img src="{% static item.image %}" alt="{{ item.label }}" width="720" height="900" loading="lazy" decoding="async">

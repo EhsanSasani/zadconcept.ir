@@ -357,3 +357,7 @@
   .zad-footer__group a,
   .zad-footer__guide-links a { transition: none; }
 }
+
+.zad-footer__trust { grid-column: 1 / -1; display: flex; justify-content: center; padding-block: 24px; }
+.zad-footer__enamad { display: inline-flex; align-items: center; justify-content: center; padding: 8px; border-radius: 12px; background: #fff; cursor: pointer; }
+.zad-footer__enamad img { display: block; width: 125px; max-width: 100%; height: auto; }

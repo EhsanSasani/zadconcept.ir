@@ -56,6 +56,22 @@ class FlowerStudioLandingTests(TestCase):
         self.assertEqual(card["image_640"], "")
         self.assertEqual(card["image_960"], "")
 
+    def test_original_three_frame_scene_is_exclusive_to_flower_studio(self):
+        response = self.client.get(reverse("flowers"))
+        self.assertContains(response, "data-hero-frame>", count=3)
+        self.assertContains(response, 'data-frame-duration="3500"')
+        self.assertContains(response, "main/js/components/hero-frame-sequence.js")
+        for index in range(1, 4):
+            self.assertContains(
+                response, f"main/img/flowers/hero-sequence/worktable-0{index}.webp"
+            )
+        self.assertNotContains(response, "main/img/flowers-hero.webp")
+        for route in ("index", "bakery", "gifts"):
+            with self.subTest(route=route):
+                self.assertNotContains(
+                    self.client.get(reverse(route)), "data-hero-frame-sequence"
+                )
+
     def test_css_carries_home_hero_and_responsive_grid_contract(self):
         css = (
             Path(settings.BASE_DIR)

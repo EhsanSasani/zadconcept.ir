@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const hero = document.querySelector(".home-hero");
+  const hero = document.querySelector("[data-frame-sequence-hero]");
   if (!hero) return;
 
   const slides = Array.from(hero.querySelectorAll(".hero-slide"));

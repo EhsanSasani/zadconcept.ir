@@ -66,7 +66,7 @@
     font-size: clamp(.62rem, .7vw, .72rem);
   }
 
-  /* Hero: preserve the approved three-frame sequence, only adapt its crop/height. */
+  /* Legacy hero geometry; the approved static artwork has its own ratio. */
   body.page-home .site-main .home-hero,
   body.page-home .site-main .home-hero .hero-slides {
     width: 100% !important;
@@ -88,20 +88,6 @@
 
   body.page-home .site-main .home-hero .hero-slide img {
     object-fit: cover !important;
-    object-position: center 46% !important;
-  }
-
-  /* Cap the scene's aspect ratio on ultrawide and short-height screens.
-     All frames share this geometry; no focal-point jump at breakpoints. */
-  body.page-home .site-main .home-hero {
-    background: var(--home-ivory);
-  }
-
-  body.page-home .site-main .home-hero .hero-slide img.home-hero-sequence__frame {
-    width: min(100%, calc(var(--home-hero-height) * 2.4)) !important;
-    right: 0;
-    left: 0;
-    margin-inline: auto;
     object-position: center 46% !important;
   }
 

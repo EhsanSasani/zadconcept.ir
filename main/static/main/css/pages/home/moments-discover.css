@@ -336,3 +336,53 @@
     background-clip: border-box;
   }
 }
+
+/* A quieter phone introduction: retain readable labels and touch targets,
+   reduce the empty space between the story rail and Discover cards. */
+@media (max-width: 760px) {
+  .page-home .zad-moments-discover {
+    --moments-cover: clamp(58px, 16vw, 68px);
+  }
+
+  .page-home .zad-moments-discover .zad-stories__container {
+    padding-top: 14px;
+  }
+
+  .page-home .zad-moments-discover .zad-stories__heading {
+    margin-bottom: 10px;
+  }
+
+  .page-home .zad-moments-discover .zad-stories__heading h2 {
+    font-size: clamp(1rem, 3.6vw, 1.1rem);
+  }
+
+  .page-home .zad-moments-discover .zad-stories__track {
+    padding-block: 3px 4px;
+  }
+
+  .page-home .zad-moments-discover .zad-story-trigger__title {
+    min-height: 1.6em;
+    margin-top: 5px;
+  }
+
+  .page-home .zad-moments-discover .zad-discover {
+    padding-top: 14px;
+  }
+
+  .page-home .zad-discover__rule {
+    margin-bottom: 12px;
+  }
+
+  .page-home .zad-discover__eyebrow {
+    margin-bottom: 6px;
+  }
+
+  .page-home .zad-discover__heading {
+    margin-bottom: 14px;
+  }
+
+  .page-home .zad-discover__heading p {
+    margin-top: 4px;
+    line-height: 1.75;
+  }
+}

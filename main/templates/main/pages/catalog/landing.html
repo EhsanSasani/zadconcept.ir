@@ -10,16 +10,19 @@
   {% if section != "flowers" %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/zad-editorial.css' %}?v=1">{% endif %}
   {% if section == 'bakery' or section == 'flowers' %}<link rel="stylesheet" href="{% static 'main/css/pages/shared/shop-display.css' %}?v=2">{% endif %}
   {% if section == 'bakery' %}<link rel="stylesheet" href="{% static 'main/css/pages/catalog/sweetbar.css' %}?v=1">{% endif %}
+  {% if section == 'flowers' %}<link rel="stylesheet" href="{% static 'main/css/components/hero-frame-sequence.css' %}?v=2">{% endif %}
 {% endblock %}
 
 {% block content %}
-{% if section != 'bakery' and not landing_hero_title %}
+{% if section != 'bakery' and section != 'flowers' and not landing_hero_title %}
 <h1 class="sr-only">{{ meta_title }}</h1>
 {% endif %}
 <div class="flowers-shell">
 
   {% if section == 'bakery' %}
     {% include 'main/components/sweetbar_hero.html' %}
+  {% elif section == 'flowers' %}
+    {% include 'main/components/flower_studio_hero.html' %}
   {% else %}
   <section class="flowers-hero {% if section == 'flowers' %}shop-display-hero {% endif %}hero-configurable {{ page_hero_style_class }} hero-position--{{ page_hero_content_position|default:'center-left' }} hero-mobile-position--{{ page_hero_mobile_content_position|default:'bottom-center' }}" id="{{ section }}-top" data-page-hero-slider>
   {% if page_hero_slides %}
@@ -81,7 +84,7 @@
       <div class="flowers-directory">
         <header class="flowers-directory__head">
           <span>FLOWER COLLECTIONS</span>
-          <h2>دسته‌بندی محصولات استودیو گل زاد</h2>
+          <h1>دسته‌بندی محصولات استودیو گل زاد</h1>
           <p>برای دیدن محصولات، دسته‌ی موردنظرتان را انتخاب کنید.</p>
         </header>
 
@@ -217,5 +220,6 @@
 {% endblock %}
 
 {% block extra_js %}
+  {% if section == 'flowers' %}<script src="{% static 'main/js/components/hero-frame-sequence.js' %}?v=1" defer></script>{% endif %}
   {% if not directory_only %}<script src="{% static 'main/js/pages/catalog/index.js' %}?v=2"></script>{% endif %}
 {% endblock %}

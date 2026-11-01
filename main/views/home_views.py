@@ -82,7 +82,7 @@ def index(request):
             "featured_today": featured_today,
             "occasion_tags": occasion_tags,
             "home_occasion_cards": [
-                _occasion_card(tag) for tag in occasion_tags[:6]
+                _occasion_card(tag, for_home=True) for tag in occasion_tags[:6]
             ],
             "sections": SECTION_CONTENT,
             "hero_call_text": "Call Now",

@@ -356,7 +356,7 @@ _csp_policy = {
     "form-action": [CSP.SELF],
     "frame-ancestors": [CSP.NONE],
     "frame-src": [CSP.NONE],
-    "img-src": [CSP.SELF, "data:", "blob:", "https://*.google-analytics.com"],
+    "img-src": [CSP.SELF, "data:", "blob:", "https://*.google-analytics.com", "https://trustseal.enamad.ir"],
     "object-src": [CSP.NONE],
     "script-src": [CSP.SELF, CSP.NONCE, "https://www.googletagmanager.com"],
     "style-src": [CSP.SELF],

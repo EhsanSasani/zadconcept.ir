@@ -99,7 +99,7 @@ body.page-flowers-landing .flowers-directory__head > span {
   letter-spacing: .22em;
 }
 
-body.page-flowers-landing .flowers-directory__head h2 {
+body.page-flowers-landing .flowers-directory__head h1 {
   color: var(--fs-navy);
   font-size: clamp(1.65rem, 2.6vw, 2.55rem);
   font-weight: 650;

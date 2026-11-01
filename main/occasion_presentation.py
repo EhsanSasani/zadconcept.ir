@@ -3,12 +3,18 @@ from django.urls import reverse
 from .page_presentation import OCCASION_CARD_CONTENT, OCCASION_EN_LABELS
 
 
-def _occasion_card(tag, *, for_flowers=False):
+HOME_EDITORIAL_OCCASIONS = frozenset({
+    "birthday", "romantic", "congratulation", "condolence", "formal-visit", "no-occasion",
+})
+
+
+def _occasion_card(tag, *, for_flowers=False, for_home=False):
     content = OCCASION_CARD_CONTENT.get(tag.slug, {})
     url_name = "flower_occasion" if for_flowers else "occasion_detail"
 
     return {
         "slug": tag.slug,
+        "home_artwork": for_home and tag.slug in HOME_EDITORIAL_OCCASIONS,
         "label": content.get("title") or tag.name,
         "label_en": OCCASION_EN_LABELS.get(
             tag.slug,
