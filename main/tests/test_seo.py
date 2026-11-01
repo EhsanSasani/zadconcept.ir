@@ -77,11 +77,13 @@ class SeoContractTests(TestCase):
     def test_homepage_preview_uses_current_hero_instead_of_legacy_default(self):
         from django.templatetags.static import static
         response=self.client.get(reverse('index'))
-        image=f"{settings.ZAD_SITE_URL.rstrip('/')}{static('main/img/home/hero-sequence/worktable-01.webp')}"
+        image_path = 'main/img/home/hero-autumn/zad-concept-1944.webp'
+        self.assertTrue((Path(settings.BASE_DIR) / 'main/static' / image_path).is_file())
+        image=f"{settings.ZAD_SITE_URL.rstrip('/')}{static(image_path)}"
         self.assertContains(response,f'<meta property="og:image" content="{image}">')
         self.assertContains(response,f'<meta name="twitter:image" content="{image}">')
-        self.assertContains(response,'<meta property="og:image:width" content="1448">')
-        self.assertContains(response,'<meta property="og:image:height" content="1086">')
+        self.assertContains(response,'<meta property="og:image:width" content="1944">')
+        self.assertContains(response,'<meta property="og:image:height" content="809">')
         self.assertNotEqual(response.context['social_image_url'],settings.ZAD_DEFAULT_SOCIAL_IMAGE)
 
     def setUp(self):
