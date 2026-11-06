@@ -1,6 +1,9 @@
 """The visual seed must be repeatable and must not remove ordinary records."""
 
 from io import StringIO
+from unittest import skipUnless
+from unittest.mock import patch
+from django.db import connection
 from tempfile import TemporaryDirectory
 
 from django.contrib.auth import get_user_model
@@ -13,6 +16,7 @@ from main.models import Florist, StudioIngestionIssue, StudioProduct
 
 
 class StudioDemoSeedTests(TestCase):
+    @skipUnless(connection.vendor == "sqlite", "Visual demo seed explicitly supports local SQLite only")
     def test_seed_is_repeatable_and_clear_is_scoped(self):
         with TemporaryDirectory() as media_dir, override_settings(DEBUG=True, MEDIA_ROOT=media_dir):
             real = Florist.objects.create(name="واقعی", code="real")
@@ -33,6 +37,7 @@ class StudioDemoSeedTests(TestCase):
             call_command("seed_studio_demo", count=12, stdout=StringIO())
         self.assertFalse(StudioProduct.objects.exists())
 
+    @skipUnless(connection.vendor == "sqlite", "Visual demo seed explicitly supports local SQLite only")
     def test_seeded_dashboard_pages_render(self):
         with TemporaryDirectory() as media_dir, override_settings(DEBUG=True, MEDIA_ROOT=media_dir):
             call_command("seed_studio_demo", count=24, stdout=StringIO())
@@ -45,3 +50,11 @@ class StudioDemoSeedTests(TestCase):
             florist = Florist.objects.get(code="demo-mz")
             self.assertEqual(self.client.get(reverse("studio_florist_profile", args=[florist.pk])).status_code, 200)
             self.assertGreater(self.client.get(reverse("studio_dashboard")).context["stats"]["produced"], 0)
+
+    @override_settings(DEBUG=True)
+    def test_rejects_postgresql_without_creating_demo_data(self):
+        with patch('main.management.commands.seed_studio_demo.connection.vendor', 'postgresql'):
+            with self.assertRaises(CommandError):
+                call_command('seed_studio_demo', count=12, stdout=StringIO())
+        self.assertFalse(StudioProduct.objects.exists())
+        self.assertFalse(Florist.objects.exists())

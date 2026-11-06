@@ -8,7 +8,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command, CommandError
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -28,7 +28,8 @@ from .test_telegram_same_day import image_file
     TELEGRAM_SAME_DAY_RELAY_URL="", STUDIO_DELIVERY_LOCK_SECONDS=120,
     PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
 )
-class NotificationSafetyTests(TestCase):
+class NotificationSafetyTests(TransactionTestCase):
+    # Worker commands recycle real connections; do not wrap them in TestCase atomic blocks.
     def setUp(self):
         media = tempfile.TemporaryDirectory()
         self.addCleanup(media.cleanup)

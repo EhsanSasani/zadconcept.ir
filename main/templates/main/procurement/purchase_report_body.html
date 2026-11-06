@@ -5,7 +5,7 @@
 <div class="proc-panel proc-suppliers proc-suppliers--compact">
 {% for row in report.supplier_breakdown %}
 <div class="proc-supplier-item">
-<a class="proc-supplier-link" href="{% studio_query supplier=row.key invoice_page='' %}">
+<a class="proc-supplier-link" data-panel-drilldown href="{% studio_query supplier=row.key invoice_page='' %}">
   <span class="proc-supplier-link__identity"><strong>{{ row.name }}</strong><small>{{ row.count|fa_number }} فاکتور · {{ row.share|fa_decimal }}٪</small></span>
   <span class="proc-supplier-link__amount"><strong>{{ row.amount|fa_number }}</strong><small>تومان <span aria-hidden="true">←</span></small></span>
 </a>

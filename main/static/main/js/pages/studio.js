@@ -88,6 +88,7 @@
     const region = link.closest("[data-table-region]");
     if (!region?.id || !window.fetch) return;
     event.preventDefault();
+    document.dispatchEvent(new Event("panel:save"));
     tableRequest?.abort();
     const controller = new AbortController();
     tableRequest = controller;
@@ -123,6 +124,7 @@
       const scrollNode = $(".table-scroll", next);
       if (scrollNode) scrollNode.scrollLeft = scroll;
       history.pushState({ studioTable: true }, "", url);
+      document.dispatchEvent(new Event("panel:table-ready"));
       for (const form of document.querySelectorAll(
         ".period-bar, .product-filters",
       )) {
@@ -185,6 +187,7 @@
     form.querySelectorAll("button[type=submit]").forEach((button) => {
       button.disabled = true;
     });
+    document.dispatchEvent(new CustomEvent("panel:submit", {detail: form}));
     HTMLFormElement.prototype.submit.call(form);
   }
   statusDialog?.addEventListener("close", () => {

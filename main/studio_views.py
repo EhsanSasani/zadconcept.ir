@@ -1,4 +1,5 @@
 """Private, server-rendered ZAD Studio Operations views."""
+from .panel_navigation import return_location, PRODUCT_RETURN_ROUTES
 from datetime import date, datetime, time, timedelta
 from urllib.parse import urlencode
 
@@ -585,7 +586,7 @@ def product_add(request):
                 messages.success(request, "محصول ثبت شد و در صف انتشار سایت و گروه آماده‌ها قرار گرفت.")
             else:
                 messages.success(request, "محصول در دفتر تولید ثبت شد.")
-            return redirect("studio_products")
+            return redirect(return_location(request, "studio_products", PRODUCT_RETURN_ROUTES))
     return render(request, "main/studio/form.html", {
         **_base(request, "add"), "form": form, "title": "ثبت محصول", "submit_label": "ثبت محصول",
         "help_text": "محصول آمادهٔ موجود در سایت و گروه آماده‌ها منتشر می‌شود؛ محصول سفارشی فقط در دفتر تولید می‌ماند."})
@@ -613,7 +614,7 @@ def product_edit(request, pk):
                 form.add_error(None, error)
         else:
             messages.success(request, "اطلاعات محصول اصلاح شد.")
-            return redirect("studio_products")
+            return redirect(return_location(request, "studio_products", PRODUCT_RETURN_ROUTES))
     return render(request, "main/studio/form.html", {
         **_base(request, "products"), "form": form, "title": f"ویرایش محصول {record.display_id}",
         "submit_label": "ذخیره تغییرات", "preview_url": record.photo_url,
@@ -634,7 +635,7 @@ def product_status(request, pk):
             messages.error(request, " ".join(error.messages))
         else:
             messages.success(request, "وضعیت محصول ثبت شد و رسیدگی به پیام گروه پیگیری می‌شود.")
-        return redirect("studio_products")
+        return redirect(return_location(request, "studio_products", PRODUCT_RETURN_ROUTES))
     with transaction.atomic():
         record = get_object_or_404(StudioProduct.objects.select_for_update(), pk=pk)
         value = request.POST.get("status")
@@ -656,7 +657,7 @@ def product_status(request, pk):
             _audit(record, request.user, 'sell' if value == 'SOLD' else 'withdraw' if value == 'WITHDRAWN' else 'cancel',
                    'تغییر وضعیت از مدیریت', before)
             messages.success(request, "وضعیت محصول ثبت شد.")
-    return redirect("studio_products")
+    return redirect(return_location(request, "studio_products", PRODUCT_RETURN_ROUTES))
 
 
 @never_cache
@@ -676,7 +677,7 @@ def product_delete(request, pk):
         messages.error(request, " ".join(error.messages))
     else:
         messages.success(request, "محصول از عملکرد فلوریست حذف شد؛ سابقهٔ مدیریتی آن محفوظ است.")
-    return redirect("studio_products")
+    return redirect(return_location(request, "studio_products", PRODUCT_RETURN_ROUTES))
 
 
 @never_cache

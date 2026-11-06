@@ -45,6 +45,7 @@ function fixture({ dialogAvailable = true, fallbackConfirmed = true, delayedClos
     },
     querySelectorAll(selector) { return selector === 'dialog' && dialogAvailable ? [dialog] : []; },
     addEventListener(type, callback) { (events[type] ??= []).push(callback); },
+    dispatchEvent(event) { for (const callback of events[event.type] ?? []) callback(event); },
   };
   const submissions = [];
   const confirmations = [];
@@ -54,6 +55,7 @@ function fixture({ dialogAvailable = true, fallbackConfirmed = true, delayedClos
     confirm(text) { confirmations.push(text); return fallbackConfirmed; },
   };
   vm.runInNewContext(source, { document, window,
+    CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init.detail; } },
     HTMLFormElement: { prototype: { submit() { submissions.push(this); } } } });
   function form(kind, { reason = 'ثبت اشتباه', status = 'SOLD', factor = 'A-123' } = {}) {
     const reasonInput = { value: reason };
@@ -192,3 +194,17 @@ for (const confirmed of [true, false]) {
     assert.equal(f.submissions.length, confirmed ? 1 : 0);
   });
 }
+
+test('confirmed native submission announces its exact form before submitting', () => {
+  const f = fixture();
+  const form = f.form('status-form');
+  let announced;
+  f.document.addEventListener('panel:submit', event => {
+    assert.equal(f.submissions.length, 0);
+    announced = event.detail;
+  });
+  f.fire('submit', form);
+  f.confirm.dispatch('click');
+  assert.equal(announced, form);
+  assert.deepEqual(f.submissions, [form]);
+});

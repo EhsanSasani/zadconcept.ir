@@ -1,3 +1,4 @@
+from .panel_navigation import return_location
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -75,7 +76,7 @@ def edit(request, pk=None):
             if saved.pk == request.user.pk and form.cleaned_data.get('password1'):
                 update_session_auth_hash(request, saved)
             messages.success(request, 'تغییرات حساب ذخیره شد.' if pk else 'حساب کاربری ساخته شد.')
-            return redirect('studio_accounts')
+            return redirect(return_location(request, 'studio_accounts'))
     return render(request, 'main/pages/accounts/form.html', {
         **_base(request, 'accounts'), 'form': form, 'account': user})
 
@@ -98,7 +99,7 @@ def delete(request, pk):
         error = ' '.join(exc.messages)
     else:
         messages.success(request, 'حساب از فهرست جاری حذف و ورود آن بسته شد؛ سوابق در بایگانی محفوظ‌اند.')
-        return redirect('studio_accounts')
+        return redirect(return_location(request, 'studio_accounts'))
     return render(request,'main/pages/accounts/form.html',{
         **_base(request,'accounts'),'account':user,'form':AccountForm(user=user),'delete_error':error},status=400)
 
@@ -121,6 +122,6 @@ def technical_florist_link(request, pk):
             form.add_error(None, error if isinstance(error,ValidationError) else 'اتصال پروفایل تغییر کرده؛ صفحه را تازه کنید.')
         else:
             messages.success(request, 'اتصال فلوریست ذخیره شد؛ مجوزها و اطلاعات فنی حساب محفوظ‌اند.')
-            return redirect('studio_accounts')
+            return redirect(return_location(request, 'studio_accounts'))
     return render(request, 'main/pages/accounts/florist_link.html', {
         **_base(request,'accounts'), 'form':form, 'account':user}, status=400 if form.is_bound and form.errors else 200)

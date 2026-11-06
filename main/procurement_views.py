@@ -1,4 +1,5 @@
 """Private purchasing workspace and manager reporting, sharing one ledger."""
+from .panel_navigation import return_location
 from functools import wraps
 from datetime import datetime
 from uuid import uuid4
@@ -126,7 +127,7 @@ def material_form(request, pk=None):
             form.add_error(None, 'کالایی با این نام ثبت شده است؛ نام دیگری انتخاب کنید.')
         else:
             messages.success(request, 'کالا ذخیره شد.')
-            return redirect('procurement_materials')
+            return redirect(return_location(request, 'procurement_materials'))
     return render(request, 'main/procurement/material_form.html', {
         **_context(request, 'materials'), 'form': form, 'record': record, 'material': record,
     }, status=400 if request.method == 'POST' else 200)

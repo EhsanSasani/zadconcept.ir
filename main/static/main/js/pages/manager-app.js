@@ -20,18 +20,6 @@
       if (node.nodeType === Node.ELEMENT_NODE) enhanceTables(node);
     }
   }).observe(main, {childList:true, subtree:true});
-  // Internal return preserves the visitor's actual filters and report period.
-  document.querySelectorAll('[data-app-back]').forEach(link => {
-    link.addEventListener('click', event => {
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-      try {
-        const previous = new URL(document.referrer);
-        if (previous.origin === location.origin && previous.pathname.startsWith('/studio/') && history.length > 1) {
-          event.preventDefault(); history.back();
-        }
-      } catch { /* Direct entry uses the real fallback URL. */ }
-    });
-  });
   // On invalid forms, reveal the section and focus its first error.
   const invalid = document.querySelector('.has-error input, .has-error select, .has-error textarea');
   if (invalid) {

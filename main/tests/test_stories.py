@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
@@ -311,7 +311,8 @@ class StoryAdminTests(TestCase):
     shutil.which("ffmpeg") and shutil.which("ffprobe"),
     "FFmpeg is required for the story optimizer integration test.",
 )
-class StoryVideoPipelineIntegrationTests(TestCase):
+class StoryVideoPipelineIntegrationTests(TransactionTestCase):
+    # Worker commands recycle real connections; do not wrap them in TestCase atomic blocks.
     def setUp(self):
         self.temporary_directory = tempfile.TemporaryDirectory()
         self.media_root = Path(self.temporary_directory.name) / "media"
@@ -375,8 +376,8 @@ class StoryVideoPipelineIntegrationTests(TestCase):
         raw_name = clip.source_video.name
 
         claimed_id = claim_next_story_clip()
-        with self.captureOnCommitCallbacks(execute=True):
-            processed = process_story_clip(claimed_id)
+        # Real pipeline commits execute their callbacks under TransactionTestCase.
+        processed = process_story_clip(claimed_id)
 
         self.assertEqual(claimed_id, clip.pk)
         self.assertEqual(
