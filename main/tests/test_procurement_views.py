@@ -280,6 +280,14 @@ class ProcurementViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'بازار گل')
 
+    def test_historical_receipt_save_opens_the_saved_document_even_outside_today_filter(self):
+        response=self.client.post(reverse('procurement_purchase_add'),self.entry_data(date='۱۴۰۵/۰۷/۱۴'))
+        invoice=PurchaseInvoice.objects.get()
+        self.assertEqual(invoice.date,date(2026,10,6))
+        self.assertRedirects(response,reverse('procurement_purchase_detail',args=[invoice.pk]))
+        self.assertContains(self.client.get(response.url),'بازار گل')
+        self.assertNotIn(invoice.pk,{entry.pk for entry in self.client.get(reverse('procurement_purchases')).context['page']})
+
     def test_save_and_another_starts_a_fresh_token(self):
         data = self.entry_data(submit='another')
         response = self.client.post(reverse('procurement_purchase_add'), data)

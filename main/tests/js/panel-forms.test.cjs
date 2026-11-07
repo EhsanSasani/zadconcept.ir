@@ -35,3 +35,34 @@ test('invalid fractional money is left visible for server validation', () => {
   const {input} = inputHarness('۱۲٫۵');
   assert.equal(input.value,'۱۲٫۵');
 });
+
+function invalidFormHarness({interacted=false,summaryOnly=false,hiddenFirst=false}={}) {
+  const docEvents={},winEvents={};const order=[];
+  const details={tagName:'DETAILS',open:false,parentElement:null};
+  const field={id:'bad-value',type:'text',disabled:false,parentElement:details,
+    getClientRects:()=>details.open?[{}]:[],focus(){order.push('field');}};
+  const hidden={type:'hidden',disabled:false};
+  const summary={textContent:'Server error',tabIndex:0,parentElement:null,focus(){order.push('summary');}};
+  const document={querySelectorAll(selector){
+    if(selector==='[aria-invalid="true"]')return summaryOnly?[]:hiddenFirst?[hidden,field]:[field];
+    if(selector==='form .errorlist, form [role="alert"]')return [summary];
+    return [];
+  },addEventListener:(name,fn)=>(docEvents[name]??=[]).push(fn)};
+  const window={addEventListener:(name,fn)=>(winEvents[name]??=[]).push(fn)};
+  vm.runInNewContext(source,{document,window,requestAnimationFrame:fn=>fn()});
+  if(interacted)for(const fn of docEvents.pointerdown||[])fn();
+  for(const fn of winEvents.pageshow||[])fn({persisted:false});
+  return {details,order,summary};
+}
+test('server validation reveals the closed section and focuses the invalid field after autofocus',()=>{
+  const f=invalidFormHarness();assert.equal(f.details.open,true);assert.deepEqual(f.order,['field']);
+});
+test('hidden invalid metadata is skipped in favor of an actionable field',()=>{
+  assert.deepEqual(invalidFormHarness({hiddenFirst:true}).order,['field']);
+});
+test('non-field errors receive focus when there is no actionable invalid input',()=>{
+  const f=invalidFormHarness({summaryOnly:true});assert.deepEqual(f.order,['summary']);assert.equal(f.summary.tabIndex,-1);
+});
+test('late error focus never steals an intentional user interaction',()=>{
+  assert.deepEqual(invalidFormHarness({interacted:true}).order,[]);
+});

@@ -289,5 +289,7 @@ def purchase_receipt(request):
             _errors(form, error)
         else:
             messages.success(request, 'فاکتور خرید ثبت شد.' if created else 'این فاکتور قبلاً ثبت شده است.')
-            return redirect('procurement_purchase_add' if request.POST.get('submit') == 'another' else 'procurement_purchases')
+            if request.POST.get('submit') == 'another':
+                return redirect('procurement_purchase_add')
+            return redirect('procurement_purchase_detail', pk=record.pk)
     return render(request, 'main/procurement/purchase_form.html', {**_context(request, 'purchase'), 'form': form, 'suppliers': SUPPLIERS}, status=400 if request.method == 'POST' else 200)

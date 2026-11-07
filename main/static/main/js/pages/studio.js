@@ -140,11 +140,14 @@
           input.value = url.searchParams.get(key);
         }
       }
-      const focus = Array.from(next.querySelectorAll("[data-sort-link]")).find(
-        (node) => node.dataset.sortKey === link.dataset.sortKey,
-      );
-      if (link.hasAttribute("data-sort-link"))
-        focus?.focus({ preventScroll: true });
+      // Replaced mobile menus are closed. Their descendants can retain layout
+      // rectangles while being unfocusable; return to the menu's summary.
+      const focus = link.closest(".app-mobile-sort")
+        ? $(".app-mobile-sort summary", next)
+        : Array.from(next.querySelectorAll("[data-sort-link]")).find(
+          (node) => node.dataset.sortKey === link.dataset.sortKey && !node.closest(".app-mobile-sort"),
+        );
+      if (link.hasAttribute("data-sort-link")) focus?.focus({ preventScroll: true });
       else {
         next.setAttribute("tabindex", "-1");
         next.focus({ preventScroll: true });

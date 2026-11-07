@@ -55,4 +55,28 @@
       });
     });
   });
+
+  // A server error can be below the fold while an unrelated autofocus input
+  // receives focus. Reveal the failing section after the browser autofocus.
+  const invalid = [...document.querySelectorAll('[aria-invalid="true"]')]
+    .find(node => node.type !== 'hidden' && !node.disabled);
+  const summary = [...document.querySelectorAll('form .errorlist, form [role="alert"]')]
+    .find(node => node.textContent.trim());
+  if (invalid || summary) {
+    let interacted = false;
+    ['pointerdown', 'keydown', 'touchstart'].forEach(name =>
+      document.addEventListener(name, () => { interacted = true; }, {once: true, passive: true}));
+    window.addEventListener('pageshow', event => {
+      if (event.persisted) return;
+      requestAnimationFrame(() => {
+        if (interacted) return;
+        const target = invalid || summary;
+        for (let node = target.parentElement; node; node = node.parentElement) {
+          if (node.tagName === 'DETAILS') node.open = true;
+        }
+        if (!invalid) target.tabIndex = -1;
+        target.focus();
+      });
+    }, {once: true});
+  }
 })();

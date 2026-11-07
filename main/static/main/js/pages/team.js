@@ -207,7 +207,14 @@
     const input = form.elements.price;
     const original = input.value;
     const digits = (value) => normalizeDigits(value).replace(/[^0-9]/g, "");
-    const formatted = digits(original).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const raw = normalizeDigits(original).replace(/[,٬\s]/g, "");
+    // Never turn invalid fractions, signs or words into a different price.
+    if (!/^\d*$/.test(raw)) {
+      input.setCustomValidity("قیمت را به تومان و با عدد صحیح مثبت وارد کنید.");
+      return;
+    }
+    input.setCustomValidity("");
+    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     if (original === formatted) return;
     const start = input.selectionStart;
     const end = input.selectionEnd;
@@ -331,8 +338,14 @@
           (target || errorBox).append(line);
         });
         const field = form.elements[name];
-        if (field && typeof field.setAttribute === "function")
+        if (field && typeof field.setAttribute === "function") {
           field.setAttribute("aria-invalid", "true");
+          if (target?.id) {
+            const descriptions = new Set((field.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+            descriptions.add(target.id);
+            field.setAttribute("aria-describedby", [...descriptions].join(" "));
+          }
+        }
       });
     if (loginURL) {
       const link = document.createElement("a");
@@ -437,6 +450,8 @@
       if (savedDraft.fields[name] !== undefined)
         form.elements[name].value = savedDraft.fields[name];
     });
+    const optional = $(".optional-details", form);
+    if (optional && form.elements.notes.value.trim()) optional.open = true;
     showPhoto(savedDraft.image || null);
     if (selectedFile) {
       try {

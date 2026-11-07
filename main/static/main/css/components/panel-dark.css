@@ -268,8 +268,8 @@ body.panel-ui.panel-ui progress::-moz-progress-bar{background:#80b5ff}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .panel-head{margin-bottom:8px}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .app-mobile-sort{margin-bottom:10px}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table tbody{gap:6px}
- body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table tbody>tr{padding:8px 10px;gap:0 8px;border-radius:10px;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;box-shadow:none}
- body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td{padding:0!important;font-size:13px}
+ body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table tbody>tr{padding:8px 10px;gap:0 8px;border-radius:10px;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto;align-items:center;box-shadow:none}
+ body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td{padding:0!important;font-size:13px;min-width:0;white-space:normal;overflow-wrap:anywhere}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:before{display:none}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:first-child{grid-column:1/3;grid-row:1}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:nth-child(2){grid-column:1;grid-row:2}
@@ -286,6 +286,11 @@ body.panel-ui.panel-ui progress::-moz-progress-bar{background:#80b5ff}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .badge{font-size:10px;padding:3px 7px;white-space:nowrap}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:last-child{grid-column:1/-1;grid-row:3}
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:last-child:has(>.app-no-actions){display:none}
+ /* Long deletion receipts need the card width, not a narrow status column. */
+ body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table tr:has(td:nth-child(6)>small)>td:nth-child(6){grid-column:1/-1;grid-row:3;text-align:right;margin-top:6px}
+ body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table td:nth-child(6)>small{display:block;margin-top:4px}
+ body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .product-table tr:has(td:nth-child(6)>small)>td:last-child{grid-row:4}
+
  body.panel-ui.panel-ui :is(#products-table,#profile-table,#metric-table) .row-actions summary{min-height:44px}
 }
 

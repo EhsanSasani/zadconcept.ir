@@ -8,14 +8,14 @@
   <link rel="stylesheet" href="{% static 'main/css/pages/studio.css' %}?v=5">
   <link rel="stylesheet" href="{% static 'main/css/pages/manager-app.css' %}?v=2">
   <script src="{% static 'main/js/components/panel-navigation.js' %}?v=1" defer></script><script src="{% static 'main/js/pages/manager-app.js' %}?v=5" defer></script>
-  <script src="{% static 'main/js/pages/studio.js' %}?v=6" defer></script>
-  <script src="{% static 'main/js/pages/team.js' %}?v=4" defer></script>
+  <script src="{% static 'main/js/pages/studio.js' %}?v=7" defer></script>
+  <script src="{% static 'main/js/pages/team.js' %}?v=5" defer></script>
 <link rel="stylesheet" href="{% static 'main/css/components/workspace-switcher.css' %}">
 {% block extra_head %}{% endblock %}
 <link rel="stylesheet" href="{% static 'main/css/components/panel-theme.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'main/css/components/panel-dark.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'main/css/components/panel-refactor.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'main/css/pages/studio-midnight.css' %}?v=1"><script src="{% static 'main/js/components/panel-forms.js' %}?v=1" defer></script></head>
+<link rel="stylesheet" href="{% static 'main/css/pages/studio-midnight.css' %}?v=1"><script src="{% static 'main/js/components/panel-forms.js' %}?v=2" defer></script></head>
 <body data-panel-user="{{ request.user.pk|default:'' }}" class="manager-app panel-ui" data-studio-page="{{ active }}" data-team-user="{{ request.user.pk }}">
 <svg focusable="false" class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
