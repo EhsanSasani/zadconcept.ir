@@ -119,3 +119,43 @@ class SameDayCatalogIsolationTests(TestCase):
             .filter(pk=self.same_day.pk)
             .exists()
         )
+
+
+class SameDayDescriptionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.category = Category.objects.create(name="گل آزمایشی", slug="description-test", section="flowers")
+        cls.product = Product.objects.create(name="گل امروز", category=cls.category,
+            catalog_scope=Product.CatalogScope.SAME_DAY, publish_status="published")
+
+    def test_home_card_displays_description_as_visible_escaped_text(self):
+        self.product.description = 'توضیح <script>alert(1)</script> & گل'
+        self.product.save(update_fields=["description"])
+        response = self.client.get(reverse("index"))
+        self.assertContains(response, '<small class="zad-shop-card__description">توضیح &lt;script&gt;alert(1)&lt;/script&gt; &amp; گل</small>', html=True)
+        self.assertNotContains(response, '<script>alert(1)</script>')
+
+    def test_empty_description_has_no_empty_home_excerpt(self):
+        response = self.client.get(reverse("index"))
+        self.assertNotContains(response, 'class="zad-shop-card__description"')
+
+    def test_admin_description_reaches_catalog_and_full_detail(self):
+        from django.contrib.auth import get_user_model
+        from django.utils.html import escape
+        self.client.force_login(get_user_model().objects.create_superuser("description-manager", password="test-only"))
+        description = "توضیح عمومی گل امروز\n" + "جزئیات محصول " * 20 + "<b>متن امن</b>"
+        response = self.client.post(reverse("admin:main_samedayflower_change", args=[self.product.pk]), {
+            "description": description, "category": self.category.pk, "publish_status": "published",
+            "is_active": "on", "sort_order": "0", "slug": self.product.slug,
+            "gallery_images-TOTAL_FORMS": "0", "gallery_images-INITIAL_FORMS": "0",
+            "gallery_images-MIN_NUM_FORMS": "0", "gallery_images-MAX_NUM_FORMS": "1000", "_save": "ذخیره",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.description, description)
+        self.client.logout()
+        detail = self.client.get(self.product.get_absolute_url())
+        self.assertContains(detail, f"<p>{escape(description)}</p>", html=True)
+        self.assertNotContains(detail, "<b>متن امن</b>")
+        catalog = self.client.get(reverse("flowers_same_day"))
+        self.assertContains(catalog, 'class="flowers-product-card__excerpt"')

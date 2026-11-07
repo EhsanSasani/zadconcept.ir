@@ -30,6 +30,7 @@
                 <strong>{{ product.name|default:product.category.name }}</strong>
                 {% if product.product_code %}<small>کد <bdi>{{ product.product_code }}</bdi></small>{% endif %}
                 {% if product.has_price %}<span class="zad-shop-card__price">{{ product.display_price }}</span>{% endif %}
+                {% if product.description %}<small class="zad-shop-card__description">{{ product.description|truncatechars:72 }}</small>{% endif %}
               </div>
               <span class="zad-shop-card__arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
             </div>
